@@ -1,5 +1,5 @@
 html {
-  background-color: #5f45bb;
+  background-color: #222222;
   /* background-image: linear-gradient(to bottom right, #180cac, #d054e4);  */
   color: #fff;
   font-family: "Quicksand", sans-serif;
@@ -36,9 +36,10 @@ a {
 }
 
 .button {
-  background-color: #fff;
+  background: rgb(255,229,79);
+  background: linear-gradient(90deg, rgba(255,229,79,1) 0%, rgba(255,199,73,1) 27%, rgba(255,48,149,1) 100%);
   border-radius: 290486px;
-  box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.2); color: #9013fe;
+  box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.2); color: #000000;
   display: inline-block;
   font-size: 0.875rem;
   line-height: 1;
@@ -115,6 +116,7 @@ position: fixed;
 .picture-image { 
   border-radius: 5201990px; 
   position: absolute;
+  filter: grayscale(100%);
 }
 
 .content {
@@ -151,14 +153,15 @@ position: fixed;
 }
 
 .hr {
-  background-color: cyan;
+  background: rgb(255,229,79);
+  background: linear-gradient(90deg, rgba(255,229,79,1) 0%, rgba(255,199,73,1) 27%, rgba(255,48,149,1) 100%);
   border: none;
   content: "";
   height: 1px;
   margin-bottom: 1.5rem;
   margin-top: 1.5rem;
   transform-origin: center left;
-  width: 4rem;
+  width: 6rem;
 }
 
 .description {

@@ -1,60 +1,286 @@
-<html>
-
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Dan Avner - Software Engineer</title>
-  <link rel="stylesheet" type="text/css" href="css/reset.css">
-  <link rel="stylesheet" type="text/css" href="css/main.css">
-  <link href="https://fonts.googleapis.com/css?family=Montserrat|Quicksand" rel="stylesheet">
-  <script defer src="https://use.fontawesome.com/releases/v5.0.0/js/all.js"></script>
-  <link rel="stylesheet" type="text/css" href="css/animations.css">
-</head>
-
-<body>
-  <div class="wallpaper"></div>
-  <div class="content">
-    <aside class="side">
-      <figure class="picture">
-        <div class="picture-shadow"></div>
-        <img id="pictureImage" class="picture-image" src="img/me.jpg" alt="Portrait of Dan Avner" width="320" height="320">
-      </figure>
-    </aside>
-    <main class="about">
-      <h1 class="name">
-        Hi, I'm Dan Avner
-      </h1>
-      <p class="job">
-        Applications Developer<br />Caltech/IPAC
-      </p>
-      <hr class="hr">
-      <div class="description">
-        <p>
-          <strong>Florida-man</strong> Astronomer turned <strong>Engineer</strong> currently employed at <strong>Caltech/IPAC</strong>. I am an Applications Developer for the <a href="https://spherex.caltech.edu" target="_blank">SPHEREx spacecraft mission</a>. I'm passionate
-          about spacecrafts and telescopes, programming, designing GUIs, and improving the observing experience. 
-        </p>
+<!doctype html>
+<html lang="en">
+	<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dan Avner - Software Engineer</title>
+    <link rel="icon" type="image/png" href="./img/favicon.png">
+    <link rel="manifest" href="./site.webmanifest">
+    <script defer src="https://use.fontawesome.com/releases/v5.0.0/js/all.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="intro">
+        <div class="intro-text">
+          <div class="intro-title">Hi, I'm Dan Avner.</div>
+          <div class="intro-info">I'm a Application Developer programming the data reduction pipeline for the upcoming NASA SPHEREx spacecraft mission. I'm fond of video games, ground-based telescopes, and my dog.<br><br ><span class="intro-subtitle">Welcome to my space. 🛸</span></div>
+          <div class="intro-social">
+            <a href="https://www.instagram.com/danavnerr/" target="_blank">
+            <button class="btn btn-social"><i class="fab fa-instagram"></i> Instagram</button></a>
+          </div>
+          <div class="intro-social">
+            <a href="https://github.com/davner" target="_blank">
+            <button class="btn btn-social"><i class="fab fa-github"></i> Github</button></a>
+          </div>
+          <div class="intro-social">
+            <a href="https://www.linkedin.com/in/danavner/" target="_blank">
+            <button class="btn btn-social"><i class="fab fa-linkedin"></i> Linkedin</button></a>
+          </div>
+        </div>
+        <img class="banner" src="./img/banner.JPG">
       </div>
-      <div class="contact">
-        <a class="button" href="mailto:ldpavner@gmail.com">
-          Get in touch
-        </a>
+      <div class="section-title">Currently</div>
+      <!-- Want to have 3 cards per row -->
+      <!-- Use CSS grid -->
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-body">
+            <div class="card-subtitle">Caltech/IPAC</div>
+            <div class="card-title">Application Developer</div>
+            <div class="card-info">Developing the NASA SPHEREx data reduction pipeline and managing large data flow.</div>
+          </div>
+          <div class="card-footer">
+            <div class="card-subtitle-muted">Python</div>
+            <a href="https://www.jpl.nasa.gov/missions/spherex" target="_blank"><button class="btn btn-block">More Info</button></a>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="card-subtitle">MMT Observatory</div>
+            <div class="card-title">Open Source Contributer</div>
+            <div class="card-info">Frontend engineer for INDIScript, tools for rapid and painless python INDI drivers to gorgeous and responsive UI.</div>
+          </div>
+          <div class="card-footer">
+            <div class="card-subtitle-muted">JavaScript, Python</div>
+            <a href="https://github.com/MMTObservatory/pyINDI" target="_blank"><button class="btn btn-block">Source</button></a>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="card-subtitle">UArizona Steward Observatory</div>
+            <div class="card-title">Consultant</div>
+            <div class="card-info">Designing the frontend UI and assisting with the driver for the 90Prime instrument upgrade.</div>
+          </div>
+          <div class="card-footer">
+            <div class="card-subtitle-muted">JavaScript, Python, C</div>
+            <a href="https://github.com/so-90prime" target="_blank"><button class="btn btn-block">Source</button>
+          </div></a>
+        </div>
       </div>
-      <ul class="social">
-        <li>
-          <a href="https://www.instagram.com/banana_dancakes_/">
-            <i class="fab fa-instagram"></i>
-          </a> </li>
-        <li> <a href="https://github.com/davner">
-            <i class="fab fa-github"></i> </a>
-        </li>
-        <li>
-          <a href="https://www.linkedin.com/in/danavner/">
-            <i class="fab fa-linkedin"></i>
-          </a> </li>
-      </ul>
-    </main>
-  </div>
-</body>
+      <div class="section-title">The Past</div>
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-body">
+            <div class="card-subtitle">UArizona Steward Observatory</div>
+            <div class="card-title">R&D Software Engineer III</div>
+            <div class="card-info">Developing embeded code and telescope control system all the up to the web UI.</div>
+          </div>
+          <div class="card-footer">
+            <div class="card-subtitle-muted">Python, JavaScript, C, C++, Ruby</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="card-subtitle">UArizona Steward Observatory</div>
+            <div class="card-title">Technical Specialist</div>
+            <div class="card-info">Developing pipeline for all sky brightness campaign and instrument commissioning on telescopes</div>
+          </div>
+          <div class="card-footer">
+            <div class="card-subtitle-muted">Python</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="card-subtitle">Northern Arizona University</div>
+            <div class="card-title">Graduate Research Assistant</div>
+            <div class="card-info">Designed and developed UI and data reduction pipeline for campus telescope infrared imager.</div>
+          </div>
+          <div class="card-footer">
+            <div class="card-subtitle-muted">Matlab</div>
+          </div>
+        </div>
+      </div>
+      <div class="section-title">Education</div>
+      <div class="card-grid">
+        <div class="card small-card">
+          <div class="sideways-card-img"></div>
+          <div class="card-subtitle-muted">Northern Arizona University</div>
+          <div class="card-title">Master of Science in Applied Physics</div>
+        </div>
+        <div class="card small-card">
+          <div class="sideways-card-img"></div>
+          <div class="card-subtitle-muted">University of Florida</div>
+          <div class="card-title">Bachelor of Arts in Astronomy</div>
+        </div>
+      </div>
+    </div>
+  </body>
+  <style>
+    :root {
+      --gray-0: #f8f9fa;
+      --gray-05: #f3f6f9;
+      --gray-1: #f1f3f5;
+      --gray-2: #e9ecef;
+      --gray-3: #dee2e6;
+      --gray-4: #ced4da;
+      --gray-5: #adb5bd;
+      --gray-6: #868e96;
+      --gray-7: #4b5056;
+      --gray-8: #31363b;
+      --gray-9: #212529;
+      --green: #51b681;
+      --green-1: #95cd7f;
+      --green-2: #73b18a;
+      --green-3: #4d8994;
+      --green-4: #30619d;
+      --green-5: #30379d;
+      --red: #f34646;
+      --red-1: #efcf4a;
+      --red-2: #e0a944;
+      --red-3: #d37d36;
+      --red-4: #cd583c;
+      --red-5: #ab2e3f;
+      --blue: #07a7e6;
+      --blue-1: #70bdee;
+      --blue-2: #618be1;
+      --blue-3: #5b5ed5;
+      --blue-4: #623ac6;
+      --blue-5: #58119f;
+      --rainbow-1: #da66b7;
+      --rainbow-2: #7549f0;
+      --rainbow-3: #4989c6;
+      --rainbow-4: #72bf8d;
+      --rainbow-5: #f4c950;
+      --orange: #ff7e22;
+      --yellow: #fca62a;
+      --pink: #e855b3;
+      --purple: #623ac6;
+      --indigo: #5a43f1;
+      --lavender: #e0b4ff;
+      --white: #ffffff;
+      --black: #000000;
+      --border-radius: 0.25rem;
+    }
+    body {
+      font-family: sans-serif;
+      background-color: black;
 
-</html>
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      margin: 0;
+    }
+    .fab {
+      padding-left: 10px;
+    }
+    .card-footer {
+      margin-top: auto;
+    }
+    .intro-title {
+      font-size: 2.5rem;
+      color: var(--gray-0)
+    }
+    .intro-info {
+      font-size: 1.2rem;
+      color: var(--gray-5);
+    }
+    .intro-subtitle {
+      font-family: monospace;
+      color: var(--lavender);
+    }
+    .intro-social {
+      display: inline-flex
+    }
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--gray-0);
+      padding-bottom: 1.5rem;
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      padding-bottom: 3rem;
+    }
+    .card-body {
+      padding-bottom: 1.5rem;
+    }
+    .card {
+      background-color: var(--gray-9);
+      padding: 1.5rem;
+      border-radius: var(--border-radius);
+      display: flex;
+      flex-direction: column;
+    }
+    .small-card {
+      background-color: var(--gray-8);
+      border: 1px solid var(--gray-7);
+    }
+    .card-subtitle-muted {
+      font-size: 0.9rem;
+      font-family: monospace;
+      color: var(--gray-5);
+    }
+    .card-subtitle {
+      color: var(--lavender);
+      font-family: monospace;
+      font-size: 0.9rem;
+    }
+    .card-title {
+      color: var(--gray-0);
+      font-size: 1.2rem;
+      padding-bottom: 1rem;
+    }
+    .card-info {
+      color: var(--gray-2);
+      font-size: 1rem;
+      padding-bottom: 1rem;
+    }
+    .btn {
+      border: 1px solid var(--gray-7);
+      background-color: var(--gray-8);
+      color: var(--gray-2);
+      font-size: 1rem;
+      padding: 0.5rem 1.5rem;
+      cursor: pointer;
+      border-radius: var(--border-radius);
+    }
+    .btn-social {
+
+    }
+    .btn:hover {
+      border: 1px solid var(--gray-5)
+    }
+    .btn-block {
+      width: 100%;
+
+    }
+    html {
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    .container {
+      padding: 1.5rem;
+      max-width: 960px;
+      margin: auto;
+      display: block;
+      background-color: var(--gray-8);
+    }
+    .intro {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2.5rem;
+      padding-bottom: 6rem;
+    }
+    .banner {
+      max-width: 300px;
+      height: auto;
+      justify-self: center;
+      border-radius: 50%;
+      border: 1px solid var(--gray-7);
+    }
+
+  </style>

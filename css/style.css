@@ -1,0 +1,17 @@
+.hero {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.hero-photo {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 1rem;
+  transition: opacity 120ms ease-in-out;
+}
+
+.mt-3 {
+  margin-top: 3rem;
+}

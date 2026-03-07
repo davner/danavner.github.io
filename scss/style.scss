@@ -1,0 +1,149 @@
+@use "pico" with (
+  $theme-color: "sand"
+);
+
+@use "colors" as *;
+
+/* Light theme surfaces */
+
+[data-theme="light"],
+:root:not([data-theme="dark"]) {
+
+  --pico-background-color: #{$grey-50};
+  --pico-card-background-color: #{$grey-100};
+  --pico-form-element-background-color: #{$grey-50};
+
+  --pico-form-element-border-color: #{$grey-250};
+  --pico-muted-border-color: #{$grey-250};
+
+  --pico-code-background-color: #{$grey-150};
+}
+
+/* Dark theme surfaces (auto) */
+
+@media (prefers-color-scheme: dark) {
+
+  :root:not([data-theme]) {
+
+    --pico-background-color: #{$grey-950};
+    --pico-card-background-color: #{$grey-900};
+    --pico-form-element-background-color: #{$grey-900};
+
+    --pico-form-element-border-color: #{$grey-750};
+    --pico-muted-border-color: #{$grey-800};
+
+    --pico-code-background-color: #{$grey-850};
+    --pico-card-border-color: #{$grey-800};
+    --pico-card-sectioning-background-color: #{$grey-900};
+    --pico-progress-background-color: #{$grey-800};
+
+  }
+
+}
+
+/* Forced dark theme */
+
+[data-theme="dark"] {
+
+  --pico-background-color: #{$grey-950};
+  --pico-card-background-color: #{$grey-900};
+  --pico-form-element-background-color: #{$grey-900};
+
+  --pico-form-element-border-color: #{$grey-750};
+  --pico-muted-border-color: #{$grey-800};
+
+  --pico-code-background-color: #{$grey-850};
+  --pico-card-border-color: #{$grey-800};
+  --pico-card-sectioning-background-color: #{$grey-900};
+    --pico-progress-background-color: #{$grey-800};
+
+
+}
+
+/* Code blocks */
+
+pre {
+  background: none;
+  color: #{$sand-100};
+}
+
+code {
+    background: none;
+    color: #{$sand-100};
+    padding-left: 0;
+    padding-right: 0;
+}
+
+pre code {
+  background: none;
+  color: inherit;
+}
+
+.section-title {
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-bottom: 0;
+  font-size: 0.75rem;
+}
+
+.pill {
+  display: inline-block;
+  font-size: 0.625rem;
+  padding: 0.375rem 0.55rem;
+  margin-right: 0.375rem;
+  border-radius: 1rem;
+  background: $sand-700;
+  color: $sand-150;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+}
+
+progress {
+  height: 1px;
+}
+
+.text-center {
+  text-align: center;
+}
+
+section {
+  margin-bottom: 3rem;
+}
+
+header {
+  background-color: $grey-900;
+}
+
+footer {
+  background-color: black;
+}
+
+.hero-photo {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 1rem;
+  transition: opacity 120ms ease-in-out;
+}
+
+.hero {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.mb-0 {
+  margin-bottom: 0;
+}
+.mt-0 {
+  margin-top: 0;
+}
+.mr-0 {
+  margin-right: 0;
+}
+.ml-0 {
+  margin-left: 0;
+}
+.m-0 {
+  margin: 0;
+}

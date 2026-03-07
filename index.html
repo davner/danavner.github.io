@@ -1,25 +1,48 @@
 <!doctype html>
-<html lang="en" class="pico-background-grey-950">
+<html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="color-scheme" content="light dark">
-    <link rel="stylesheet" href="css/pico.sand.min.css">
-    <link rel="stylesheet" href="css/pico.colors.min.css">
-    <link rel="stylesheet" href="css/style.css">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="stylesheet" href="css/style.css" />
     <script src="js/feather.min.js"></script>
     <title>Dan Avner</title>
   </head>
 
+  <!--TODO: Add animated telescope mount pointing toward the profile photo.-->
+
   <body>
-    <header class="container-fluid pico-background-grey-900">
+    <div class="warp-background"></div>
+    <header class="container-fluid">
       <nav class="container">
         <ul></ul>
         <ul class="nav-icons">
-          <li><a aria-label="GitHub" title="GitHub" href="https://github.com/davner"><i data-feather="github"></i></a></li>
-          <li><a aria-label="LinkedIn" title="LinkedIn" href="https://www.linkedin.com/in/danavner/"><i data-feather="linkedin"></i></a></li>
-          <li><a aria-label="Instagram" title="Instagram" href="https://www.instagram.com/aspacemansheavyload/"><i data-feather="instagram"></i></a></li>
-          <li><a aria-label="Email" title="Email" href="mailto:ldpavner@gmail.com"><i data-feather="send"></i></a></li>
+          <li>
+            <a aria-label="GitHub" title="GitHub" href="https://github.com/davner"
+              ><i data-feather="github"></i
+            ></a>
+          </li>
+          <li>
+            <a
+              aria-label="LinkedIn"
+              title="LinkedIn"
+              href="https://www.linkedin.com/in/danavner/"
+              ><i data-feather="linkedin"></i
+            ></a>
+          </li>
+          <li>
+            <a
+              aria-label="Instagram"
+              title="Instagram"
+              href="https://www.instagram.com/aspacemansheavyload/"
+              ><i data-feather="instagram"></i
+            ></a>
+          </li>
+          <li>
+            <a aria-label="Email" title="Email" href="mailto:ldpavner@gmail.com"
+              ><i data-feather="send"></i
+            ></a>
+          </li>
         </ul>
         <ul></ul>
       </nav>
@@ -27,52 +50,161 @@
 
     <main class="container">
       <section class="hero">
-        <img
-          id="hero-photo"
-          src="img/me1.jpg"
-          alt="Dan Avner"
-          class="hero-photo"
-        />
-
+        <img id="hero-photo" src="img/me1.jpg" alt="Dan Avner" class="hero-photo" />
         <h1>Hi, I'm Dan Avner.</h1>
         <p>
-          I build production-quality software for telescopes and astronomers.
+          I build production-quality software for telescopes, observatories, and
+          astronomers.
         </p>
-        <a href="mailto:ldpavner@gmail.com" role="button">
-          <i data-feather="send"></i> Get in touch
-        </a>
+      </section>
+      <section class="text-center">
+        <p>
+          <a href="mailto:ldpavner@gmail.com" role="button">
+            <i data-feather="send"></i> Get in touch
+          </a>
+        </p>
       </section>
 
-      <section class="mt-3">
-        <p>
-          <i data-feather="tool"></i>
-          More coming soon.
-        </p>
+      <section>
+        <p class="section-title">Currently Building</p>
+        <progress value="100" max="100"></progress>
+        <article>
+          <header>
+            <hgroup class="mb-0">
+              <h3>GPP Resource</h3>
+              <p><small>NOIRLab</small></p>
+            </hgroup>
+          </header>
+          <h6>Lead Software Engineer</h6>
+          <p>
+            A next-generation observatory operations platform for the Gemini Observatory
+            that unifies telescope scheduling, instrument configuration, and operational
+            resources into a single API and web application used by scheduling systems,
+            proposal tools, and observatory staff.
+          </p>
+          <footer>
+            <span class="pill">Scala</span>
+            <span class="pill">API Design</span>
+            <span class="pill">TypeScript</span>
+            <span class="pill">Web Application</span>
+          </footer>
+        </article>
 
-        <p>
-          This space is under construction:
-          projects, writing, and other things I probably will overthink.
-        </p>
+        <article>
+          <header>
+            <hgroup class="mb-0">
+              <h3><code>gpp-client</code></h3>
+              <p><small>NOIRLab</small></p>
+            </hgroup>
+          </header>
+          <h6>Lead Software Engineer</h6>
+          <p>
+            The official Python client for
+            <abbr title="Gemini Program Platform">GPP</abbr>, providing a high-level
+            interface for interacting with Gemini's GraphQL APIs and enabling
+            applications, services, and automation tools to manage programs,
+            observations, and related resources.
+          </p>
+          <footer>
+            <span class="pill">Python</span>
+            <span class="pill">GraphQL</span>
+            <span class="pill">SDK Design</span>
+            <span class="pill">API Clients</span>
+          </footer>
+        </article>
+
+        <article>
+          <header>
+            <hgroup class="mb-0">
+              <h3>GOATS</h3>
+              <p><small>NOIRLab</small></p>
+            </hgroup>
+          </header>
+          <h6>Lead Software Engineer</h6>
+          <p>
+            The Gemini Observation and Analysis of Targets System is a time-domain
+            astronomy platform for the Gemini Observatory that enables astronomers to
+            manage targets, coordinate follow-up observations, and process observational
+            data through an integrated web application.
+          </p>
+          <footer>
+            <span class="pill">Python</span>
+            <span class="pill">JavaScript</span>
+            <span class="pill">Django</span>
+            <span class="pill">TOM Toolkit</span>
+            <span class="pill">Web Application</span>
+          </footer>
+        </article>
+      </section>
+
+      <section>
+        <p class="section-title">Previously</p>
+        <progress value="100" max="100"></progress>
+        <article>
+          <header>
+            <hgroup class="mb-0">
+              <h3>SPHEREx</h3>
+              <p><small>Caltech/ IPAC</small></p>
+            </hgroup>
+          </header>
+
+          <h6>Applications Developer</h6>
+          <p>
+            Developed components of the SPHEREx mission data reduction pipeline used to
+            process and calibrate infrared survey data.
+          </p>
+          <footer>
+            <span class="pill">Python</span>
+            <span class="pill">Data Pipelines</span>
+            <span class="pill">Astronomy Data Processing</span>
+          </footer>
+        </article>
+
+        <article>
+          <header>
+            <hgroup class="mb-0">
+              <h3>Steward Observatory</h3>
+              <p><small>University of Arizona</small></p>
+            </hgroup>
+          </header>
+          <h6>Research and Development Software Engineer III</h6>
+          <p>
+            Upgraded telescope control software, developed operational user interfaces,
+            and supported nighttime observatory operations.
+          </p>
+          <footer>
+            <span class="pill">Python</span>
+            <span class="pill">Telescope Control Systems</span>
+            <span class="pill">UI Development</span>
+            <span class="pill">Observatory Operations</span>
+          </footer>
+        </article>
+
+        <article>
+          <header>
+            <hgroup class="mb-0">
+              <h3>Steward Observatory</h3>
+              <p><small>University of Arizona</small></p>
+            </hgroup>
+          </header>
+          <h6>Instrument Specialist</h6>
+          <p>
+            Supported instrument changes, mirror recoating operations, telescope
+            preparation, and nighttime operations.
+          </p>
+          <footer>
+            <span class="pill">Instrumentation</span>
+            <span class="pill">Telescope Operations</span>
+          </footer>
+        </article>
       </section>
     </main>
+    <footer class="text-center container-fluid">
+      <small class="mb-0">🖤</small>
+    </footer>
 
     <script>
       feather.replace({ width: "1em", height: "1em" });
-      const images = ["img/me1.jpg", "img/me2.jpg"];
-      let index = 0;
-
-      const photo = document.getElementById("hero-photo");
-
-      setInterval(() => {
-        index = (index + 1) % images.length;
-        photo.style.opacity = "0";
-
-        setTimeout(() => {
-          photo.src = images[index];
-          photo.style.opacity = "1";
-        }, 100);
-      }, 700);
     </script>
   </body>
 </html>
-

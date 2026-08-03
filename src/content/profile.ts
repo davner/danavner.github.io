@@ -79,7 +79,7 @@ export const profile = {
   /** The career voice, used on the Career page and in its meta description. */
   tagline: "I write production software for telescopes and the people who have to use it at 3 a.m.",
   intro:
-    "I have spent about a decade writing the software that sits between a telescope and the astronomer using it. Some of that is the services that run an observation. A lot of it is the interface someone is staring at when the weather turns at 2 a.m. Right now I lead the software architecture for Gemini Observatory at NOIRLab.",
+    "I have spent about a decade writing the software that sits between a telescope and the astronomer using it. Some of that is the services that run an observation. A lot of it is the interface someone is staring at when the weather turns at 2 a.m. Right now I lead the architecture for GPP Resource, a Gemini Program Platform project at NOIRLab.",
 } as const;
 
 export const socials: SocialLink[] = [

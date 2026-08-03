@@ -1,6 +1,7 @@
 import { ArrowUpRight } from "lucide-react";
 
 import { EmailReveal } from "@/components/email-reveal";
+import { FramedPhoto } from "@/components/framed-photo";
 import { PageHeader, PageShell, Section } from "@/components/page";
 import { Badge } from "@/components/ui/badge";
 import { education, observing, profile, roles, skills, socials } from "@/content/profile";
@@ -33,13 +34,23 @@ export function Career() {
             href="https://github.com/davner"
             target="_blank"
             rel="noreferrer noopener"
-            className="inline-flex items-center gap-2 border border-border px-5 py-3 transition-colors hover:border-ember hover:text-ember"
+            className="inline-flex items-center gap-2 border border-border px-5 py-3 transition-colors hover:border-ember hover:bg-ember/10 hover:text-ember"
           >
             <span className="readout">GitHub</span>
             <ArrowUpRight className="size-4" />
           </a>
         </div>
       </PageHeader>
+
+      <FramedPhoto
+        src="/img/career/goats-spie.jpg"
+        alt="Dan at a podium presenting a GOATS project slide to a seated conference audience, a NOIRLab logo on the screen"
+        caption="Presenting GOATS at SPIE"
+        width={1600}
+        height={1200}
+        className="-mt-8 mb-4"
+        imageClassName="aspect-video object-cover object-[center_38%]"
+      />
 
       <Section title="Experience" index="01">
         <ol>
@@ -146,7 +157,7 @@ export function Career() {
           href={scholar.href}
           target="_blank"
           rel="noreferrer noopener"
-          className="group mt-px flex items-center gap-4 border border-t-0 border-border p-6 transition-colors hover:border-ember sm:p-8"
+          className="group mt-px flex items-center gap-4 border border-t-0 border-border p-6 transition-colors hover:border-ember hover:bg-ember/10 hover:text-ember sm:p-8"
         >
           <span className="flex-1">
             <span className="readout block text-ember">Publications</span>

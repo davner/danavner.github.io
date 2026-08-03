@@ -2,89 +2,52 @@
 title: How this site is built
 date: 2026-08-02
 category: work
-summary: React, Vite, Tailwind, and shadcn/ui on GitHub Pages - plus a markdown pipeline that turns a file in a folder into a published post.
+summary: React, Vite, and Tailwind on GitHub Pages, built to look like a gig flyer and made cheap to add to.
 tags: [react, vite, tailwind, github-pages]
 ---
 
-I rebuilt this site so that adding to it is cheap. The old version was hand-written HTML with a
-Sass build on top, which was fine until I wanted a second page. Here is what replaced it, and how
-the blog you are reading actually works.
+I rebuilt this site with two goals: make it look like something I would actually pin to a wall, and
+make adding to it cheap. The old version was hand-written HTML with a Sass build, which was fine
+until I wanted a second page.
+
+## What inspired the look
+
+Two things I care about share a visual language: the tour poster and the star chart. Both are stark,
+mostly black, and set huge type next to small, precise data. So the site is void black with a bone
+typeface, one ember accent for heat and a cyan for the readouts. Light mode is the same poster
+printed on newsprint instead of pinned to a wall. If a panel reads like a gig flyer or the margin of
+a sky atlas, it is doing its job.
 
 ## The stack
 
 | Layer | Choice | Why |
 | --- | --- | --- |
-| Build | Vite | Fast dev server, sane defaults, no config sprawl |
-| UI | React + TypeScript | Familiar, and the type errors catch my content mistakes |
-| Styling | Tailwind CSS v4 | CSS-first config, no `tailwind.config.js` to maintain |
-| Components | shadcn/ui | Components live in my repo, so I can edit them |
-| Routing | React Router | Client-side routes with a 404 fallback for Pages |
+| Build | Vite | Fast dev server, no config sprawl |
+| UI | React + TypeScript | Familiar, and the types catch my content mistakes |
+| Styling | Tailwind CSS v4 | CSS-first config, nothing to maintain |
+| Components | shadcn/ui | The source lives in my repo, so I can rewrite it |
 | Hosting | GitHub Pages | Free, already where the repo lives |
 
-The thing I like most about shadcn/ui is that it is not a dependency. The CLI copies component
-source into `src/components/ui/`, and from that point on it is my code - including the right to
-delete it. This design wanted hard-edged panels and hairline rules, not cards with soft shadows, so
-most of what I pulled in got thrown away and the rest got rewritten. No theme API to argue with.
-
-The type is self-hosted for the same reason: three woff2 files in the bundle, no request to
-fonts.gstatic.com, nothing to break when someone else's CDN has a bad afternoon.
+The best thing about shadcn/ui is that it is not a dependency. The CLI copies component source into my
+repo, and from there it is mine to edit or delete. This design wanted hard edges and hairline rules,
+not soft cards, so most of what I pulled in got rewritten.
 
 ## Posts are just files
 
-There is no CMS and no database. A post is a markdown file in `src/content/blog/`. Each one starts
-with a YAML frontmatter block that supplies the metadata:
+There is no CMS and no database. A post is a markdown file in `src/content/blog/` with a YAML
+frontmatter block for the metadata. A small Vite plugin reads the folder at build time, validates
+each file, and hands the app a finished list.
 
-```md
----
-title: How this site is built
-date: 2026-08-02
-category: work
-summary: One or two sentences for the card and the meta description.
-tags: [react, vite]
----
-
-The body starts here.
-```
-
-My first attempt loaded those files in the browser with `import.meta.glob` and parsed the
-frontmatter at runtime. It worked, and it was quietly wrong in two ways: a typo in a `date` field
-produced a blank page for visitors instead of a failed build, and posts marked `draft: true` were
-filtered out of the UI but still sitting in the JavaScript bundle for anyone who looked.
-
-So the parsing moved into a small Vite plugin that runs in Node and exposes the result as a virtual
-module:
-
-```ts
-export function blogPlugin(): Plugin {
-  return {
-    name: "blog",
-    resolveId: (id) => (id === "virtual:blog" ? "\0virtual:blog" : null),
-    load(id) {
-      if (id !== "\0virtual:blog") return null;
-      return `export const posts = ${JSON.stringify(loadPosts())};`;
-    },
-  };
-}
-```
-
-`loadPosts()` reads the directory, validates every file, computes a reading time from the word
-count, and sorts newest-first. Moving it across that boundary changed a few things.
-
-A missing `title`, a malformed `date`, or a `category` that is not `work` or `personal` now stops CI
-with the offending filename, which I would rather hear from the build than from the live site.
-Drafts stopped shipping: `draft: true` keeps a post visible under `npm run dev` and out of the
-production bundle, instead of shipping it and hiding it. And `js-yaml` runs at build time now, which
-took about 45 kB off what every visitor downloads.
-
-The filename becomes the slug, which means renaming a file changes its URL. Worth remembering
-before anything gets linked.
+Doing it at build time rather than in the browser buys three things: a bad `date` or `category` fails
+the build with the filename instead of blanking a page for visitors, `draft: true` posts stay out of
+the shipped bundle instead of merely hidden, and the YAML parser never reaches anyone's browser. The
+filename becomes the slug, so renaming a file changes its URL.
 
 ## Deep links on GitHub Pages
 
-GitHub Pages serves static files and has no rewrite rules, so a hard refresh on `/blog/welcome`
-would normally 404 - there is no such file on disk. The standard workaround is to give Pages a
-`404.html` that is a byte-for-byte copy of `index.html`; the app boots, React Router reads the URL,
-and the right page renders. A small Vite plugin does the copy after every build:
+Pages serves static files with no rewrite rules, so a hard refresh on `/blog/welcome` would normally
+404. The standard trick is a `404.html` that is a byte-for-byte copy of `index.html`: the app boots,
+the router reads the URL, and the right page renders.
 
 ```ts
 function githubPagesSpaFallback(): Plugin {
@@ -99,15 +62,4 @@ function githubPagesSpaFallback(): Plugin {
 }
 ```
 
-> It is a hack. It is also six lines, has no runtime cost, and means I never think about it again.
-
-## What I gave up
-
-There is no server rendering, so a crawler or a link preview sees the shell before the app hydrates.
-That was fine until I started sharing individual shows, at which point every one of them previewed
-in iMessage as the same generic site card.
-
-The fix turned out to be smaller than I expected. Another build plugin walks the shows and writes a
-real HTML file for each, with its own title, description, and image, and the app boots from that
-file the same way it boots from `index.html`. The blog posts have not had the same treatment yet.
-They will when it starts bothering me.
+It is a hack. It is also six lines, has no runtime cost, and means I never think about it again.

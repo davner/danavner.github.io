@@ -20,6 +20,7 @@ export function PageHeader({
   lede,
   meta,
   children,
+  aside,
 }: {
   eyebrow: string;
   title: ReactNode;
@@ -27,7 +28,26 @@ export function PageHeader({
   /** Small mono readouts shown along the top rule. */
   meta?: string[];
   children?: ReactNode;
+  /**
+   * Optional media shown beside the title on large screens and stacked below it
+   * on small ones, the way the home hero pairs its photo with the wordmark.
+   */
+  aside?: ReactNode;
 }) {
+  const intro = (
+    <>
+      <h1 className="display mt-6 text-[clamp(3.25rem,13vw,9rem)]">{title}</h1>
+
+      {lede ? (
+        <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground text-pretty">
+          {lede}
+        </p>
+      ) : null}
+
+      {children}
+    </>
+  );
+
   return (
     <header className="mb-16">
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-border pb-3">
@@ -43,15 +63,14 @@ export function PageHeader({
         ) : null}
       </div>
 
-      <h1 className="display mt-6 text-[clamp(3.25rem,13vw,9rem)]">{title}</h1>
-
-      {lede ? (
-        <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground text-pretty">
-          {lede}
-        </p>
-      ) : null}
-
-      {children}
+      {aside ? (
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-end lg:gap-12">
+          <div>{intro}</div>
+          <div className="lg:pb-1">{aside}</div>
+        </div>
+      ) : (
+        intro
+      )}
     </header>
   );
 }

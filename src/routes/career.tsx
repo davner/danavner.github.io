@@ -27,6 +27,16 @@ export function Career() {
         }
         meta={[profile.role, profile.org, "2013 - present"]}
         lede={profile.intro}
+        aside={
+          <FramedPhoto
+            src="/img/career/goats-spie.jpg"
+            alt="Dan at a podium presenting a GOATS project slide to a seated conference audience, a NOIRLab logo on the screen"
+            caption="Presenting GOATS at SPIE"
+            width={1600}
+            height={1200}
+            imageClassName="aspect-4/3 object-cover"
+          />
+        }
       >
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <EmailReveal />
@@ -41,16 +51,6 @@ export function Career() {
           </a>
         </div>
       </PageHeader>
-
-      <FramedPhoto
-        src="/img/career/goats-spie.jpg"
-        alt="Dan at a podium presenting a GOATS project slide to a seated conference audience, a NOIRLab logo on the screen"
-        caption="Presenting GOATS at SPIE"
-        width={1600}
-        height={1200}
-        className="-mt-8 mb-4"
-        imageClassName="aspect-video object-cover object-[center_38%]"
-      />
 
       <Section title="Experience" index="01">
         <ol>

@@ -17,6 +17,7 @@ If you want to fork it and make it yours, see [Making it yours](#making-it-yours
 | UI | [React](https://react.dev) 19 + TypeScript | Type errors catch content mistakes before the browser does |
 | Styling | [Tailwind CSS](https://tailwindcss.com) v4 | CSS-first config — no `tailwind.config.js` to maintain |
 | Components | [shadcn/ui](https://ui.shadcn.com) | Copied into the repo, so they are mine to edit or delete |
+| Carousel | [Embla](https://embla-carousel.com) | What shadcn/ui's Carousel is built on |
 | Icons | [lucide-react](https://lucide.dev) | Consistent 24px stroke set, tree-shakeable, ISC |
 | Type | [Fontsource](https://fontsource.org) | Self-hosted Anton / Inter / JetBrains Mono |
 | Routing | [React Router](https://reactrouter.com) 8 | Client routes, with a 404 fallback for GitHub Pages |
@@ -36,9 +37,39 @@ npm run dev        # http://localhost:5173
 npm run build      # type-check, then build to dist/
 npm run preview    # serve the built site
 npm run typecheck  # types only, no build
+npm test           # Playwright, against the production build
+npm run test:ui    # the same suite, interactively
 ```
 
-Node 22+.
+Node 22+. `npm test` builds nothing itself — run `npm run build` first, or let
+CI do it.
+
+## CI
+
+| Workflow | When | What |
+| --- | --- | --- |
+| `ci.yml` | every push to `main` and every PR | type-check, build, then the full Playwright suite |
+| `deploy.yml` | push to `main` | builds and publishes to GitHub Pages |
+| `links.yml` | weekly, Mondays | external link check; opens an issue if anything is dead |
+
+The Playwright suite runs against the **production build**, on desktop and
+mobile viewports, and covers four things:
+
+- **Behaviour** — routing, titles, the writing filter and its URL state, theme
+  persistence, markdown rendering, and the derived show stats.
+- **Accessibility** — axe (WCAG 2.1 A and AA) on every route in *both* themes.
+  The palettes are independent, and contrast is the easiest thing to break.
+- **Links and assets** — every in-site link resolves to a real route rather
+  than the SPA's 404 fallback, and no image is broken.
+- **No third parties** — fails if any request leaves the origin, which is what
+  keeps the "nothing phones home" claim above honest.
+
+External links are deliberately excluded from CI. They rot for reasons no
+commit caused — a venue folds, a host starts refusing bots — and a red build
+nobody can fix is worse than no check. They get the weekly run instead.
+
+Content mistakes never reach the tests: the build validates every markdown
+file, down to checking that a photo path actually exists in `public/`.
 
 ---
 
@@ -55,14 +86,21 @@ src/
     shows/*.md            one markdown file per show
   routes/                 one file per page
   components/
-    ui/                   shadcn/ui — only Button survived the redesign
+    ui/                   shadcn/ui: Button, Badge, Carousel, Toggle, ToggleGroup
   lib/
     blog.ts               post helpers over the plugin's output
     shows.ts              sorting, year grouping, derived show stats
     theme.ts              light/dark store, synced with the pre-paint script
   index.css               design tokens, utilities, and the poster primitives
   fonts.css               self-hosted @font-face declarations
+tests/                    Playwright: behaviour, accessibility, links
+playwright.config.ts      runs the suite against the production build
 ```
+
+shadcn/ui components are vendored, not installed — the CLI copies source into
+`src/components/ui/` and it becomes yours. Anything built on top (the photo
+strip, the solo badge, the filter row) composes those primitives rather than
+reimplementing them.
 
 ### How content works
 
@@ -212,6 +250,10 @@ starfield live in `components/backdrop.tsx`. Panels are plain `gap-px` grids
 over a `bg-border` parent, which is what produces the hairline seams.
 
 **Motion** is minimal and all of it respects `prefers-reduced-motion`.
+
+**Contrast is enforced, not assumed.** Both palettes are checked by axe in CI.
+That is not decoration: it caught white-on-ember at 3.35:1, which is why button
+text on the ember accent is near-black rather than bone.
 
 ---
 

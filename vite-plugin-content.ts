@@ -103,7 +103,7 @@ function parsePost({ file, meta, body, slug }: Frontmatter) {
  *       alt: Underoath mid-set
  *       caption: Underoath
  */
-function asPhotos(value: unknown, file: string) {
+function asPhotos(value: unknown, file: string, publicDir: string) {
   if (value == null) return [];
 
   return (Array.isArray(value) ? value : [value]).map((entry, index) => {
@@ -124,11 +124,17 @@ function asPhotos(value: unknown, file: string) {
       );
     }
 
+    // A typo in a photo path would otherwise ship as a broken image; local
+    // files are cheap to confirm, remote ones are not this build's problem.
+    if (src.startsWith("/") && !existsSync(path.join(publicDir, src))) {
+      fail("shows", file, `\`photos[${index}].src\` does not exist: public${src}`);
+    }
+
     return { src, alt: asTrimmedString(raw.alt), caption: asTrimmedString(raw.caption) };
   });
 }
 
-function parseShow({ file, meta, body, slug }: Frontmatter) {
+function parseShow({ file, meta, body, slug }: Frontmatter, publicDir: string) {
   const type = asTrimmedString(meta.type) || "show";
   if (!SHOW_TYPES.includes(type)) {
     fail("shows", file, `\`type\` must be one of: ${SHOW_TYPES.join(", ")}`);
@@ -227,7 +233,7 @@ function parseShow({ file, meta, body, slug }: Frontmatter) {
     // A YouTube playlist URL is just a video URL with a `list` param, so the
     // link labels itself rather than needing a second field.
     videoIsPlaylist: /[?&]list=/.test(video),
-    photos: asPhotos(meta.photos, file),
+    photos: asPhotos(meta.photos, file, publicDir),
     standout: meta.standout === true,
     body,
   };
@@ -237,7 +243,7 @@ interface Collection {
   /** Directory under `src/content/`, and the export name on the virtual module. */
   name: string;
   exportName: string;
-  parse: (entry: Frontmatter) => { date: string; title: string; draft?: boolean };
+  parse: (entry: Frontmatter, publicDir: string) => { date: string; title: string; draft?: boolean };
 }
 
 const COLLECTIONS: Collection[] = [
@@ -257,6 +263,7 @@ const COLLECTIONS: Collection[] = [
  */
 export function contentPlugin(): Plugin {
   const dirs = new Map<string, string>();
+  let publicDir = "";
   let includeDrafts = false;
 
   function virtualId(name: string) {
@@ -279,6 +286,7 @@ export function contentPlugin(): Plugin {
       .map((file) =>
         collection.parse(
           splitFrontmatter(collection.name, file, readFileSync(path.join(dir, file), "utf8")),
+          publicDir,
         ),
       )
       .filter((entry) => includeDrafts || !entry.draft)
@@ -297,6 +305,7 @@ export function contentPlugin(): Plugin {
       for (const collection of COLLECTIONS) {
         dirs.set(collection.name, path.resolve(config.root, "src/content", collection.name));
       }
+      publicDir = config.publicDir;
       includeDrafts = config.command === "serve";
     },
 

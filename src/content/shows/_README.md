@@ -119,3 +119,34 @@ Notes:
   heading, `2026-06` renders as "Jun", a full date renders as "Jun 20".
 - Bad frontmatter fails the build with the filename, rather than shipping a broken row.
 - Files starting with `_` (like this one) are ignored.
+
+## Photos
+
+Run them through the optimizer first. It resizes to a 1600px long edge,
+re-encodes, bakes in the EXIF rotation, and strips the metadata - phone photos
+carry GPS coordinates, and this is a list of places you were at a known time:
+
+```bash
+node scripts/optimize-photos.mjs <show-slug> ~/Pictures/that-night
+```
+
+Output lands in `public/img/shows/<show-slug>/`. Reference the paths in
+`photos:` and give each one an `alt` and a `caption`.
+
+## Slug and sharing
+
+The filename is the slug and the URL: `/shows/<slug>`. Use
+`<headliner-or-festival>-<city>-<year>`, with `-day-1` / `-day-2` for a
+multi-day festival logged as separate nights.
+
+Each entry gets its own page, a **Share** button that renders a poster of the
+night, and its own link preview - the build writes a real
+`dist/shows/<slug>/index.html` per show with its own title, description, and
+image. Renaming a file changes its URL, so anything already shared stops
+resolving.
+
+## The `add-show` skill
+
+`.claude/skills/add-show/` runs this whole routine: research the tour name,
+venue, and openers, optimize the photos, write their alt text and captions, and
+produce the file.

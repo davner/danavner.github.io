@@ -20,5 +20,11 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["vite.config.ts", "vite-plugin-content.ts"]
+  "include": [
+    "vite.config.ts",
+    "vite-plugin-content.ts",
+    "vite-plugin-share-pages.ts",
+    "src/lib/show-summary.ts",
+    "src/lib/site.ts"
+  ]
 }

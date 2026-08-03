@@ -7,4 +7,5 @@ export const ROUTES = [
   "/shows",
   "/blog/welcome",
   "/blog/building-this-site",
+  "/shows/bruno-mars-madrid-2026",
 ] as const;

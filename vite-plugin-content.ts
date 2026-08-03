@@ -254,6 +254,39 @@ const COLLECTIONS: Collection[] = [
   { name: "shows", exportName: "shows", parse: parseShow },
 ];
 
+function readCollection(collection: Collection, dir: string, publicDir: string) {
+  // A leading underscore marks a file as notes-to-self rather than an entry,
+  // which is how each collection keeps its own README next to its content.
+  const files = existsSync(dir)
+    ? readdirSync(dir).filter((file) => file.endsWith(".md") && !file.startsWith("_"))
+    : [];
+
+  return (
+    files
+      .map((file) =>
+        collection.parse(
+          splitFrontmatter(collection.name, file, readFileSync(path.join(dir, file), "utf8")),
+          publicDir,
+        ),
+      )
+      // Newest first; a partial date sorts below a full one in the same year,
+      // which is the right place for "sometime in 2026".
+      .sort((a, b) => b.date.localeCompare(a.date) || a.title.localeCompare(b.title))
+  );
+}
+
+/**
+ * The published shows, parsed the same way the app sees them. Exported so the
+ * build can write a real HTML page per show without a second parser drifting
+ * out of step with this one.
+ */
+export function readShows(root: string, publicDir: string) {
+  const collection = COLLECTIONS.find((entry) => entry.name === "shows")!;
+  return readCollection(collection, path.resolve(root, "src/content/shows"), publicDir) as ReturnType<
+    typeof parseShow
+  >[];
+}
+
 /**
  * Reads and validates the markdown collections under `src/content/` at build
  * time and exposes each as a virtual module (`virtual:blog`, `virtual:shows`).
@@ -278,24 +311,9 @@ export function contentPlugin(): Plugin {
   }
 
   function load(collection: Collection): string {
-    const dir = dirs.get(collection.name)!;
-    // A leading underscore marks a file as notes-to-self rather than an entry,
-    // which is how each collection keeps its own README next to its content.
-    const files = existsSync(dir)
-      ? readdirSync(dir).filter((file) => file.endsWith(".md") && !file.startsWith("_"))
-      : [];
-
-    const entries = files
-      .map((file) =>
-        collection.parse(
-          splitFrontmatter(collection.name, file, readFileSync(path.join(dir, file), "utf8")),
-          publicDir,
-        ),
-      )
-      .filter((entry) => includeDrafts || !entry.draft)
-      // Newest first; a partial date sorts below a full one in the same year,
-      // which is the right place for "sometime in 2026".
-      .sort((a, b) => b.date.localeCompare(a.date) || a.title.localeCompare(b.title));
+    const entries = readCollection(collection, dirs.get(collection.name)!, publicDir).filter(
+      (entry) => includeDrafts || !entry.draft,
+    );
 
     return `export const ${collection.exportName} = ${JSON.stringify(entries)};`;
   }

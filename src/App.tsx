@@ -17,8 +17,11 @@ const BlogPost = lazy(() =>
   import("@/routes/blog-post").then((module) => ({ default: module.BlogPost })),
 );
 
-// Shows render markdown notes, so this route pulls in the renderer too.
+// Shows render markdown notes, so these routes pull in the renderer too.
 const Shows = lazy(() => import("@/routes/shows").then((module) => ({ default: module.Shows })));
+const ShowDetail = lazy(() =>
+  import("@/routes/show").then((module) => ({ default: module.ShowDetail })),
+);
 
 export function App() {
   return (
@@ -55,6 +58,14 @@ export function App() {
               element={
                 <Suspense fallback={<PostSkeleton />}>
                   <Shows />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/shows/:slug"
+              element={
+                <Suspense fallback={<PostSkeleton />}>
+                  <ShowDetail />
                 </Suspense>
               }
             />

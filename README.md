@@ -77,7 +77,10 @@ file, down to checking that a photo path actually exists in `public/`.
 
 ```
 public/                   served as-is (CNAME, favicon, photos)
+scripts/
+  optimize-photos.mjs     resizes show photos and strips their EXIF
 vite-plugin-content.ts    reads + validates the markdown collections at build time
+vite-plugin-share-pages.ts writes one HTML file per show so links preview properly
 vite.config.ts            aliases, Tailwind, the 404.html fallback
 src/
   content/
@@ -90,6 +93,8 @@ src/
   lib/
     blog.ts               post helpers over the plugin's output
     shows.ts              sorting, year grouping, derived show stats
+    show-summary.ts       one-line show description, shared with the Node build
+    show-card.ts          draws the shareable poster on a canvas
     theme.ts              light/dark store, synced with the pre-paint script
   index.css               design tokens, utilities, and the poster primitives
   fonts.css               self-hosted @font-face declarations
@@ -205,6 +210,19 @@ Free-form markdown about the night. Optional.
 Photos live in `public/img/shows/<slug>/` and render as a swipeable strip with
 prev/next buttons and a counter. One photo drops the controls.
 
+Run phone photos through the optimizer before committing them. It resizes to a
+1600px long edge, re-encodes, bakes in the EXIF rotation, and then strips the
+metadata - which matters, because phone photos carry GPS coordinates and a show
+log is a list of places you were at a known time:
+
+```bash
+node scripts/optimize-photos.mjs <show-slug> ~/Pictures/that-night
+```
+
+There is also an `add-show` skill in `.claude/skills/` that runs the whole
+routine: looks up the tour name, venue, and openers, optimizes the photos,
+writes their alt text and captions, and produces the markdown file.
+
 `solo: true` renders a **SOLO RUN / 1P** badge. When the only name in `with` is
 the partner named in `profile.ts`, the entry renders **MY DUO / 2P** instead.
 
@@ -221,6 +239,22 @@ Three more details worth knowing:
   stay out of the average.
 - **Partial dates are fine.** `2026` renders with no day label under the 2026
   heading, `2026-06` renders as "Jun", a full date as "Jun 20".
+
+### Sharing a show
+
+Every entry has its own page at `/shows/<slug>` and a **Share** button.
+
+The button renders a 1080×1920 poster from the entry on a canvas - photo,
+lineup, rating, venue, date, and the URL - then hands the image and the link to
+`navigator.share()`. On a phone that is one tap into an Instagram story or a
+text message. Where `navigator.share` is missing, usually a desktop browser, it
+falls back to a panel with the same image to save and the link to copy.
+
+The link itself previews properly because `vite-plugin-share-pages.ts` writes a
+real `dist/shows/<slug>/index.html` per show at build time, each with its own
+title, description, and `og:image`. Crawlers behind iMessage, Slack, and
+WhatsApp read the served HTML and never run the router, so without those files
+every shared show would preview as the same generic site card.
 
 ---
 
@@ -296,6 +330,14 @@ Things that were not obvious, in case you hit them too:
   tiny and the weight is all in the markdown pipeline. The default stays.
 - **Heavy routes are lazy.** The markdown renderer only loads on `/blog/:slug`
   and `/shows`, keeping the initial bundle near 100 kB gzipped.
+- **The footer fire is a simulation, not a sprite.** `components/pixel-fire.tsx`
+  runs the Doom fire routine on a low-resolution canvas scaled up with
+  `image-rendering: pixelated`. It pauses via `IntersectionObserver` when it is
+  below the fold, which is most of the time, and settles into a single still
+  frame under `prefers-reduced-motion`.
+- **`lib/show-summary.ts` imports nothing.** It is called from the browser by
+  the share button and from Node by the build that writes the per-show HTML, so
+  a single `@/` alias or `virtual:` import in it would break the Node side.
 
 ---
 

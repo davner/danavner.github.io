@@ -1,6 +1,7 @@
-import { Flame, Music, Users, Youtube } from "lucide-react";
+import { ArrowUpRight, Flame, Music, Users, Youtube } from "lucide-react";
 import type { ReactNode } from "react";
 import Markdown from "react-markdown";
+import { Link } from "react-router";
 import remarkGfm from "remark-gfm";
 
 import { BandList } from "@/components/band-list";
@@ -9,6 +10,7 @@ import { PageHeader, PageShell, Section } from "@/components/page";
 import { DuoBadge } from "@/components/duo-badge";
 import { PhotoCarousel } from "@/components/photo-carousel";
 import { Rating } from "@/components/rating";
+import { ShareShow } from "@/components/share-show";
 import { SoloBadge } from "@/components/solo-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,8 +40,14 @@ function ShowRow({ show }: { show: Show }) {
       {date ? <p className="readout-dim tabular-nums">{date}</p> : <span />}
 
       <div>
-        <h3 className="display flex items-center gap-3 text-2xl transition-colors group-hover:text-ember sm:text-3xl">
-          {show.title}
+        <h3 className="display flex items-center gap-3 text-2xl sm:text-3xl">
+          <Link
+            to={`/shows/${show.slug}`}
+            className="inline-flex items-center gap-2 transition-colors group-hover:text-ember"
+          >
+            {show.title}
+            <ArrowUpRight className="size-4 shrink-0 opacity-0 transition-opacity group-hover:opacity-70" />
+          </Link>
           {show.standout ? (
             <Flame className="size-4 shrink-0 text-ember" aria-label="Standout" />
           ) : null}
@@ -89,8 +97,8 @@ function ShowRow({ show }: { show: Show }) {
           </p>
         ) : null}
 
-        {show.video ? (
-          <p className="mt-3">
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          {show.video ? (
             <Button
               asChild
               variant="outline"
@@ -102,8 +110,9 @@ function ShowRow({ show }: { show: Show }) {
                 {show.videoIsPlaylist ? "Playlist" : "Watch"}
               </a>
             </Button>
-          </p>
-        ) : null}
+          ) : null}
+          <ShareShow show={show} />
+        </div>
 
         {show.body ? (
           <div className="prose-dan mt-4 max-w-prose border-l-2 border-border pl-4 text-sm leading-relaxed">

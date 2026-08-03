@@ -231,6 +231,9 @@ test.describe("shows", () => {
 test.describe("chrome", () => {
   test("the skip link is the first stop for a keyboard", async ({ page }) => {
     await page.goto("/");
+    // Tabbing before React has hydrated moves focus in the pre-render, where
+    // the skip link is not there to receive it.
+    await page.getByRole("heading", { level: 1 }).waitFor();
     await page.keyboard.press("Tab");
     await expect(page.locator(":focus")).toContainText("Skip to content");
   });

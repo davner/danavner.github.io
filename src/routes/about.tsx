@@ -59,7 +59,7 @@ const LG_SPAN: Record<number, string> = { 1: "", 2: "lg:col-span-2", 3: "lg:col-
 export function About() {
   useDocumentMeta(
     "About",
-    "Software engineer by trade, Florida man at heart. Alexis, Milly and Penny, concerts, records, comics, Legos, and one very specific bowling achievement.",
+    "The non-work half. Alexis, Milly and Penny, shows, records, comics, Legos, and one very specific bowling achievement.",
   );
 
   return (
@@ -73,35 +73,33 @@ export function About() {
           </>
         }
         meta={[profile.location, "He/him", "Loud"]}
-        lede="I'm Dan. Software engineer by trade, Florida man at heart."
+        lede="I'm Dan. Grew up in Florida, live in Los Angeles now, usually somewhere loud."
       />
 
       <Section>
         <div className="grid gap-10 md:grid-cols-[minmax(0,1fr)_19rem] md:gap-14">
           <div className="space-y-6 text-lg leading-relaxed text-muted-foreground text-pretty">
             <p>
-              I grew up in Florida, spent a few formative years in Arizona, and somehow ended up in
-              Los Angeles County with my wife,{" "}
-              <span className="text-foreground">{profile.partnerFirstName}</span>. She's my
-              favorite person, my best friend, and the perfect sweat to my sweat, whether we're
-              dropping into Fortnite or hunting down a new coffee shop.
+              Florida first, then a few years in Arizona, and now Los Angeles County with my wife{" "}
+              <span className="text-foreground">{profile.partnerFirstName}</span>. She's the best
+              person I know. We're the perfect sweat to each other's sweat, which in practice means
+              Fortnite lobbies and an ongoing search for a coffee shop we both like.
             </p>
             <p>
-              Our house is ruled by two tiny supervisors: Milly, our pup, and Penny, our cat.
-              They'll both be making appearances here, because frankly they're more photogenic
-              than I am.
+              Milly is our dog, Penny is our cat, and neither of them thinks I'm in charge. They
+              both turn up further down this page.
             </p>
             <p>
-              Outside of work you'll usually find me at a concert, digging through record bins,
-              building Lego sets with my nephew Nathan, pointing a camera at the night sky, or
-              wandering into a comic shop on Wednesday because that's when the new pulls hit.
+              Most of what I do happens out of the house: shows, record shops, the comic store on
+              Wednesday when the new pulls land. Some of it doesn't. Legos with my nephew Nathan,
+              or a camera pointed at the sky from the backyard.
             </p>
             <p>
-              I do genuinely love what I do for work, but that's what the{" "}
+              I like my job a lot, but it has{" "}
               <Link to="/career" className="text-ember underline underline-offset-4">
-                Career page
-              </Link>{" "}
-              is for. This page is about everything else.
+                its own page
+              </Link>
+              . This one is for everything else.
             </p>
           </div>
 

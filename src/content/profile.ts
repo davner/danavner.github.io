@@ -75,7 +75,7 @@ export const profile = {
   partnerFirstName: "Alexis",
   /** The homepage voice: a person who happens to have a career. */
   blurb:
-    "Software engineer by trade, Florida man at heart. I write software for telescopes, point a much smaller one at the same sky, and spend the rest of the week at shows, in record bins, or under a barbell.",
+    "I write software for telescopes for a living, then go home and point a much smaller one at the same sky. Most other nights I am at a show.",
   /** The career voice, used on the Career page and in its meta description. */
   tagline: "I write production software for telescopes and the people who have to use it at 3 a.m.",
   intro:
@@ -195,19 +195,19 @@ export const interests: Interest[] = [
   {
     name: "Live music",
     icon: "music",
-    note: "I hardly went to shows growing up - too nervous, too timid, always finding a reason not to. That changed in LA, where there is something worth seeing most nights of the week, and now I go to as many as I can. Mostly metalcore, occasionally something completely different. Every one gets logged and rated.",
+    note: "I barely went to shows growing up. I was too nervous, and there was always a reason not to go. Then I moved to LA, where there is something worth seeing most nights, and I ran out of reasons. Mostly metalcore, occasionally something completely different. Every one gets logged and rated.",
     to: "/shows",
     feature: true,
   },
   {
     name: "Astrophotography",
     icon: "telescope",
-    note: "Mostly just me, a Sony camera, a tripod, and stealing as many photons as I can before sunrise.",
+    note: "Just me and a Sony camera on a tripod, stealing as many photons as I can before the sun comes up.",
   },
   {
     name: "Video games",
     icon: "gamepad-2",
-    note: "Mass Effect is still my favorite game ever made. Lately you will find me on PlayStation, pretending I will finally clear my backlog.",
+    note: "Mass Effect is the best game ever made and I will not be taking questions. These days I am mostly on PlayStation, pretending the backlog is getting shorter.",
     handle: {
       label: "PlayStation",
       value: "treslechesplzz",
@@ -217,7 +217,7 @@ export const interests: Interest[] = [
   {
     name: "Fortnite",
     icon: "swords",
-    note: "I have a great squad and an even better duo. Alexis is the perfect sweat to my sweat, and we are always looking for more people to drop in with.",
+    note: "The squad is good and the duo is better, because the duo is Alexis. There is always room for one more.",
     handle: {
       label: "Epic",
       value: "danwiththeyams",
@@ -227,23 +227,23 @@ export const interests: Interest[] = [
   {
     name: "Vinyl",
     icon: "disc",
-    note: "Always digging for something new. My favorite record is the Record Store Day 2026 pressing of All We Know Is Falling with the Summer Tic EP - huge thanks to babe for tracking one down after what felt like a nationwide scavenger hunt.",
+    note: "My favorite record is the Record Store Day 2026 pressing of All We Know Is Falling with the Summer Tic EP. Babe tracked one down after what turned into a nationwide scavenger hunt. Still digging for the next one.",
     handle: { label: "Discogs", value: "dnafam", href: "https://www.discogs.com/user/dnafam" },
   },
   {
     name: "Comic books",
     icon: "book-open",
-    note: "Wednesday means new comic day. You will usually find me at the shop with my comic book cuties, Mikey and Kiwi, arguing about what to pull next.",
+    note: "New comic day is Wednesday. I am usually at the shop with Mikey and Kiwi, my comic book cuties, arguing about what to pull next.",
   },
   {
     name: "Weightlifting",
     icon: "dumbbell",
-    note: "The most honest hour of my week. Nothing to debug, nobody to convince, and the bar does not care how the sprint went.",
+    note: "The most honest hour of my week. The bar does not care how work went, and there is nothing about it to debug.",
   },
   {
     name: "Legos",
     icon: "blocks",
-    note: "I still love building sets, especially with my nephew Nathan. Turns out they are just as fun as they were twenty years ago.",
+    note: "Still building sets, mostly with my nephew Nathan. Twenty years on I have not gotten bored of them and I do not expect to.",
   },
 ];
 

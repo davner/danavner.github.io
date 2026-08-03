@@ -14,6 +14,13 @@ export interface Photo {
   caption: string;
 }
 
+export interface Setlist {
+  /** The band the setlist belongs to. Always one that played this night. */
+  band: string;
+  /** Full URL to that band's setlist.fm page for this show. */
+  url: string;
+}
+
 export interface Show {
   slug: string;
   /** Display heading: the festival's name, or whoever topped the bill. */
@@ -45,6 +52,8 @@ export interface Show {
   video: string;
   /** True when `video` points at a YouTube playlist rather than one video. */
   videoIsPlaylist: boolean;
+  /** Per-band setlist.fm links, in bill order. Empty when none were found. */
+  setlists: Setlist[];
   photos: Photo[];
   standout: boolean;
   /** Markdown notes about the night. */

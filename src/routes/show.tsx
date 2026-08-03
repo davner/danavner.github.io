@@ -1,4 +1,4 @@
-import { ArrowLeft, Flame, Music, Users, Youtube } from "lucide-react";
+import { ArrowLeft, Flame, ListMusic, Music, Users, Youtube } from "lucide-react";
 import Markdown from "react-markdown";
 import { Link, Navigate, useParams } from "react-router";
 import remarkGfm from "remark-gfm";
@@ -77,6 +77,33 @@ function ShowBody({ show }: { show: (typeof shows)[number] }) {
             </Button>
           ) : null}
         </div>
+
+        {show.setlists.length > 0 ? (
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span className="readout-dim self-center text-xs" aria-hidden>
+              Setlists
+            </span>
+            {show.setlists.map((set) => (
+              <Button
+                key={set.band}
+                asChild
+                variant="outline"
+                size="sm"
+                className="readout h-7 rounded-none px-2.5 text-xs text-muted-foreground hover:border-ember hover:text-ember"
+              >
+                <a
+                  href={set.url}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  aria-label={`${set.band} setlist on setlist.fm`}
+                >
+                  <ListMusic />
+                  {set.band}
+                </a>
+              </Button>
+            ))}
+          </div>
+        ) : null}
       </PageHeader>
 
       {support.length > 0 ? (

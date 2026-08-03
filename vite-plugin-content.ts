@@ -144,6 +144,56 @@ function asPhotos(value: unknown, file: string, publicDir: string) {
   });
 }
 
+/**
+ * Per-band setlist.fm links, written as objects that name the band and its URL:
+ *
+ *   setlists:
+ *     - band: Bilmuri
+ *       url: https://www.setlist.fm/setlist/bilmuri/2026/...
+ *     - band: GANG!
+ *       url: https://www.setlist.fm/setlist/gang/2026/...
+ *
+ * Every `band` must be on the bill, so a button never labels a band the entry
+ * does not claim to have seen. Returned in `lineup` order regardless of how the
+ * file lists them, so the buttons read top-billing-first like everything else.
+ */
+function asSetlists(value: unknown, file: string, lineup: string[]) {
+  if (value == null) return [];
+
+  const entries = (Array.isArray(value) ? value : [value]).map((entry, index) => {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+      fail("shows", file, `\`setlists[${index}]\` must be a mapping with \`band\` and \`url\``);
+    }
+    const raw = entry as Record<string, unknown>;
+
+    const band = asTrimmedString(raw.band);
+    if (!band) fail("shows", file, `\`setlists[${index}]\` needs a \`band\``);
+    if (!lineup.includes(band)) {
+      fail(
+        "shows",
+        file,
+        `\`setlists[${index}].band\` "${band}" is not in the lineup - a setlist button can only point at a band that played`,
+      );
+    }
+
+    const url = asTrimmedString(raw.url);
+    if (!/^https?:\/\//.test(url)) {
+      fail("shows", file, `\`setlists[${index}].url\` must be a full http(s) URL`);
+    }
+
+    return { band, url };
+  });
+
+  const duplicates = entries.filter(
+    (entry, index) => entries.findIndex((other) => other.band === entry.band) !== index,
+  );
+  if (duplicates.length > 0) {
+    fail("shows", file, `\`setlists\` names the same band twice: ${duplicates.map((d) => d.band).join(", ")}`);
+  }
+
+  return entries.sort((a, b) => lineup.indexOf(a.band) - lineup.indexOf(b.band));
+}
+
 function parseShow({ file, meta, body, slug }: Frontmatter, publicDir: string) {
   const type = asTrimmedString(meta.type) || "show";
   if (!SHOW_TYPES.includes(type)) {
@@ -246,6 +296,7 @@ function parseShow({ file, meta, body, slug }: Frontmatter, publicDir: string) {
     // A YouTube playlist URL is just a video URL with a `list` param, so the
     // link labels itself rather than needing a second field.
     videoIsPlaylist: /[?&]list=/.test(video),
+    setlists: asSetlists(meta.setlists, file, lineup),
     photos: asPhotos(meta.photos, file, publicDir),
     standout: meta.standout === true,
     body,

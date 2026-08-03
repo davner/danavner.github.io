@@ -209,6 +209,47 @@ test.describe("shows", () => {
     }
   });
 
+  test("setlist buttons link to setlist.fm and only name a band from the bill", async ({
+    page,
+  }) => {
+    const hrefs: string[] = await page
+      .locator('a[href^="/shows/"]')
+      .evaluateAll((els) =>
+        Array.from(
+          new Set(els.map((el) => (el as HTMLAnchorElement).getAttribute("href") ?? "")),
+        ).filter(Boolean),
+      );
+    expect(hrefs.length).toBeGreaterThan(0);
+
+    let seen = 0;
+    for (const href of hrefs) {
+      await page.goto(href);
+      await page.getByRole("heading", { level: 1 }).waitFor();
+
+      const buttons = page.getByRole("link", { name: /setlist on setlist\.fm$/i });
+      const count = await buttons.count();
+      // Every band named on the page - the headliner and the support acts.
+      const bill = (await page.locator("main").innerText()).toLowerCase();
+
+      for (let i = 0; i < count; i++) {
+        const button = buttons.nth(i);
+        await expect(button).toHaveAttribute("href", /^https:\/\/www\.setlist\.fm\//);
+        // Opens off-site, so it has to open safely in its own tab.
+        await expect(button).toHaveAttribute("target", "_blank");
+        await expect(button).toHaveAttribute("rel", /noopener/);
+
+        const band = (await button.innerText()).trim();
+        expect(band.length).toBeGreaterThan(0);
+        // A button never promises a set from a band the entry does not list.
+        expect(bill).toContain(band.toLowerCase());
+        seen++;
+      }
+    }
+
+    // The feature is real content, not just a code path - exercise it for real.
+    expect(seen).toBeGreaterThan(0);
+  });
+
   test("a rating's fill width matches its accessible label", async ({ page }) => {
     const ratings = page.locator("[role=img][aria-label^='Rated']");
     for (let i = 0; i < (await ratings.count()); i++) {

@@ -206,6 +206,7 @@ Free-form markdown about the night. Optional.
 | `with` | no | List of names. Mutually exclusive with `solo`. |
 | `solo` | no | `true` renders a **SOLO RUN · 1P** badge |
 | `video` | no | Full URL. A YouTube playlist labels itself "Playlist". |
+| `setlists` | no | `{ band, url }` pairs. Each `band` must be in `lineup`. Renders as per-band buttons. |
 | `photos` | no | Objects with `src` / `alt` / `caption`. All three required. |
 | `standout` | no | Adds a flame and pins it to the ticker |
 

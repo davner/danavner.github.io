@@ -75,6 +75,25 @@ drops the controls. No photos, no strip at all.
 Alt text falls back to a generated description, but write your own where the
 photo actually shows something.
 
+## Setlists
+
+`setlists` links each band to its setlist.fm page for the night. It is a list of
+`{ band, url }` pairs, and every `band` has to be a name from `lineup` - a
+button never points at a band the entry does not claim to have seen.
+
+```yaml
+setlists:
+  - band: Bilmuri
+    url: https://www.setlist.fm/setlist/bilmuri/2026/...
+  - band: The Home Team
+    url: https://www.setlist.fm/setlist/the-home-team/2026/...
+```
+
+They render as small per-band buttons under the heading, top-billing-first
+regardless of the order here. Leave a band out when you cannot find its setlist;
+a missing one is just no button. Festivals use the same field - fill in whichever
+bands you can confirm and skip the rest.
+
 ## A festival
 
 Festivals get a `title`, because the event is not a band. `lineup` is optional - use
@@ -109,6 +128,7 @@ lineup:
 | `solo` | no | `true` for a solo run. Mutually exclusive with `with`. |
 | `subtitle` | no | Qualifier under the heading, e.g. "Day 1" |
 | `video` | no | Full URL. A YouTube playlist labels itself "Playlist". |
+| `setlists` | no | `{ band, url }` pairs. Each `band` must be in `lineup`. Renders as per-band buttons. |
 | `photos` | no | Objects with `src` / `alt` / `caption`. All three required. |
 | `standout` | no | Adds a flame and pins it to the ticker |
 

@@ -187,7 +187,7 @@ export const interests: Interest[] = [
   {
     name: "Live music",
     icon: "music",
-    note: "I have been going to shows since I was a teenager and never really stopped. Mostly metalcore, occasionally something completely different. Every show gets logged and rated.",
+    note: "I hardly went to shows growing up - too nervous, too timid, always finding a reason not to. That changed in LA, where there is something worth seeing most nights of the week, and now I go to as many as I can. Mostly metalcore, occasionally something completely different. Every one gets logged and rated.",
     to: "/shows",
     feature: true,
   },

@@ -21,6 +21,7 @@ export function PageHeader({
   meta,
   children,
   aside,
+  asideAlign = "end",
 }: {
   eyebrow: string;
   title: ReactNode;
@@ -33,6 +34,12 @@ export function PageHeader({
    * on small ones, the way the home hero pairs its photo with the wordmark.
    */
   aside?: ReactNode;
+  /**
+   * How the aside lines up with the title column. `end` sits it at the bottom
+   * (good when the media is shorter than the text); `start` tops it out level
+   * with the title (good when the media is the taller column).
+   */
+  asideAlign?: "start" | "end";
 }) {
   const intro = (
     <>
@@ -64,9 +71,14 @@ export function PageHeader({
       </div>
 
       {aside ? (
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-end lg:gap-12">
+        <div
+          className={cn(
+            "grid gap-10 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-12",
+            asideAlign === "start" ? "lg:items-start" : "lg:items-end",
+          )}
+        >
           <div>{intro}</div>
-          <div className="lg:pb-1">{aside}</div>
+          <div className={asideAlign === "end" ? "lg:pb-1" : undefined}>{aside}</div>
         </div>
       ) : (
         intro

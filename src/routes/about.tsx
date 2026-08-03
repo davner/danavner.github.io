@@ -74,28 +74,9 @@ export function About() {
         }
         meta={[profile.location, "He/him", "Loud"]}
         lede="I'm Dan. I write telescope software for a living; this page is the rest of the day."
-      />
-
-      <Section>
-        <div className="grid gap-10 md:grid-cols-[minmax(0,1fr)_19rem] md:gap-14">
-          <div className="space-y-6 text-lg leading-relaxed text-muted-foreground text-pretty">
-            <p>
-              I live in Los Angeles County with my wife{" "}
-              <span className="text-foreground">{profile.partnerFirstName}</span>, our dog Milly,
-              and our cat Penny. She's the best person I know, and the other two love me right back.
-              They go by Stinky and the Brainless. You can guess which is which.
-            </p>
-            <p>
-              Most of my time goes to dropping into Fortnite and hanging with these three. When we
-              get out, it's travel and live music. The day job has{" "}
-              <Link to="/career" className="text-ember underline underline-offset-4">
-                its own page
-              </Link>
-              . Everything else is below.
-            </p>
-          </div>
-
-          <div className="md:sticky md:top-28 md:self-start">
+        asideAlign="start"
+        aside={
+          <div>
             {/* Full colour rather than the duotone treatment used elsewhere -
                 this is the warm one. */}
             <FramedPhoto
@@ -129,8 +110,25 @@ export function About() {
 
             <SocialLinks className="mt-4 -ml-2" />
           </div>
+        }
+      >
+        <div className="mt-10 max-w-xl space-y-6 text-lg leading-relaxed text-muted-foreground text-pretty">
+          <p>
+            I live in Los Angeles County with my wife{" "}
+            <span className="text-foreground">{profile.partnerFirstName}</span>, our dog Milly, and
+            our cat Penny. She's the best person I know, and the other two love me right back. They
+            go by Stinky and the Brainless. You can guess which is which.
+          </p>
+          <p>
+            Most of my time goes to dropping into Fortnite and hanging with these three. When we get
+            out, it's travel and live music. The day job has{" "}
+            <Link to="/career" className="text-ember underline underline-offset-4">
+              its own page
+            </Link>
+            . Everything else is below.
+          </p>
         </div>
-      </Section>
+      </PageHeader>
 
       <Section title="Outside of work" index="01">
         <ul className="grid gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">

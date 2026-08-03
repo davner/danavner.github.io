@@ -253,15 +253,6 @@
 
   /* ---- Panels -------------------------------------------------------- */
 
-  /* Hard-edged card. No soft shadows anywhere on this site. */
-  .panel {
-    @apply border border-border bg-card/60 backdrop-blur-[2px];
-  }
-
-  .panel-hover {
-    @apply transition-colors duration-150 hover:border-ember hover:bg-card;
-  }
-
   /* Corner ticks, like registration marks on a printed flyer. */
   .cut-corners {
     position: relative;

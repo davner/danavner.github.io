@@ -7,7 +7,6 @@ import remarkGfm from "remark-gfm";
 
 import { PageShell } from "@/components/page";
 import { CATEGORY_LABEL, formatDate, getPost, posts } from "@/lib/blog";
-import { highlightLanguages } from "@/lib/highlight-languages";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 import { cn } from "@/lib/utils";
 import { NotFound } from "@/routes/not-found";
@@ -78,10 +77,11 @@ export function WritingPost() {
         <div className="prose-dan">
           <Markdown
             remarkPlugins={[remarkGfm]}
-            rehypePlugins={[
-              rehypeSlug,
-              [rehypeHighlight, { languages: highlightLanguages, detect: false }],
-            ]}
+            // rehype-highlight defaults to lowlight's `common` set — about 37
+            // languages. Narrowing it was measured and made the bundle very
+            // slightly larger, so the default stays. `detect: false` keeps
+            // unlabelled blocks plain rather than guessing at them.
+            rehypePlugins={[rehypeSlug, [rehypeHighlight, { detect: false }]]}
             components={{
               a: ({ href, children, ...props }) => {
                 const external = href?.startsWith("http");

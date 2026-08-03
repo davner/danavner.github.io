@@ -44,17 +44,18 @@ Create `src/content/shows/<slug>.md`. Everything on `/shows` — the totals, the
 year groups, the most-seen act, the standouts ticker — is derived from these
 files, so adding a show is dropping in a file and nothing else.
 
+`lineup` is the whole bill, top billing first. Openers count — toward the
+display, and toward "bands seen".
+
 ```md
 ---
-title: Knocked Loose            # band, or the festival name
-type: show                      # "show" (default) or "festival"
-date: 2026-06-20                # YYYY, YYYY-MM, or YYYY-MM-DD — use what you remember
-endDate: 2026-06-21             # optional, for multi-day festivals
-venue: Hollywood Palladium      # optional — omit for festivals with no fixed venue
-city: Los Angeles, CA           # required
-lineup:                         # optional, in running order. Openers count.
-  - Show Me the Body
+lineup:                         # every band, top of the bill first
+  - Knocked Loose               # shown large
+  - Show Me the Body            # everyone below is listed as "w/ …"
   - Speed
+date: 2026-06-20                # YYYY, YYYY-MM, or YYYY-MM-DD — use what you remember
+venue: Hollywood Palladium      # optional
+city: Los Angeles, CA           # required
 video: https://youtu.be/xxxxx   # optional, full URL — renders a Watch link
 standout: true                  # optional — adds a flame and pins it to the ticker
 ---
@@ -62,9 +63,13 @@ standout: true                  # optional — adds a flame and pins it to the t
 Free-form markdown about the night. Optional.
 ```
 
-`type: festival` keeps the festival's name out of the "bands seen" count — only
-its `lineup` counts toward that. Partial dates are fine: `2026` renders with no
-day label under the 2026 heading, `2026-06` renders as "Jun".
+A one-band night can skip the list and just say `title: Turnstile`.
+
+A festival gets `type: festival` and a `title` instead, because the event is not
+a band — that keeps its name out of the "bands seen" count while its optional
+`lineup` still counts. `endDate` covers multi-day runs, and partial dates are
+fine: `2026` renders with no day label under the 2026 heading, `2026-06` renders
+as "Jun".
 
 See `src/content/shows/_README.md` for the same reference next to the files.
 

@@ -6,7 +6,7 @@ import { Section } from "@/components/page";
 import { SocialLinks } from "@/components/social-links";
 import { profile, projects } from "@/content/profile";
 import { posts } from "@/lib/blog";
-import { formatShowDate, showLocation, showStats } from "@/lib/shows";
+import { formatShowDate, showLocation, showStats, supportFor } from "@/lib/shows";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
 const INDEX = [
@@ -210,7 +210,9 @@ export function Home() {
                   {latestShow.title}
                 </p>
                 <p className="mt-4 flex-1 leading-relaxed text-muted-foreground text-pretty">
-                  {latestShow.lineup.length ? `with ${latestShow.lineup.join(", ")} — ` : null}
+                  {supportFor(latestShow).length
+                    ? `with ${supportFor(latestShow).join(", ")} — `
+                    : null}
                   {showLocation(latestShow)}
                 </p>
                 <p className="readout-dim mt-6 flex items-center gap-2">

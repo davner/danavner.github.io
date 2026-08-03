@@ -94,8 +94,42 @@ function parsePost({ file, meta, body, slug }: Frontmatter) {
 }
 
 function parseShow({ file, meta, body, slug }: Frontmatter) {
-  const title = asTrimmedString(meta.title);
-  if (!title) fail("shows", file, "frontmatter needs a `title` — the band or festival name");
+  const type = asTrimmedString(meta.type) || "show";
+  if (!SHOW_TYPES.includes(type)) {
+    fail("shows", file, `\`type\` must be one of: ${SHOW_TYPES.join(", ")}`);
+  }
+
+  const givenTitle = asTrimmedString(meta.title);
+  const givenLineup = asStringArray(meta.lineup).map((band) => band.trim()).filter(Boolean);
+
+  /*
+   * `lineup` is the whole bill, top billing first — a show is rarely one band,
+   * and the openers are half the reason to go. A one-band night can still be
+   * written as a bare `title`, which normalises to a lineup of one.
+   *
+   * A festival's `title` is the event, not a band, so it stays out of `lineup`
+   * and therefore out of every band count downstream.
+   */
+  const lineup = type === "festival" ? givenLineup : givenLineup.length ? givenLineup : [givenTitle].filter(Boolean);
+
+  if (type === "festival" && !givenTitle) {
+    fail("shows", file, "a festival needs a `title` — the name of the event");
+  }
+  if (type === "show" && lineup.length === 0) {
+    fail(
+      "shows",
+      file,
+      "a show needs a `lineup` listing who played, top billing first (or a `title` for a one-band night)",
+    );
+  }
+
+  const duplicates = lineup.filter((band, index) => lineup.indexOf(band) !== index);
+  if (duplicates.length > 0) {
+    fail("shows", file, `\`lineup\` lists the same band twice: ${duplicates.join(", ")}`);
+  }
+
+  // For a show the heading is whoever is top of the bill.
+  const title = type === "festival" ? givenTitle : lineup[0];
 
   const date = asDate(meta.date);
   if (!DATE.test(date)) {
@@ -108,11 +142,6 @@ function parseShow({ file, meta, body, slug }: Frontmatter) {
   }
   if (endDate && endDate < date) {
     fail("shows", file, "`endDate` is before `date`");
-  }
-
-  const type = asTrimmedString(meta.type) || "show";
-  if (!SHOW_TYPES.includes(type)) {
-    fail("shows", file, `\`type\` must be one of: ${SHOW_TYPES.join(", ")}`);
   }
 
   const city = asTrimmedString(meta.city);
@@ -131,7 +160,7 @@ function parseShow({ file, meta, body, slug }: Frontmatter) {
     endDate,
     venue: asTrimmedString(meta.venue),
     city,
-    lineup: asStringArray(meta.lineup),
+    lineup,
     video,
     standout: meta.standout === true,
     body,

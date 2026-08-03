@@ -9,12 +9,14 @@ import {
   showsByYear,
   showStats,
   standouts,
+  supportFor,
   type Show,
 } from "@/lib/shows";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
 function ShowRow({ show }: { show: Show }) {
   const date = formatShowDate(show);
+  const support = supportFor(show);
 
   return (
     <li className="cut-corners group grid gap-x-6 gap-y-3 border-b border-border px-3 py-7 transition-colors hover:bg-card/60 sm:grid-cols-[6rem_minmax(0,1fr)_minmax(0,15rem)]">
@@ -34,9 +36,9 @@ function ShowRow({ show }: { show: Show }) {
           <p className="readout mt-2 text-ion">Festival</p>
         ) : null}
 
-        {show.lineup.length > 0 ? (
-          <p className="mt-2 text-sm text-muted-foreground">
-            <span className="text-ember">w/</span> {show.lineup.join(" · ")}
+        {support.length > 0 ? (
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground text-pretty">
+            <span className="text-ember">w/</span> {support.join(" · ")}
           </p>
         ) : null}
 

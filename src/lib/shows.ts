@@ -4,6 +4,7 @@ export type ShowType = "show" | "festival";
 
 export interface Show {
   slug: string;
+  /** Display heading: the festival's name, or whoever topped the bill. */
   title: string;
   type: ShowType;
   /** `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`. */
@@ -12,13 +13,22 @@ export interface Show {
   endDate: string;
   venue: string;
   city: string;
-  /** Who played, in running order. Openers count. */
+  /**
+   * Every band on the bill, top billing first. Normalised by the content
+   * plugin, so for a show `lineup[0] === title` and a festival's name is never
+   * in here — a festival is not a band.
+   */
   lineup: string[];
   /** Full URL to a video of the night. */
   video: string;
   standout: boolean;
   /** Markdown notes about the night. */
   body: string;
+}
+
+/** Everyone below top billing — the openers, in running order. */
+export function supportFor(show: Show): string[] {
+  return show.type === "festival" ? show.lineup : show.lineup.slice(1);
 }
 
 /** Parsed, validated, and sorted newest-first by the content plugin. */
@@ -37,14 +47,6 @@ export const showsByYear: ShowYear[] = shows.reduce<ShowYear[]>((years, show) =>
   return years;
 }, []);
 
-/**
- * A festival's title is the event, not a band, so only its lineup counts toward
- * "bands seen". A regular show's headliner does.
- */
-function everyBand(show: Show): string[] {
-  return show.type === "festival" ? show.lineup : [show.title, ...show.lineup];
-}
-
 function mostFrequent(values: string[]): { name: string; count: number } | undefined {
   const tally = new Map<string, number>();
   for (const value of values) tally.set(value, (tally.get(value) ?? 0) + 1);
@@ -59,7 +61,8 @@ function mostFrequent(values: string[]): { name: string; count: number } | undef
   return best && best.count > 1 ? best : undefined;
 }
 
-const allBands = shows.flatMap(everyBand);
+// `lineup` already excludes festival names, so every entry here is a band.
+const allBands = shows.flatMap((show) => show.lineup);
 
 export const showStats = {
   total: shows.length,

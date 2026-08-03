@@ -3,6 +3,7 @@ import {
   Blocks,
   BookOpen,
   Disc3,
+  Dumbbell,
   Gamepad2,
   Music,
   Swords,
@@ -27,7 +28,32 @@ const INTEREST_ICONS = {
   disc: Disc3,
   "book-open": BookOpen,
   blocks: Blocks,
+  dumbbell: Dumbbell,
 } satisfies Record<Interest["icon"], typeof Music>;
+
+/**
+ * How far the last card has to stretch to finish its row.
+ *
+ * The grid paints its gaps with the border colour, so a row left half empty
+ * renders as a solid block rather than as nothing. Rather than tuning the
+ * interest count by hand every time one is added, the last card grows to close
+ * whatever gap is left.
+ */
+function trailingSpanFor(count: number) {
+  const feature = interests.filter((interest) => interest.feature).length;
+  // A feature card already occupies a whole row, so it does not count toward
+  // the tail.
+  const tail = count - feature;
+
+  const remainder = (columns: number) => (tail % columns === 0 ? 1 : columns - (tail % columns) + 1);
+
+  return { sm: remainder(2), lg: remainder(3) };
+}
+
+const trailingSpan = trailingSpanFor(interests.length);
+
+const SM_SPAN: Record<number, string> = { 1: "", 2: "sm:col-span-2" };
+const LG_SPAN: Record<number, string> = { 1: "", 2: "lg:col-span-2", 3: "lg:col-span-3" };
 
 export function About() {
   useDocumentMeta(
@@ -102,7 +128,12 @@ export function About() {
       <Section title="Outside of work" index="01">
         <ul className="grid gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
           {interests.map((interest, index) => (
-            <InterestCard key={interest.name} interest={interest} index={index} />
+            <InterestCard
+              key={interest.name}
+              interest={interest}
+              index={index}
+              fill={index === interests.length - 1 ? trailingSpan : undefined}
+            />
           ))}
         </ul>
       </Section>
@@ -121,7 +152,46 @@ export function About() {
   );
 }
 
-function InterestCard({ interest, index }: { interest: Interest; index: number }) {
+function Handle({ handle }: { handle: NonNullable<Interest["handle"]> }) {
+  const chip = (
+    <Badge
+      variant="outline"
+      // Wraps rather than nowraps: a long handle would otherwise push the card
+      // wider than a 320px viewport.
+      className="max-w-full flex-wrap gap-2 rounded-none border-border whitespace-normal transition-colors group-hover/handle:border-ember"
+    >
+      <span className="text-muted-foreground">{handle.label}</span>
+      <span className="break-all text-ember">{handle.value}</span>
+      {handle.href ? <ArrowUpRight className="text-muted-foreground" /> : null}
+    </Badge>
+  );
+
+  if (!handle.href) return <p className="mt-4">{chip}</p>;
+
+  return (
+    <p className="mt-4">
+      <a
+        href={handle.href}
+        target="_blank"
+        rel="noreferrer noopener"
+        className="group/handle relative z-10 inline-block"
+      >
+        {chip}
+      </a>
+    </p>
+  );
+}
+
+function InterestCard({
+  interest,
+  index,
+  fill,
+}: {
+  interest: Interest;
+  index: number;
+  /** Columns this card should occupy, when it is the one closing the grid. */
+  fill?: { sm: number; lg: number };
+}) {
   const Icon = INTEREST_ICONS[interest.icon];
 
   const body = (
@@ -156,14 +226,7 @@ function InterestCard({ interest, index }: { interest: Interest; index: number }
             {interest.note}
           </p>
 
-          {interest.handle ? (
-            <p className="mt-4">
-              <Badge variant="outline" className="gap-2 rounded-none border-border">
-                <span className="text-muted-foreground">{interest.handle.label}</span>
-                <span className="text-ember">{interest.handle.value}</span>
-              </Badge>
-            </p>
-          ) : null}
+          {interest.handle ? <Handle handle={interest.handle} /> : null}
         </div>
 
         {interest.feature ? (
@@ -178,9 +241,9 @@ function InterestCard({ interest, index }: { interest: Interest; index: number }
 
   const shell = cn(
     "cut-corners group bg-background p-6 transition-colors hover:bg-card/60 sm:p-8",
-    // The feature card runs the width of the grid, which also keeps the last
-    // row full rather than leaving cells of bare border colour.
+    // The feature card runs the width of the grid.
     interest.feature && "sm:col-span-2 lg:col-span-3",
+    fill && !interest.feature && [SM_SPAN[fill.sm], LG_SPAN[fill.lg]],
   );
 
   if (interest.to) {

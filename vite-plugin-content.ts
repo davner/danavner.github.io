@@ -95,13 +95,14 @@ function parsePost({ file, meta, body, slug }: Frontmatter) {
 }
 
 /**
- * Photos accept either a bare path or an object, so a quick entry stays quick:
+ * Photos are written as objects with a path, alt text, and a caption:
  *
  *   photos:
- *     - /img/shows/warped-1/pit.jpg
  *     - src: /img/shows/warped-1/stage.jpg
- *       alt: Underoath mid-set
+ *       alt: Underoath mid-set, the drummer lit from behind
  *       caption: Underoath
+ *
+ * `alt` and `caption` are both required; a bare path is rejected.
  */
 function asPhotos(value: unknown, file: string, publicDir: string) {
   if (value == null) return [];
@@ -130,7 +131,16 @@ function asPhotos(value: unknown, file: string, publicDir: string) {
       fail("shows", file, `\`photos[${index}].src\` does not exist: public${src}`);
     }
 
-    return { src, alt: asTrimmedString(raw.alt), caption: asTrimmedString(raw.caption) };
+    // Alt text and a caption are both required. A photo without alt text is
+    // invisible to anyone using a screen reader, and one without a caption
+    // gives no context to anyone else - neither should reach the site.
+    const alt = asTrimmedString(raw.alt);
+    if (!alt) fail("shows", file, `\`photos[${index}]\` needs \`alt\` describing what is in the frame`);
+
+    const caption = asTrimmedString(raw.caption);
+    if (!caption) fail("shows", file, `\`photos[${index}]\` needs a \`caption\``);
+
+    return { src, alt, caption };
   });
 }
 

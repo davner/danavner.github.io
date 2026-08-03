@@ -21,9 +21,13 @@ export function Rating({
   size?: "base" | "sm";
 }) {
   const clamped = Math.min(Math.max(value, 0), MAX_RATING);
-  const percent = (clamped / MAX_RATING) * 100;
+  // Rounded once and used for both the label and the bar, so the fill always
+  // shows exactly what the accessible label claims. An average like 4.6667
+  // reads as 4.7 and is drawn as 4.7, not as two different numbers.
+  const shown = Number(clamped.toFixed(1));
+  const percent = (shown / MAX_RATING) * 100;
   // Trailing zeros look like false precision on a hand-kept log: 4, not 4.0.
-  const label = `${Number(clamped.toFixed(1))} out of ${MAX_RATING}`;
+  const label = `${shown} out of ${MAX_RATING}`;
   const row = HORNS.repeat(MAX_RATING);
 
   return (

@@ -65,7 +65,9 @@ This applies to any image entering the repo, not just show photos.
 
 ## 4. Caption them
 
-Open each optimized photo with `Read` and look at it. For each one write:
+Open each optimized photo with `Read` and look at it. **Every photo needs both
+an `alt` and a `caption`, always** - the build rejects a photo that is missing
+either, so there is no such thing as a quick bare path.
 
 - **`alt`** - what is in the frame, for someone who cannot see it. Under about
   125 characters. Describe the picture, not the occasion: "Stage washed in red
@@ -76,6 +78,9 @@ Open each optimized photo with `Read` and look at it. For each one write:
 Only describe what is actually visible. Do not name a person unless the user
 named them. Do not infer the band, the song, or the venue from the picture - use
 what the user and your research established.
+
+This holds for photos anywhere on the site, not just the show log. A photo
+without a caption is a photo nobody can place.
 
 ## 5. Write the file
 
@@ -100,7 +105,7 @@ with:
   - Jasmine P.
 video: https://youtu.be/xxxxx
 standout: true
-photos:
+photos:                          # alt and caption are both required
   - src: /img/shows/knocked-loose-la-2026/pit.jpg
     alt: Crowd surge under red light, arms up across the front barricade
     caption: Front barricade, second song

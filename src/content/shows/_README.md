@@ -109,7 +109,7 @@ lineup:
 | `solo` | no | `true` for a solo run. Mutually exclusive with `with`. |
 | `subtitle` | no | Qualifier under the heading, e.g. "Day 1" |
 | `video` | no | Full URL. A YouTube playlist labels itself "Playlist". |
-| `photos` | no | Paths under `public/`, or objects with `src` / `alt` / `caption` |
+| `photos` | no | Objects with `src` / `alt` / `caption`. All three required. |
 | `standout` | no | Adds a flame and pins it to the ticker |
 
 Notes:
@@ -132,7 +132,8 @@ node scripts/optimize-photos.mjs shows/<show-slug> ~/Pictures/that-night
 
 The first argument is a folder under `public/img/`, so the same script handles
 every image on the site. Output lands in `public/img/shows/<show-slug>/`. Reference the paths in
-`photos:` and give each one an `alt` and a `caption`.
+`photos:`. Every photo needs both an `alt` and a `caption` - the build rejects
+one that is missing either.
 
 ## Slug and sharing
 

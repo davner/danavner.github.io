@@ -1,6 +1,7 @@
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { Link } from "react-router";
 
+import { BandList } from "@/components/band-list";
 import { Marquee } from "@/components/marquee";
 import { Section } from "@/components/page";
 import { SocialLinks } from "@/components/social-links";
@@ -14,7 +15,7 @@ const INDEX = [
     to: "/about",
     number: "01",
     title: "About",
-    blurb: "Music, lifting, Legos, a backyard telescope, and one bowling statistic.",
+    blurb: "Alexis, Milly and Penny, shows, records, comics, Legos, and one bowling statistic.",
   },
   {
     to: "/career",
@@ -40,12 +41,13 @@ const TICKER = [
   "Metalcore",
   "danwiththeyams",
   "2nd in Florida for bowling",
-  "Guitar, enthusiastically",
-  "Backyard astrophotography",
+  "Digging through record bins",
+  "New comic Wednesday",
+  "Stealing photons before sunrise",
   "Front of the barricade",
-  "Legos on the kitchen table",
-  "One more set",
-  "Locked Out of Heaven",
+  "Legos with Nathan",
+  "Milly and Penny",
+  "Under a barbell",
   "Los Angeles",
 ];
 
@@ -98,7 +100,7 @@ export function Home() {
 
           {/* Duotone until you hover it - poster treatment that still lets the
               photo be a photo. */}
-          <div className="group relative w-full max-w-xs justify-self-start lg:max-w-none lg:justify-self-end">
+          <div className="group relative w-full max-w-xs justify-self-center lg:max-w-none lg:justify-self-end">
             <div className="relative overflow-hidden border border-border">
               <img
                 src="/img/me1.jpg"
@@ -186,9 +188,13 @@ export function Home() {
                   {latestShow.title}
                 </p>
                 <p className="mt-4 flex-1 leading-relaxed text-muted-foreground text-pretty">
-                  {supportFor(latestShow).length
-                    ? `with ${supportFor(latestShow).join(", ")} - `
-                    : null}
+                  {supportFor(latestShow).length ? (
+                    <>
+                      <span className="text-ember">w/</span>{" "}
+                      <BandList bands={supportFor(latestShow)} />
+                      {" - "}
+                    </>
+                  ) : null}
                   {showLocation(latestShow)}
                 </p>
                 <p className="readout-dim mt-6 flex items-center gap-2">

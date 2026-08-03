@@ -204,7 +204,7 @@ Free-form markdown about the night. Optional.
 | `with` | no | List of names. Mutually exclusive with `solo`. |
 | `solo` | no | `true` renders a **SOLO RUN · 1P** badge |
 | `video` | no | Full URL. A YouTube playlist labels itself "Playlist". |
-| `photos` | no | Paths under `public/`, or objects with `src` / `alt` / `caption` |
+| `photos` | no | Objects with `src` / `alt` / `caption`. All three required. |
 | `standout` | no | Adds a flame and pins it to the ticker |
 
 Photos live in `public/img/shows/<slug>/` and render as a swipeable strip with

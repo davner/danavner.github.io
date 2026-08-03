@@ -36,7 +36,15 @@ export interface Education {
 
 export interface Interest {
   name: string;
-  icon: "music" | "telescope" | "gamepad-2" | "swords" | "disc" | "book-open" | "blocks";
+  icon:
+    | "music"
+    | "telescope"
+    | "gamepad-2"
+    | "swords"
+    | "disc"
+    | "book-open"
+    | "blocks"
+    | "dumbbell";
   note: string;
   /** A handle worth sharing, e.g. a gamertag. `href` makes it a link. */
   handle?: { label: string; value: string; href?: string };
@@ -67,7 +75,7 @@ export const profile = {
   partnerFirstName: "Alexis",
   /** The homepage voice: a person who happens to have a career. */
   blurb:
-    "I write software for telescopes, point a much smaller one at the same sky, and spend the rest of my time at loud shows, under a barbell, or building something that did not need building.",
+    "Software engineer by trade, Florida man at heart. I write software for telescopes, point a much smaller one at the same sky, and spend the rest of the week at shows, in record bins, or under a barbell.",
   /** The career voice, used on the Career page and in its meta description. */
   tagline: "I build production software for telescopes, observatories, and astronomers.",
   intro:
@@ -200,24 +208,37 @@ export const interests: Interest[] = [
     name: "Video games",
     icon: "gamepad-2",
     note: "Mass Effect is still my favorite game ever made. Lately you will find me on PlayStation, pretending I will finally clear my backlog.",
-    handle: { label: "PlayStation", value: "treslechesplzz" },
+    handle: {
+      label: "PlayStation",
+      value: "treslechesplzz",
+      href: "https://psnprofiles.com/treslechesplzz",
+    },
   },
   {
     name: "Fortnite",
     icon: "swords",
     note: "I have a great squad and an even better duo. Alexis is the perfect sweat to my sweat, and we are always looking for more people to drop in with.",
-    handle: { label: "Epic", value: "danwiththeyams" },
+    handle: {
+      label: "Epic",
+      value: "danwiththeyams",
+      href: "https://fortnitetracker.com/profile/all/danwiththeyams",
+    },
   },
   {
     name: "Vinyl",
     icon: "disc",
-    note: "Always digging for something new. My favorite record is the Record Store Day 2026 pressing of All We Know Is Falling with the Summer Tic EP - huge thanks to babe for tracking one down after what felt like a statewide scavenger hunt.",
+    note: "Always digging for something new. My favorite record is the Record Store Day 2026 pressing of All We Know Is Falling with the Summer Tic EP - huge thanks to babe for tracking one down after what felt like a nationwide scavenger hunt.",
     handle: { label: "Discogs", value: "dnafam", href: "https://www.discogs.com/user/dnafam" },
   },
   {
     name: "Comic books",
     icon: "book-open",
     note: "Wednesday means new comic day. You will usually find me at the shop with my comic book cuties, Mikey and Kiwi, arguing about what to pull next.",
+  },
+  {
+    name: "Weightlifting",
+    icon: "dumbbell",
+    note: "The one part of my week that gives immediate, honest feedback. No debugging, no opinions - the bar either moves or it does not.",
   },
   {
     name: "Legos",

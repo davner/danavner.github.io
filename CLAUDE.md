@@ -42,4 +42,4 @@ live site. See `README.md` for the stack, the content model, and the CI layout.
 - Every image entering the repo goes through
   `node scripts/optimize-photos.mjs <folder-under-public/img> <files...>` first.
   It resizes, re-encodes, and strips EXIF - phone photos carry GPS. Then look at
-  the result and write real `alt` text for it.
+  the result and give it both real `alt` text and a caption. Always both.

@@ -7,38 +7,41 @@ interface Star {
   y: number;
   radius: number;
   baseAlpha: number;
-  /** Radians per frame-second, offset per star so they twinkle out of phase. */
   twinkleRate: number;
   phase: number;
   drift: number;
 }
 
-const STAR_DENSITY = 1 / 9000; // stars per CSS pixel of viewport area
-const MAX_STARS = 320;
+const STAR_DENSITY = 1 / 7000; // stars per CSS pixel of viewport area
+const MAX_STARS = 420;
+
+/** Film grain, generated once as an SVG data URI rather than shipping a PNG. */
+const GRAIN =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
 
 function createStars(width: number, height: number): Star[] {
   const count = Math.min(MAX_STARS, Math.round(width * height * STAR_DENSITY));
   return Array.from({ length: count }, () => ({
     x: Math.random() * width,
     y: Math.random() * height,
-    radius: Math.random() * 1.1 + 0.35,
-    baseAlpha: Math.random() * 0.5 + 0.15,
-    twinkleRate: Math.random() * 1.4 + 0.3,
+    radius: Math.random() * 1.05 + 0.3,
+    baseAlpha: Math.random() * 0.55 + 0.12,
+    twinkleRate: Math.random() * 1.5 + 0.3,
     phase: Math.random() * Math.PI * 2,
     drift: Math.random() * 4 + 1.5,
   }));
 }
 
 /**
- * Fixed starfield behind the whole site. Dark mode only — in light mode the
- * page falls back to the gradient wash alone, which is what a daytime sky
- * should look like.
+ * Fixed backdrop: starfield, an ember bloom at the top of the page, and a grain
+ * layer over everything so flat colour never reads as flat.
  */
 export function Backdrop() {
   const { theme } = useTheme();
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
+    // A starfield on newsprint is just dirt, so light mode gets the wash alone.
     if (theme !== "dark") return;
 
     const canvas = canvasRef.current;
@@ -72,11 +75,8 @@ export function Backdrop() {
       for (const star of stars) {
         const twinkle = reduceMotion
           ? 1
-          : 0.65 + 0.35 * Math.sin(star.phase + elapsedSeconds * star.twinkleRate);
-        // Slow downward drift that wraps, so the field never empties out.
-        const y = reduceMotion
-          ? star.y
-          : (star.y + elapsedSeconds * star.drift) % (height + 4);
+          : 0.6 + 0.4 * Math.sin(star.phase + elapsedSeconds * star.twinkleRate);
+        const y = reduceMotion ? star.y : (star.y + elapsedSeconds * star.drift) % (height + 4);
 
         context.globalAlpha = star.baseAlpha * twinkle;
         context.beginPath();
@@ -117,14 +117,18 @@ export function Backdrop() {
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
       <canvas ref={canvasRef} className="absolute inset-0 size-full" />
+
       <div
-        className="absolute inset-x-0 top-0 h-[70vh]"
+        className="absolute inset-x-0 top-0 h-[80vh]"
         style={{
-          background:
-            "radial-gradient(60rem 40rem at 50% -12%, var(--glow), transparent 70%)",
+          background: "radial-gradient(70rem 45rem at 50% -18%, var(--glow), transparent 72%)",
         }}
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
+
+      <div
+        className="absolute inset-0"
+        style={{ backgroundImage: GRAIN, opacity: "var(--grain-opacity)" }}
+      />
     </div>
   );
 }

@@ -19,16 +19,41 @@ vite-plugin-blog.ts  reads and validates the markdown posts at build time
 src/
   content/
     profile.ts       everything the Work / About / Home pages render
+    shows.ts         the gig log
     blog/*.md        one markdown file per post
   routes/            one file per page
   components/
     ui/              shadcn/ui components — owned by this repo, edit freely
   lib/
     blog.ts          post helpers over the plugin's output
+    shows.ts         sorting, year grouping, and derived show stats
+  index.css          design tokens and the poster primitives
+  fonts.css          self-hosted Anton / Inter / JetBrains Mono
 ```
 
 Updating the résumé side of the site — a new role, a project, a skill — is editing
 `src/content/profile.ts`. Nothing else needs to change.
+
+## Adding a show
+
+Append an object to `src/content/shows.ts`. Order does not matter; the page sorts
+by date and groups by year, and every stat on it (total, bands seen, venues, most
+seen) is derived, so nothing needs updating by hand.
+
+```ts
+{
+  date: "2026-06-20",
+  headliner: "Knocked Loose",
+  support: ["Show Me the Body", "Speed"],   // optional, in running order
+  venue: "Hollywood Palladium",
+  city: "Los Angeles, CA",
+  tour: "…",        // optional
+  note: "…",        // optional, one line about the night
+  standout: true,   // optional, adds a flame and pins it to the marquee
+}
+```
+
+The entries currently in that file are **placeholders** — replace them.
 
 ## Adding a blog post
 

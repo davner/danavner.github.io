@@ -4,52 +4,76 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  // The wordmark already links home, so that entry is dropped on narrow screens
-  // rather than letting four links plus the toggle wrap the bar.
-  { to: "/", label: "Home", end: true, mobile: false },
-  { to: "/work", label: "Work", end: false, mobile: true },
-  { to: "/about", label: "About", end: false, mobile: true },
-  { to: "/writing", label: "Writing", end: false, mobile: true },
+  { to: "/work", label: "Work", index: "01" },
+  { to: "/about", label: "About", index: "02" },
+  { to: "/writing", label: "Writing", index: "03" },
+  { to: "/shows", label: "Shows", index: "04" },
 ];
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-50 border-b border-border/60 bg-background/70 backdrop-blur-md">
-      <div className="mx-auto flex h-14 max-w-5xl items-center gap-2 px-3 sm:px-6">
+    <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
+      <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-2 sm:gap-3 sm:px-6">
         <NavLink
           to="/"
           aria-label="Dan Avner — home"
-          className="mr-auto flex items-center gap-2 font-mono text-sm font-semibold tracking-tight whitespace-nowrap transition-opacity hover:opacity-80"
+          className={({ isActive }) =>
+            cn(
+              "mr-auto flex items-baseline transition-opacity hover:opacity-70",
+              isActive && "text-ember",
+            )
+          }
         >
-          <span className="inline-block size-1.5 shrink-0 rounded-full bg-primary shadow-[0_0_10px_2px_var(--glow)]" />
-          {/* Below ~380px the mark alone carries the link, so the bar never wraps. */}
-          <span className="hidden min-[380px]:inline">dan avner</span>
+          {/* Four section labels plus a toggle leave no room for the full
+              wordmark on the narrowest phones, so it contracts to initials. */}
+          <span className="display text-xl sm:text-2xl">
+            <span className="sm:hidden">DA</span>
+            <span className="hidden sm:inline">Dan Avner</span>
+          </span>
         </NavLink>
 
         <nav aria-label="Main">
-          <ul className="flex items-center gap-0.5">
+          <ul className="flex items-center">
             {NAV.map((item) => (
-              <li key={item.to} className={item.mobile ? undefined : "hidden sm:block"}>
+              <li key={item.to}>
                 <NavLink
                   to={item.to}
-                  end={item.end}
                   className={({ isActive }) =>
                     cn(
-                      "block rounded-md px-2 py-1.5 text-sm whitespace-nowrap transition-colors sm:px-3",
-                      isActive
-                        ? "font-medium text-foreground"
-                        : "text-muted-foreground hover:text-foreground",
+                      "group relative flex items-baseline gap-1.5 px-1.5 py-2 transition-colors sm:px-3",
+                      isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground",
                     )
                   }
                 >
-                  {item.label}
+                  {({ isActive }) => (
+                    <>
+                      <span
+                        className={cn(
+                          "hidden font-mono text-[0.6rem] transition-colors sm:inline",
+                          isActive ? "text-ember" : "text-muted-foreground/50",
+                        )}
+                      >
+                        {item.index}
+                      </span>
+                      <span className="font-mono text-[0.6rem] font-medium tracking-[0.1em] uppercase sm:text-[0.68rem] sm:tracking-[0.18em]">
+                        {item.label}
+                      </span>
+                      {/* Active marker sits on the header's bottom rule. */}
+                      <span
+                        className={cn(
+                          "absolute inset-x-1.5 -bottom-px h-0.5 bg-ember transition-transform duration-150",
+                          isActive ? "scale-x-100" : "scale-x-0",
+                        )}
+                      />
+                    </>
+                  )}
                 </NavLink>
               </li>
             ))}
           </ul>
         </nav>
 
-        <div className="sm:ml-1 sm:border-l sm:border-border/60 sm:pl-1">
+        <div className="border-border sm:ml-2 sm:border-l sm:pl-2">
           <ThemeToggle />
         </div>
       </div>

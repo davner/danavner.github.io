@@ -1,184 +1,231 @@
-import { ArrowRight, BookOpen, Briefcase, MapPin, Sparkles, User } from "lucide-react";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { Link } from "react-router";
 
-import { PostCard } from "@/components/post-card";
+import { Marquee } from "@/components/marquee";
 import { Section } from "@/components/page";
 import { SocialLinks } from "@/components/social-links";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { profile, projects } from "@/content/profile";
 import { posts } from "@/lib/blog";
+import { formatShowDate, showStats } from "@/lib/shows";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
-const DOORS = [
+const INDEX = [
   {
     to: "/work",
-    icon: Briefcase,
+    number: "01",
     title: "Work",
-    description:
-      "The career side — what I have built, who I built it for, and the stack I reach for. Projects, roles, and skills.",
-    cta: "See the work",
+    blurb: "Observatory systems, data pipelines, and the software astronomers actually use.",
   },
   {
     to: "/about",
-    icon: User,
+    number: "02",
     title: "About",
-    description:
-      "The rest of it. Where I came from, what I do when I am not shipping software, and one unusually specific bowling fact.",
-    cta: "Get to know me",
+    blurb: "Where I came from, what I do when the laptop is shut, one bowling statistic.",
   },
   {
     to: "/writing",
-    icon: BookOpen,
+    number: "03",
     title: "Writing",
-    description:
-      "Notes on scientific software and engineering, plus whatever else I feel like writing down. Work and personal, side by side.",
-    cta: "Read the posts",
+    blurb: "Notes on scientific software, and everything that is not scientific software.",
   },
+  {
+    to: "/shows",
+    number: "04",
+    title: "Shows",
+    blurb: "Every gig I have stood at the front of. Mostly loud, mostly worth it.",
+  },
+];
+
+const TICKER = [
+  "Time-domain astronomy",
+  "Gemini Observatory",
+  "Python",
+  "Metalcore",
+  "150+ nights on sky",
+  "GraphQL",
+  "Loud guitars",
+  "Telescope control",
+  "Django",
+  "Los Angeles",
 ];
 
 export function Home() {
   useDocumentMeta("Dan Avner", profile.tagline);
 
   const current = projects.filter((project) => project.current);
-  const latest = posts.slice(0, 2);
+  const latestPost = posts[0];
+  const latestShow = showStats.latest;
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-24">
-      <section className="flex flex-col items-center text-center">
-        <div className="relative">
-          <span
-            aria-hidden
-            className="absolute -inset-4 rounded-full bg-primary/15 blur-2xl"
-          />
-          <img
-            src="/img/me1.jpg"
-            alt={profile.name}
-            width={160}
-            height={160}
-            className="relative size-36 rounded-full border border-border object-cover shadow-xl sm:size-40"
-          />
+    <>
+      <section className="mx-auto max-w-6xl px-4 pt-10 pb-14 sm:px-6 sm:pt-16">
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-border pb-3">
+          <p className="readout text-ember">Software engineer</p>
+          <ul className="flex flex-wrap gap-x-5 gap-y-1">
+            <li className="readout-dim">{profile.org}</li>
+            <li className="readout-dim">{profile.location}</li>
+            <li className="readout-dim">150+ nights on sky</li>
+          </ul>
         </div>
 
-        <Badge variant="outline" className="mt-8 gap-1.5 py-1 font-normal text-muted-foreground">
-          <span className="relative flex size-1.5">
-            <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary opacity-75" />
-            <span className="relative inline-flex size-1.5 rounded-full bg-primary" />
-          </span>
-          {profile.role} at {profile.org}
-        </Badge>
+        <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-end lg:gap-12">
+          <div>
+            <h1 className="display text-[clamp(4rem,17vw,12.5rem)]">
+              <span className="block">Dan</span>
+              <span className="display-outline block">Avner</span>
+            </h1>
 
-        <h1 className="mt-6 text-4xl font-semibold tracking-tight text-balance sm:text-6xl">
-          Hi, I&rsquo;m {profile.name}.
-        </h1>
+            <p className="mt-8 max-w-xl text-xl leading-snug text-pretty sm:text-2xl">
+              {profile.tagline}
+            </p>
 
-        <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground text-pretty sm:text-xl">
-          {profile.tagline}
-        </p>
+            <div className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-3">
+              <Link
+                to="/work"
+                className="group inline-flex items-center gap-2 border border-ember bg-ember px-5 py-3 text-primary-foreground transition-colors hover:bg-transparent hover:text-ember"
+              >
+                <span className="readout">See the work</span>
+                <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+              </Link>
+              <a
+                href={`mailto:${profile.email}`}
+                className="inline-flex items-center gap-2 border border-border px-5 py-3 transition-colors hover:border-ember hover:text-ember"
+              >
+                <span className="readout">Get in touch</span>
+              </a>
+              <SocialLinks className="sm:ml-1" />
+            </div>
+          </div>
 
-        <p className="mt-4 flex items-center gap-1.5 text-sm text-muted-foreground">
-          <MapPin className="size-3.5" />
-          {profile.location}
-        </p>
-
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <Button asChild size="lg">
-            <Link to="/work">
-              See my work
-              <ArrowRight />
-            </Link>
-          </Button>
-          <Button asChild size="lg" variant="outline">
-            <a href={`mailto:${profile.email}`}>Get in touch</a>
-          </Button>
+          {/* Duotone until you hover it — poster treatment that still lets the
+              photo be a photo. */}
+          <div className="group relative w-full max-w-xs justify-self-start lg:max-w-none lg:justify-self-end">
+            <div className="relative overflow-hidden border border-border">
+              <img
+                src="/img/me1.jpg"
+                alt={profile.name}
+                width={320}
+                height={400}
+                className="aspect-4/5 w-full object-cover grayscale contrast-[1.15] transition-all duration-500 group-hover:grayscale-0 group-hover:contrast-100"
+              />
+              <div className="pointer-events-none absolute inset-0 bg-ember opacity-25 mix-blend-color transition-opacity duration-500 group-hover:opacity-0" />
+            </div>
+            <p className="readout-dim mt-3 flex items-center justify-between">
+              <span>Fig. 1</span>
+              <span>Subject, smiling</span>
+            </p>
+          </div>
         </div>
-
-        <SocialLinks className="mt-6" />
       </section>
 
-      <Section className="mt-24">
-        <div className="grid gap-4 sm:grid-cols-3">
-          {DOORS.map((door) => (
-            <Link
-              key={door.to}
-              to={door.to}
-              className="group relative flex flex-col rounded-xl border border-border bg-card/50 p-6 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card hover:shadow-lg"
-            >
-              <span className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <door.icon className="size-5" />
-              </span>
-              <h2 className="mt-5 text-lg font-semibold tracking-tight">{door.title}</h2>
-              <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground text-pretty">
-                {door.description}
-              </p>
-              <span className="mt-5 flex items-center gap-1.5 text-sm font-medium text-primary">
-                {door.cta}
-                <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
-              </span>
-            </Link>
-          ))}
-        </div>
-      </Section>
+      <Marquee items={TICKER} />
 
-      <Section title="Currently building">
-        <ul className="divide-y divide-border rounded-xl border border-border bg-card/40">
-          {current.map((project) => (
-            <li key={project.name} className="flex flex-col gap-3 p-6 sm:flex-row sm:gap-6">
-              <div className="sm:w-52 sm:shrink-0">
-                <p className="flex items-center gap-2 font-mono font-semibold">
-                  <Sparkles className="size-3.5 text-primary" />
-                  {project.name}
+      <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+        <Section>
+          <ul className="border-t border-border">
+            {INDEX.map((entry) => (
+              <li key={entry.to}>
+                <Link
+                  to={entry.to}
+                  className="group flex items-center gap-4 border-b border-border py-6 transition-colors hover:bg-card/60 sm:gap-8 sm:py-8"
+                >
+                  <span className="font-mono text-xs text-ember transition-transform duration-200 group-hover:translate-x-1 sm:text-sm">
+                    {entry.number}
+                  </span>
+                  <span className="display text-4xl transition-all duration-200 group-hover:translate-x-1 group-hover:text-ember sm:text-6xl">
+                    {entry.title}
+                  </span>
+                  <span className="ml-auto hidden max-w-sm text-right text-sm leading-relaxed text-muted-foreground text-pretty lg:block">
+                    {entry.blurb}
+                  </span>
+                  <ArrowUpRight className="size-5 shrink-0 text-muted-foreground transition-all duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-ember sm:size-6" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </Section>
+
+        <Section title="Currently building">
+          <ul className="grid gap-px border border-border bg-border sm:grid-cols-3">
+            {current.map((project) => (
+              <li key={project.name} className="flex flex-col bg-background p-6">
+                <p className="flex items-center gap-2">
+                  <span className="size-1.5 animate-pulse bg-ember" />
+                  <span className="font-mono font-semibold">{project.name}</span>
                 </p>
-                <p className="mt-1 text-xs text-muted-foreground">{project.org}</p>
-              </div>
-              <div className="flex-1">
-                <p className="leading-relaxed text-muted-foreground text-pretty">
+                <p className="readout-dim mt-1">{project.org}</p>
+                <p className="mt-4 flex-1 text-sm leading-relaxed text-muted-foreground text-pretty">
                   {project.blurb}
                 </p>
-                <ul className="mt-3 flex flex-wrap gap-1.5">
+                <ul className="mt-5 flex flex-wrap gap-x-3 gap-y-1">
                   {project.stack.map((tech) => (
-                    <li key={tech}>
-                      <Badge variant="secondary" className="font-mono font-normal">
-                        {tech}
-                      </Badge>
+                    <li key={tech} className="readout-dim">
+                      {tech}
                     </li>
                   ))}
                 </ul>
-              </div>
-            </li>
-          ))}
-        </ul>
-
-        <p className="mt-5 text-sm">
-          <Link
-            to="/work"
-            className="inline-flex items-center gap-1.5 font-medium text-primary hover:underline"
-          >
-            Everything I have worked on
-            <ArrowRight className="size-4" />
-          </Link>
-        </p>
-      </Section>
-
-      {latest.length > 0 ? (
-        <Section title="Latest writing">
-          <div className="grid gap-4 sm:grid-cols-2">
-            {latest.map((post) => (
-              <PostCard key={post.slug} post={post} />
+              </li>
             ))}
-          </div>
+          </ul>
+        </Section>
 
-          <p className="mt-5 text-sm">
+        <Section
+          title="Latest"
+          action={
             <Link
               to="/writing"
-              className="inline-flex items-center gap-1.5 font-medium text-primary hover:underline"
+              className="readout text-muted-foreground transition-colors hover:text-ember"
             >
-              All posts
-              <ArrowRight className="size-4" />
+              All posts →
             </Link>
-          </p>
+          }
+        >
+          <div className="grid gap-px border border-border bg-border md:grid-cols-2">
+            {latestPost ? (
+              <Link
+                to={`/writing/${latestPost.slug}`}
+                className="group flex flex-col bg-background p-6 transition-colors hover:bg-card/60 sm:p-8"
+              >
+                <p className="readout text-ember">Latest post</p>
+                <p className="display mt-4 text-3xl text-balance transition-colors group-hover:text-ember sm:text-4xl">
+                  {latestPost.title}
+                </p>
+                <p className="mt-4 flex-1 leading-relaxed text-muted-foreground text-pretty">
+                  {latestPost.summary}
+                </p>
+                <p className="readout-dim mt-6 flex items-center gap-2">
+                  Read
+                  <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+                </p>
+              </Link>
+            ) : null}
+
+            {latestShow ? (
+              <Link
+                to="/shows"
+                className="group flex flex-col bg-background p-6 transition-colors hover:bg-card/60 sm:p-8"
+              >
+                <p className="readout text-ember">Last show</p>
+                <p className="display mt-4 text-3xl text-balance transition-colors group-hover:text-ember sm:text-4xl">
+                  {latestShow.headliner}
+                </p>
+                <p className="mt-4 flex-1 leading-relaxed text-muted-foreground text-pretty">
+                  {latestShow.support?.length
+                    ? `with ${latestShow.support.join(", ")} — `
+                    : null}
+                  {latestShow.venue}, {latestShow.city}
+                </p>
+                <p className="readout-dim mt-6 flex items-center gap-2">
+                  {formatShowDate(latestShow.date)} {latestShow.date.slice(0, 4)}
+                  <span className="text-ember">·</span>
+                  {showStats.total} logged
+                  <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+                </p>
+              </Link>
+            ) : null}
+          </div>
         </Section>
-      ) : null}
-    </div>
+      </div>
+    </>
   );
 }

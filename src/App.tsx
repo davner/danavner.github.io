@@ -8,6 +8,7 @@ import { SiteHeader } from "@/components/site-header";
 import { About } from "@/routes/about";
 import { Home } from "@/routes/home";
 import { NotFound } from "@/routes/not-found";
+import { Shows } from "@/routes/shows";
 import { Work } from "@/routes/work";
 import { Writing } from "@/routes/writing";
 
@@ -25,7 +26,7 @@ export function App() {
 
       <a
         href="#main"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-100 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
+        className="readout sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-100 focus:bg-ember focus:px-4 focus:py-2 focus:text-primary-foreground"
       >
         Skip to content
       </a>
@@ -38,6 +39,7 @@ export function App() {
             <Route path="/" element={<Home />} />
             <Route path="/work" element={<Work />} />
             <Route path="/about" element={<About />} />
+            <Route path="/shows" element={<Shows />} />
             <Route path="/writing" element={<Writing />} />
             <Route
               path="/writing/:slug"

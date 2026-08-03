@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, Clock } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import Markdown from "react-markdown";
 import { Link, useParams } from "react-router";
 import rehypeHighlight from "rehype-highlight";
@@ -6,11 +6,10 @@ import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 
 import { PageShell } from "@/components/page";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { CATEGORY_LABEL, formatDate, getPost, posts } from "@/lib/blog";
 import { highlightLanguages } from "@/lib/highlight-languages";
 import { useDocumentMeta } from "@/lib/use-document-meta";
+import { cn } from "@/lib/utils";
 import { NotFound } from "@/routes/not-found";
 
 export function WritingPost() {
@@ -29,54 +28,52 @@ export function WritingPost() {
     <PageShell className="max-w-3xl">
       <Link
         to={`/writing?category=${post.category}`}
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        className="readout group inline-flex items-center gap-2 text-muted-foreground transition-colors hover:text-ember"
       >
-        <ArrowLeft className="size-4" />
+        <ArrowLeft className="size-3.5 transition-transform group-hover:-translate-x-0.5" />
         All {CATEGORY_LABEL[post.category].toLowerCase()} posts
       </Link>
 
-      <article className="mt-8">
+      <article className="mt-10">
         <header>
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground">
-            <Badge variant={post.category === "work" ? "default" : "secondary"}>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-border pb-3">
+            <p className={cn("readout", post.category === "work" ? "text-ember" : "text-ion")}>
               {CATEGORY_LABEL[post.category]}
-            </Badge>
-            <time dateTime={post.date}>{formatDate(post.date)}</time>
-            <span className="flex items-center gap-1">
-              <Clock className="size-3.5" />
-              {post.readingTime} min read
-            </span>
+            </p>
+            <span className="text-border">/</span>
+            <time dateTime={post.date} className="readout-dim">
+              {formatDate(post.date)}
+            </time>
+            <span className="text-border">/</span>
+            <span className="readout-dim">{post.readingTime} min read</span>
             {post.draft ? (
-              <Badge variant="outline" className="border-dashed">
-                Draft
-              </Badge>
+              <>
+                <span className="text-border">/</span>
+                <span className="readout text-ember">Draft</span>
+              </>
             ) : null}
           </div>
 
-          <h1 className="mt-5 text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
-            {post.title}
-          </h1>
+          <h1 className="display mt-7 text-[clamp(2.5rem,8vw,5rem)]">{post.title}</h1>
 
           {post.summary ? (
-            <p className="mt-5 text-lg leading-relaxed text-muted-foreground text-pretty">
+            <p className="mt-6 text-lg leading-relaxed text-muted-foreground text-pretty">
               {post.summary}
             </p>
           ) : null}
 
           {post.tags.length > 0 ? (
-            <ul className="mt-6 flex flex-wrap gap-1.5">
+            <ul className="mt-6 flex flex-wrap gap-x-4 gap-y-2">
               {post.tags.map((tag) => (
-                <li key={tag}>
-                  <Badge variant="outline" className="font-mono font-normal">
-                    #{tag}
-                  </Badge>
+                <li key={tag} className="readout-dim">
+                  #{tag}
                 </li>
               ))}
             </ul>
           ) : null}
         </header>
 
-        <Separator className="my-10" />
+        <div className="rule-ticks my-10" />
 
         <div className="prose-dan">
           <Markdown
@@ -106,38 +103,42 @@ export function WritingPost() {
       </article>
 
       {newer || older ? (
-        <>
-          <Separator className="my-14" />
-          <nav aria-label="More posts" className="grid gap-4 sm:grid-cols-2">
-            {older ? (
-              <Link
-                to={`/writing/${older.slug}`}
-                className="group rounded-xl border border-border p-5 transition-colors hover:border-primary/40 hover:bg-card"
-              >
-                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <ArrowLeft className="size-3.5 transition-transform group-hover:-translate-x-0.5" />
-                  Older
-                </span>
-                <span className="mt-2 block font-medium text-pretty">{older.title}</span>
-              </Link>
-            ) : (
-              <span />
-            )}
+        <nav
+          aria-label="More posts"
+          className="mt-20 grid gap-px border border-border bg-border sm:grid-cols-2"
+        >
+          {older ? (
+            <Link
+              to={`/writing/${older.slug}`}
+              className="group bg-background p-6 transition-colors hover:bg-card/60"
+            >
+              <span className="readout-dim flex items-center gap-2">
+                <ArrowLeft className="size-3.5 transition-transform group-hover:-translate-x-0.5" />
+                Older
+              </span>
+              <span className="display mt-3 block text-xl text-balance transition-colors group-hover:text-ember">
+                {older.title}
+              </span>
+            </Link>
+          ) : (
+            <span className="hidden bg-background sm:block" />
+          )}
 
-            {newer ? (
-              <Link
-                to={`/writing/${newer.slug}`}
-                className="group rounded-xl border border-border p-5 text-right transition-colors hover:border-primary/40 hover:bg-card sm:col-start-2"
-              >
-                <span className="flex items-center justify-end gap-1.5 text-xs text-muted-foreground">
-                  Newer
-                  <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
-                </span>
-                <span className="mt-2 block font-medium text-pretty">{newer.title}</span>
-              </Link>
-            ) : null}
-          </nav>
-        </>
+          {newer ? (
+            <Link
+              to={`/writing/${newer.slug}`}
+              className="group bg-background p-6 text-right transition-colors hover:bg-card/60 sm:col-start-2"
+            >
+              <span className="readout-dim flex items-center justify-end gap-2">
+                Newer
+                <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+              </span>
+              <span className="display mt-3 block text-xl text-balance transition-colors group-hover:text-ember">
+                {newer.title}
+              </span>
+            </Link>
+          ) : null}
+        </nav>
       ) : null}
     </PageShell>
   );

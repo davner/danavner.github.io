@@ -22,8 +22,12 @@ the blog you are reading actually works.
 | Hosting | GitHub Pages | Free, already where the repo lives |
 
 The thing I like most about shadcn/ui is that it is not a dependency. The CLI copies component
-source into `src/components/ui/`, and from that point on it is my code. When I wanted the badge to
-use a monospace font, I edited the file instead of fighting a theme API.
+source into `src/components/ui/`, and from that point on it is my code — including the right to
+delete it. This design wanted hard-edged panels and hairline rules, not cards with soft shadows, so
+most of what I pulled in got thrown away and the rest got rewritten. No theme API to argue with.
+
+The type is self-hosted for the same reason: three woff2 files in the bundle, no request to
+fonts.gstatic.com, nothing to break when someone else's CDN has a bad afternoon.
 
 ## Posts are just files
 

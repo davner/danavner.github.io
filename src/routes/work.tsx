@@ -1,8 +1,6 @@
-import { ArrowUpRight, GraduationCap, Mail, Moon, Telescope } from "lucide-react";
+import { ArrowUpRight, Mail } from "lucide-react";
 
 import { PageHeader, PageShell, Section } from "@/components/page";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   education,
   observing,
@@ -26,156 +24,142 @@ export function Work() {
     <PageShell>
       <PageHeader
         eyebrow="Work"
-        title="Software for the people who use telescopes."
+        title={
+          <>
+            <span className="block">Built for</span>
+            <span className="display-outline-ember block">the dark</span>
+          </>
+        }
+        meta={[profile.role, profile.org, "2013 — present"]}
         lede={profile.intro}
       >
-        <div className="mt-7 flex flex-wrap gap-3">
-          <Button asChild>
-            <a href={`mailto:${profile.email}`}>
-              <Mail />
-              Work with me
-            </a>
-          </Button>
-          <Button asChild variant="outline">
-            <a href="https://github.com/davner" target="_blank" rel="noreferrer noopener">
-              GitHub
-              <ArrowUpRight />
-            </a>
-          </Button>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <a
+            href={`mailto:${profile.email}`}
+            className="group inline-flex items-center gap-2 border border-ember bg-ember px-5 py-3 text-primary-foreground transition-colors hover:bg-transparent hover:text-ember"
+          >
+            <Mail className="size-4" />
+            <span className="readout">Work with me</span>
+          </a>
+          <a
+            href="https://github.com/davner"
+            target="_blank"
+            rel="noreferrer noopener"
+            className="inline-flex items-center gap-2 border border-border px-5 py-3 transition-colors hover:border-ember hover:text-ember"
+          >
+            <span className="readout">GitHub</span>
+            <ArrowUpRight className="size-4" />
+          </a>
         </div>
       </PageHeader>
 
-      <Section title="Selected projects">
-        <div className="grid gap-4 md:grid-cols-2">
+      <Section title="Selected projects" index="01">
+        <ul className="grid gap-px border border-border bg-border md:grid-cols-2">
           {projects.map((project) => (
-            <article
-              key={project.name}
-              className="flex flex-col rounded-xl border border-border bg-card/50 p-6 transition-colors hover:border-primary/40 hover:bg-card"
-            >
+            <li key={project.name} className="cut-corners flex flex-col bg-background p-6 sm:p-8">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h3 className="font-mono text-lg font-semibold tracking-tight">
-                    {project.name}
-                  </h3>
-                  <p className="mt-1 text-xs text-muted-foreground">{project.org}</p>
+                  <h3 className="font-mono text-lg font-semibold">{project.name}</h3>
+                  <p className="readout-dim mt-1">{project.org}</p>
                 </div>
                 {project.current ? (
-                  <Badge variant="outline" className="shrink-0 gap-1.5 font-normal">
-                    <span className="size-1.5 rounded-full bg-primary" />
+                  <p className="readout flex shrink-0 items-center gap-1.5 text-ember">
+                    <span className="size-1.5 animate-pulse bg-ember" />
                     Active
-                  </Badge>
+                  </p>
                 ) : null}
               </div>
 
-              <p className="mt-4 flex-1 leading-relaxed text-muted-foreground text-pretty">
+              <p className="mt-5 flex-1 leading-relaxed text-muted-foreground text-pretty">
                 {project.blurb}
               </p>
 
-              <ul className="mt-5 flex flex-wrap gap-1.5">
+              <ul className="mt-6 flex flex-wrap gap-x-3 gap-y-1 border-t border-border pt-4">
                 {project.stack.map((tech) => (
-                  <li key={tech}>
-                    <Badge variant="secondary" className="font-mono font-normal">
-                      {tech}
-                    </Badge>
-                  </li>
-                ))}
-              </ul>
-            </article>
-          ))}
-        </div>
-      </Section>
-
-      <Section title="Experience">
-        <ol className="relative space-y-12 border-l border-border pl-8">
-          {roles.map((role) => (
-            <li key={`${role.org}-${role.start}`} className="relative">
-              <span
-                aria-hidden
-                className="absolute top-2 -left-[2.3rem] size-2.5 rounded-full border-2 border-background bg-primary"
-              />
-
-              <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6">
-                <h3 className="text-lg font-semibold tracking-tight">{role.title}</h3>
-                <p className="font-mono text-xs whitespace-nowrap text-muted-foreground">
-                  {role.period}
-                </p>
-              </div>
-
-              <p className="mt-1 text-sm text-primary">
-                {role.org} <span className="text-muted-foreground">· {role.location}</span>
-              </p>
-
-              <ul className="mt-4 space-y-2.5">
-                {role.highlights.map((highlight) => (
-                  <li
-                    key={highlight}
-                    className="relative pl-5 leading-relaxed text-muted-foreground text-pretty before:absolute before:top-[0.7em] before:left-0 before:size-1 before:rounded-full before:bg-primary/60"
-                  >
-                    {highlight}
-                  </li>
-                ))}
-              </ul>
-
-              <ul className="mt-4 flex flex-wrap gap-1.5">
-                {role.stack.map((tech) => (
-                  <li key={tech}>
-                    <Badge variant="secondary" className="font-mono font-normal">
-                      {tech}
-                    </Badge>
+                  <li key={tech} className="readout-dim">
+                    {tech}
                   </li>
                 ))}
               </ul>
             </li>
           ))}
+        </ul>
+      </Section>
+
+      <Section title="Experience" index="02">
+        <ol>
+          {roles.map((role) => (
+            <li
+              key={`${role.org}-${role.start}`}
+              className="grid gap-x-8 gap-y-4 border-b border-border py-10 first:border-t md:grid-cols-[13rem_minmax(0,1fr)]"
+            >
+              <div>
+                <p className="readout text-ember">{role.period}</p>
+                <p className="mt-3 font-mono text-sm">{role.org}</p>
+                <p className="readout-dim mt-1">{role.location}</p>
+              </div>
+
+              <div>
+                <h3 className="display text-2xl sm:text-3xl">{role.title}</h3>
+                <p className="mt-2 text-muted-foreground text-pretty">{role.summary}</p>
+
+                <ul className="mt-6 space-y-3">
+                  {role.highlights.map((highlight) => (
+                    <li
+                      key={highlight}
+                      className="relative pl-6 leading-relaxed text-muted-foreground text-pretty before:absolute before:top-[0.72em] before:left-0 before:h-px before:w-3 before:bg-ember"
+                    >
+                      {highlight}
+                    </li>
+                  ))}
+                </ul>
+
+                <ul className="mt-6 flex flex-wrap gap-x-3 gap-y-1">
+                  {role.stack.map((tech) => (
+                    <li key={tech} className="readout-dim">
+                      {tech}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </li>
+          ))}
         </ol>
       </Section>
 
-      <Section title="At the telescope">
-        <div className="rounded-xl border border-border bg-card/50 p-6 sm:p-8">
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-            <div className="flex items-center gap-4">
-              <span className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <Moon className="size-5" />
-              </span>
-              <div>
-                <p className="font-mono text-3xl font-semibold tracking-tight">
-                  {observing.nights}
-                </p>
-                <p className="text-sm text-muted-foreground">nights observing</p>
-              </div>
-            </div>
-
-            <div className="flex-1 sm:border-l sm:border-border sm:pl-6">
-              <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Telescope className="size-4 text-primary" />
-                Time on the mountain, not just in the repo
-              </p>
-              <ul className="mt-3 flex flex-wrap gap-1.5">
-                {observing.telescopes.map((telescope) => (
-                  <li key={telescope}>
-                    <Badge variant="outline" className="font-mono font-normal">
-                      {telescope}
-                    </Badge>
-                  </li>
-                ))}
-              </ul>
-            </div>
+      <Section title="On sky" index="03">
+        <div className="grid gap-px border border-border bg-border sm:grid-cols-[auto_minmax(0,1fr)]">
+          <div className="bg-background p-8 sm:px-10">
+            <p className="display text-6xl text-ember sm:text-7xl">{observing.nights}</p>
+            <p className="readout-dim mt-2">Nights observing</p>
+          </div>
+          <div className="bg-background p-8">
+            <p className="text-muted-foreground text-pretty">
+              Time on the mountain, not just in the repo. Enough nights at the eyepiece to know
+              what breaks at 2 a.m., and what a confusing button costs when the weather window is
+              closing.
+            </p>
+            <ul className="mt-6 flex flex-wrap gap-x-4 gap-y-2 border-t border-border pt-5">
+              {observing.telescopes.map((telescope) => (
+                <li key={telescope} className="readout">
+                  {telescope}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </Section>
 
-      <Section title="Toolkit">
-        <dl className="grid gap-6 sm:grid-cols-2">
+      <Section title="Toolkit" index="04">
+        <dl className="grid gap-px border border-border bg-border sm:grid-cols-2">
           {skills.map((group) => (
-            <div key={group.label} className="rounded-xl border border-border bg-card/40 p-6">
-              <dt className="eyebrow">{group.label}</dt>
+            <div key={group.label} className="bg-background p-6 sm:p-8">
+              <dt className="readout text-ember">{group.label}</dt>
               <dd className="mt-4">
-                <ul className="flex flex-wrap gap-1.5">
+                <ul className="flex flex-wrap gap-x-3 gap-y-2">
                   {group.items.map((item) => (
-                    <li key={item}>
-                      <Badge variant="secondary" className="font-mono font-normal">
-                        {item}
-                      </Badge>
+                    <li key={item} className="font-mono text-sm text-muted-foreground">
+                      {item}
                     </li>
                   ))}
                 </ul>
@@ -185,15 +169,14 @@ export function Work() {
         </dl>
       </Section>
 
-      <Section title="Education & research">
-        <div className="grid gap-4 sm:grid-cols-2">
+      <Section title="Education" index="05">
+        <div className="grid gap-px border border-border bg-border sm:grid-cols-2">
           {education.map((entry) => (
-            <div key={entry.school} className="rounded-xl border border-border bg-card/40 p-6">
-              <p className="font-mono text-xs text-muted-foreground">{entry.period}</p>
-              <h3 className="mt-2 font-semibold tracking-tight">{entry.degree}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {entry.school} · {entry.location}
-              </p>
+            <div key={entry.school} className="bg-background p-6 sm:p-8">
+              <p className="readout text-ember">{entry.period}</p>
+              <h3 className="display mt-3 text-2xl">{entry.degree}</h3>
+              <p className="mt-2 font-mono text-sm text-muted-foreground">{entry.school}</p>
+              <p className="readout-dim mt-1">{entry.location}</p>
             </div>
           ))}
         </div>
@@ -202,34 +185,36 @@ export function Work() {
           href={scholar.href}
           target="_blank"
           rel="noreferrer noopener"
-          className="group mt-4 flex items-center gap-3 rounded-xl border border-border bg-card/40 p-6 transition-colors hover:border-primary/40 hover:bg-card"
+          className="group mt-px flex items-center gap-4 border border-t-0 border-border p-6 transition-colors hover:border-ember sm:p-8"
         >
-          <GraduationCap className="size-5 shrink-0 text-primary" />
-          <span className="flex-1 text-sm">
-            <span className="font-medium">Publications on Google Scholar</span>
-            <span className="block text-muted-foreground">
+          <span className="flex-1">
+            <span className="readout block text-ember">Publications</span>
+            <span className="mt-2 block font-mono text-sm">Google Scholar</span>
+            <span className="mt-1 block text-sm text-muted-foreground">
               Peer-reviewed work from the observing and instrumentation side
             </span>
           </span>
-          <ArrowUpRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+          <ArrowUpRight className="size-5 shrink-0 text-muted-foreground transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-ember" />
         </a>
       </Section>
 
       <Section>
-        <div className="rounded-xl border border-primary/30 bg-primary/5 p-8 text-center">
-          <h2 className="text-2xl font-semibold tracking-tight text-balance">
-            Building something at the edge of science and software?
+        <div className="border border-ember/40 p-8 text-center sm:p-14">
+          <p className="readout text-ember">Open to interesting problems</p>
+          <h2 className="display mx-auto mt-5 max-w-3xl text-4xl text-balance sm:text-6xl">
+            Science is hard enough. The software should not be.
           </h2>
-          <p className="mx-auto mt-3 max-w-xl leading-relaxed text-muted-foreground text-pretty">
-            I like problems where the domain is genuinely hard and the software still has to be
+          <p className="mx-auto mt-6 max-w-xl leading-relaxed text-muted-foreground text-pretty">
+            I like problems where the domain is genuinely difficult and the system still has to be
             reliable at 3 a.m. If that sounds like yours, say hello.
           </p>
-          <Button asChild size="lg" className="mt-6">
-            <a href={`mailto:${profile.email}`}>
-              <Mail />
-              {profile.email}
-            </a>
-          </Button>
+          <a
+            href={`mailto:${profile.email}`}
+            className="mt-8 inline-flex items-center gap-2 border border-ember bg-ember px-6 py-3.5 text-primary-foreground transition-colors hover:bg-transparent hover:text-ember"
+          >
+            <Mail className="size-4" />
+            <span className="readout">{profile.email}</span>
+          </a>
         </div>
       </Section>
     </PageShell>

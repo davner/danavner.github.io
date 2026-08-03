@@ -9,7 +9,7 @@ import { useDocumentMeta } from "@/lib/use-document-meta";
 type Filter = Category | "all";
 
 const FILTERS: { value: Filter; label: string }[] = [
-  { value: "all", label: "All" },
+  { value: "all", label: "Everything" },
   ...CATEGORIES.map((category) => ({ value: category, label: CATEGORY_LABEL[category] })),
 ];
 
@@ -37,10 +37,11 @@ export function Writing() {
     <PageShell>
       <PageHeader
         eyebrow="Writing"
-        title="Notes, in public."
+        title="Notes"
+        meta={[`${posts.length} ${posts.length === 1 ? "post" : "posts"}`, "No schedule"]}
         lede="Some of this is about building software for astronomy. Some of it is about lifting, drums, or whatever else has my attention. It all lives here — filter it if you only want one kind."
       >
-        <div className="mt-8 flex flex-wrap gap-2" role="group" aria-label="Filter posts">
+        <div className="mt-8 flex flex-wrap gap-px bg-border" role="group" aria-label="Filter posts">
           {FILTERS.map((filter) => {
             const count =
               filter.value === "all" ? posts.length : postsByCategory(filter.value).length;
@@ -53,16 +54,14 @@ export function Writing() {
                 onClick={() => selectFilter(filter.value)}
                 aria-pressed={isActive}
                 className={cn(
-                  "inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm transition-colors",
+                  "flex items-center gap-2 px-5 py-3 transition-colors",
                   isActive
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                    ? "bg-ember text-primary-foreground"
+                    : "bg-background text-muted-foreground hover:text-ember",
                 )}
               >
-                {filter.label}
-                <span className={cn("font-mono text-xs", isActive ? "opacity-70" : "opacity-60")}>
-                  {count}
-                </span>
+                <span className="readout">{filter.label}</span>
+                <span className="font-mono text-[0.65rem] opacity-70">{count}</span>
               </button>
             );
           })}
@@ -70,13 +69,13 @@ export function Writing() {
       </PageHeader>
 
       {visible.length > 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {visible.map((post) => (
-            <PostCard key={post.slug} post={post} />
+        <div className="grid gap-px border border-border bg-border sm:grid-cols-2">
+          {visible.map((post, index) => (
+            <PostCard key={post.slug} post={post} index={visible.length - index} />
           ))}
         </div>
       ) : (
-        <p className="rounded-xl border border-dashed border-border p-12 text-center text-muted-foreground">
+        <p className="border border-dashed border-border p-16 text-center text-muted-foreground">
           Nothing here yet. Check back soon.
         </p>
       )}

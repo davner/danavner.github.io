@@ -1,0 +1,17 @@
+{
+  "name": "Dan Avner",
+  "short_name": "Dan Avner",
+  "description": "Dan Avner builds production software for telescopes, observatories, and the astronomers who use them.",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#0a0c12",
+  "background_color": "#0a0c12",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

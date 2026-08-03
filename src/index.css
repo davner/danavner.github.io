@@ -1,0 +1,327 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Palette: "observatory at night".
+ * Deep blue-black sky, warm sand/amber accent carried over from the old site,
+ * cool neutral text. Light mode is the same idea inverted onto warm paper.
+ */
+:root {
+  --radius: 0.75rem;
+
+  --background: oklch(0.985 0.006 85);
+  --foreground: oklch(0.22 0.015 265);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.015 265);
+
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0.015 265);
+
+  --primary: oklch(0.56 0.13 62);
+  --primary-foreground: oklch(0.99 0.005 85);
+
+  --secondary: oklch(0.955 0.008 85);
+  --secondary-foreground: oklch(0.26 0.015 265);
+
+  --muted: oklch(0.955 0.008 85);
+  --muted-foreground: oklch(0.5 0.015 265);
+
+  --accent: oklch(0.94 0.02 75);
+  --accent-foreground: oklch(0.26 0.015 265);
+
+  --destructive: oklch(0.58 0.22 27);
+  --destructive-foreground: oklch(0.99 0.005 85);
+
+  --border: oklch(0.9 0.008 85);
+  --input: oklch(0.9 0.008 85);
+  --ring: oklch(0.56 0.13 62);
+
+  /* Site-specific tokens. */
+  --sky: oklch(0.985 0.006 85);
+  --star: oklch(0.55 0.06 265);
+  --glow: oklch(0.56 0.13 62 / 0.12);
+}
+
+.dark {
+  --background: oklch(0.15 0.014 265);
+  --foreground: oklch(0.94 0.008 90);
+
+  --card: oklch(0.19 0.016 265);
+  --card-foreground: oklch(0.94 0.008 90);
+
+  --popover: oklch(0.19 0.016 265);
+  --popover-foreground: oklch(0.94 0.008 90);
+
+  --primary: oklch(0.81 0.13 72);
+  --primary-foreground: oklch(0.2 0.03 62);
+
+  --secondary: oklch(0.24 0.016 265);
+  --secondary-foreground: oklch(0.94 0.008 90);
+
+  --muted: oklch(0.24 0.016 265);
+  --muted-foreground: oklch(0.7 0.016 265);
+
+  --accent: oklch(0.27 0.022 265);
+  --accent-foreground: oklch(0.94 0.008 90);
+
+  --destructive: oklch(0.68 0.19 25);
+  --destructive-foreground: oklch(0.16 0.02 265);
+
+  --border: oklch(0.29 0.016 265);
+  --input: oklch(0.29 0.016 265);
+  --ring: oklch(0.81 0.13 72);
+
+  --sky: oklch(0.15 0.014 265);
+  --star: oklch(0.92 0.02 90);
+  --glow: oklch(0.81 0.13 72 / 0.16);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono",
+    monospace;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--glow);
+  }
+
+  /* Keep anchored headings clear of the sticky header. */
+  :target {
+    scroll-margin-top: 6rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* Small caps section label used across the site. */
+  .eyebrow {
+    @apply font-mono text-[0.7rem] font-medium tracking-[0.2em] text-muted-foreground uppercase;
+  }
+
+  /* Long-form markdown rendering for blog posts. */
+  .prose-dan {
+    @apply text-[1.0625rem] leading-[1.75] text-foreground/90;
+  }
+
+  .prose-dan > * + * {
+    @apply mt-5;
+  }
+
+  .prose-dan h2 {
+    @apply mt-12 scroll-mt-28 text-2xl font-semibold tracking-tight text-foreground;
+  }
+
+  .prose-dan h3 {
+    @apply mt-9 scroll-mt-28 text-xl font-semibold tracking-tight text-foreground;
+  }
+
+  .prose-dan h4 {
+    @apply mt-8 scroll-mt-28 text-base font-semibold tracking-tight text-foreground;
+  }
+
+  .prose-dan a {
+    @apply text-primary underline decoration-primary/40 underline-offset-4 transition-colors hover:decoration-primary;
+  }
+
+  .prose-dan strong {
+    @apply font-semibold text-foreground;
+  }
+
+  .prose-dan ul {
+    @apply list-disc space-y-2 pl-6 marker:text-primary/60;
+  }
+
+  .prose-dan ol {
+    @apply list-decimal space-y-2 pl-6 marker:text-muted-foreground;
+  }
+
+  .prose-dan li > ul,
+  .prose-dan li > ol {
+    @apply mt-2;
+  }
+
+  .prose-dan blockquote {
+    @apply border-l-2 border-primary/50 pl-5 text-muted-foreground italic;
+  }
+
+  .prose-dan hr {
+    @apply my-10 border-border;
+  }
+
+  .prose-dan img {
+    @apply rounded-lg border border-border;
+  }
+
+  .prose-dan code {
+    @apply rounded-md bg-muted px-1.5 py-0.5 font-mono text-[0.85em] text-foreground;
+  }
+
+  .prose-dan pre {
+    @apply overflow-x-auto rounded-xl border border-border bg-card p-4 text-[0.85rem] leading-relaxed;
+  }
+
+  .prose-dan pre code {
+    @apply bg-transparent p-0 text-[1em];
+  }
+
+  .prose-dan table {
+    @apply block w-full overflow-x-auto text-sm;
+  }
+
+  .prose-dan thead {
+    @apply border-b border-border;
+  }
+
+  .prose-dan th {
+    @apply px-3 py-2 text-left font-semibold;
+  }
+
+  .prose-dan td {
+    @apply border-t border-border px-3 py-2 align-top;
+  }
+}
+
+/*
+ * Syntax highlighting for rehype-highlight, tuned to the palette above instead
+ * of pulling in a highlight.js theme that would fight it.
+ */
+.hljs-comment,
+.hljs-quote {
+  @apply text-muted-foreground italic;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-doctag,
+.hljs-type,
+.hljs-name,
+.hljs-strong {
+  color: var(--primary);
+}
+
+.hljs-string,
+.hljs-regexp,
+.hljs-addition,
+.hljs-attribute,
+.hljs-meta .hljs-string {
+  color: oklch(0.7 0.13 160);
+}
+
+.dark .hljs-string,
+.dark .hljs-regexp,
+.dark .hljs-addition,
+.dark .hljs-attribute,
+.dark .hljs-meta .hljs-string {
+  color: oklch(0.8 0.12 160);
+}
+
+.hljs-number,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-link,
+.hljs-selector-attr {
+  color: oklch(0.6 0.16 300);
+}
+
+.dark .hljs-number,
+.dark .hljs-symbol,
+.dark .hljs-bullet,
+.dark .hljs-variable,
+.dark .hljs-template-variable,
+.dark .hljs-link,
+.dark .hljs-selector-attr {
+  color: oklch(0.78 0.13 300);
+}
+
+.hljs-title,
+.hljs-section,
+.hljs-function .hljs-title,
+.hljs-title.function_,
+.hljs-title.class_ {
+  color: oklch(0.55 0.14 240);
+}
+
+.dark .hljs-title,
+.dark .hljs-section,
+.dark .hljs-function .hljs-title,
+.dark .hljs-title.function_,
+.dark .hljs-title.class_ {
+  color: oklch(0.78 0.11 240);
+}
+
+.hljs-built_in,
+.hljs-class .hljs-title,
+.hljs-params {
+  @apply text-foreground;
+}
+
+.hljs-emphasis {
+  @apply italic;
+}
+
+.hljs-deletion {
+  color: var(--destructive);
+}

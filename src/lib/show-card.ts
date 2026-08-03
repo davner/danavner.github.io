@@ -16,14 +16,25 @@ const PAD = 96;
 /** Matches the rating row on the site. */
 const HORNS = "\u{1F918}\u{1F3FD}";
 
-/** Wraps text to `maxWidth`, returning the lines. Assumes the font is set. */
-function wrap(context: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+/**
+ * Wraps text to `maxWidth`, returning the lines. Assumes the font is set.
+ *
+ * `firstWidth` narrows the first line only, which is how the band list leaves
+ * room for the `w/` drawn beside it.
+ */
+function wrap(
+  context: CanvasRenderingContext2D,
+  text: string,
+  maxWidth: number,
+  firstWidth = maxWidth,
+): string[] {
   const lines: string[] = [];
   let line = "";
 
   for (const word of text.split(/\s+/).filter(Boolean)) {
     const candidate = line ? `${line} ${word}` : word;
-    if (line && context.measureText(candidate).width > maxWidth) {
+    const limit = lines.length === 0 ? firstWidth : maxWidth;
+    if (line && context.measureText(candidate).width > limit) {
       lines.push(line);
       line = word;
     } else {
@@ -159,12 +170,22 @@ export async function renderShowCard(show: Show): Promise<Blob> {
   const openers = support(show);
   if (openers.length > 0) {
     context.font = '400 36px "Inter Variable", system-ui, sans-serif';
-    const body = wrap(context, `w/ ${openers.join(", ")}`, WIDTH - PAD * 2).slice(0, 3);
-    for (const line of body) {
+
+    const prefix = "w/ ";
+    const prefixWidth = context.measureText(prefix).width;
+    const maxWidth = WIDTH - PAD * 2;
+    const body = wrap(context, openers.join(", "), maxWidth, maxWidth - prefixWidth).slice(0, 3);
+
+    // The site prints `w/` in ember and the bands in muted grey. The card is
+    // the same mark, so it gets the same two colours.
+    context.fillStyle = EMBER;
+    context.fillText(prefix.trimEnd(), PAD, y);
+
+    body.forEach((line, index) => {
       context.fillStyle = DIM;
-      context.fillText(line, PAD, y);
+      context.fillText(line, index === 0 ? PAD + prefixWidth : PAD, y);
       y += 52;
-    }
+    });
     y += 16;
   }
 

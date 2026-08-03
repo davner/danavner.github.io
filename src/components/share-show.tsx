@@ -1,21 +1,23 @@
-import { Check, Copy, Download, Loader2, Share2, X } from "lucide-react";
+import { Check, Copy, Download, ImageIcon, Link2, Loader2, Share2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { renderShowCard, showUrl } from "@/lib/show-card";
-import { showHeading, showSummary } from "@/lib/show-summary";
+import { showHeading } from "@/lib/show-summary";
 import type { Show } from "@/lib/shows";
 import { cn } from "@/lib/utils";
 
 type Status = "idle" | "working" | "ready" | "failed";
 
 /**
- * Share sheet for one show: a poster rendered from the entry, plus the link.
+ * Share sheet for one show: a poster rendered from the entry, and the link.
  *
- * On a phone this hands both to the OS share sheet in one go, which is what
- * puts the image into an Instagram story or a text message. On a desktop, where
- * `navigator.share` is usually absent, it falls back to saving the image and
- * copying the link, which is the same two things done by hand.
+ * The two are offered separately on purpose. Handing the OS a payload with a
+ * file *and* a URL *and* a body of text lets each app decide what to do with
+ * all three, and Messages decides to stack them: a full-height poster, the
+ * whole lineup as a paragraph, and the link underneath. Sending one thing at a
+ * time means the story gets the poster and the message gets a link that
+ * previews itself.
  */
 export function ShareShow({ show, className }: { show: Show; className?: string }) {
   const [status, setStatus] = useState<Status>("idle");
@@ -50,48 +52,35 @@ export function ShareShow({ show, className }: { show: Show; className?: string 
     triggerRef.current?.focus();
   }
 
-  async function build(): Promise<Blob | null> {
-    if (card) return card.blob;
+  async function open() {
+    if (card) {
+      setStatus("ready");
+      return;
+    }
+
+    setStatus("working");
 
     try {
       const blob = await renderShowCard(show);
       setCard({ blob, url: URL.createObjectURL(blob) });
-      return blob;
+      setStatus("ready");
     } catch {
-      return null;
-    }
-  }
-
-  async function open() {
-    setStatus("working");
-    const blob = await build();
-
-    if (!blob) {
       setStatus("failed");
-      return;
     }
-
-    const file = new File([blob], `${show.slug}.png`, { type: "image/png" });
-    const payload = { title: heading, text: `${heading} - ${showSummary(show)}`, url, files: [file] };
-
-    // Sharing the file and the link together is the whole point; if the
-    // platform will not take a file, the panel below does the job instead.
-    if (navigator.canShare?.(payload)) {
-      try {
-        await navigator.share(payload);
-        setStatus("idle");
-        return;
-      } catch (error) {
-        // A cancelled share is a normal outcome, not a failure to report.
-        if ((error as Error)?.name === "AbortError") {
-          setStatus("idle");
-          return;
-        }
-      }
-    }
-
-    setStatus("ready");
   }
+
+  /** Swallows the cancel that every OS share sheet throws on dismissal. */
+  async function share(payload: ShareData) {
+    try {
+      await navigator.share(payload);
+    } catch (error) {
+      if ((error as Error)?.name !== "AbortError") throw error;
+    }
+  }
+
+  const file = card ? new File([card.blob], `${show.slug}.png`, { type: "image/png" }) : null;
+  const canShareLink = typeof navigator !== "undefined" && Boolean(navigator.share);
+  const canShareImage = Boolean(file && navigator.canShare?.({ files: [file] }));
 
   async function copyLink() {
     try {
@@ -102,6 +91,8 @@ export function ShareShow({ show, className }: { show: Show; className?: string 
       // Clipboard blocked; the link is on screen and selectable.
     }
   }
+
+  const action = "readout w-full justify-start rounded-none hover:border-ember hover:text-ember";
 
   return (
     <span className={cn("relative inline-block", className)}>
@@ -149,25 +140,40 @@ export function ShareShow({ show, className }: { show: Show; className?: string 
           />
 
           <div className="mt-3 flex flex-col gap-2">
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className="readout rounded-none hover:border-ember hover:text-ember"
-            >
+            {canShareImage ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => share({ files: [file!] })}
+                className={action}
+              >
+                <ImageIcon />
+                Share the card
+              </Button>
+            ) : null}
+
+            <Button asChild variant="outline" size="sm" className={action}>
               <a href={card.url} download={`${show.slug}.png`}>
                 <Download />
-                Save image
+                Save the card
               </a>
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={copyLink}
-              className="readout rounded-none hover:border-ember hover:text-ember"
-            >
+
+            {canShareLink ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => share({ title: heading, url })}
+                className={action}
+              >
+                <Link2 />
+                Send the link
+              </Button>
+            ) : null}
+
+            <Button variant="outline" size="sm" onClick={copyLink} className={action}>
               {copied ? <Check className="text-ember" /> : <Copy />}
-              {copied ? "Link copied" : "Copy link"}
+              {copied ? "Link copied" : "Copy the link"}
             </Button>
           </div>
 

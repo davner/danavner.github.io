@@ -79,6 +79,7 @@ file, down to checking that a photo path actually exists in `public/`.
 public/                   served as-is (CNAME, favicon, photos)
 scripts/
   optimize-photos.mjs     resizes any image and strips its EXIF
+  make-share-fallback.mjs draws the social image for a show with no photos
 vite-plugin-content.ts    reads + validates the markdown collections at build time
 vite-plugin-share-pages.ts writes one HTML file per show so links preview properly
 vite.config.ts            aliases, Tailwind, the 404.html fallback
@@ -256,17 +257,30 @@ Three more details worth knowing:
 
 Every entry has its own page at `/shows/<slug>` and a **Share** button.
 
-The button renders a 1080×1920 poster from the entry on a canvas - photo,
-lineup, rating, venue, date, and the URL - then hands the image and the link to
-`navigator.share()`. On a phone that is one tap into an Instagram story or a
-text message. Where `navigator.share` is missing, usually a desktop browser, it
-falls back to a panel with the same image to save and the link to copy.
+The button renders a 1080×1920 poster from the entry on a canvas: photo, lineup,
+rating, venue, date, and the URL. It then opens a panel offering the poster and
+the link as **separate** actions.
+
+That separation is the whole design. Handing `navigator.share()` a payload with
+a file *and* a URL *and* a body of text lets each app decide what to do with all
+three, and Messages decides to stack them, so you get a full-height poster, the
+entire lineup as a paragraph, and the link underneath. Sending one thing at a
+time means an Instagram story gets the poster and a text message gets a link
+that previews itself. On a desktop, where `navigator.share` is usually missing,
+the panel offers the same poster to save and the link to copy.
 
 The link itself previews properly because `vite-plugin-share-pages.ts` writes a
 real `dist/shows/<slug>/index.html` per show at build time, each with its own
 title, description, and `og:image`. Crawlers behind iMessage, Slack, and
 WhatsApp read the served HTML and never run the router, so without those files
 every shared show would preview as the same generic site card.
+
+`og:image` is the show's first photo. A show with no photos gets
+`public/img/share-card.jpg` instead of the site portrait, because a festival
+link that previews as a headshot looks like the wrong link. That image is
+generated once by `scripts/make-share-fallback.mjs` and committed; the build
+does not call it, since rendering a card at build time would mean shipping a
+headless browser or a font stack with the site.
 
 ---
 

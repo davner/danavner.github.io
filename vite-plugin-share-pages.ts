@@ -4,7 +4,7 @@ import path from "node:path";
 import type { Plugin } from "vite";
 
 import { showHeading, showSummary } from "./src/lib/show-summary";
-import { DEFAULT_SHARE_IMAGE, SITE_NAME, SITE_URL } from "./src/lib/site";
+import { SHOW_FALLBACK_IMAGE, SITE_NAME, SITE_URL } from "./src/lib/site";
 import { readShows } from "./vite-plugin-content";
 
 function escapeAttribute(value: string) {
@@ -54,7 +54,7 @@ export function sharePagesPlugin(): Plugin {
         const title = `${heading} · ${SITE_NAME}`;
         const description = showSummary(show);
         const url = `${SITE_URL}/shows/${show.slug}`;
-        const photo = show.photos[0]?.src ?? DEFAULT_SHARE_IMAGE;
+        const photo = show.photos[0]?.src ?? SHOW_FALLBACK_IMAGE;
         const image = /^https?:\/\//.test(photo) ? photo : `${SITE_URL}${photo}`;
 
         let html = template.replace(

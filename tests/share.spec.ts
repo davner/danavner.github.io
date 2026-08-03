@@ -40,6 +40,9 @@ test.describe("link previews", () => {
       // An image path that 404s previews as a blank card, which is worse than
       // no image at all.
       expect(ogImage).toMatch(/^https:\/\/danavner\.com\//);
+      // A show with no photos used to fall back to the site portrait, so a
+      // festival link previewed in Messages as a headshot.
+      expect(ogImage, `${slug} previews as the portrait`).not.toContain("/img/me1.jpg");
 
       titles.add(title!);
     }
@@ -60,8 +63,9 @@ test.describe("share", () => {
     await page.goto("/shows/bruno-mars-madrid-2026");
     await page.getByRole("heading", { level: 1 }).waitFor();
 
-    // Headless Chromium has no `navigator.share`, so this exercises the
-    // fallback panel - the path every desktop visitor gets.
+    // The panel is always the first stop now. Handing the OS the card and the
+    // link in one payload made Messages stack the poster, the lineup, and the
+    // URL on top of each other.
     await page.getByRole("button", { name: /^Share/ }).click();
 
     const card = page.locator("img[alt^='Share card']");
@@ -73,11 +77,47 @@ test.describe("share", () => {
     );
     expect(size).toBeGreaterThan(0);
 
-    await expect(page.getByRole("link", { name: /Save image/ })).toHaveAttribute(
+    await expect(page.getByRole("link", { name: /Save the card/ })).toHaveAttribute(
       "download",
       "bruno-mars-madrid-2026.png",
     );
     await expect(page.getByText("danavner.com/shows/bruno-mars-madrid-2026")).toBeVisible();
+  });
+
+  test("the card and the link are separate actions", async ({ page }) => {
+    await page.goto("/shows/bruno-mars-madrid-2026");
+
+    // Stand in for a phone: a share sheet that takes files as well as links.
+    await page.addInitScript(() => {
+      const shared: unknown[] = [];
+      (window as unknown as { __shared: unknown[] }).__shared = shared;
+      Object.defineProperty(navigator, "share", {
+        configurable: true,
+        value: async (data: unknown) => void shared.push(data),
+      });
+      Object.defineProperty(navigator, "canShare", { configurable: true, value: () => true });
+    });
+    await page.reload();
+
+    await page.getByRole("button", { name: /^Share/ }).click();
+    await expect(page.getByRole("group", { name: /^Share / })).toBeFocused({ timeout: 15_000 });
+
+    await page.getByRole("button", { name: /Share the card/ }).click();
+    await page.getByRole("button", { name: /Send the link/ }).click();
+
+    const payloads = await page.evaluate(
+      () => (window as unknown as { __shared: Record<string, unknown>[] }).__shared,
+    );
+    expect(payloads).toHaveLength(2);
+
+    // The card goes out on its own, with no URL riding along.
+    expect(payloads[0].files).toBeTruthy();
+    expect(payloads[0].url).toBeUndefined();
+
+    // The link goes out on its own, with no file and no pasted lineup.
+    expect(payloads[1].url).toBe("https://danavner.com/shows/bruno-mars-madrid-2026");
+    expect(payloads[1].files).toBeUndefined();
+    expect(payloads[1].text).toBeUndefined();
   });
 
   test("escape closes the panel and hands focus back", async ({ page }) => {

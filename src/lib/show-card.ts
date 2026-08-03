@@ -121,7 +121,10 @@ export async function renderShowCard(show: Show): Promise<Blob> {
   context.fillStyle = glow;
   context.fillRect(0, 0, WIDTH, HEIGHT);
 
-  let y = photo ? photoHeight + 40 : 320;
+  // With no photo the top of the card is just the ember bloom, so the block
+  // starts lower and sits between the glow and the footer rule instead of
+  // stranding itself at the top with 700px of empty space underneath.
+  let y = photo ? photoHeight + 40 : 620;
 
   const readout = (text: string, color: string, size = 30) => {
     context.font = `500 ${size}px "JetBrains Mono Variable", ui-monospace, monospace`;

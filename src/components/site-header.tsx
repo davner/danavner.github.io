@@ -4,10 +4,10 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { to: "/about", label: "About", index: "01" },
-  { to: "/career", label: "Career", index: "02" },
-  { to: "/blog", label: "Blog", index: "03" },
-  { to: "/shows", label: "Shows", index: "04" },
+  { to: "/about", label: "About" },
+  { to: "/career", label: "Career" },
+  { to: "/blog", label: "Blog" },
+  { to: "/shows", label: "Shows" },
 ];
 
 export function SiteHeader() {
@@ -47,14 +47,6 @@ export function SiteHeader() {
                 >
                   {({ isActive }) => (
                     <>
-                      <span
-                        className={cn(
-                          "hidden font-mono text-[0.6rem] transition-colors sm:inline",
-                          isActive ? "text-ember" : "text-muted-foreground",
-                        )}
-                      >
-                        {item.index}
-                      </span>
                       <span className="font-mono text-[0.6rem] font-medium tracking-[0.1em] uppercase sm:text-[0.68rem] sm:tracking-[0.18em]">
                         {item.label}
                       </span>

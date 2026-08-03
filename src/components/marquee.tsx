@@ -1,6 +1,9 @@
-import { Fragment } from "react";
+import { Star } from "lucide-react";
+import { Fragment, type ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
+
+const STAR = <Star aria-hidden className="inline-block size-2.5 shrink-0 text-ember" />;
 
 /**
  * Scrolling ticker. The track holds two identical copies of the items and
@@ -11,19 +14,19 @@ export function Marquee({
   items,
   className,
   duration = "42s",
-  separator = "✦",
+  separator = STAR,
 }: {
   items: string[];
   className?: string;
   duration?: string;
-  separator?: string;
+  separator?: ReactNode;
 }) {
   const copy = (key: string) => (
     <div key={key} className="flex shrink-0 items-center">
       {items.map((item, index) => (
         <Fragment key={`${key}-${index}`}>
           <span className="px-5 whitespace-nowrap">{item}</span>
-          <span className="text-ember">{separator}</span>
+          <span className="flex shrink-0 items-center text-ember">{separator}</span>
         </Fragment>
       ))}
     </div>

@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { BandList } from "@/components/band-list";
 import { Marquee } from "@/components/marquee";
 import { PageHeader, PageShell, Section } from "@/components/page";
 import { Rating } from "@/components/rating";
@@ -45,7 +46,7 @@ function ShowRow({ show }: { show: Show }) {
 
         {support.length > 0 ? (
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground text-pretty">
-            <span className="text-ember">w/</span> {support.join(" · ")}
+            <span className="text-ember">w/</span> <BandList bands={support} />
           </p>
         ) : null}
 

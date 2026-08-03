@@ -148,7 +148,7 @@ export function About() {
               >
                 <div className="flex items-start justify-between">
                   <Icon className="size-6 text-ember" />
-                  <span className="font-mono text-xs text-muted-foreground/50">
+                  <span className="font-mono text-xs text-muted-foreground">
                     {String(index + 1).padStart(2, "0")}
                   </span>
                 </div>

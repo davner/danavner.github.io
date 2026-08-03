@@ -83,6 +83,13 @@ export function WritingPost() {
             // unlabelled blocks plain rather than guessing at them.
             rehypePlugins={[rehypeSlug, [rehypeHighlight, { detect: false }]]}
             components={{
+              // A code block that scrolls sideways is unreachable to a keyboard
+              // unless it can take focus, which is most of them on a phone.
+              pre: ({ children, ...props }) => (
+                <pre tabIndex={0} {...props}>
+                  {children}
+                </pre>
+              ),
               a: ({ href, children, ...props }) => {
                 const external = href?.startsWith("http");
                 return (

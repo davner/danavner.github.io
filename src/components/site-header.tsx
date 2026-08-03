@@ -50,7 +50,7 @@ export function SiteHeader() {
                       <span
                         className={cn(
                           "hidden font-mono text-[0.6rem] transition-colors sm:inline",
-                          isActive ? "text-ember" : "text-muted-foreground/50",
+                          isActive ? "text-ember" : "text-muted-foreground",
                         )}
                       >
                         {item.index}

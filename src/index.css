@@ -64,7 +64,10 @@
   --popover-foreground: oklch(0.95 0.008 90);
 
   --primary: oklch(0.66 0.225 32);
-  --primary-foreground: oklch(0.99 0.004 85);
+  /* Near-black rather than bone: at this ember's lightness, white type only
+     reaches 3.35:1. Dark type on hot orange clears AA and reads more like
+     hazard tape anyway, which suits the poster. */
+  --primary-foreground: oklch(0.16 0.03 40);
 
   --secondary: oklch(0.2 0.018 268);
   --secondary-foreground: oklch(0.95 0.008 90);

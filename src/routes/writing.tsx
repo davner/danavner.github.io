@@ -49,7 +49,7 @@ export function Writing() {
           value={active}
           onValueChange={(value) => selectFilter(isFilter(value) ? value : "all")}
           aria-label="Filter posts by category"
-          className="mt-8 bg-border"
+          className="mt-8 max-w-full flex-wrap bg-border"
         >
           {FILTERS.map((filter) => {
             const count =

@@ -8,7 +8,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc -b --noEmit"
+    "typecheck": "tsc -b --noEmit",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui"
   },
   "repository": {
     "type": "git",
@@ -20,8 +22,11 @@
     "@fontsource-variable/jetbrains-mono": "^5.3.0",
     "@fontsource/anton": "^5.3.0",
     "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-toggle": "^1.1.18",
+    "@radix-ui/react-toggle-group": "^1.1.19",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "embla-carousel-react": "^8.6.0",
     "lucide-react": "^0.545.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
@@ -33,6 +38,8 @@
     "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/vite": "^4.1.14",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^24.7.0",

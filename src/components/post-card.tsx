@@ -1,23 +1,18 @@
 import { ArrowUpRight } from "lucide-react";
 import { Link } from "react-router";
 
+import { Badge } from "@/components/ui/badge";
 import { CATEGORY_LABEL, formatDate, type Post } from "@/lib/blog";
-import { cn } from "@/lib/utils";
 
 export function PostCard({ post, index }: { post: Post; index?: number }) {
   return (
     <article className="cut-corners group relative flex flex-col bg-background p-6 transition-colors hover:bg-card/60 sm:p-8">
       <div className="flex items-center justify-between gap-4">
-        <p
-          className={cn(
-            "readout",
-            post.category === "work" ? "text-ember" : "text-ion",
-          )}
-        >
+        <Badge variant={post.category === "work" ? "ember" : "ion"}>
           {CATEGORY_LABEL[post.category]}
-        </p>
+        </Badge>
         {index != null ? (
-          <span className="font-mono text-xs text-muted-foreground/50">
+          <span className="font-mono text-xs text-muted-foreground">
             {String(index).padStart(2, "0")}
           </span>
         ) : null}
@@ -44,7 +39,7 @@ export function PostCard({ post, index }: { post: Post; index?: number }) {
         {post.draft ? (
           <>
             <span className="text-ember">·</span>
-            <span className="readout text-ember">Draft</span>
+            <Badge variant="ember">Draft</Badge>
           </>
         ) : null}
         <ArrowUpRight className="ml-auto size-4 text-muted-foreground transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-ember" />

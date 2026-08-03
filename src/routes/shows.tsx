@@ -9,6 +9,8 @@ import { PageHeader, PageShell, Section } from "@/components/page";
 import { PhotoCarousel } from "@/components/photo-carousel";
 import { Rating } from "@/components/rating";
 import { SoloBadge } from "@/components/solo-badge";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   formatShowDate,
   showsByYear,
@@ -43,7 +45,11 @@ function ShowRow({ show }: { show: Show }) {
 
         {tags.length > 0 || show.rating != null ? (
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
-            {tags.length > 0 ? <p className="readout text-ion">{tags.join(" · ")}</p> : null}
+            {tags.map((tag) => (
+              <Badge key={tag} variant="ion">
+                {tag}
+              </Badge>
+            ))}
             {show.rating != null ? <Rating value={show.rating} /> : null}
           </div>
         ) : null}
@@ -70,15 +76,17 @@ function ShowRow({ show }: { show: Show }) {
 
         {show.video ? (
           <p className="mt-3">
-            <a
-              href={show.video}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="readout relative z-10 inline-flex items-center gap-2 border border-border px-3 py-2 text-muted-foreground transition-colors hover:border-ember hover:text-ember"
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="readout relative z-10 rounded-none text-muted-foreground hover:border-ember hover:text-ember"
             >
-              <Youtube className="size-4" />
-              {show.videoIsPlaylist ? "Playlist" : "Watch"}
-            </a>
+              <a href={show.video} target="_blank" rel="noreferrer noopener">
+                <Youtube />
+                {show.videoIsPlaylist ? "Playlist" : "Watch"}
+              </a>
+            </Button>
           </p>
         ) : null}
 

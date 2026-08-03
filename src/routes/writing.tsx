@@ -2,6 +2,7 @@ import { useSearchParams } from "react-router";
 
 import { PageHeader, PageShell } from "@/components/page";
 import { PostCard } from "@/components/post-card";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { CATEGORIES, CATEGORY_LABEL, posts, postsByCategory, type Category } from "@/lib/blog";
 import { cn } from "@/lib/utils";
 import { useDocumentMeta } from "@/lib/use-document-meta";
@@ -41,31 +42,35 @@ export function Writing() {
         meta={[`${posts.length} ${posts.length === 1 ? "post" : "posts"}`, "No schedule"]}
         lede="Some of this is about building software for astronomy. Some of it is about lifting, drums, or whatever else has my attention. It all lives here — filter it if you only want one kind."
       >
-        <div className="mt-8 flex flex-wrap gap-px bg-border" role="group" aria-label="Filter posts">
+        {/* A single-select filter is a radio group, which is what ToggleGroup
+            gives: roving focus and arrow-key navigation for free. */}
+        <ToggleGroup
+          type="single"
+          value={active}
+          onValueChange={(value) => selectFilter(isFilter(value) ? value : "all")}
+          aria-label="Filter posts by category"
+          className="mt-8 bg-border"
+        >
           {FILTERS.map((filter) => {
             const count =
               filter.value === "all" ? posts.length : postsByCategory(filter.value).length;
-            const isActive = active === filter.value;
 
             return (
-              <button
+              <ToggleGroupItem
                 key={filter.value}
-                type="button"
-                onClick={() => selectFilter(filter.value)}
-                aria-pressed={isActive}
+                value={filter.value}
                 className={cn(
-                  "flex items-center gap-2 px-5 py-3 transition-colors",
-                  isActive
-                    ? "bg-ember text-primary-foreground"
-                    : "bg-background text-muted-foreground hover:text-ember",
+                  "h-auto gap-2 bg-background px-5 py-3 text-muted-foreground",
+                  "hover:bg-background hover:text-ember",
+                  "data-[state=on]:bg-ember data-[state=on]:text-primary-foreground",
                 )}
               >
                 <span className="readout">{filter.label}</span>
                 <span className="font-mono text-[0.65rem] opacity-70">{count}</span>
-              </button>
+              </ToggleGroupItem>
             );
           })}
-        </div>
+        </ToggleGroup>
       </PageHeader>
 
       {visible.length > 0 ? (

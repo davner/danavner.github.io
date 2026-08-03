@@ -6,9 +6,9 @@ import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 
 import { PageShell } from "@/components/page";
+import { Badge } from "@/components/ui/badge";
 import { CATEGORY_LABEL, formatDate, getPost, posts } from "@/lib/blog";
 import { useDocumentMeta } from "@/lib/use-document-meta";
-import { cn } from "@/lib/utils";
 import { NotFound } from "@/routes/not-found";
 
 export function WritingPost() {
@@ -36,9 +36,9 @@ export function WritingPost() {
       <article className="mt-10">
         <header>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-border pb-3">
-            <p className={cn("readout", post.category === "work" ? "text-ember" : "text-ion")}>
+            <Badge variant={post.category === "work" ? "ember" : "ion"}>
               {CATEGORY_LABEL[post.category]}
-            </p>
+            </Badge>
             <span className="text-border">/</span>
             <time dateTime={post.date} className="readout-dim">
               {formatDate(post.date)}
@@ -48,7 +48,7 @@ export function WritingPost() {
             {post.draft ? (
               <>
                 <span className="text-border">/</span>
-                <span className="readout text-ember">Draft</span>
+                <Badge variant="ember">Draft</Badge>
               </>
             ) : null}
           </div>

@@ -1,5 +1,6 @@
 import { Sparkles } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 /**
@@ -9,17 +10,12 @@ import { cn } from "@/lib/utils";
  */
 export function SoloBadge({ className }: { className?: string }) {
   return (
-    <span
-      className={cn(
-        "solo-badge readout inline-flex items-center gap-2 border border-ion/50 px-2.5 py-1 text-ion",
-        className,
-      )}
-    >
-      <Sparkles className="size-3" aria-hidden />
+    <Badge variant="ion" className={cn("solo-badge gap-2 px-2.5 py-1", className)}>
+      <Sparkles aria-hidden />
       Solo run
       <span aria-hidden className="border-l border-ion/30 pl-2 opacity-70">
         1P
       </span>
-    </span>
+    </Badge>
   );
 }

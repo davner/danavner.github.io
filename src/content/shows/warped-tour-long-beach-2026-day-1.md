@@ -36,8 +36,8 @@ setlists:
     url: https://www.setlist.fm/setlist/south-arcade/2026/shoreline-waterfront-long-beach-ca-usa-1b49b1ac.html
 ---
 
-Got to Warped Tour around 11:30am. Convinced JP to join me at the last minute to go to Warped Tour.
-Somehow convinced her to wear matching frog hats. #FrogSquad
+Got to Warped Tour around 11:30 a.m. Convinced JP to join me at the last minute, and somehow
+convinced her to wear matching frog hats too. #FrogSquad
 
 LOLO killed it, and was the sleeper hit. Vana was how I expected, a little rough with her
 vocals but she keeps getting better and better.

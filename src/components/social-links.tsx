@@ -1,4 +1,4 @@
-import { GraduationCap, Github, Instagram, Linkedin } from "lucide-react";
+import { GraduationCap, Github, Instagram, Linkedin, Youtube } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { socials, type SocialLink } from "@/content/profile";
@@ -8,6 +8,7 @@ const ICONS = {
   github: Github,
   linkedin: Linkedin,
   instagram: Instagram,
+  youtube: Youtube,
   "graduation-cap": GraduationCap,
 } satisfies Record<SocialLink["icon"], typeof Github>;
 

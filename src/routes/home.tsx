@@ -39,17 +39,18 @@ const INDEX = [
 ];
 
 const TICKER = [
-  "Metalcore",
-  "danwiththeyams",
-  "2nd in Florida for bowling",
-  "Digging through record bins",
+  "Live music",
+  "Dropping into Fortnite",
+  "Alexis, Milly and Penny",
+  "Travel",
+  "Record bins",
   "New comic Wednesday",
-  "Stealing photons before sunrise",
-  "Front of the barricade",
   "Legos with Nathan",
-  "Milly and Penny",
-  "Under a barbell",
-  "Los Angeles",
+  "Astrophotography",
+  "Telescope software",
+  "Front of the barricade",
+  "2nd in Florida for bowling",
+  "Goof boy",
 ];
 
 export function Home() {
@@ -66,7 +67,7 @@ export function Home() {
           <ul className="flex flex-wrap gap-x-5 gap-y-1">
             <li className="readout-dim">{profile.location}</li>
             <li className="readout-dim">He/him</li>
-            <li className="readout-dim">Probably at a show</li>
+            <li className="readout-dim">Chasing dark skies</li>
           </ul>
         </div>
 
@@ -91,7 +92,7 @@ export function Home() {
               </Link>
               <Link
                 to="/career"
-                className="inline-flex items-center gap-2 border border-border px-5 py-3 transition-colors hover:border-ember hover:text-ember"
+                className="inline-flex items-center gap-2 border border-border px-5 py-3 transition-colors hover:border-ember hover:bg-ember/10 hover:text-ember"
               >
                 <span className="readout">The day job</span>
               </Link>

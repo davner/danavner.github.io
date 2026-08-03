@@ -7,7 +7,7 @@ export interface SocialLink {
   label: string;
   href: string;
   /** lucide-react icon name, resolved in `src/components/social-links.tsx`. */
-  icon: "github" | "linkedin" | "instagram" | "graduation-cap";
+  icon: "github" | "linkedin" | "instagram" | "youtube" | "graduation-cap";
 }
 
 export interface Role {
@@ -75,7 +75,7 @@ export const profile = {
   partnerFirstName: "Alexis",
   /** The homepage voice: a person who happens to have a career. */
   blurb:
-    "I write software for telescopes for a living, then go home and point a much smaller one at the same sky. Most other nights I am at a show.",
+    "My corner of the web. I write software for telescopes for a living, and off the clock I'm chasing clear skies, live shows, and plane tickets, usually with my family in tow.",
   /** The career voice, used on the Career page and in its meta description. */
   tagline: "I write production software for telescopes and the people who have to use it at 3 a.m.",
   intro:
@@ -86,6 +86,7 @@ export const socials: SocialLink[] = [
   { label: "GitHub", href: "https://github.com/davner", icon: "github" },
   { label: "LinkedIn", href: "https://www.linkedin.com/in/danavner/", icon: "linkedin" },
   { label: "Instagram", href: "https://www.instagram.com/aspacemansheavyload/", icon: "instagram" },
+  { label: "YouTube", href: "https://www.youtube.com/@danmadespace", icon: "youtube" },
   {
     label: "Google Scholar",
     href: "https://scholar.google.com/citations?user=B0HllkYAAAAJ&hl=en",
@@ -202,12 +203,12 @@ export const interests: Interest[] = [
   {
     name: "Astrophotography",
     icon: "telescope",
-    note: "Just me and a Sony camera on a tripod collecting photons.",
+    note: "Just a Sony camera on a tripod, no telescope. Los Angeles is far too bright for it, so it only really happens when I can get out to a dark sky, which is not as often as I would like.",
   },
   {
     name: "Video games",
     icon: "gamepad-2",
-    note: "Mass Effect is the best game ever made and I will not be taking questions. These days I am mostly on PlayStation, playing Fortnite...I still have not finished Expedition 33.",
+    note: "Mass Effect is the best game ever made and I will not be taking questions. These days I am mostly on PlayStation, playing Fortnite. I still have not finished Expedition 33.",
     handle: {
       label: "PlayStation",
       value: "treslechesplzz",
@@ -239,12 +240,12 @@ export const interests: Interest[] = [
   {
     name: "Weightlifting",
     icon: "dumbbell",
-    note: "Weirdly, my bowling coach in High School was a football player at Notre Dame. He taught me how to lift, and I have been doing it on and off ever since. I am sometimes strong, and sometimes I'm squishy.",
+    note: "Weirdly, my bowling coach in high school was a football player at Notre Dame. He taught me how to lift, and I have been doing it on and off ever since. Sometimes I'm strong, and sometimes I'm squishy.",
   },
   {
     name: "Legos",
     icon: "blocks",
-    note: "Still building sets, mostly with my nephew Nathan. 31 years on I have not gotten bored of them and I do not expect to.",
+    note: "Still building sets, mostly with my nephew Nathan. Thirty-one years on, I have not gotten bored of them, and I do not expect to.",
   },
 ];
 

@@ -73,33 +73,25 @@ export function About() {
           </>
         }
         meta={[profile.location, "He/him", "Loud"]}
-        lede="I'm Dan. Grew up in Florida, live in Los Angeles now, usually somewhere loud."
+        lede="I'm Dan. I write telescope software for a living; this page is the rest of the day."
       />
 
       <Section>
         <div className="grid gap-10 md:grid-cols-[minmax(0,1fr)_19rem] md:gap-14">
           <div className="space-y-6 text-lg leading-relaxed text-muted-foreground text-pretty">
             <p>
-              Florida first, then a few years in Arizona, and now Los Angeles County with my wife{" "}
-              <span className="text-foreground">{profile.partnerFirstName}</span>. She's the best
-              person I know. We're the perfect sweat to each other's sweat, which in practice means
-              Fortnite lobbies and an ongoing search for a coffee shop we both like.
+              I live in Los Angeles County with my wife{" "}
+              <span className="text-foreground">{profile.partnerFirstName}</span>, our dog Milly,
+              and our cat Penny. She's the best person I know, and the other two love me right back.
+              They go by Stinky and the Brainless. You can guess which is which.
             </p>
             <p>
-              Milly is our dog, Penny is our cat, and neither of them thinks I'm in charge. They
-              both turn up further down this page.
-            </p>
-            <p>
-              Most of what I do happens out of the house: shows, record shops, the comic store on
-              Wednesday when the new pulls land. Some of it doesn't. Legos with my nephew Nathan,
-              or a camera pointed at the sky from the backyard.
-            </p>
-            <p>
-              I like my job a lot, but it has{" "}
+              Most of my time goes to dropping into Fortnite and hanging with these three. When we
+              get out, it's travel and live music. The day job has{" "}
               <Link to="/career" className="text-ember underline underline-offset-4">
                 its own page
               </Link>
-              . This one is for everything else.
+              . Everything else is below.
             </p>
           </div>
 

@@ -5,7 +5,7 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
 
-import { blogPlugin } from "./vite-plugin-blog";
+import { contentPlugin } from "./vite-plugin-content";
 
 /**
  * GitHub Pages has no SPA rewrite rule, so a deep link like /blog/some-post
@@ -24,7 +24,7 @@ function githubPagesSpaFallback(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [react(), tailwindcss(), blogPlugin(), githubPagesSpaFallback()],
+  plugins: [react(), tailwindcss(), contentPlugin(), githubPagesSpaFallback()],
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "./src"),

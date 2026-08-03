@@ -8,7 +8,6 @@ import { SiteHeader } from "@/components/site-header";
 import { About } from "@/routes/about";
 import { Home } from "@/routes/home";
 import { NotFound } from "@/routes/not-found";
-import { Shows } from "@/routes/shows";
 import { Work } from "@/routes/work";
 import { Writing } from "@/routes/writing";
 
@@ -17,6 +16,9 @@ import { Writing } from "@/routes/writing";
 const WritingPost = lazy(() =>
   import("@/routes/writing-post").then((module) => ({ default: module.WritingPost })),
 );
+
+// Shows render markdown notes, so this route pulls in the renderer too.
+const Shows = lazy(() => import("@/routes/shows").then((module) => ({ default: module.Shows })));
 
 export function App() {
   return (
@@ -39,7 +41,14 @@ export function App() {
             <Route path="/" element={<Home />} />
             <Route path="/work" element={<Work />} />
             <Route path="/about" element={<About />} />
-            <Route path="/shows" element={<Shows />} />
+            <Route
+              path="/shows"
+              element={
+                <Suspense fallback={<PostSkeleton />}>
+                  <Shows />
+                </Suspense>
+              }
+            />
             <Route path="/writing" element={<Writing />} />
             <Route
               path="/writing/:slug"

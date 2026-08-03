@@ -1,9 +1,28 @@
-import { shows as raw, type Show } from "@/content/shows";
+import { shows as rawShows } from "virtual:shows";
 
-export type { Show };
+export type ShowType = "show" | "festival";
 
-/** Newest first. */
-export const shows: Show[] = [...raw].sort((a, b) => b.date.localeCompare(a.date));
+export interface Show {
+  slug: string;
+  title: string;
+  type: ShowType;
+  /** `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`. */
+  date: string;
+  /** Set for multi-day festivals. Same precision rules as `date`. */
+  endDate: string;
+  venue: string;
+  city: string;
+  /** Who played, in running order. Openers count. */
+  lineup: string[];
+  /** Full URL to a video of the night. */
+  video: string;
+  standout: boolean;
+  /** Markdown notes about the night. */
+  body: string;
+}
+
+/** Parsed, validated, and sorted newest-first by the content plugin. */
+export const shows: Show[] = rawShows;
 
 export interface ShowYear {
   year: string;
@@ -18,8 +37,12 @@ export const showsByYear: ShowYear[] = shows.reduce<ShowYear[]>((years, show) =>
   return years;
 }, []);
 
+/**
+ * A festival's title is the event, not a band, so only its lineup counts toward
+ * "bands seen". A regular show's headliner does.
+ */
 function everyBand(show: Show): string[] {
-  return [show.headliner, ...(show.support ?? [])];
+  return show.type === "festival" ? show.lineup : [show.title, ...show.lineup];
 }
 
 function mostFrequent(values: string[]): { name: string; count: number } | undefined {
@@ -41,23 +64,54 @@ const allBands = shows.flatMap(everyBand);
 export const showStats = {
   total: shows.length,
   bands: new Set(allBands).size,
-  venues: new Set(shows.map((show) => show.venue)).size,
+  venues: new Set(shows.map((show) => show.venue).filter(Boolean)).size,
   cities: new Set(shows.map((show) => show.city)).size,
+  festivals: shows.filter((show) => show.type === "festival").length,
   mostSeen: mostFrequent(allBands),
-  latest: shows[0],
+  latest: shows[0] as Show | undefined,
   firstYear: shows.at(-1)?.date.slice(0, 4),
 };
 
 export const standouts = shows.filter((show) => show.standout);
 
-export function formatShowDate(date: string): string {
-  return new Date(`${date}T12:00:00Z`).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    timeZone: "UTC",
-  });
+const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+/**
+ * Formats to whatever precision the entry actually has. The year is omitted
+ * because the page already groups by it; a year-only entry gets no label at all.
+ */
+export function formatShowDate(show: Pick<Show, "date" | "endDate">): string {
+  const format = (value: string) => {
+    const [, month, day] = value.split("-");
+    if (!month) return "";
+    const name = MONTHS[Number(month) - 1] ?? "";
+    return day ? `${name} ${Number(day)}` : name;
+  };
+
+  const start = format(show.date);
+  if (!show.endDate || show.endDate === show.date) return start;
+
+  const end = format(show.endDate);
+  if (!start || !end) return start || end;
+
+  // Same month: "Nov 15–16" rather than "Nov 15–Nov 16".
+  const sameMonth = show.date.slice(0, 7) === show.endDate.slice(0, 7);
+  return sameMonth ? `${start}–${end.split(" ").at(-1)}` : `${start} – ${end}`;
 }
 
-export function showLineup(show: Show): string {
-  return everyBand(show).join(" · ");
+export function showLocation(show: Show): string {
+  return [show.venue, show.city].filter(Boolean).join(", ");
 }

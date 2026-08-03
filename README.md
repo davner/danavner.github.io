@@ -15,45 +15,58 @@ npm run preview  # serve the built site
 
 ```
 public/              static assets served as-is (CNAME, favicon, photos)
-vite-plugin-blog.ts  reads and validates the markdown posts at build time
+vite-plugin-content.ts  reads and validates every markdown collection at build time
 src/
   content/
-    profile.ts       everything the Work / About / Home pages render
-    shows.ts         the gig log
-    blog/*.md        one markdown file per post
-  routes/            one file per page
+    profile.ts          everything the Work / About / Home pages render
+    blog/*.md           one markdown file per post
+    shows/*.md          one markdown file per show
+  routes/               one file per page
   components/
-    ui/              shadcn/ui components — owned by this repo, edit freely
+    ui/                 shadcn/ui components — owned by this repo, edit freely
   lib/
-    blog.ts          post helpers over the plugin's output
-    shows.ts         sorting, year grouping, and derived show stats
-  index.css          design tokens and the poster primitives
-  fonts.css          self-hosted Anton / Inter / JetBrains Mono
+    blog.ts             post helpers over the plugin's output
+    shows.ts            sorting, year grouping, and derived show stats
+  index.css             design tokens and the poster primitives
+  fonts.css             self-hosted Anton / Inter / JetBrains Mono
 ```
 
 Updating the résumé side of the site — a new role, a project, a skill — is editing
 `src/content/profile.ts`. Nothing else needs to change.
 
+Both `blog/` and `shows/` are markdown collections read by the same Vite plugin.
+A file whose name starts with `_` is ignored, which is how each directory keeps
+its own notes next to its content.
+
 ## Adding a show
 
-Append an object to `src/content/shows.ts`. Order does not matter; the page sorts
-by date and groups by year, and every stat on it (total, bands seen, venues, most
-seen) is derived, so nothing needs updating by hand.
+Create `src/content/shows/<slug>.md`. Everything on `/shows` — the totals, the
+year groups, the most-seen act, the standouts ticker — is derived from these
+files, so adding a show is dropping in a file and nothing else.
 
-```ts
-{
-  date: "2026-06-20",
-  headliner: "Knocked Loose",
-  support: ["Show Me the Body", "Speed"],   // optional, in running order
-  venue: "Hollywood Palladium",
-  city: "Los Angeles, CA",
-  tour: "…",        // optional
-  note: "…",        // optional, one line about the night
-  standout: true,   // optional, adds a flame and pins it to the marquee
-}
+```md
+---
+title: Knocked Loose            # band, or the festival name
+type: show                      # "show" (default) or "festival"
+date: 2026-06-20                # YYYY, YYYY-MM, or YYYY-MM-DD — use what you remember
+endDate: 2026-06-21             # optional, for multi-day festivals
+venue: Hollywood Palladium      # optional — omit for festivals with no fixed venue
+city: Los Angeles, CA           # required
+lineup:                         # optional, in running order. Openers count.
+  - Show Me the Body
+  - Speed
+video: https://youtu.be/xxxxx   # optional, full URL — renders a Watch link
+standout: true                  # optional — adds a flame and pins it to the ticker
+---
+
+Free-form markdown about the night. Optional.
 ```
 
-The entries currently in that file are **placeholders** — replace them.
+`type: festival` keeps the festival's name out of the "bands seen" count — only
+its `lineup` counts toward that. Partial dates are fine: `2026` renders with no
+day label under the 2026 heading, `2026-06` renders as "Jun".
+
+See `src/content/shows/_README.md` for the same reference next to the files.
 
 ## Adding a blog post
 
@@ -83,7 +96,7 @@ blocks with syntax highlighting all work.
 | `tags` | no | Free-form list, shown on the post page |
 | `draft` | no | `true` keeps it in `npm run dev` and out of the build |
 
-Posts are read and validated in Node by `vite-plugin-blog.ts`, so bad frontmatter
+Posts are read and validated in Node by `vite-plugin-content.ts`, so bad frontmatter
 fails the build with the offending filename, and `draft: true` posts are absent
 from the production bundle rather than merely hidden in the UI.
 

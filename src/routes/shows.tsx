@@ -1,46 +1,66 @@
-import { Flame } from "lucide-react";
+import { Flame, Youtube } from "lucide-react";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 import { Marquee } from "@/components/marquee";
 import { PageHeader, PageShell, Section } from "@/components/page";
-import { formatShowDate, showsByYear, showStats, standouts, type Show } from "@/lib/shows";
+import {
+  formatShowDate,
+  showsByYear,
+  showStats,
+  standouts,
+  type Show,
+} from "@/lib/shows";
 import { useDocumentMeta } from "@/lib/use-document-meta";
-import { cn } from "@/lib/utils";
 
 function ShowRow({ show }: { show: Show }) {
+  const date = formatShowDate(show);
+
   return (
-    <li
-      className={cn(
-        "cut-corners group grid gap-x-6 gap-y-2 border-b border-border px-3 py-6 transition-colors hover:bg-card/60",
-        "sm:grid-cols-[5.5rem_minmax(0,1fr)_minmax(0,16rem)] sm:items-baseline",
-      )}
-    >
-      <p className="readout-dim tabular-nums">{formatShowDate(show.date)}</p>
+    <li className="cut-corners group grid gap-x-6 gap-y-3 border-b border-border px-3 py-7 transition-colors hover:bg-card/60 sm:grid-cols-[6rem_minmax(0,1fr)_minmax(0,15rem)]">
+      <p className="readout-dim tabular-nums">
+        {date || <span className="text-muted-foreground/50">—</span>}
+      </p>
 
       <div>
         <h3 className="display flex items-center gap-3 text-2xl transition-colors group-hover:text-ember sm:text-3xl">
-          {show.headliner}
+          {show.title}
           {show.standout ? (
             <Flame className="size-4 shrink-0 text-ember" aria-label="Standout" />
           ) : null}
         </h3>
 
-        {show.support?.length ? (
-          <p className="mt-1.5 text-sm text-muted-foreground">
-            <span className="text-ember">w/</span> {show.support.join(" · ")}
+        {show.type === "festival" ? (
+          <p className="readout mt-2 text-ion">Festival</p>
+        ) : null}
+
+        {show.lineup.length > 0 ? (
+          <p className="mt-2 text-sm text-muted-foreground">
+            <span className="text-ember">w/</span> {show.lineup.join(" · ")}
           </p>
         ) : null}
 
-        {show.tour ? <p className="readout-dim mt-2">{show.tour}</p> : null}
+        {show.body ? (
+          <div className="prose-dan mt-4 max-w-prose border-l-2 border-border pl-4 text-sm leading-relaxed">
+            <Markdown remarkPlugins={[remarkGfm]}>{show.body}</Markdown>
+          </div>
+        ) : null}
 
-        {show.note ? (
-          <p className="mt-3 max-w-prose border-l-2 border-border pl-3 text-sm leading-relaxed text-muted-foreground italic text-pretty">
-            {show.note}
-          </p>
+        {show.video ? (
+          <a
+            href={show.video}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="readout relative z-10 mt-4 inline-flex items-center gap-2 border border-border px-3 py-2 text-muted-foreground transition-colors hover:border-ember hover:text-ember"
+          >
+            <Youtube className="size-4" />
+            Watch
+          </a>
         ) : null}
       </div>
 
       <div className="sm:text-right">
-        <p className="font-mono text-sm">{show.venue}</p>
+        {show.venue ? <p className="font-mono text-sm">{show.venue}</p> : null}
         <p className="readout-dim mt-1">{show.city}</p>
       </div>
     </li>
@@ -50,17 +70,8 @@ function ShowRow({ show }: { show: Show }) {
 export function Shows() {
   useDocumentMeta(
     "Shows",
-    "A running log of every gig I have been to — headliners, openers, venues, and how loud it got.",
+    "A running log of every gig I have been to — who played, where, and how loud it got.",
   );
-
-  const stats = [
-    { label: "Shows", value: String(showStats.total) },
-    { label: "Bands seen", value: String(showStats.bands) },
-    { label: "Venues", value: String(showStats.venues) },
-    showStats.mostSeen
-      ? { label: `Most seen (${showStats.mostSeen.count}×)`, value: showStats.mostSeen.name }
-      : { label: "Cities", value: String(showStats.cities) },
-  ];
 
   if (showStats.total === 0) {
     return (
@@ -69,6 +80,26 @@ export function Shows() {
       </PageShell>
     );
   }
+
+  // Candidates in priority order; a stat is only shown once it has something to
+  // say, so an early log of one festival never renders "BANDS SEEN — 0".
+  const stats = [
+    { label: "Logged", value: String(showStats.total), show: true },
+    { label: "Bands seen", value: String(showStats.bands), show: showStats.bands > 0 },
+    showStats.mostSeen
+      ? {
+          label: `Most seen (${showStats.mostSeen.count}×)`,
+          value: showStats.mostSeen.name,
+          show: true,
+        }
+      : { label: "", value: "", show: false },
+    { label: "Festivals", value: String(showStats.festivals), show: showStats.festivals > 0 },
+    { label: "Venues", value: String(showStats.venues), show: showStats.venues > 0 },
+    { label: "Cities", value: String(showStats.cities), show: showStats.cities > 0 },
+    { label: "Since", value: showStats.firstYear ?? "", show: Boolean(showStats.firstYear) },
+  ]
+    .filter((stat) => stat.show)
+    .slice(0, 4);
 
   return (
     <>
@@ -99,7 +130,9 @@ export function Shows() {
       {standouts.length > 0 ? (
         <div className="mt-16">
           <Marquee
-            items={standouts.map((show) => `${show.headliner} — ${show.venue}`)}
+            items={standouts.map((show) =>
+              [show.title, show.venue || show.city].filter(Boolean).join(" — "),
+            )}
             duration="28s"
             separator="🔥"
             className="text-ember"
@@ -116,20 +149,20 @@ export function Shows() {
             className={groupIndex === 0 ? "mt-0" : undefined}
             action={
               <span className="readout-dim">
-                {group.shows.length} {group.shows.length === 1 ? "show" : "shows"}
+                {group.shows.length} {group.shows.length === 1 ? "entry" : "entries"}
               </span>
             }
           >
             <ul className="border-t border-border">
               {group.shows.map((show) => (
-                <ShowRow key={`${show.date}-${show.headliner}`} show={show} />
+                <ShowRow key={show.slug} show={show} />
               ))}
             </ul>
           </Section>
         ))}
 
         <p className="readout-dim mt-16 border-t border-border pt-6">
-          Log kept by hand in <span className="text-ember">src/content/shows.ts</span>
+          One markdown file per show in <span className="text-ember">src/content/shows/</span>
         </p>
       </PageShell>
     </>

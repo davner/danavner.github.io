@@ -6,7 +6,7 @@ import { Section } from "@/components/page";
 import { SocialLinks } from "@/components/social-links";
 import { profile, projects } from "@/content/profile";
 import { posts } from "@/lib/blog";
-import { formatShowDate, showStats } from "@/lib/shows";
+import { formatShowDate, showLocation, showStats } from "@/lib/shows";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
 const INDEX = [
@@ -207,16 +207,16 @@ export function Home() {
               >
                 <p className="readout text-ember">Last show</p>
                 <p className="display mt-4 text-3xl text-balance transition-colors group-hover:text-ember sm:text-4xl">
-                  {latestShow.headliner}
+                  {latestShow.title}
                 </p>
                 <p className="mt-4 flex-1 leading-relaxed text-muted-foreground text-pretty">
-                  {latestShow.support?.length
-                    ? `with ${latestShow.support.join(", ")} — `
-                    : null}
-                  {latestShow.venue}, {latestShow.city}
+                  {latestShow.lineup.length ? `with ${latestShow.lineup.join(", ")} — ` : null}
+                  {showLocation(latestShow)}
                 </p>
                 <p className="readout-dim mt-6 flex items-center gap-2">
-                  {formatShowDate(latestShow.date)} {latestShow.date.slice(0, 4)}
+                  {[formatShowDate(latestShow), latestShow.date.slice(0, 4)]
+                    .filter(Boolean)
+                    .join(" ")}
                   <span className="text-ember">·</span>
                   {showStats.total} logged
                   <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />

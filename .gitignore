@@ -1,6 +1,5 @@
 node_modules/
 dist/
-.DS_Store
 *.local
 .vite/
 *.tsbuildinfo
@@ -8,3 +7,9 @@ test-results/
 playwright-report/
 blob-report/
 .playwright/
+
+# macOS
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes

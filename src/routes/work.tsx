@@ -17,7 +17,7 @@ const scholar = socials.find((social) => social.icon === "graduation-cap")!;
 export function Work() {
   useDocumentMeta(
     "Work",
-    "Projects, roles, and skills — a decade of building software for telescopes, observatories, and astronomers.",
+    "Projects, roles, and skills - a decade of building software for telescopes, observatories, and astronomers.",
   );
 
   return (
@@ -30,7 +30,7 @@ export function Work() {
             <span className="display-outline-ember block">the dark</span>
           </>
         }
-        meta={[profile.role, profile.org, "2013 — present"]}
+        meta={[profile.role, profile.org, "2013 - present"]}
         lede={profile.intro}
       >
         <div className="mt-8 flex flex-wrap gap-3">

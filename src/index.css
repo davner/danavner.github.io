@@ -168,7 +168,7 @@
 }
 
 /*
- * Small mono readout — section labels, dates, venue lines, telescope names.
+ * Small mono readout - section labels, dates, venue lines, telescope names.
  * Registered with `@utility` rather than as a plain component class so other
  * rules can `@apply readout`, which Tailwind v4 only permits for utilities.
  */
@@ -300,7 +300,7 @@
     overflow: hidden;
   }
 
-  /* Slow shimmer across the badge — the one bit of sparkle on the page. */
+  /* Slow shimmer across the badge - the one bit of sparkle on the page. */
   .solo-badge::after {
     content: "";
     position: absolute;

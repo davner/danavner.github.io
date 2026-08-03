@@ -13,7 +13,7 @@ const launch = process.env.PLAYWRIGHT_CHROMIUM_PATH
   : {};
 
 /**
- * Tests run against the production build, not the dev server — the content
+ * Tests run against the production build, not the dev server - the content
  * plugin behaves differently between the two (drafts), and a bug that only
  * exists in the shipped bundle is the one worth catching.
  */

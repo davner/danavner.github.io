@@ -1,6 +1,6 @@
 name: External links
 
-# External links rot for reasons that have nothing to do with a commit — a
+# External links rot for reasons that have nothing to do with a commit - a
 # venue folds, a profile moves, a host starts refusing bots. Checking them on
 # every push would mean a red build nobody can fix, so they get their own
 # weekly run instead, and internal links stay in CI where they belong.

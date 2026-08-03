@@ -1,6 +1,6 @@
 # danavner.com
 
-My personal site — work, writing, and a log of every show I have been to.
+My personal site - work, writing, and a log of every show I have been to.
 Live at **[danavner.com](https://danavner.com)**.
 
 It is a static React site with no backend and no CMS. All the content is
@@ -15,7 +15,7 @@ If you want to fork it and make it yours, see [Making it yours](#making-it-yours
 | --- | --- | --- |
 | Build | [Vite](https://vite.dev) 7 | Fast dev server, sane defaults, minimal config |
 | UI | [React](https://react.dev) 19 + TypeScript | Type errors catch content mistakes before the browser does |
-| Styling | [Tailwind CSS](https://tailwindcss.com) v4 | CSS-first config — no `tailwind.config.js` to maintain |
+| Styling | [Tailwind CSS](https://tailwindcss.com) v4 | CSS-first config - no `tailwind.config.js` to maintain |
 | Components | [shadcn/ui](https://ui.shadcn.com) | Copied into the repo, so they are mine to edit or delete |
 | Carousel | [Embla](https://embla-carousel.com) | What shadcn/ui's Carousel is built on |
 | Icons | [lucide-react](https://lucide.dev) | Consistent 24px stroke set, tree-shakeable, ISC |
@@ -26,7 +26,7 @@ If you want to fork it and make it yours, see [Making it yours](#making-it-yours
 | Hosting | GitHub Pages | Free, already where the repo lives |
 
 Every dependency is permissively licensed (MIT, ISC, Apache-2.0, BSD-3-Clause,
-OFL-1.1 for the fonts). Nothing here phones home — no analytics, no font CDN,
+OFL-1.1 for the fonts). Nothing here phones home - no analytics, no font CDN,
 no third-party scripts.
 
 ### Running it
@@ -41,7 +41,7 @@ npm test           # Playwright, against the production build
 npm run test:ui    # the same suite, interactively
 ```
 
-Node 22+. `npm test` builds nothing itself — run `npm run build` first, or let
+Node 22+. `npm test` builds nothing itself - run `npm run build` first, or let
 CI do it.
 
 ## CI
@@ -55,17 +55,17 @@ CI do it.
 The Playwright suite runs against the **production build**, on desktop and
 mobile viewports, and covers four things:
 
-- **Behaviour** — routing, titles, the writing filter and its URL state, theme
+- **Behaviour** - routing, titles, the writing filter and its URL state, theme
   persistence, markdown rendering, and the derived show stats.
-- **Accessibility** — axe (WCAG 2.1 A and AA) on every route in *both* themes.
+- **Accessibility** - axe (WCAG 2.1 A and AA) on every route in *both* themes.
   The palettes are independent, and contrast is the easiest thing to break.
-- **Links and assets** — every in-site link resolves to a real route rather
+- **Links and assets** - every in-site link resolves to a real route rather
   than the SPA's 404 fallback, and no image is broken.
-- **No third parties** — fails if any request leaves the origin, which is what
+- **No third parties** - fails if any request leaves the origin, which is what
   keeps the "nothing phones home" claim above honest.
 
 External links are deliberately excluded from CI. They rot for reasons no
-commit caused — a venue folds, a host starts refusing bots — and a red build
+commit caused - a venue folds, a host starts refusing bots - and a red build
 nobody can fix is worse than no check. They get the weekly run instead.
 
 Content mistakes never reach the tests: the build validates every markdown
@@ -97,7 +97,7 @@ tests/                    Playwright: behaviour, accessibility, links
 playwright.config.ts      runs the suite against the production build
 ```
 
-shadcn/ui components are vendored, not installed — the CLI copies source into
+shadcn/ui components are vendored, not installed - the CLI copies source into
 `src/components/ui/` and it becomes yours. Anything built on top (the photo
 strip, the solo badge, the filter row) composes those primitives rather than
 reimplementing them.
@@ -113,7 +113,7 @@ it there rather than in the browser:
   rendering a broken card on the live site.
 - **`draft: true` posts are absent from the production bundle**, rather than
   shipped and merely hidden.
-- **The YAML parser never reaches the client** — it runs at build time only.
+- **The YAML parser never reaches the client** - it runs at build time only.
 
 A file whose name starts with `_` is ignored, which is how each collection keeps
 its own reference next to its content.
@@ -143,7 +143,7 @@ highlighting all work.
 | --- | --- | --- |
 | `title` | yes | |
 | `date` | yes | `YYYY-MM-DD`. Posts sort newest-first. |
-| `category` | yes | `work` or `personal` — drives the filter on `/writing` |
+| `category` | yes | `work` or `personal` - drives the filter on `/writing` |
 | `summary` | no | Recommended; used on cards and for link previews |
 | `tags` | no | Free-form list, shown on the post page |
 | `draft` | no | `true` keeps it in `npm run dev` and out of the build |
@@ -154,8 +154,8 @@ Reading time is computed from the word count. Renaming a file changes its URL.
 
 ## Adding a show
 
-Create `src/content/shows/<slug>.md`. Everything on `/shows` — the totals, year
-groups, most-seen act, average rating, standouts ticker — is derived from these
+Create `src/content/shows/<slug>.md`. Everything on `/shows` - the totals, year
+groups, most-seen act, average rating, standouts ticker - is derived from these
 files, so adding a show is dropping in a file and nothing else.
 
 `lineup` is the whole bill, **top billing first**. Openers count, toward the
@@ -189,7 +189,7 @@ Free-form markdown about the night. Optional.
 | `lineup` | shows | Every band, top billing first. No duplicates. |
 | `title` | festivals | The event name. On a show, shorthand for a one-band night. |
 | `type` | no | `show` (default) or `festival` |
-| `date` | yes | `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` — use what you remember |
+| `date` | yes | `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` - use what you remember |
 | `endDate` | no | Multi-day festivals. Renders as "Nov 15–16". |
 | `city` | yes | |
 | `venue` | no | Omit for festivals with no fixed venue |
@@ -204,7 +204,7 @@ Free-form markdown about the night. Optional.
 Photos live in `public/img/shows/<slug>/` and render as a swipeable strip with
 prev/next buttons and a counter. One photo drops the controls.
 
-**Every subsection is conditional** — no rating, no lineup, no companions, no
+**Every subsection is conditional** - no rating, no lineup, no companions, no
 photos, no notes means nothing renders in its place. The stat row works the same
 way: a figure only appears once it has something to say.
 
@@ -213,7 +213,7 @@ Three more details worth knowing:
 - **A festival is not a band.** `type: festival` keeps the event's `title` out of
   the "bands seen" count while its `lineup` still counts.
 - **Ratings fill proportionally.** `3.2` really shows a fifth of the fourth horn.
-  Omitting `rating` renders nothing — unrated is not zero, and unrated entries
+  Omitting `rating` renders nothing - unrated is not zero, and unrated entries
   stay out of the average.
 - **Partial dates are fine.** `2026` renders with no day label under the 2026
   heading, `2026-06` renders as "Jun", a full date as "Jun 20".
@@ -223,7 +223,7 @@ Three more details worth knowing:
 ## Editing the résumé side
 
 A new role, project, skill, or interest is one edit to `src/content/profile.ts`.
-Nothing else changes — Home, Work, and About all read from it.
+Nothing else changes - Home, Work, and About all read from it.
 
 ---
 
@@ -238,7 +238,7 @@ components drop in unchanged, plus `--ember`, `--ion`, `--star`, and `--glow`.
 Retheming is editing the two blocks at the top of that file.
 
 **Type.** Anton for display, set large, uppercase and tight. Inter for body.
-JetBrains Mono for readouts, labels, and code. Self-hosted latin subsets only —
+JetBrains Mono for readouts, labels, and code. Self-hosted latin subsets only -
 three woff2 files, ~108 kB, declared by hand in `src/fonts.css` so `dist/`
 carries exactly three font files rather than every subset Fontsource ships.
 
@@ -267,7 +267,7 @@ publishes `dist/` to GitHub Pages.
 > `index.html`.
 
 The custom domain lives in `public/CNAME` so it survives every deploy. Deep
-links work because the build writes a `404.html` copy of `index.html` — Pages
+links work because the build writes a `404.html` copy of `index.html` - Pages
 serves it for unknown paths and the client router takes over.
 
 ---
@@ -284,7 +284,7 @@ Things that were not obvious, in case you hit them too:
   and re-asserts on the next frame.
 - **Narrowing the syntax highlighter is not worth it.** rehype-highlight
   defaults to lowlight's `common` set, roughly 37 languages. Registering only
-  eight measured 189.87 kB against 189.75 kB for the default — the grammars are
+  eight measured 189.87 kB against 189.75 kB for the default - the grammars are
   tiny and the weight is all in the markdown pipeline. The default stays.
 - **Heavy routes are lazy.** The markdown renderer only loads on `/writing/:slug`
   and `/shows`, keeping the initial bundle near 100 kB gzipped.
@@ -306,13 +306,13 @@ Fork it, then:
    in `src/fonts.css` and the `--font-*` values in the `@theme` block.
 6. Update `.github/workflows/deploy.yml` if your default branch is not `master`.
 
-The `/shows` section is the most reusable piece if you keep any kind of log —
+The `/shows` section is the most reusable piece if you keep any kind of log -
 it is a markdown collection, a validator, and a stats derivation, and none of it
 is specific to gigs.
 
 ## License
 
-MIT — see [LICENSE](LICENSE). Use whatever is useful.
+MIT - see [LICENSE](LICENSE). Use whatever is useful.
 
 The photographs of me in `public/img/` and the writing under
 `src/content/blog/` are not covered; please swap those out.

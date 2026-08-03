@@ -12,7 +12,7 @@ export function PageShell({ className, children }: { className?: string; childre
 
 /**
  * Page title block. `title` is set in the display face at poster scale, so it
- * wants one or two short words — long phrases go in `lede`.
+ * wants one or two short words - long phrases go in `lede`.
  */
 export function PageHeader({
   eyebrow,

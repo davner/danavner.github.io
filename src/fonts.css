@@ -1,5 +1,5 @@
 /*
- * Self-hosted, latin subset only — three files, ~108 kB total, no third-party
+ * Self-hosted, latin subset only - three files, ~108 kB total, no third-party
  * request at runtime. Importing the @fontsource stylesheets directly would pull
  * every subset into dist/ for scripts this site never renders.
  */

@@ -2,7 +2,7 @@
 title: How this site is built
 date: 2026-08-02
 category: work
-summary: React, Vite, Tailwind, and shadcn/ui on GitHub Pages — plus a markdown pipeline that turns a file in a folder into a published post.
+summary: React, Vite, Tailwind, and shadcn/ui on GitHub Pages - plus a markdown pipeline that turns a file in a folder into a published post.
 tags: [react, vite, tailwind, github-pages]
 ---
 
@@ -22,7 +22,7 @@ the blog you are reading actually works.
 | Hosting | GitHub Pages | Free, already where the repo lives |
 
 The thing I like most about shadcn/ui is that it is not a dependency. The CLI copies component
-source into `src/components/ui/`, and from that point on it is my code — including the right to
+source into `src/components/ui/`, and from that point on it is my code - including the right to
 delete it. This design wanted hard-edged panels and hairline rules, not cards with soft shadows, so
 most of what I pulled in got thrown away and the rest got rewritten. No theme API to argue with.
 
@@ -84,7 +84,7 @@ before anything gets linked.
 ## Deep links on GitHub Pages
 
 GitHub Pages serves static files and has no rewrite rules, so a hard refresh on `/writing/welcome`
-would normally 404 — there is no such file on disk. The standard workaround is to give Pages a
+would normally 404 - there is no such file on disk. The standard workaround is to give Pages a
 `404.html` that is a byte-for-byte copy of `index.html`; the app boots, React Router reads the URL,
 and the right page renders. A small Vite plugin does the copy after every build:
 
@@ -108,4 +108,4 @@ function githubPagesSpaFallback(): Plugin {
 The one thing I gave up is server-rendered HTML, which means crawlers and link previews see the
 shell before the app hydrates. For a personal site with a handful of pages that trade is fine.
 If the writing side ever grows enough to care about, prerendering the routes at build time is a
-contained change — the content is already static, it just needs to be walked.
+contained change - the content is already static, it just needs to be walked.

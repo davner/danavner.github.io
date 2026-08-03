@@ -77,7 +77,7 @@ export function WritingPost() {
         <div className="prose-dan">
           <Markdown
             remarkPlugins={[remarkGfm]}
-            // rehype-highlight defaults to lowlight's `common` set — about 37
+            // rehype-highlight defaults to lowlight's `common` set - about 37
             // languages. Narrowing it was measured and made the bundle very
             // slightly larger, so the default stays. `detect: false` keeps
             // unlabelled blocks plain rather than guessing at them.

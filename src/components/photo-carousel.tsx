@@ -13,8 +13,8 @@ import type { Photo } from "@/lib/shows";
 /**
  * Photo strip for a show, built on the shadcn/ui Carousel.
  *
- * The buttons sit under the strip rather than overlapping it — at this size
- * they would cover a third of the photo — so the default absolute positioning
+ * The buttons sit under the strip rather than overlapping it - at this size
+ * they would cover a third of the photo - so the default absolute positioning
  * is overridden rather than the component being reimplemented.
  */
 export function PhotoCarousel({ photos, label }: { photos: Photo[]; label: string }) {
@@ -53,7 +53,7 @@ export function PhotoCarousel({ photos, label }: { photos: Photo[]; label: strin
             <CarouselItem key={photo.src} className="relative bg-background">
               <img
                 src={photo.src}
-                alt={photo.alt || `${label} — photo ${index + 1} of ${photos.length}`}
+                alt={photo.alt || `${label} - photo ${index + 1} of ${photos.length}`}
                 loading="lazy"
                 decoding="async"
                 className="aspect-4/3 w-full object-cover sm:aspect-video"

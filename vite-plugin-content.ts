@@ -11,7 +11,7 @@ const POST_CATEGORIES = ["work", "personal"];
 const SHOW_TYPES = ["show", "festival"];
 const MAX_RATING = 5;
 
-/** `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` — you remember some nights better than others. */
+/** `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` - you remember some nights better than others. */
 const DATE = /^\d{4}(-\d{2}(-\d{2})?)?$/;
 
 interface Frontmatter {
@@ -22,7 +22,7 @@ interface Frontmatter {
 }
 
 function fail(collection: string, file: string, message: string): never {
-  throw new Error(`Invalid ${collection} entry — src/content/${collection}/${file}: ${message}`);
+  throw new Error(`Invalid ${collection} entry - src/content/${collection}/${file}: ${message}`);
 }
 
 function asStringArray(value: unknown): string[] {
@@ -144,7 +144,7 @@ function parseShow({ file, meta, body, slug }: Frontmatter, publicDir: string) {
   const givenLineup = asStringArray(meta.lineup).map((band) => band.trim()).filter(Boolean);
 
   /*
-   * `lineup` is the whole bill, top billing first — a show is rarely one band,
+   * `lineup` is the whole bill, top billing first - a show is rarely one band,
    * and the openers are half the reason to go. A one-band night can still be
    * written as a bare `title`, which normalises to a lineup of one.
    *
@@ -154,7 +154,7 @@ function parseShow({ file, meta, body, slug }: Frontmatter, publicDir: string) {
   const lineup = type === "festival" ? givenLineup : givenLineup.length ? givenLineup : [givenTitle].filter(Boolean);
 
   if (type === "festival" && !givenTitle) {
-    fail("shows", file, "a festival needs a `title` — the name of the event");
+    fail("shows", file, "a festival needs a `title` - the name of the event");
   }
   if (type === "show" && lineup.length === 0) {
     fail(
@@ -213,7 +213,7 @@ function parseShow({ file, meta, body, slug }: Frontmatter, publicDir: string) {
   const solo = meta.solo === true;
 
   if (solo && companions.length > 0) {
-    fail("shows", file, "`solo: true` contradicts `with` — drop one");
+    fail("shows", file, "`solo: true` contradicts `with` - drop one");
   }
 
   return {

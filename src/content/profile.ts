@@ -59,7 +59,7 @@ export const profile = {
   email: "ldpavner@gmail.com",
   tagline: "I build production software for telescopes, observatories, and astronomers.",
   intro:
-    "For the last decade I have worked at the seam between astronomy and software — writing the services, pipelines, and interfaces that turn a night on a mountain into data people can actually use. These days that means leading architecture for Gemini Observatory software at NOIRLab.",
+    "For the last decade I have worked at the seam between astronomy and software - writing the services, pipelines, and interfaces that turn a night on a mountain into data people can actually use. These days that means leading architecture for Gemini Observatory software at NOIRLab.",
 } as const;
 
 export const socials: SocialLink[] = [
@@ -80,7 +80,7 @@ export const projects: Project[] = [
     org: "NOIRLab",
     current: true,
     blurb:
-      "The Gemini Observation and Analysis of Targets System — an end-to-end platform for time-domain and multi-messenger astronomy. Astronomers manage targets, trigger Gemini follow-up, and reduce the resulting data without leaving the browser. I am the principal engineer and architect.",
+      "The Gemini Observation and Analysis of Targets System - an end-to-end platform for time-domain and multi-messenger astronomy. Astronomers manage targets, trigger Gemini follow-up, and reduce the resulting data without leaving the browser. I am the principal engineer and architect.",
     stack: ["Python", "Django", "JavaScript", "WebSockets", "TOM Toolkit"],
   },
   {
@@ -96,7 +96,7 @@ export const projects: Project[] = [
     org: "NOIRLab",
     current: true,
     blurb:
-      "Moved the DRAGONS data reduction pipeline off the command line and onto a browser-accessible platform — Django for backend services, WebSockets pushing real-time reduction progress to the frontend.",
+      "Moved the DRAGONS data reduction pipeline off the command line and onto a browser-accessible platform - Django for backend services, WebSockets pushing real-time reduction progress to the frontend.",
     stack: ["Python", "Django", "WebSockets", "Data pipelines"],
   },
   {
@@ -110,7 +110,7 @@ export const projects: Project[] = [
     name: "Telemetry & weather displays",
     org: "Steward Observatory",
     blurb:
-      "An async Python backend streaming live observatory telemetry over WebSockets to a responsive web dashboard — weather, dome, and instrument state visible from anywhere.",
+      "An async Python backend streaming live observatory telemetry over WebSockets to a responsive web dashboard - weather, dome, and instrument state visible from anywhere.",
     stack: ["Python", "FastAPI", "WebSockets", "JavaScript", "Bootstrap"],
   },
   {
@@ -127,14 +127,14 @@ export const roles: Role[] = [
     title: "Software Engineer III",
     org: "NOIRLab / AURA",
     location: "Remote",
-    period: "2023 — Present",
+    period: "2023 - Present",
     start: 2023,
     summary: "Architecture and development of astronomy software for Gemini Observatory.",
     highlights: [
       "Principal software engineer and architect for GOATS, an end-to-end system for time-domain and multi-messenger astronomy aimed at Gemini follow-up observations.",
       "Transitioned the DRAGONS data reduction pipeline to a web-based platform, with Django backend services and real-time frontend communication over WebSockets.",
       "Lead engineer and architect for gpp-client, an async Python SDK for the Gemini Program Platform with environment-aware authentication and authenticated GraphQL/REST access.",
-      "Applied continuous integration practices — environment setup, unit and integration testing — using Jenkins and GitHub Actions to keep builds reliable.",
+      "Applied continuous integration practices - environment setup, unit and integration testing - using Jenkins and GitHub Actions to keep builds reliable.",
     ],
     stack: ["Python", "Django", "GraphQL", "WebSockets", "Jenkins", "GitHub Actions"],
   },
@@ -142,7 +142,7 @@ export const roles: Role[] = [
     title: "Application Developer",
     org: "California Institute of Technology / IPAC",
     location: "Pasadena, CA",
-    period: "2021 — 2023",
+    period: "2021 - 2023",
     start: 2021,
     summary: "Production pipeline development for NASA's SPHEREx mission.",
     highlights: [
@@ -157,14 +157,14 @@ export const roles: Role[] = [
     title: "R&D Software Engineer III",
     org: "University of Arizona, Steward Observatory",
     location: "Tucson, AZ",
-    period: "2019 — 2021",
+    period: "2019 - 2021",
     start: 2019,
     summary: "Telescope automation, control software, and operator-facing interfaces.",
     highlights: [
       "Designed, developed, and tested software to automate telescopes for both classical and autonomous observing modes.",
       "Specified, implemented, tested, and integrated software and upgrades for telescopes, instruments, and observatory tools.",
       "Built web GUIs with modern design aimed at functional, foolproof user experiences for observers.",
-      "Led projects end to end — embedded firmware through user frontend — for dome shutters, dome control, and mirror covers.",
+      "Led projects end to end - embedded firmware through user frontend - for dome shutters, dome control, and mirror covers.",
     ],
     stack: ["Python", "C", "INDI", "FastAPI", "JavaScript", "Embedded"],
   },
@@ -209,13 +209,13 @@ export const education: Education[] = [
   {
     school: "Northern Arizona University",
     location: "Flagstaff, AZ",
-    period: "2015 — 2017",
+    period: "2015 - 2017",
     degree: "M.S. Applied Physics",
   },
   {
     school: "University of Florida",
     location: "Gainesville, FL",
-    period: "2009 — 2013",
+    period: "2009 - 2013",
     degree: "B.A. Astronomy",
   },
 ];

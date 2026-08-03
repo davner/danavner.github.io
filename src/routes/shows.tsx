@@ -110,7 +110,7 @@ function ShowRow({ show }: { show: Show }) {
 export function Shows() {
   useDocumentMeta(
     "Shows",
-    "A running log of every gig I have been to — who played, where, and how loud it got.",
+    "A running log of every gig I have been to - who played, where, and how loud it got.",
   );
 
   if (showStats.total === 0) {
@@ -122,7 +122,7 @@ export function Shows() {
   }
 
   // Candidates in priority order; a stat is only shown once it has something to
-  // say, so an early log of one festival never renders "BANDS SEEN — 0".
+  // say, so an early log of one festival never renders "BANDS SEEN - 0".
   const stats: { label: string; value: ReactNode; show: boolean }[] = [
     { label: "Logged", value: String(showStats.total), show: true },
     { label: "Bands seen", value: String(showStats.bands), show: showStats.bands > 0 },
@@ -164,7 +164,7 @@ export function Shows() {
             showStats.firstYear ? `Since ${showStats.firstYear}` : "",
             "Ears: negotiable",
           ].filter(Boolean)}
-          lede="I keep a list. Mostly metalcore, occasionally something with clean vocals, always somewhere near the front. Openers count — half the best sets I have seen went on at 7:15 to forty people."
+          lede="I keep a list. Mostly metalcore, occasionally something with clean vocals, always somewhere near the front. Openers count - half the best sets I have seen went on at 7:15 to forty people."
         />
       </PageShell>
 
@@ -183,7 +183,7 @@ export function Shows() {
         <div className="mt-16">
           <Marquee
             items={standouts.map((show) =>
-              [show.title, show.venue || show.city].filter(Boolean).join(" — "),
+              [show.title, show.venue || show.city].filter(Boolean).join(" - "),
             )}
             duration="28s"
             separator="🔥"

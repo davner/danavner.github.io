@@ -16,7 +16,7 @@ export function SiteHeader() {
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-2 sm:gap-3 sm:px-6">
         <NavLink
           to="/"
-          aria-label="Dan Avner — home"
+          aria-label="Dan Avner - home"
           className={({ isActive }) =>
             cn(
               "mr-auto flex items-baseline transition-opacity hover:opacity-70",

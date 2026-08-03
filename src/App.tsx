@@ -12,7 +12,7 @@ import { Work } from "@/routes/work";
 import { Writing } from "@/routes/writing";
 
 // The markdown renderer and syntax highlighter are only needed on a post page,
-// and together they outweigh the rest of the site — so they load on demand.
+// and together they outweigh the rest of the site - so they load on demand.
 const WritingPost = lazy(() =>
   import("@/routes/writing-post").then((module) => ({ default: module.WritingPost })),
 );

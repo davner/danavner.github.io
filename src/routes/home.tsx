@@ -97,7 +97,7 @@ export function Home() {
             </div>
           </div>
 
-          {/* Duotone until you hover it — poster treatment that still lets the
+          {/* Duotone until you hover it - poster treatment that still lets the
               photo be a photo. */}
           <div className="group relative w-full max-w-xs justify-self-start lg:max-w-none lg:justify-self-end">
             <div className="relative overflow-hidden border border-border">
@@ -211,7 +211,7 @@ export function Home() {
                 </p>
                 <p className="mt-4 flex-1 leading-relaxed text-muted-foreground text-pretty">
                   {supportFor(latestShow).length
-                    ? `with ${supportFor(latestShow).join(", ")} — `
+                    ? `with ${supportFor(latestShow).join(", ")} - `
                     : null}
                   {showLocation(latestShow)}
                 </p>

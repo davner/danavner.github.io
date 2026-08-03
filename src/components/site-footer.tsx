@@ -24,7 +24,7 @@ export function SiteFooter() {
               Avner
             </p>
             <p className="readout-dim mt-4">
-              {profile.role} — {profile.org}
+              {profile.role} - {profile.org}
             </p>
             <p className="readout-dim mt-1">{profile.location}</p>
           </div>

@@ -28,7 +28,7 @@ export interface Show {
   /**
    * Every band on the bill, top billing first. Normalised by the content
    * plugin, so for a show `lineup[0] === title` and a festival's name is never
-   * in here — a festival is not a band.
+   * in here - a festival is not a band.
    */
   lineup: string[];
   /** Out of {@link MAX_RATING} horns, partials allowed. `null` means unrated. */
@@ -47,7 +47,7 @@ export interface Show {
   body: string;
 }
 
-/** Everyone below top billing — the openers, in running order. */
+/** Everyone below top billing - the openers, in running order. */
 export function supportFor(show: Show): string[] {
   return show.type === "festival" ? show.lineup : show.lineup.slice(1);
 }

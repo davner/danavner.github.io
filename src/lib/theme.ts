@@ -24,7 +24,7 @@ export function setTheme(theme: Theme) {
   try {
     localStorage.setItem(STORAGE_KEY, theme);
   } catch {
-    // Private browsing or blocked storage — the theme still applies for this visit.
+    // Private browsing or blocked storage - the theme still applies for this visit.
   }
   listeners.forEach((listener) => listener());
 }

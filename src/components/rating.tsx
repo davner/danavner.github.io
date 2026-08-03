@@ -6,8 +6,8 @@ const HORNS = "🤘🏽";
 /**
  * Rating out of five horns.
  *
- * Two stacked copies of the same string — a desaturated one underneath and a
- * full-colour one clipped to `value / MAX` — which gives real partial fill for
+ * Two stacked copies of the same string - a desaturated one underneath and a
+ * full-colour one clipped to `value / MAX` - which gives real partial fill for
  * free and keeps the actual emoji rather than substituting a flat icon for it.
  * The row is decorative; the label carries the value for assistive tech.
  */

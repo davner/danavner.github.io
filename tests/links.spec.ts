@@ -7,8 +7,8 @@ import { ROUTES } from "./routes";
  * photo path is a build-output bug, and it is cheap and deterministic to catch.
  *
  * External links are deliberately NOT checked here. They fail for reasons that
- * have nothing to do with this repo — rate limits, bot walls, a venue site
- * being down — and a red build nobody can fix is worse than no check at all.
+ * have nothing to do with this repo - rate limits, bot walls, a venue site
+ * being down - and a red build nobody can fix is worse than no check at all.
  * `.github/workflows/links.yml` runs those weekly instead.
  */
 test.describe("internal links", () => {
@@ -28,7 +28,7 @@ test.describe("internal links", () => {
     for (const href of seen) {
       const response = await page.request.get(new URL(href, baseURL).toString());
       // The SPA fallback serves index.html for unknown paths, so a 200 alone
-      // proves nothing — the rendered page must not be the 404 route.
+      // proves nothing - the rendered page must not be the 404 route.
       expect(response.status(), `${href} did not respond`).toBe(200);
 
       await page.goto(href);

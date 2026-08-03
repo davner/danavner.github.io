@@ -19,27 +19,27 @@ const PLACES = [
   {
     place: "Gainesville, FL",
     detail: "B.A. Astronomy at the University of Florida",
-    years: "2009 — 2013",
+    years: "2009 - 2013",
   },
   {
     place: "Flagstaff, AZ",
     detail: "M.S. Applied Physics at Northern Arizona University",
-    years: "2015 — 2017",
+    years: "2015 - 2017",
   },
   {
     place: "Tucson, AZ",
-    detail: "Steward Observatory — telescopes, domes, and long nights",
-    years: "2019 — 2021",
+    detail: "Steward Observatory - telescopes, domes, and long nights",
+    years: "2019 - 2021",
   },
   {
     place: "Pasadena, CA",
     detail: "Caltech / IPAC on NASA's SPHEREx mission",
-    years: "2021 — 2023",
+    years: "2021 - 2023",
   },
   {
     place: "Los Angeles County, CA",
     detail: "Remote for NOIRLab, working on Gemini software",
-    years: "2023 — now",
+    years: "2023 - now",
   },
 ];
 
@@ -60,7 +60,7 @@ export function About() {
           </>
         }
         meta={[profile.location, "He/him", "Loud"]}
-        lede="I have spent most of my adult life somewhere near a telescope — first as a student, then as the person on the mountain at 3 a.m., and now as the one writing the software that keeps all of it running."
+        lede="I have spent most of my adult life somewhere near a telescope - first as a student, then as the person on the mountain at 3 a.m., and now as the one writing the software that keeps all of it running."
       />
 
       <Section>
@@ -70,7 +70,7 @@ export function About() {
               I studied astronomy in Florida and applied physics in Arizona, which is a slightly
               roundabout way of saying I liked the sky and I liked figuring out how things work.
               Somewhere in there I discovered the part I enjoyed most was not the paper at the end
-              — it was the instrument, the pipeline, the interface, the thing that had to actually
+              - it was the instrument, the pipeline, the interface, the thing that had to actually
               work when the dome opened.
             </p>
             <p>

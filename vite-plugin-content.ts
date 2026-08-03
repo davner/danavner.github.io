@@ -94,6 +94,40 @@ function parsePost({ file, meta, body, slug }: Frontmatter) {
   };
 }
 
+/**
+ * Photos accept either a bare path or an object, so a quick entry stays quick:
+ *
+ *   photos:
+ *     - /img/shows/warped-1/pit.jpg
+ *     - src: /img/shows/warped-1/stage.jpg
+ *       alt: Underoath mid-set
+ *       caption: Underoath
+ */
+function asPhotos(value: unknown, file: string) {
+  if (value == null) return [];
+
+  return (Array.isArray(value) ? value : [value]).map((entry, index) => {
+    const raw =
+      typeof entry === "string"
+        ? { src: entry }
+        : entry && typeof entry === "object" && !Array.isArray(entry)
+          ? (entry as Record<string, unknown>)
+          : fail("shows", file, `\`photos[${index}]\` must be a path or a mapping with \`src\``);
+
+    const src = asTrimmedString(raw.src);
+    if (!src) fail("shows", file, `\`photos[${index}]\` needs a \`src\``);
+    if (!src.startsWith("/") && !/^https?:\/\//.test(src)) {
+      fail(
+        "shows",
+        file,
+        `\`photos[${index}].src\` must start with "/" (a path under public/) or be a full URL`,
+      );
+    }
+
+    return { src, alt: asTrimmedString(raw.alt), caption: asTrimmedString(raw.caption) };
+  });
+}
+
 function parseShow({ file, meta, body, slug }: Frontmatter) {
   const type = asTrimmedString(meta.type) || "show";
   if (!SHOW_TYPES.includes(type)) {
@@ -190,6 +224,10 @@ function parseShow({ file, meta, body, slug }: Frontmatter) {
     companions,
     solo,
     video,
+    // A YouTube playlist URL is just a video URL with a `list` param, so the
+    // link labels itself rather than needing a second field.
+    videoIsPlaylist: /[?&]list=/.test(video),
+    photos: asPhotos(meta.photos, file),
     standout: meta.standout === true,
     body,
   };

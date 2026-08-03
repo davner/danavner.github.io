@@ -6,6 +6,7 @@ import remarkGfm from "remark-gfm";
 import { BandList } from "@/components/band-list";
 import { Marquee } from "@/components/marquee";
 import { PageHeader, PageShell, Section } from "@/components/page";
+import { PhotoCarousel } from "@/components/photo-carousel";
 import { Rating } from "@/components/rating";
 import { SoloBadge } from "@/components/solo-badge";
 import {
@@ -24,10 +25,13 @@ function ShowRow({ show }: { show: Show }) {
   const tags = [show.type === "festival" ? "Festival" : "", show.subtitle].filter(Boolean);
 
   return (
-    <li className="cut-corners group grid gap-x-6 gap-y-3 border-b border-border px-3 py-7 transition-colors hover:bg-card/60 sm:grid-cols-[6rem_minmax(0,1fr)_minmax(0,15rem)]">
-      <p className="readout-dim tabular-nums">
-        {date || <span className="text-muted-foreground/50">—</span>}
-      </p>
+    <li
+      data-slot="show"
+      className="cut-corners group grid gap-x-6 gap-y-3 border-b border-border px-3 py-7 transition-colors hover:bg-card/60 sm:grid-cols-[6rem_minmax(0,1fr)_minmax(0,15rem)]"
+    >
+      {/* A year-only entry has no day label; the grid column keeps the
+          alignment, so nothing needs to stand in for it. */}
+      {date ? <p className="readout-dim tabular-nums">{date}</p> : <span />}
 
       <div>
         <h3 className="display flex items-center gap-3 text-2xl transition-colors group-hover:text-ember sm:text-3xl">
@@ -64,23 +68,27 @@ function ShowRow({ show }: { show: Show }) {
           </p>
         ) : null}
 
+        {show.video ? (
+          <p className="mt-3">
+            <a
+              href={show.video}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="readout relative z-10 inline-flex items-center gap-2 border border-border px-3 py-2 text-muted-foreground transition-colors hover:border-ember hover:text-ember"
+            >
+              <Youtube className="size-4" />
+              {show.videoIsPlaylist ? "Playlist" : "Watch"}
+            </a>
+          </p>
+        ) : null}
+
         {show.body ? (
           <div className="prose-dan mt-4 max-w-prose border-l-2 border-border pl-4 text-sm leading-relaxed">
             <Markdown remarkPlugins={[remarkGfm]}>{show.body}</Markdown>
           </div>
         ) : null}
 
-        {show.video ? (
-          <a
-            href={show.video}
-            target="_blank"
-            rel="noreferrer noopener"
-            className="readout relative z-10 mt-4 inline-flex items-center gap-2 border border-border px-3 py-2 text-muted-foreground transition-colors hover:border-ember hover:text-ember"
-          >
-            <Youtube className="size-4" />
-            Watch
-          </a>
-        ) : null}
+        <PhotoCarousel photos={show.photos} label={show.title} />
       </div>
 
       <div className="sm:text-right">

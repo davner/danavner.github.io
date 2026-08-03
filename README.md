@@ -134,7 +134,12 @@ venue: Hollywood Palladium
 city: Los Angeles, CA
 rating: 4.5
 with: [Jasmine P.]
-video: https://youtu.be/xxxxx
+video: https://youtube.com/playlist?list=xxxxx
+photos:
+  - /img/shows/knocked-loose-2026/pit.jpg
+  - src: /img/shows/knocked-loose-2026/stage.jpg
+    alt: Underoath mid-set, lit red
+    caption: Underoath
 standout: true
 ---
 
@@ -154,10 +159,18 @@ Free-form markdown about the night. Optional.
 | `rating` | no | 0–5 🤘, decimals allowed. Omit for unrated. |
 | `with` | no | List of names. Mutually exclusive with `solo`. |
 | `solo` | no | `true` renders a **SOLO RUN · 1P** badge |
-| `video` | no | Full URL. Renders a Watch link. |
+| `video` | no | Full URL. A YouTube playlist labels itself "Playlist". |
+| `photos` | no | Paths under `public/`, or objects with `src` / `alt` / `caption` |
 | `standout` | no | Adds a flame and pins it to the ticker |
 
-Three details worth knowing:
+Photos live in `public/img/shows/<slug>/` and render as a swipeable strip with
+prev/next buttons and a counter. One photo drops the controls.
+
+**Every subsection is conditional** — no rating, no lineup, no companions, no
+photos, no notes means nothing renders in its place. The stat row works the same
+way: a figure only appears once it has something to say.
+
+Three more details worth knowing:
 
 - **A festival is not a band.** `type: festival` keeps the event's `title` out of
   the "bands seen" count while its `lineup` still counts.

@@ -46,6 +46,31 @@ zero, and unrated shows are excluded from the average at the top of the page.
 `with` is a list of names. Went alone? Use `solo: true` instead and the entry
 gets a **SOLO RUN · 1P** badge. Setting both is an error — the build will say so.
 
+## Video
+
+`video` takes any URL. A YouTube playlist link (anything with a `list=` param)
+labels itself **Playlist**; anything else labels itself **Watch**. The link sits
+directly under the who-you-went-with line.
+
+## Photos
+
+Drop the files in `public/img/shows/<slug>/` and list them. A bare path is
+enough; use the object form when you want alt text or a caption.
+
+```yaml
+photos:
+  - /img/shows/warped-tour-long-beach-2026-day-1/pit.jpg
+  - src: /img/shows/warped-tour-long-beach-2026-day-1/stage.jpg
+    alt: Underoath mid-set, lit red        # described for screen readers
+    caption: Underoath                     # overlaid on the photo
+```
+
+They render as a swipeable strip with prev/next buttons and a counter. One photo
+drops the controls. No photos, no strip at all.
+
+Alt text falls back to a generated description, but write your own where the
+photo actually shows something.
+
 ## A festival
 
 Festivals get a `title`, because the event is not a band. `lineup` is optional — use
@@ -78,7 +103,8 @@ lineup:
 | `with` | no | List of names you went with |
 | `solo` | no | `true` for a solo run. Mutually exclusive with `with`. |
 | `subtitle` | no | Qualifier under the heading, e.g. "Day 1" |
-| `video` | no | Full URL. Renders a Watch link. |
+| `video` | no | Full URL. A YouTube playlist labels itself "Playlist". |
+| `photos` | no | Paths under `public/`, or objects with `src` / `alt` / `caption` |
 | `standout` | no | Adds a flame and pins it to the ticker |
 
 Notes:

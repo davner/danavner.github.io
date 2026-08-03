@@ -4,6 +4,14 @@ export type ShowType = "show" | "festival";
 
 export const MAX_RATING = 5;
 
+export interface Photo {
+  /** Path under `public/`, or a full URL. */
+  src: string;
+  /** Falls back to a generated description when empty. */
+  alt: string;
+  caption: string;
+}
+
 export interface Show {
   slug: string;
   /** Display heading: the festival's name, or whoever topped the bill. */
@@ -29,8 +37,11 @@ export interface Show {
   companions: string[];
   /** Went alone, deliberately recorded rather than merely unstated. */
   solo: boolean;
-  /** Full URL to a video of the night. */
+  /** Full URL to a video or playlist of the night. */
   video: string;
+  /** True when `video` points at a YouTube playlist rather than one video. */
+  videoIsPlaylist: boolean;
+  photos: Photo[];
   standout: boolean;
   /** Markdown notes about the night. */
   body: string;

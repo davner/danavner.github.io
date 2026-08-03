@@ -79,7 +79,7 @@ export const profile = {
   /** The career voice, used on the Career page and in its meta description. */
   tagline: "I write production software for telescopes and the people who have to use it at 3 a.m.",
   intro:
-    "I have spent about a decade writing the software that sits between a telescope and the astronomer using it. Some of that is the services that run an observation. A lot of it is the interface someone is staring at when the weather turns at 2 a.m. Right now I lead the architecture for Gemini Observatory software at NOIRLab.",
+    "I have spent about a decade writing the software that sits between a telescope and the astronomer using it. Some of that is the services that run an observation. A lot of it is the interface someone is staring at when the weather turns at 2 a.m. Right now I lead the project called Resource for Gemini Observatory software at NOIRLab.",
 } as const;
 
 export const socials: SocialLink[] = [
@@ -195,23 +195,23 @@ export const interests: Interest[] = [
   {
     name: "Live music",
     icon: "music",
-    note: "I barely went to shows growing up. I was too nervous, and there was always a reason not to go. Then I moved to LA, where there is something worth seeing most nights, and I ran out of reasons. Mostly metalcore, occasionally something completely different. Every one gets logged and rated.",
+    note: "I barely went to shows growing up. I was too nervous, and there was always a reason not to go. Then I moved to LA, where there is something worth seeing most nights, and I ran out of reasons. Mostly metalcore, emo, and pop punk, occasionally something completely different. Check out my ratings.",
     to: "/shows",
     feature: true,
   },
   {
     name: "Astrophotography",
     icon: "telescope",
-    note: "Just me and a Sony camera on a tripod, stealing as many photons as I can before the sun comes up.",
+    note: "Just me and a Sony camera on a tripod collecting photons.",
   },
   {
     name: "Video games",
     icon: "gamepad-2",
-    note: "Mass Effect is the best game ever made and I will not be taking questions. These days I am mostly on PlayStation, pretending the backlog is getting shorter.",
+    note: "Mass Effect is the best game ever made and I will not be taking questions. These days I am mostly on PlayStation, playing Fortnite...I still have not finished Expedition 33.",
     handle: {
       label: "PlayStation",
       value: "treslechesplzz",
-      href: "https://psnprofiles.com/treslechesplzz",
+      href: "https://profile.playstation.com/treslechesplzz",
     },
   },
   {
@@ -221,7 +221,7 @@ export const interests: Interest[] = [
     handle: {
       label: "Epic",
       value: "danwiththeyams",
-      href: "https://fortnitetracker.com/profile/all/danwiththeyams",
+      href: "https://store.epicgames.com/u/c8d91b5d775c424faaca60ccb06765b6",
     },
   },
   {
@@ -233,17 +233,18 @@ export const interests: Interest[] = [
   {
     name: "Comic books",
     icon: "book-open",
-    note: "New comic day is Wednesday. I am usually at the shop with Mikey and Kiwi, my comic book cuties, arguing about what to pull next.",
+    note: "New comic day is Wednesday. I am usually at the shop with Mikey and Kiwi, my comic book cuties, discussing what to pull next.",
+    handle: { label: "League of Comic Geeks", value: "aspacemansheavyload", href: "https://leagueofcomicgeeks.com/profile/aspacemansheavyload" }
   },
   {
     name: "Weightlifting",
     icon: "dumbbell",
-    note: "The most honest hour of my week. The bar does not care how work went, and there is nothing about it to debug.",
+    note: "Weirdly, my bowling coach in High School was a football player at Notre Dame. He taught me how to lift, and I have been doing it on and off ever since. I am sometimes strong, and sometimes I'm squishy.",
   },
   {
     name: "Legos",
     icon: "blocks",
-    note: "Still building sets, mostly with my nephew Nathan. Twenty years on I have not gotten bored of them and I do not expect to.",
+    note: "Still building sets, mostly with my nephew Nathan. 31 years on I have not gotten bored of them and I do not expect to.",
   },
 ];
 

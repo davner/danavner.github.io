@@ -1,9 +1,10 @@
-import { Blocks, Drum, Dumbbell, Gamepad2, Telescope, Trophy } from "lucide-react";
+import { Blocks, Dumbbell, Gamepad2, Guitar, Swords, Telescope, Trophy } from "lucide-react";
 import { Link } from "react-router";
 
 import { PageHeader, PageShell, Section } from "@/components/page";
 import { SocialLinks } from "@/components/social-links";
-import { funFact, interests, profile, type Interest } from "@/content/profile";
+import { Badge } from "@/components/ui/badge";
+import { fortnite, funFact, interests, profile, type Interest } from "@/content/profile";
 import { showStats } from "@/lib/shows";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
@@ -11,42 +12,15 @@ const INTEREST_ICONS = {
   dumbbell: Dumbbell,
   telescope: Telescope,
   "gamepad-2": Gamepad2,
-  drum: Drum,
+  guitar: Guitar,
+  swords: Swords,
   blocks: Blocks,
 } satisfies Record<Interest["icon"], typeof Dumbbell>;
-
-const PLACES = [
-  {
-    place: "Gainesville, FL",
-    detail: "B.A. Astronomy at the University of Florida",
-    years: "2009 - 2013",
-  },
-  {
-    place: "Flagstaff, AZ",
-    detail: "M.S. Applied Physics at Northern Arizona University",
-    years: "2015 - 2017",
-  },
-  {
-    place: "Tucson, AZ",
-    detail: "Steward Observatory - telescopes, domes, and long nights",
-    years: "2019 - 2021",
-  },
-  {
-    place: "Pasadena, CA",
-    detail: "Caltech / IPAC on NASA's SPHEREx mission",
-    years: "2021 - 2023",
-  },
-  {
-    place: "Los Angeles County, CA",
-    detail: "Remote for NOIRLab, working on Gemini software",
-    years: "2023 - now",
-  },
-];
 
 export function About() {
   useDocumentMeta(
     "About",
-    "The non-résumé version: where I have lived, what I do outside of work, and one very specific bowling achievement.",
+    "The person, not the job title: music, lifting, Legos, a backyard telescope, and one very specific bowling achievement.",
   );
 
   return (
@@ -55,40 +29,44 @@ export function About() {
         eyebrow="About"
         title={
           <>
-            <span className="block">Not a</span>
-            <span className="display-outline block">job title</span>
+            <span className="block">Who is</span>
+            <span className="display-outline block">Dan?</span>
           </>
         }
         meta={[profile.location, "He/him", "Loud"]}
-        lede="I have spent most of my adult life somewhere near a telescope - first as a student, then as the person on the mountain at 3 a.m., and now as the one writing the software that keeps all of it running."
+        lede="Someone who is happiest at the front of a crowded room with the volume too high, and otherwise at home with a barbell, a guitar, a controller, or a pile of Lego bricks."
       />
 
       <Section>
         <div className="grid gap-10 md:grid-cols-[minmax(0,1fr)_19rem] md:gap-14">
           <div className="space-y-6 text-lg leading-relaxed text-muted-foreground text-pretty">
             <p>
-              I studied astronomy in Florida and applied physics in Arizona, which is a slightly
-              roundabout way of saying I liked the sky and I liked figuring out how things work.
-              Somewhere in there I discovered the part I enjoyed most was not the paper at the end
-              - it was the instrument, the pipeline, the interface, the thing that had to actually
-              work when the dome opened.
+              I grew up in Florida, spent some formative years in Arizona, and now live in Los
+              Angeles County with my wife{" "}
+              <span className="text-foreground">{profile.partner}</span> - who is, for the record,
+              the best person I know and also the only teammate I trust in a final circle.
             </p>
             <p>
-              So I went that direction. Over 150 nights of observing later, I have a concrete sense
-              of what breaks at 2 a.m. and how much a confusing button costs when the weather
-              window is closing. That is the perspective I bring to everything I build now:{" "}
-              <span className="text-foreground">
-                this is not a demo, someone is going to depend on it in the dark.
-              </span>
-            </p>
-            <p>
-              These days I work remotely from Los Angeles County for NOIRLab, leading architecture
-              on software for Gemini Observatory. Outside of that I lift, drum badly but
-              enthusiastically, point a much smaller telescope at the same sky, and{" "}
+              Most of what I do outside the house involves standing too close to a speaker. I have
+              been going to shows since I was a teenager and I have never really stopped, so I{" "}
               <Link to="/shows" className="text-ember underline underline-offset-4">
-                stand too close to the speakers
+                keep a log of every one
+              </Link>
+              . Metalcore mostly, but I will show up for anything with a good breakdown or a good
+              chorus, and I have been known to cry at a Bruno Mars set.
+            </p>
+            <p>
+              The rest of it is quieter. I lift, badly and consistently. I play guitar, badly and
+              enthusiastically. I point a small telescope at the sky from the backyard and stack
+              frames until something looks like a galaxy. I build Legos on a table that has not
+              been used for anything else in years.
+            </p>
+            <p>
+              I also have a day job I genuinely like -{" "}
+              <Link to="/career" className="text-ember underline underline-offset-4">
+                that lives over here
               </Link>{" "}
-              as often as I can manage.
+              - but it is not the interesting part of this page.
             </p>
           </div>
 
@@ -105,35 +83,19 @@ export function About() {
               <span>Fig. 2</span>
               <span>Still smiling</span>
             </p>
-            <SocialLinks className="-ml-2 mt-4" />
+            <SocialLinks className="mt-4 -ml-2" />
           </div>
         </div>
       </Section>
 
-      <Section title="Coordinates" index="01">
-        <ol>
-          {PLACES.map((entry) => (
-            <li
-              key={entry.place}
-              className="group grid gap-x-8 gap-y-1 border-b border-border py-6 first:border-t sm:grid-cols-[9rem_minmax(0,1fr)] sm:items-baseline"
-            >
-              <p className="readout-dim tabular-nums">{entry.years}</p>
-              <div>
-                <h3 className="display text-2xl transition-colors group-hover:text-ember sm:text-3xl">
-                  {entry.place}
-                </h3>
-                <p className="mt-1.5 text-muted-foreground text-pretty">{entry.detail}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
-      </Section>
-
       <Section
         title="Outside of work"
-        index="02"
+        index="01"
         action={
-          <Link to="/shows" className="readout text-muted-foreground transition-colors hover:text-ember">
+          <Link
+            to="/shows"
+            className="readout text-muted-foreground transition-colors hover:text-ember"
+          >
             {showStats.total} shows logged →
           </Link>
         }
@@ -161,18 +123,33 @@ export function About() {
               </li>
             );
           })}
-
-          <li className="flex flex-col justify-center bg-background p-6 sm:p-8">
-            <p className="readout-dim">Also</p>
-            <p className="mt-2 leading-relaxed text-muted-foreground text-pretty">
-              Anything with a double kick pedal and a breakdown. See the{" "}
-              <Link to="/shows" className="text-ember underline underline-offset-4">
-                show log
-              </Link>
-              .
-            </p>
-          </li>
         </ul>
+      </Section>
+
+      <Section title="Drop me at Tilted" index="02">
+        <div className="grid gap-px border border-border bg-border sm:grid-cols-[minmax(0,1fr)_auto]">
+          <div className="bg-background p-8 sm:p-10">
+            <p className="readout text-ember">Fortnite, still, unapologetically</p>
+            <ul className="mt-6 space-y-3 text-lg leading-relaxed text-pretty">
+              <li className="relative pl-6 before:absolute before:top-[0.72em] before:left-0 before:h-px before:w-3 before:bg-ember">
+                {fortnite.squad}
+              </li>
+              <li className="relative pl-6 before:absolute before:top-[0.72em] before:left-0 before:h-px before:w-3 before:bg-ember">
+                {fortnite.duo}
+              </li>
+            </ul>
+            <p className="mt-6 text-muted-foreground text-pretty">{fortnite.note}</p>
+          </div>
+
+          <div className="flex flex-col justify-center gap-3 bg-background p-8 sm:p-10">
+            <Badge variant="ember" className="self-start">
+              Gamer tag
+            </Badge>
+            <p className="font-mono text-2xl break-all text-ember sm:text-3xl">
+              {fortnite.gamertag}
+            </p>
+          </div>
+        </div>
       </Section>
 
       <Section title="Fun fact" index="03">

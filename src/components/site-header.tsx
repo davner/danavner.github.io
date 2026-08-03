@@ -4,9 +4,9 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { to: "/work", label: "Work", index: "01" },
-  { to: "/about", label: "About", index: "02" },
-  { to: "/writing", label: "Writing", index: "03" },
+  { to: "/about", label: "About", index: "01" },
+  { to: "/career", label: "Career", index: "02" },
+  { to: "/blog", label: "Blog", index: "03" },
   { to: "/shows", label: "Shows", index: "04" },
 ];
 

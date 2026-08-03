@@ -83,7 +83,7 @@ before anything gets linked.
 
 ## Deep links on GitHub Pages
 
-GitHub Pages serves static files and has no rewrite rules, so a hard refresh on `/writing/welcome`
+GitHub Pages serves static files and has no rewrite rules, so a hard refresh on `/blog/welcome`
 would normally 404 - there is no such file on disk. The standard workaround is to give Pages a
 `404.html` that is a byte-for-byte copy of `index.html`; the app boots, React Router reads the URL,
 and the right page renders. A small Vite plugin does the copy after every build:

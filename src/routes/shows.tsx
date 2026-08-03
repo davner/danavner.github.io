@@ -227,10 +227,6 @@ export function Shows() {
             </ul>
           </Section>
         ))}
-
-        <p className="readout-dim mt-16 border-t border-border pt-6">
-          One markdown file per show in <span className="text-ember">src/content/shows/</span>
-        </p>
       </PageShell>
     </>
   );

@@ -81,7 +81,7 @@ vite-plugin-content.ts    reads + validates the markdown collections at build ti
 vite.config.ts            aliases, Tailwind, the 404.html fallback
 src/
   content/
-    profile.ts            everything the Work / About / Home pages render
+    profile.ts            everything the Home / About / Career pages render
     blog/*.md             one markdown file per post
     shows/*.md            one markdown file per show
   routes/                 one file per page
@@ -123,7 +123,7 @@ its own reference next to its content.
 ## Adding a blog post
 
 Create `src/content/blog/<slug>.md`. The filename becomes the URL, so
-`hello-world.md` publishes at `/writing/hello-world`.
+`hello-world.md` publishes at `/blog/hello-world`.
 
 ```md
 ---
@@ -143,7 +143,7 @@ highlighting all work.
 | --- | --- | --- |
 | `title` | yes | |
 | `date` | yes | `YYYY-MM-DD`. Posts sort newest-first. |
-| `category` | yes | `work` or `personal` - drives the filter on `/writing` |
+| `category` | yes | `work` or `personal` - drives the filter on `/blog` |
 | `summary` | no | Recommended; used on cards and for link previews |
 | `tags` | no | Free-form list, shown on the post page |
 | `draft` | no | `true` keeps it in `npm run dev` and out of the build |
@@ -226,8 +226,12 @@ Three more details worth knowing:
 
 ## Editing the résumé side
 
-A new role, project, skill, or interest is one edit to `src/content/profile.ts`.
-Nothing else changes - Home, Work, and About all read from it.
+A new role, skill, or interest is one edit to `src/content/profile.ts`.
+Nothing else changes - Home, About, and Career all read from it.
+
+The email address is stored as `emailUser` and `emailDomain` and only joined in a
+click handler, so it never lands in the served HTML. `<EmailReveal />` is the only
+thing that puts it on screen.
 
 ---
 
@@ -290,7 +294,7 @@ Things that were not obvious, in case you hit them too:
   defaults to lowlight's `common` set, roughly 37 languages. Registering only
   eight measured 189.87 kB against 189.75 kB for the default - the grammars are
   tiny and the weight is all in the markdown pipeline. The default stays.
-- **Heavy routes are lazy.** The markdown renderer only loads on `/writing/:slug`
+- **Heavy routes are lazy.** The markdown renderer only loads on `/blog/:slug`
   and `/shows`, keeping the initial bundle near 100 kB gzipped.
 
 ---

@@ -19,7 +19,7 @@ export function PostCard({ post, index }: { post: Post; index?: number }) {
       </div>
 
       <h3 className="display mt-5 text-3xl text-balance transition-colors group-hover:text-ember sm:text-4xl">
-        <Link to={`/writing/${post.slug}`} className="after:absolute after:inset-0">
+        <Link to={`/blog/${post.slug}`} className="after:absolute after:inset-0">
           {post.title}
         </Link>
       </h3>

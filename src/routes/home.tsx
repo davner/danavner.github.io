@@ -4,29 +4,29 @@ import { Link } from "react-router";
 import { Marquee } from "@/components/marquee";
 import { Section } from "@/components/page";
 import { SocialLinks } from "@/components/social-links";
-import { profile, projects } from "@/content/profile";
+import { profile } from "@/content/profile";
 import { posts } from "@/lib/blog";
 import { formatShowDate, showLocation, showStats, supportFor } from "@/lib/shows";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
 const INDEX = [
   {
-    to: "/work",
+    to: "/about",
     number: "01",
-    title: "Work",
+    title: "About",
+    blurb: "Music, lifting, Legos, a backyard telescope, and one bowling statistic.",
+  },
+  {
+    to: "/career",
+    number: "02",
+    title: "Career",
     blurb: "Observatory systems, data pipelines, and the software astronomers actually use.",
   },
   {
-    to: "/about",
-    number: "02",
-    title: "About",
-    blurb: "Where I came from, what I do when the laptop is shut, one bowling statistic.",
-  },
-  {
-    to: "/writing",
+    to: "/blog",
     number: "03",
-    title: "Writing",
-    blurb: "Notes on scientific software, and everything that is not scientific software.",
+    title: "Blog",
+    blurb: "Notes on whatever has my attention. Some of it is work, most of it is not.",
   },
   {
     to: "/shows",
@@ -37,22 +37,21 @@ const INDEX = [
 ];
 
 const TICKER = [
-  "Time-domain astronomy",
-  "Gemini Observatory",
-  "Python",
   "Metalcore",
-  "150+ nights on sky",
-  "GraphQL",
-  "Loud guitars",
-  "Telescope control",
-  "Django",
+  "danwiththeyams",
+  "2nd in Florida for bowling",
+  "Guitar, enthusiastically",
+  "Backyard astrophotography",
+  "Front of the barricade",
+  "Legos on the kitchen table",
+  "One more set",
+  "Locked Out of Heaven",
   "Los Angeles",
 ];
 
 export function Home() {
-  useDocumentMeta("Dan Avner", profile.tagline);
+  useDocumentMeta("Dan Avner", profile.blurb);
 
-  const current = projects.filter((project) => project.current);
   const latestPost = posts[0];
   const latestShow = showStats.latest;
 
@@ -60,11 +59,11 @@ export function Home() {
     <>
       <section className="mx-auto max-w-6xl px-4 pt-10 pb-14 sm:px-6 sm:pt-16">
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-border pb-3">
-          <p className="readout text-ember">Software engineer</p>
+          <p className="readout text-ember">Personal site</p>
           <ul className="flex flex-wrap gap-x-5 gap-y-1">
-            <li className="readout-dim">{profile.org}</li>
             <li className="readout-dim">{profile.location}</li>
-            <li className="readout-dim">150+ nights on sky</li>
+            <li className="readout-dim">He/him</li>
+            <li className="readout-dim">Probably at a show</li>
           </ul>
         </div>
 
@@ -76,23 +75,23 @@ export function Home() {
             </h1>
 
             <p className="mt-8 max-w-xl text-xl leading-snug text-pretty sm:text-2xl">
-              {profile.tagline}
+              {profile.blurb}
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-3">
               <Link
-                to="/work"
+                to="/about"
                 className="group inline-flex items-center gap-2 border border-ember bg-ember px-5 py-3 text-primary-foreground transition-colors hover:bg-transparent hover:text-ember"
               >
-                <span className="readout">See the work</span>
+                <span className="readout">Get to know me</span>
                 <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
-              <a
-                href={`mailto:${profile.email}`}
+              <Link
+                to="/career"
                 className="inline-flex items-center gap-2 border border-border px-5 py-3 transition-colors hover:border-ember hover:text-ember"
               >
-                <span className="readout">Get in touch</span>
-              </a>
+                <span className="readout">The day job</span>
+              </Link>
               <SocialLinks className="sm:ml-1" />
             </div>
           </div>
@@ -145,35 +144,12 @@ export function Home() {
           </ul>
         </Section>
 
-        <Section title="Currently building">
-          <ul className="grid gap-px border border-border bg-border sm:grid-cols-3">
-            {current.map((project) => (
-              <li key={project.name} className="flex flex-col bg-background p-6">
-                <p className="flex items-center gap-2">
-                  <span className="size-1.5 animate-pulse bg-ember" />
-                  <span className="font-mono font-semibold">{project.name}</span>
-                </p>
-                <p className="readout-dim mt-1">{project.org}</p>
-                <p className="mt-4 flex-1 text-sm leading-relaxed text-muted-foreground text-pretty">
-                  {project.blurb}
-                </p>
-                <ul className="mt-5 flex flex-wrap gap-x-3 gap-y-1">
-                  {project.stack.map((tech) => (
-                    <li key={tech} className="readout-dim">
-                      {tech}
-                    </li>
-                  ))}
-                </ul>
-              </li>
-            ))}
-          </ul>
-        </Section>
 
         <Section
           title="Latest"
           action={
             <Link
-              to="/writing"
+              to="/blog"
               className="readout text-muted-foreground transition-colors hover:text-ember"
             >
               All posts →
@@ -183,7 +159,7 @@ export function Home() {
           <div className="grid gap-px border border-border bg-border md:grid-cols-2">
             {latestPost ? (
               <Link
-                to={`/writing/${latestPost.slug}`}
+                to={`/blog/${latestPost.slug}`}
                 className="group flex flex-col bg-background p-6 transition-colors hover:bg-card/60 sm:p-8"
               >
                 <p className="readout text-ember">Latest post</p>

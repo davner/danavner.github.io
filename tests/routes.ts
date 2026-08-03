@@ -1,10 +1,10 @@
 /** Every page the site serves, used by most of the suites. */
 export const ROUTES = [
   "/",
-  "/work",
   "/about",
-  "/writing",
+  "/career",
+  "/blog",
   "/shows",
-  "/writing/welcome",
-  "/writing/building-this-site",
+  "/blog/welcome",
+  "/blog/building-this-site",
 ] as const;

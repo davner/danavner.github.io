@@ -1,20 +1,20 @@
 import { Suspense, lazy } from "react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router";
+import { BrowserRouter, Navigate, Route, Routes, useParams } from "react-router";
 
 import { Backdrop } from "@/components/backdrop";
 import { ScrollToTop } from "@/components/scroll-to-top";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { About } from "@/routes/about";
+import { Blog } from "@/routes/blog";
+import { Career } from "@/routes/career";
 import { Home } from "@/routes/home";
 import { NotFound } from "@/routes/not-found";
-import { Work } from "@/routes/work";
-import { Writing } from "@/routes/writing";
 
 // The markdown renderer and syntax highlighter are only needed on a post page,
 // and together they outweigh the rest of the site - so they load on demand.
-const WritingPost = lazy(() =>
-  import("@/routes/writing-post").then((module) => ({ default: module.WritingPost })),
+const BlogPost = lazy(() =>
+  import("@/routes/blog-post").then((module) => ({ default: module.BlogPost })),
 );
 
 // Shows render markdown notes, so this route pulls in the renderer too.
@@ -39,8 +39,17 @@ export function App() {
         <main id="main" className="flex-1">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/work" element={<Work />} />
             <Route path="/about" element={<About />} />
+            <Route path="/career" element={<Career />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route
+              path="/blog/:slug"
+              element={
+                <Suspense fallback={<PostSkeleton />}>
+                  <BlogPost />
+                </Suspense>
+              }
+            />
             <Route
               path="/shows"
               element={
@@ -49,18 +58,13 @@ export function App() {
                 </Suspense>
               }
             />
-            <Route path="/writing" element={<Writing />} />
-            <Route
-              path="/writing/:slug"
-              element={
-                <Suspense fallback={<PostSkeleton />}>
-                  <WritingPost />
-                </Suspense>
-              }
-            />
-            {/* Kept so older /blog links keep resolving. */}
-            <Route path="/blog" element={<Navigate to="/writing" replace />} />
-            <Route path="/blog/:slug" element={<LegacyPostRedirect />} />
+
+            {/* The sections were called Work and Writing before; keep both
+                resolving so nothing already linked breaks. */}
+            <Route path="/work" element={<Navigate to="/career" replace />} />
+            <Route path="/writing" element={<Navigate to="/blog" replace />} />
+            <Route path="/writing/:slug" element={<LegacyPostRedirect />} />
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
@@ -72,7 +76,8 @@ export function App() {
 }
 
 function LegacyPostRedirect() {
-  return <Navigate to="/writing" replace />;
+  const { slug } = useParams();
+  return <Navigate to={slug ? `/blog/${slug}` : "/blog"} replace />;
 }
 
 function PostSkeleton() {

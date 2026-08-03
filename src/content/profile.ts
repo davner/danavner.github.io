@@ -7,7 +7,7 @@ export interface SocialLink {
   label: string;
   href: string;
   /** lucide-react icon name, resolved in `src/components/social-links.tsx`. */
-  icon: "github" | "linkedin" | "instagram" | "mail" | "graduation-cap";
+  icon: "github" | "linkedin" | "instagram" | "graduation-cap";
 }
 
 export interface Role {
@@ -20,16 +20,6 @@ export interface Role {
   summary: string;
   highlights: string[];
   stack: string[];
-}
-
-export interface Project {
-  name: string;
-  org: string;
-  blurb: string;
-  stack: string[];
-  href?: string;
-  /** Shown with a live dot on the home page. */
-  current?: boolean;
 }
 
 export interface SkillGroup {
@@ -46,7 +36,7 @@ export interface Education {
 
 export interface Interest {
   name: string;
-  icon: "dumbbell" | "telescope" | "gamepad-2" | "drum" | "blocks";
+  icon: "dumbbell" | "telescope" | "gamepad-2" | "guitar" | "blocks" | "swords";
   note: string;
 }
 
@@ -56,12 +46,21 @@ export const profile = {
   role: "Software Engineer III",
   org: "NOIRLab / AURA",
   location: "Los Angeles County, CA",
-  email: "ldpavner@gmail.com",
+  /**
+   * Split so the address is never a single scrapeable string in the bundle or
+   * the DOM. Joined at click time by `<EmailReveal />`.
+   */
+  emailUser: "ldpavner",
+  emailDomain: "gmail.com",
   /**
    * Shows where this is the only name in `with` render as a duo rather than a
    * list of one. Player two.
    */
   partner: "Alexis A.",
+  /** The homepage voice: a person who happens to have a career. */
+  blurb:
+    "I write software for telescopes, point a much smaller one at the same sky, and spend the rest of my time at loud shows, under a barbell, or building something that did not need building.",
+  /** The career voice, used on the Career page and in its meta description. */
   tagline: "I build production software for telescopes, observatories, and astronomers.",
   intro:
     "For the last decade I have worked at the seam between astronomy and software - writing the services, pipelines, and interfaces that turn a night on a mountain into data people can actually use. These days that means leading architecture for Gemini Observatory software at NOIRLab.",
@@ -75,55 +74,6 @@ export const socials: SocialLink[] = [
     label: "Google Scholar",
     href: "https://scholar.google.com/citations?user=B0HllkYAAAAJ&hl=en",
     icon: "graduation-cap",
-  },
-  { label: "Email", href: "mailto:ldpavner@gmail.com", icon: "mail" },
-];
-
-export const projects: Project[] = [
-  {
-    name: "GOATS",
-    org: "NOIRLab",
-    current: true,
-    blurb:
-      "The Gemini Observation and Analysis of Targets System - an end-to-end platform for time-domain and multi-messenger astronomy. Astronomers manage targets, trigger Gemini follow-up, and reduce the resulting data without leaving the browser. I am the principal engineer and architect.",
-    stack: ["Python", "Django", "JavaScript", "WebSockets", "TOM Toolkit"],
-  },
-  {
-    name: "gpp-client",
-    org: "NOIRLab",
-    current: true,
-    blurb:
-      "The asynchronous Python SDK for the Gemini Program Platform. Environment-aware authentication, domain-based resource interfaces, and authenticated GraphQL and REST access, so tools and automation can drive programs and observations directly. Lead engineer and architect.",
-    stack: ["Python", "asyncio", "GraphQL", "SDK design"],
-  },
-  {
-    name: "DRAGONS on the web",
-    org: "NOIRLab",
-    current: true,
-    blurb:
-      "Moved the DRAGONS data reduction pipeline off the command line and onto a browser-accessible platform - Django for backend services, WebSockets pushing real-time reduction progress to the frontend.",
-    stack: ["Python", "Django", "WebSockets", "Data pipelines"],
-  },
-  {
-    name: "SPHEREx pipeline",
-    org: "Caltech / IPAC",
-    blurb:
-      "Production data-processing software for NASA's SPHEREx all-sky infrared survey, built alongside the pipeline architect and science team, with Rubin Observatory Pipelines and Butler integrated into the processing flow.",
-    stack: ["Python", "Rubin Pipelines", "Butler", "Jenkins CI"],
-  },
-  {
-    name: "Telemetry & weather displays",
-    org: "Steward Observatory",
-    blurb:
-      "An async Python backend streaming live observatory telemetry over WebSockets to a responsive web dashboard - weather, dome, and instrument state visible from anywhere.",
-    stack: ["Python", "FastAPI", "WebSockets", "JavaScript", "Bootstrap"],
-  },
-  {
-    name: "Guidebox & INDI driver",
-    org: "Steward Observatory",
-    blurb:
-      "Debugged and rebuilt the INDI driver and client GUI for the Vatican telescope guidebox, eliminating nearly all of the observing time that had been lost to guidebox faults.",
-    stack: ["C", "INDI", "Embedded"],
   },
 ];
 
@@ -234,23 +184,36 @@ export const interests: Interest[] = [
   {
     name: "Astrophotography",
     icon: "telescope",
-    note: "Same sky as the day job, slower pace, much smaller telescope.",
+    note: "A small telescope in the backyard, a cold night, and a lot of stacked frames.",
   },
   {
     name: "Video games",
     icon: "gamepad-2",
-    note: "A reliable way to think about systems without being responsible for one.",
+    note: "Backlog enormous, discipline questionable, enthusiasm undiminished.",
   },
   {
-    name: "Drums",
-    icon: "drum",
-    note: "Loud, physical, and impossible to do while checking email.",
+    name: "Guitar",
+    icon: "guitar",
+    note: "Loud, physical, and getting slightly less terrible every year.",
+  },
+  {
+    name: "Fortnite",
+    icon: "swords",
+    note: "An indefensible amount of build practice for a grown adult.",
   },
   {
     name: "Legos",
     icon: "blocks",
-    note: "Instructions that always work. A nice change of pace from software.",
+    note: "Instructions that always work, and a table permanently out of commission.",
   },
 ];
+
+/** The Fortnite subsection on About. Fun, not a dossier. */
+export const fortnite = {
+  gamertag: "danwiththeyams",
+  squad: "I have an amazing squad.",
+  duo: "My favorite duo is my wife.",
+  note: "If you see the yams in the lobby, say hi. If you see the yams in the storm, say nothing.",
+} as const;
 
 export const funFact = "Was once ranked 2nd in the state of Florida for bowling.";

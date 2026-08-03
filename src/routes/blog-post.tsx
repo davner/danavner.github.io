@@ -11,7 +11,7 @@ import { CATEGORY_LABEL, formatDate, getPost, posts } from "@/lib/blog";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 import { NotFound } from "@/routes/not-found";
 
-export function WritingPost() {
+export function BlogPost() {
   const { slug } = useParams();
   const post = getPost(slug);
 
@@ -26,7 +26,7 @@ export function WritingPost() {
   return (
     <PageShell className="max-w-3xl">
       <Link
-        to={`/writing?category=${post.category}`}
+        to={`/blog?category=${post.category}`}
         className="readout group inline-flex items-center gap-2 text-muted-foreground transition-colors hover:text-ember"
       >
         <ArrowLeft className="size-3.5 transition-transform group-hover:-translate-x-0.5" />
@@ -116,7 +116,7 @@ export function WritingPost() {
         >
           {older ? (
             <Link
-              to={`/writing/${older.slug}`}
+              to={`/blog/${older.slug}`}
               className="group bg-background p-6 transition-colors hover:bg-card/60"
             >
               <span className="readout-dim flex items-center gap-2">
@@ -133,7 +133,7 @@ export function WritingPost() {
 
           {newer ? (
             <Link
-              to={`/writing/${newer.slug}`}
+              to={`/blog/${newer.slug}`}
               className="group bg-background p-6 text-right transition-colors hover:bg-card/60 sm:col-start-2"
             >
               <span className="readout-dim flex items-center justify-end gap-2">

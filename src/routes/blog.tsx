@@ -18,10 +18,10 @@ function isFilter(value: string | null): value is Filter {
   return value === "all" || CATEGORIES.includes(value as Category);
 }
 
-export function Writing() {
+export function Blog() {
   useDocumentMeta(
-    "Writing",
-    "Posts on scientific software and engineering, plus the personal stuff. Filter by work or personal.",
+    "Blog",
+    "Dan Avner's blog. Posts on scientific software and engineering, plus the personal stuff. Filter by work or personal.",
   );
 
   // Kept in the URL so a filtered view is linkable and survives a refresh.
@@ -37,10 +37,10 @@ export function Writing() {
   return (
     <PageShell>
       <PageHeader
-        eyebrow="Writing"
-        title="Notes"
+        eyebrow="Blog"
+        title="The blog"
         meta={[`${posts.length} ${posts.length === 1 ? "post" : "posts"}`, "No schedule"]}
-        lede="Some of this is about building software for astronomy. Some of it is about lifting, drums, or whatever else has my attention. It all lives here - filter it if you only want one kind."
+        lede="Some of this is about building software for astronomy. Some of it is about lifting, guitar, or whatever else has my attention. It all lives here - filter it if you only want one kind."
       >
         {/* A single-select filter is a radio group, which is what ToggleGroup
             gives: roving focus and arrow-key navigation for free. */}

@@ -1,19 +1,23 @@
 import { Link } from "react-router";
 
+import { EmailReveal } from "@/components/email-reveal";
+import { Flames } from "@/components/flames";
 import { SocialLinks } from "@/components/social-links";
 import { profile } from "@/content/profile";
 
 const LINKS = [
-  { to: "/work", label: "Work" },
   { to: "/about", label: "About" },
-  { to: "/writing", label: "Writing" },
+  { to: "/career", label: "Career" },
+  { to: "/blog", label: "Blog" },
   { to: "/shows", label: "Shows" },
 ];
 
 export function SiteFooter() {
   return (
     <footer className="mt-20 border-t border-border">
-      <div className="rule-ticks" />
+      {/* Pulled up by its own height so the licks rise off the footer's rule
+          rather than sitting under it. The footer's top margin leaves room. */}
+      <Flames className="-mt-10" />
 
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
         <div className="flex flex-col gap-10 md:flex-row md:justify-between">
@@ -47,17 +51,14 @@ export function SiteFooter() {
 
             <SocialLinks className="-ml-2 md:-mr-2 md:ml-0" />
 
-            <a
-              href={`mailto:${profile.email}`}
-              className="font-mono text-sm text-muted-foreground underline decoration-border underline-offset-4 transition-colors hover:text-ember hover:decoration-ember"
-            >
-              {profile.email}
-            </a>
+            <EmailReveal className="md:justify-end" />
           </div>
         </div>
 
         <div className="mt-12 flex flex-col gap-2 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <p className="readout-dim">© {new Date().getFullYear()} {profile.fullName}</p>
+          <p className="readout-dim">
+            © {new Date().getFullYear()} {profile.fullName}
+          </p>
           <p className="readout-dim">Built in the dark · Los Angeles</p>
         </div>
       </div>

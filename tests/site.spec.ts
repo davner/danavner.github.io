@@ -18,16 +18,16 @@ test.describe("navigation", () => {
 
   test("home links to every section", async ({ page }) => {
     await page.goto("/");
-    for (const path of ["/work", "/about", "/writing", "/shows"]) {
+    for (const path of ["/about", "/career", "/blog", "/shows"]) {
       await expect(page.locator(`a[href="${path}"]`).first()).toBeAttached();
     }
   });
 
   test("each route sets its own title", async ({ page }) => {
     const titles: Record<string, string> = {
-      "/work": "Work · Dan Avner",
       "/about": "About · Dan Avner",
-      "/writing": "Writing · Dan Avner",
+      "/career": "Career · Dan Avner",
+      "/blog": "Blog · Dan Avner",
       "/shows": "Shows · Dan Avner",
     };
 
@@ -38,7 +38,7 @@ test.describe("navigation", () => {
   });
 
   test("scroll resets between pages", async ({ page }) => {
-    await page.goto("/work");
+    await page.goto("/career");
     await page.evaluate(() => window.scrollTo(0, 1500));
     // The header drops its index numbers below `sm`, so target the link itself
     // rather than a label that differs between viewports.
@@ -56,9 +56,15 @@ test.describe("navigation", () => {
     );
   });
 
-  test("legacy /blog links still resolve", async ({ page }) => {
-    await page.goto("/blog");
-    await page.waitForURL("**/writing");
+  test("the sections' old paths still resolve", async ({ page }) => {
+    for (const [from, to] of [
+      ["/work", "**/career"],
+      ["/writing", "**/blog"],
+      ["/writing/welcome", "**/blog/welcome"],
+    ] as const) {
+      await page.goto(from);
+      await page.waitForURL(to);
+    }
   });
 });
 
@@ -80,24 +86,24 @@ test.describe("theme", () => {
   });
 });
 
-test.describe("writing", () => {
+test.describe("blog", () => {
   test("filter narrows the list and syncs the URL", async ({ page }) => {
-    await page.goto("/writing");
+    await page.goto("/blog");
     const posts = page.locator("article");
     await expect(posts).toHaveCount(2);
 
     await page.getByRole("radio", { name: /^Work/i }).click();
-    await page.waitForURL("**/writing?category=work");
+    await page.waitForURL("**/blog?category=work");
     await expect(posts).toHaveCount(1);
     await expect(posts.locator("h3")).toContainText(/HOW THIS SITE IS BUILT/i);
 
     await page.getByRole("radio", { name: /^Personal/i }).click();
-    await page.waitForURL("**/writing?category=personal");
+    await page.waitForURL("**/blog?category=personal");
     await expect(posts).toHaveCount(1);
   });
 
   test("filter survives a reload", async ({ page }) => {
-    await page.goto("/writing?category=personal");
+    await page.goto("/blog?category=personal");
     await expect(page.locator("article")).toHaveCount(1);
     await expect(page.getByRole("radio", { name: /^Personal/i })).toHaveAttribute(
       "aria-checked",
@@ -106,7 +112,7 @@ test.describe("writing", () => {
   });
 
   test("a post renders markdown, code, tables, and heading anchors", async ({ page }) => {
-    await page.goto("/writing/building-this-site");
+    await page.goto("/blog/building-this-site");
     await expect(page).toHaveTitle("How this site is built · Dan Avner");
     await expect(page.locator("pre code .hljs-keyword").first()).toBeAttached();
     await expect(page.locator("table").first()).toBeAttached();
@@ -230,10 +236,29 @@ test.describe("chrome", () => {
   });
 
   test("external links open safely", async ({ page }) => {
-    await page.goto("/work");
+    await page.goto("/career");
     const github = page.locator('a[href="https://github.com/davner"]').first();
     await expect(github).toHaveAttribute("target", "_blank");
     await expect(github).toHaveAttribute("rel", /noopener/);
+  });
+
+  test("the email address is not in the page until you ask for it", async ({ page }) => {
+    const EMAIL = /[\w.+-]+@[\w-]+\.[\w.]{2,}/;
+    await page.goto("/");
+
+    // Split in the source and joined in an event handler, so a harvester
+    // scraping the served HTML finds nothing to take.
+    expect(await page.content()).not.toMatch(EMAIL);
+    await expect(page.locator('a[href^="mailto:"]')).toHaveCount(0);
+
+    await page
+      .getByRole("button", { name: /Show email/i })
+      .first()
+      .click();
+
+    const link = page.locator('a[href^="mailto:"]').first();
+    await expect(link).toBeVisible();
+    expect(await link.getAttribute("href")).toMatch(EMAIL);
   });
 
   test("the marquee is decorative", async ({ page }) => {
@@ -245,11 +270,20 @@ test.describe("chrome", () => {
     await page.setViewportSize({ width: 320, height: 800 });
     for (const path of ROUTES) {
       await page.goto(path);
-      const { scrollWidth, clientWidth } = await page.evaluate(() => ({
-        scrollWidth: document.documentElement.scrollWidth,
-        clientWidth: document.documentElement.clientWidth,
-      }));
-      expect(scrollWidth, `${path} overflows`).toBeLessThanOrEqual(clientWidth + 1);
+      // Lazy routes render a skeleton first and the display face swaps in after
+      // load, so measuring straight after `goto` measures a page mid-layout.
+      await page.getByRole("heading", { level: 1 }).waitFor();
+      await page.evaluate(() => document.fonts.ready);
+
+      await expect
+        .poll(
+          () =>
+            page.evaluate(
+              () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+            ),
+          { message: `${path} overflows` },
+        )
+        .toBeLessThanOrEqual(1);
     }
   });
 });

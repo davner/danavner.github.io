@@ -34,7 +34,7 @@ export function SiteFooter() {
           <SocialLinks className="-ml-2 sm:-mr-2 sm:ml-0" />
         </div>
 
-        <div className="flex flex-col gap-2 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <p className="readout-dim">
             © {new Date().getFullYear()} {profile.name} · Built in the dark with good music on
           </p>

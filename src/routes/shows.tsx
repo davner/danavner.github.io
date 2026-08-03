@@ -188,7 +188,7 @@ export function Shows() {
             showStats.firstYear ? `Since ${showStats.firstYear}` : "",
             "Ears: negotiable",
           ].filter(Boolean)}
-          lede="I keep a list. Mostly metalcore, occasionally something with clean vocals, always somewhere near the front. Openers count - half the best sets I have seen went on at 7:15 to forty people."
+          lede="I keep a list. Mostly metalcore, occasionally something with clean vocals, and I am always somewhere near the front. Openers count too. Half the best sets I have seen went on at 7:15 to about forty people."
         />
       </PageShell>
 

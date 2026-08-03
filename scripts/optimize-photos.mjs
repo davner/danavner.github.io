@@ -6,7 +6,9 @@
  *
  * `<destination>` is a folder under `public/img/`, so `about` writes to
  * `public/img/about/` and `shows/warped-2026` to `public/img/shows/warped-2026/`.
- * Pass `--name=<basename>` to rename a single photo on the way through.
+ * Pass `--name=<basename>` to rename a single photo on the way through, and
+ * `--max=<px>` to cap the long edge below the default for photos that only ever
+ * render small.
  *
  * Three things matter here beyond the file size:
  *
@@ -52,6 +54,7 @@ function collect(target) {
 
 const args = process.argv.slice(2);
 const renameTo = args.find((arg) => arg.startsWith("--name="))?.slice("--name=".length);
+const maxEdge = Number(args.find((arg) => arg.startsWith("--max="))?.slice("--max=".length)) || MAX_EDGE;
 const [destination, ...targets] = args.filter((arg) => !arg.startsWith("--"));
 
 if (!destination || targets.length === 0) {
@@ -89,7 +92,7 @@ for (const source of sources) {
 
   const output = await sharp(source)
     .rotate() // Applies the EXIF orientation before the tag is discarded.
-    .resize({ width: MAX_EDGE, height: MAX_EDGE, fit: "inside", withoutEnlargement: true })
+    .resize({ width: maxEdge, height: maxEdge, fit: "inside", withoutEnlargement: true })
     .jpeg({ quality: QUALITY, mozjpeg: true })
     .toFile(outPath);
 

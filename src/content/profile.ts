@@ -77,9 +77,9 @@ export const profile = {
   blurb:
     "Software engineer by trade, Florida man at heart. I write software for telescopes, point a much smaller one at the same sky, and spend the rest of the week at shows, in record bins, or under a barbell.",
   /** The career voice, used on the Career page and in its meta description. */
-  tagline: "I build production software for telescopes, observatories, and astronomers.",
+  tagline: "I write production software for telescopes and the people who have to use it at 3 a.m.",
   intro:
-    "For the last decade I have worked at the seam between astronomy and software - writing the services, pipelines, and interfaces that turn a night on a mountain into data people can actually use. These days that means leading architecture for Gemini Observatory software at NOIRLab.",
+    "I have spent about a decade writing the software that sits between a telescope and the astronomer using it. Some of that is the services that run an observation. A lot of it is the interface someone is staring at when the weather turns at 2 a.m. Right now I lead the architecture for Gemini Observatory software at NOIRLab.",
 } as const;
 
 export const socials: SocialLink[] = [
@@ -238,7 +238,7 @@ export const interests: Interest[] = [
   {
     name: "Weightlifting",
     icon: "dumbbell",
-    note: "The one part of my week that gives immediate, honest feedback. No debugging, no opinions - the bar either moves or it does not.",
+    note: "The most honest hour of my week. Nothing to debug, nobody to convince, and the bar does not care how the sprint went.",
   },
   {
     name: "Legos",

@@ -11,7 +11,7 @@ const scholar = socials.find((social) => social.icon === "graduation-cap")!;
 export function Career() {
   useDocumentMeta(
     "Career",
-    "Roles, skills, and time on sky - a decade of building software for telescopes, observatories, and astronomers.",
+    "A decade of writing software for telescopes: the roles, the toolkit, and the nights on a mountain that inform both.",
   );
 
   return (
@@ -46,7 +46,7 @@ export function Career() {
           {roles.map((role) => (
             <li
               key={`${role.org}-${role.start}`}
-              className="grid gap-x-8 gap-y-4 border-b border-border py-10 first:border-t md:grid-cols-[13rem_minmax(0,1fr)]"
+              className="grid gap-x-8 gap-y-4 border-b border-border py-10 md:grid-cols-[13rem_minmax(0,1fr)]"
             >
               <div>
                 <p className="readout text-ember">{role.period}</p>
@@ -92,9 +92,9 @@ export function Career() {
           </div>
           <div className="bg-background p-8">
             <p className="text-muted-foreground text-pretty">
-              Time on the mountain, not just in the repo. Enough nights at the eyepiece to know
-              what breaks at 2 a.m., and what a confusing button costs when the weather window is
-              closing.
+              I have spent a lot of nights actually observing, and it changes how you write the
+              software. You learn what breaks at 2 a.m., and what a confusing button costs when the
+              weather is about to close in on you.
             </p>
             <ul className="mt-6 flex flex-wrap gap-2 border-t border-border pt-5">
               {observing.telescopes.map((telescope) => (
@@ -166,10 +166,10 @@ export function Career() {
             Science is hard enough. The software should not be.
           </h2>
           <p className="mx-auto mt-6 max-w-xl leading-relaxed text-muted-foreground text-pretty">
-            I take on a small amount of consulting through Sidereal Software - observatory systems,
-            data pipelines, and the interfaces scientists have to live inside. If the domain is
-            genuinely difficult and it still has to be reliable at 3 a.m., that is the kind of
-            problem I want. Start a conversation there.
+            I take on a little consulting through Sidereal Software: observatory systems, data
+            pipelines, and the interfaces scientists have to live inside all night. The work I want
+            is the kind where the domain is hard and the thing still has to hold up at 3 a.m.
+            Sidereal is where to reach me about it.
           </p>
           <a
             href="https://sidereal.software"

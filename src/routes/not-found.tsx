@@ -14,8 +14,8 @@ export function NotFound() {
         Nothing at these coordinates
       </h1>
       <p className="mt-5 leading-relaxed text-muted-foreground text-pretty">
-        The page you were looking for is not here. It may have moved, or it may never have existed
-        in the first place.
+        Whatever you were after is not here. It either moved or it never existed, and I cannot
+        tell you which from where I am standing.
       </p>
       <Link
         to="/"

@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router";
 
+import { FramedPhoto } from "@/components/framed-photo";
 import { PageHeader, PageShell, Section } from "@/components/page";
 import { SocialLinks } from "@/components/social-links";
 import { Badge } from "@/components/ui/badge";
@@ -107,19 +108,35 @@ export function About() {
           <div className="md:sticky md:top-28 md:self-start">
             {/* Full colour rather than the duotone treatment used elsewhere -
                 this is the warm one. */}
-            <div className="overflow-hidden border border-border">
-              <img
-                src="/img/about/dan-and-alexis.jpg"
-                alt={`${profile.name} and ${profile.partner} on a balcony above the sea`}
-                width={1200}
-                height={1600}
-                className="aspect-4/5 w-full object-cover"
+            <FramedPhoto
+              src="/img/about/dan-and-alexis.jpg"
+              alt={`${profile.name} and ${profile.partnerFirstName} on a balcony above the sea`}
+              caption="Player one and two"
+              width={1200}
+              height={1600}
+              imageClassName="aspect-4/5"
+            />
+
+            {/* The two supervisors, as promised. */}
+            <div className="mt-px grid grid-cols-2 gap-px">
+              <FramedPhoto
+                src="/img/about/milly.jpg"
+                alt="Milly, a small curly grey and cream dog, walking toward the camera across a sunlit lawn"
+                caption="Milly"
+                width={1000}
+                height={750}
+                imageClassName="aspect-square"
+              />
+              <FramedPhoto
+                src="/img/about/penny.jpg"
+                alt="Penny, a calico cat with black, white and orange markings, looking up close to the camera"
+                caption="Penny"
+                width={1000}
+                height={750}
+                imageClassName="aspect-square"
               />
             </div>
-            <p className="readout-dim mt-3 flex items-center justify-between">
-              <span>Fig. 2</span>
-              <span>Player one and two</span>
-            </p>
+
             <SocialLinks className="mt-4 -ml-2" />
           </div>
         </div>

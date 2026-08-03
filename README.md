@@ -90,6 +90,7 @@ src/
   routes/                 one file per page
   components/
     ui/                   shadcn/ui: Button, Badge, Carousel, Toggle, ToggleGroup
+    framed-photo.tsx      the site's photo frame, caption printed on the image
   lib/
     blog.ts               post helpers over the plugin's output
     shows.ts              sorting, year grouping, derived show stats
@@ -222,7 +223,13 @@ node scripts/optimize-photos.mjs shows/<show-slug> ~/Pictures/that-night
 The first argument is a folder under `public/img/`, so the same script handles
 every image on the site - `node scripts/optimize-photos.mjs about photo.jpg`
 writes `public/img/about/photo.jpg`. Add `--name=<basename>` to rename a single
-photo on the way through.
+photo, or `--max=<px>` to cap the long edge below the 1600px default for photos
+that only ever render small.
+
+Every photo on the site carries a caption printed over the bottom of the image,
+via `components/framed-photo.tsx` for one-offs and the carousel for show strips.
+Show photos are validated at build time and fail without an `alt` and a
+`caption`.
 
 There is also an `add-show` skill in `.claude/skills/` that runs the whole
 routine: looks up the tour name, venue, and openers, optimizes the photos,

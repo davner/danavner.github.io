@@ -2,6 +2,7 @@ import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { Link } from "react-router";
 
 import { BandList } from "@/components/band-list";
+import { FramedPhoto } from "@/components/framed-photo";
 import { Marquee } from "@/components/marquee";
 import { Section } from "@/components/page";
 import { SocialLinks } from "@/components/social-links";
@@ -21,19 +22,19 @@ const INDEX = [
     to: "/career",
     number: "02",
     title: "Career",
-    blurb: "Observatory systems, data pipelines, and the software astronomers actually use.",
+    blurb: "The day job, and the decade of telescope software behind it.",
   },
   {
     to: "/blog",
     number: "03",
     title: "Blog",
-    blurb: "Notes on whatever has my attention. Some of it is work, most of it is not.",
+    blurb: "Notes on whatever has my attention, which is usually not work.",
   },
   {
     to: "/shows",
     number: "04",
     title: "Shows",
-    blurb: "Every gig I have stood at the front of. Mostly loud, mostly worth it.",
+    blurb: "Every gig I have been to since I started keeping track, logged and rated.",
   },
 ];
 
@@ -100,21 +101,16 @@ export function Home() {
 
           {/* Duotone until you hover it - poster treatment that still lets the
               photo be a photo. */}
-          <div className="group relative w-full max-w-xs justify-self-center lg:max-w-none lg:justify-self-end">
-            <div className="relative overflow-hidden border border-border">
-              <img
-                src="/img/me1.jpg"
-                alt={profile.name}
-                width={320}
-                height={400}
-                className="aspect-4/5 w-full object-cover grayscale contrast-[1.15] transition-all duration-500 group-hover:grayscale-0 group-hover:contrast-100"
-              />
-              <div className="pointer-events-none absolute inset-0 bg-ember opacity-25 mix-blend-color transition-opacity duration-500 group-hover:opacity-0" />
-            </div>
-            <p className="readout-dim mt-3 flex items-center justify-between">
-              <span>Fig. 1</span>
-              <span>Subject, smiling</span>
-            </p>
+          <div className="group w-full max-w-xs justify-self-center lg:max-w-none lg:justify-self-end">
+            <FramedPhoto
+              src="/img/me1.jpg"
+              alt={`${profile.name}, smiling, in a patterned shirt`}
+              caption="Subject, smiling"
+              width={320}
+              height={400}
+              eager
+              imageClassName="aspect-4/5 grayscale contrast-[1.15] transition-all duration-500 group-hover:grayscale-0 group-hover:contrast-100"
+            />
           </div>
         </div>
       </section>

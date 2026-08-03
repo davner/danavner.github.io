@@ -68,15 +68,13 @@ export function blogPlugin(): Plugin {
 ```
 
 `loadPosts()` reads the directory, validates every file, computes a reading time from the word
-count, and sorts newest-first. Moving it across the boundary bought three things:
+count, and sorts newest-first. Moving it across that boundary changed a few things.
 
-- **Validation fails the build.** A missing `title`, a malformed `date`, or a `category` that is
-  not `work` or `personal` stops CI with the offending filename. I would rather hear it from the
-  build than from the live site.
-- **Drafts genuinely do not ship.** `draft: true` keeps a post visible under `npm run dev` and out
-  of the production bundle entirely, rather than shipping it and hiding it.
-- **The YAML parser stayed home.** `js-yaml` runs at build time now, which took about 45 kB off
-  what every visitor downloads.
+A missing `title`, a malformed `date`, or a `category` that is not `work` or `personal` now stops CI
+with the offending filename, which I would rather hear from the build than from the live site.
+Drafts stopped shipping: `draft: true` keeps a post visible under `npm run dev` and out of the
+production bundle, instead of shipping it and hiding it. And `js-yaml` runs at build time now, which
+took about 45 kB off what every visitor downloads.
 
 The filename becomes the slug, which means renaming a file changes its URL. Worth remembering
 before anything gets linked.
@@ -103,9 +101,13 @@ function githubPagesSpaFallback(): Plugin {
 
 > It is a hack. It is also six lines, has no runtime cost, and means I never think about it again.
 
-## What I would change
+## What I gave up
 
-The one thing I gave up is server-rendered HTML, which means crawlers and link previews see the
-shell before the app hydrates. For a personal site with a handful of pages that trade is fine.
-If the writing side ever grows enough to care about, prerendering the routes at build time is a
-contained change - the content is already static, it just needs to be walked.
+There is no server rendering, so a crawler or a link preview sees the shell before the app hydrates.
+That was fine until I started sharing individual shows, at which point every one of them previewed
+in iMessage as the same generic site card.
+
+The fix turned out to be smaller than I expected. Another build plugin walks the shows and writes a
+real HTML file for each, with its own title, description, and image, and the app boots from that
+file the same way it boots from `index.html`. The blog posts have not had the same treatment yet.
+They will when it starts bothering me.

@@ -20,15 +20,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - run: npm ci
-      - run: npm run build
-
-      - name: Check links in the built site
+      # Only the sources where human-facing URLs actually live. The built HTML
+      # is not one of them: this is a single-page app, so dist/index.html holds
+      # asset tags and nothing else, and its root-relative paths cannot be
+      # resolved without a root dir. Internal links and assets are covered by
+      # the Playwright suite in ci.yml, which checks them in a real browser.
+      - name: Check outbound links
         id: lychee
         uses: lycheeverse/lychee-action@v2
         with:
@@ -38,12 +35,15 @@ jobs:
             --no-progress
             --max-retries 2
             --accept 200,206,429
-            --exclude-path dist/assets
+            --exclude-mail
             --exclude 'linkedin\.com'
             --exclude 'instagram\.com'
-            'dist/**/*.html'
-            'src/content/**/*.md'
+            --exclude 'localhost'
+            --exclude '127\.0\.0\.1'
+            --exclude 'xxxxx'
             'README.md'
+            'src/content/profile.ts'
+            'src/content/**/*.md'
           fail: false
           output: lychee-report.md
 

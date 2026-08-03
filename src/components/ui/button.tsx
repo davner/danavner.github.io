@@ -12,8 +12,11 @@ const buttonVariants = cva(
         default: "bg-primary text-primary-foreground shadow-xs hover:bg-primary/90",
         destructive:
           "bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/40",
+        // Any outline button: on hover the whole thing goes ember and picks up
+        // a faint ember wash, so it reads as a target rather than lighting up
+        // only its edges.
         outline:
-          "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
+          "border border-border bg-background transition-colors hover:border-ember hover:bg-ember/10 hover:text-ember",
         secondary: "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",

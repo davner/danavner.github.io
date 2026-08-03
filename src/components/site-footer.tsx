@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 
 import { EmailReveal } from "@/components/email-reveal";
-import { Flames } from "@/components/flames";
+import { PixelFire } from "@/components/pixel-fire";
 import { SocialLinks } from "@/components/social-links";
 import { profile } from "@/content/profile";
 
@@ -15,9 +15,9 @@ const LINKS = [
 export function SiteFooter() {
   return (
     <footer className="mt-20 border-t border-border">
-      {/* Pulled up by its own height so the licks rise off the footer's rule
+      {/* Pulled up by its own height so the fire burns off the footer's rule
           rather than sitting under it. The footer's top margin leaves room. */}
-      <Flames className="-mt-10" />
+      <PixelFire className="-mt-[65px]" />
 
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
         <div className="flex flex-col gap-10 md:flex-row md:justify-between">

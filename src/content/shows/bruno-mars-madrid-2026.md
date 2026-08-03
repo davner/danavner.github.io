@@ -13,6 +13,11 @@ bestSong: Locked Out of Heaven
 with:
   - Alexis A.
 standout: true
+setlists:
+  - band: Bruno Mars
+    url: https://www.setlist.fm/setlist/bruno-mars/2026/riyadh-air-metropolitano-madrid-spain-7b4abe34.html
+  - band: Victoria Monét
+    url: https://www.setlist.fm/setlist/victoria-monet/2026/riyadh-air-metropolitano-madrid-spain-134ab971.html
 photos:
   - src: /img/shows/bruno-mars-madrid-2026/outside-the-stadium.jpg
     alt: Dan and Alexis outside the stadium, under a banner reading Bruno Mars, The Romantic Tour, Sold Out

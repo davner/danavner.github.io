@@ -42,13 +42,11 @@ export function PhotoCarousel({ photos, label }: { photos: Photo[]; label: strin
   return (
     // Capped so a photo does not dwarf the entry it belongs to.
     <figure className="mt-5 max-w-2xl">
-      <Carousel
-        setApi={setApi}
-        opts={{ align: "start", loop: false }}
-        aria-label={`Photos from ${label}`}
-        className="border border-border bg-border"
-      >
-        <CarouselContent>
+      <Carousel setApi={setApi} opts={{ align: "start", loop: false }} aria-label={`Photos from ${label}`}>
+        {/* The frame wraps only the photos. Putting it on the Carousel root
+            would drag the controls onto the border colour too. */}
+        <div className="border border-border">
+          <CarouselContent>
           {photos.map((photo, index) => (
             <CarouselItem key={photo.src} className="relative bg-background">
               <img
@@ -65,7 +63,8 @@ export function PhotoCarousel({ photos, label }: { photos: Photo[]; label: strin
               ) : null}
             </CarouselItem>
           ))}
-        </CarouselContent>
+          </CarouselContent>
+        </div>
 
         {single ? null : (
           <div className="mt-2 flex items-center gap-3">

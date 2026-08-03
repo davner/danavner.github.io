@@ -171,6 +171,7 @@ date: 2026-06-20
 venue: Hollywood Palladium
 city: Los Angeles, CA
 rating: 4.5
+bestSong: Locked Out of Heaven
 with: [Jasmine P.]
 video: https://youtube.com/playlist?list=xxxxx
 photos:
@@ -203,6 +204,9 @@ Free-form markdown about the night. Optional.
 
 Photos live in `public/img/shows/<slug>/` and render as a swipeable strip with
 prev/next buttons and a counter. One photo drops the controls.
+
+`solo: true` renders a **SOLO RUN / 1P** badge. When the only name in `with` is
+the partner named in `profile.ts`, the entry renders **MY DUO / 2P** instead.
 
 **Every subsection is conditional** - no rating, no lineup, no companions, no
 photos, no notes means nothing renders in its place. The stat row works the same

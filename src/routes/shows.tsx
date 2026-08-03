@@ -1,4 +1,4 @@
-import { Flame, Users, Youtube } from "lucide-react";
+import { Flame, Music, Users, Youtube } from "lucide-react";
 import type { ReactNode } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -6,6 +6,7 @@ import remarkGfm from "remark-gfm";
 import { BandList } from "@/components/band-list";
 import { Marquee } from "@/components/marquee";
 import { PageHeader, PageShell, Section } from "@/components/page";
+import { DuoBadge } from "@/components/duo-badge";
 import { PhotoCarousel } from "@/components/photo-carousel";
 import { Rating } from "@/components/rating";
 import { SoloBadge } from "@/components/solo-badge";
@@ -13,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   formatShowDate,
+  isDuo,
   showsByYear,
   showStats,
   standouts,
@@ -60,9 +62,22 @@ function ShowRow({ show }: { show: Show }) {
           </p>
         ) : null}
 
+        {show.bestSong ? (
+          <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+            <Music className="size-3.5 shrink-0 text-ember" aria-hidden />
+            <span>
+              <span className="readout-dim">Best live</span> {show.bestSong}
+            </span>
+          </p>
+        ) : null}
+
         {show.solo ? (
           <p className="mt-3">
             <SoloBadge />
+          </p>
+        ) : isDuo(show) ? (
+          <p className="mt-3">
+            <DuoBadge partner={show.companions[0]} />
           </p>
         ) : show.companions.length > 0 ? (
           <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">

@@ -1,5 +1,7 @@
 import { shows as rawShows } from "virtual:shows";
 
+import { profile } from "@/content/profile";
+
 export type ShowType = "show" | "festival";
 
 export const MAX_RATING = 5;
@@ -25,6 +27,8 @@ export interface Show {
   endDate: string;
   venue: string;
   city: string;
+  /** The one that stayed with you. */
+  bestSong: string;
   /**
    * Every band on the bill, top billing first. Normalised by the content
    * plugin, so for a show `lineup[0] === title` and a festival's name is never
@@ -50,6 +54,14 @@ export interface Show {
 /** Everyone below top billing - the openers, in running order. */
 export function supportFor(show: Show): string[] {
   return show.type === "festival" ? show.lineup : show.lineup.slice(1);
+}
+
+/**
+ * Just the two of them. Any other combination is a list of names, because a
+ * duo is specifically two players and nothing else.
+ */
+export function isDuo(show: Show): boolean {
+  return !show.solo && show.companions.length === 1 && show.companions[0] === profile.partner;
 }
 
 /** Parsed, validated, and sorted newest-first by the content plugin. */

@@ -44,7 +44,11 @@ zero, and unrated shows are excluded from the average at the top of the page.
 ## Who you went with
 
 `with` is a list of names. Went alone? Use `solo: true` instead and the entry
-gets a **SOLO RUN · 1P** badge. Setting both is an error - the build will say so.
+gets a **SOLO RUN / 1P** badge. Setting both is an error - the build will say so.
+
+When the only name is the partner set in `src/content/profile.ts`, the entry
+renders a **MY DUO / 2P** badge instead of a list of one. Any other combination
+is just names, because a duo is two players and nothing else.
 
 ## Video
 
@@ -100,6 +104,7 @@ lineup:
 | `city` | yes | |
 | `venue` | no | Omit for festivals with no fixed venue |
 | `rating` | no | 0–5 horns, decimals allowed. Omit for unrated. |
+| `bestSong` | no | The one that stayed with you. Shown as "Best live". |
 | `with` | no | List of names you went with |
 | `solo` | no | `true` for a solo run. Mutually exclusive with `with`. |
 | `subtitle` | no | Qualifier under the heading, e.g. "Day 1" |

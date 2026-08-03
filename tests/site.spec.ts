@@ -145,19 +145,32 @@ test.describe("shows", () => {
     }
   });
 
-  test("solo runs and companions are mutually exclusive", async ({ page }) => {
+  test("who you were with renders exactly one way per entry", async ({ page }) => {
     const rows = page.locator("[data-slot=show]");
     let recorded = 0;
 
     for (let i = 0; i < (await rows.count()); i++) {
       const row = rows.nth(i);
       const solo = (await row.locator(".solo-badge").count()) > 0;
-      const people = (await row.getByText("Went with", { exact: false }).count()) > 0;
-      expect(solo && people).toBe(false);
-      if (solo || people) recorded++;
+      const duo = (await row.locator(".duo-badge").count()) > 0;
+      const names = (await row.getByText("Went with", { exact: false }).count()) > 0;
+
+      // Solo, duo, and a plain list are three states, never two at once.
+      expect([solo, duo, names].filter(Boolean).length).toBeLessThanOrEqual(1);
+      if (solo || duo || names) recorded++;
     }
 
     expect(recorded).toBeGreaterThan(0);
+  });
+
+  test("the duo badge names the partner and reads as two players", async ({ page }) => {
+    const duo = page.locator(".duo-badge");
+    if ((await duo.count()) === 0) return;
+
+    const text = await duo.first().innerText();
+    expect(text).toMatch(/2P/);
+    // The point of the badge is that it says who, not just that there were two.
+    expect(text.replace(/MY DUO|2P|\W/gi, "").length).toBeGreaterThan(0);
   });
 
   test("empty subsections render nothing at all", async ({ page }) => {

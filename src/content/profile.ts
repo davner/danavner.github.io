@@ -57,6 +57,11 @@ export const profile = {
   org: "NOIRLab / AURA",
   location: "Los Angeles County, CA",
   email: "ldpavner@gmail.com",
+  /**
+   * Shows where this is the only name in `with` render as a duo rather than a
+   * list of one. Player two.
+   */
+  partner: "Alexis A.",
   tagline: "I build production software for telescopes, observatories, and astronomers.",
   intro:
     "For the last decade I have worked at the seam between astronomy and software - writing the services, pipelines, and interfaces that turn a night on a mountain into data people can actually use. These days that means leading architecture for Gemini Observatory software at NOIRLab.",

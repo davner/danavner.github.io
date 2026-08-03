@@ -318,6 +318,46 @@
     }
   }
 
+  /* ---- Duo badge ----------------------------------------------------- */
+
+  .duo-badge {
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Warm counterpart to the solo badge's cold shimmer. */
+  .duo-badge::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg, transparent 30%, var(--ember) 50%, transparent 70%);
+    opacity: 0.18;
+    transform: translateX(-100%);
+    animation: solo-sweep 4s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  .duo-heart {
+    animation: duo-beat 2.4s ease-in-out infinite;
+  }
+
+  @keyframes duo-beat {
+    0%,
+    72%,
+    100% {
+      transform: scale(1);
+    }
+    78% {
+      transform: scale(1.22);
+    }
+    84% {
+      transform: scale(1);
+    }
+    90% {
+      transform: scale(1.14);
+    }
+  }
+
   /* ---- Long-form -------------------------------------------------------- */
 
   .prose-dan {

@@ -188,6 +188,8 @@ function parseShow({ file, meta, body, slug }: Frontmatter, publicDir: string) {
   const city = asTrimmedString(meta.city);
   if (!city) fail("shows", file, "frontmatter needs a `city`");
 
+  const bestSong = asTrimmedString(meta.bestSong);
+
   const video = asTrimmedString(meta.video);
   if (video && !/^https?:\/\//.test(video)) {
     fail("shows", file, "`video` must be a full http(s) URL");
@@ -225,6 +227,7 @@ function parseShow({ file, meta, body, slug }: Frontmatter, publicDir: string) {
     endDate,
     venue: asTrimmedString(meta.venue),
     city,
+    bestSong,
     lineup,
     rating,
     companions,

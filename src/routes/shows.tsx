@@ -1,9 +1,12 @@
-import { Flame, Youtube } from "lucide-react";
+import { Flame, Users, Youtube } from "lucide-react";
+import type { ReactNode } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { Marquee } from "@/components/marquee";
 import { PageHeader, PageShell, Section } from "@/components/page";
+import { Rating } from "@/components/rating";
+import { SoloBadge } from "@/components/solo-badge";
 import {
   formatShowDate,
   showsByYear,
@@ -17,6 +20,7 @@ import { useDocumentMeta } from "@/lib/use-document-meta";
 function ShowRow({ show }: { show: Show }) {
   const date = formatShowDate(show);
   const support = supportFor(show);
+  const tags = [show.type === "festival" ? "Festival" : "", show.subtitle].filter(Boolean);
 
   return (
     <li className="cut-corners group grid gap-x-6 gap-y-3 border-b border-border px-3 py-7 transition-colors hover:bg-card/60 sm:grid-cols-[6rem_minmax(0,1fr)_minmax(0,15rem)]">
@@ -32,13 +36,30 @@ function ShowRow({ show }: { show: Show }) {
           ) : null}
         </h3>
 
-        {show.type === "festival" ? (
-          <p className="readout mt-2 text-ion">Festival</p>
+        {tags.length > 0 || show.rating != null ? (
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
+            {tags.length > 0 ? <p className="readout text-ion">{tags.join(" · ")}</p> : null}
+            {show.rating != null ? <Rating value={show.rating} /> : null}
+          </div>
         ) : null}
 
         {support.length > 0 ? (
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground text-pretty">
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground text-pretty">
             <span className="text-ember">w/</span> {support.join(" · ")}
+          </p>
+        ) : null}
+
+        {show.solo ? (
+          <p className="mt-3">
+            <SoloBadge />
+          </p>
+        ) : show.companions.length > 0 ? (
+          <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+            <Users className="size-3.5 shrink-0 text-ember" aria-hidden />
+            <span>
+              <span className="sr-only">Went with </span>
+              {show.companions.join(", ")}
+            </span>
           </p>
         ) : null}
 
@@ -85,17 +106,29 @@ export function Shows() {
 
   // Candidates in priority order; a stat is only shown once it has something to
   // say, so an early log of one festival never renders "BANDS SEEN — 0".
-  const stats = [
+  const stats: { label: string; value: ReactNode; show: boolean }[] = [
     { label: "Logged", value: String(showStats.total), show: true },
     { label: "Bands seen", value: String(showStats.bands), show: showStats.bands > 0 },
+    {
+      label: `Average (${showStats.ratedCount} rated)`,
+      value:
+        showStats.averageRating != null ? (
+          <span className="flex flex-wrap items-center gap-2">
+            {Number(showStats.averageRating.toFixed(1))}
+            <Rating value={showStats.averageRating} size="sm" />
+          </span>
+        ) : null,
+      show: showStats.averageRating != null,
+    },
     showStats.mostSeen
       ? {
           label: `Most seen (${showStats.mostSeen.count}×)`,
           value: showStats.mostSeen.name,
           show: true,
         }
-      : { label: "", value: "", show: false },
+      : { label: "", value: null, show: false },
     { label: "Festivals", value: String(showStats.festivals), show: showStats.festivals > 0 },
+    { label: "Solo runs", value: String(showStats.solo), show: showStats.solo > 0 },
     { label: "Venues", value: String(showStats.venues), show: showStats.venues > 0 },
     { label: "Cities", value: String(showStats.cities), show: showStats.cities > 0 },
     { label: "Since", value: showStats.firstYear ?? "", show: Boolean(showStats.firstYear) },

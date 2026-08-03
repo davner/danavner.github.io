@@ -56,6 +56,8 @@ lineup:                         # every band, top of the bill first
 date: 2026-06-20                # YYYY, YYYY-MM, or YYYY-MM-DD — use what you remember
 venue: Hollywood Palladium      # optional
 city: Los Angeles, CA           # required
+rating: 4.5                     # optional, out of 5 horns — partials welcome
+with: [Jasmine P.]              # optional — or `solo: true` for a solo run
 video: https://youtu.be/xxxxx   # optional, full URL — renders a Watch link
 standout: true                  # optional — adds a flame and pins it to the ticker
 ---
@@ -64,6 +66,11 @@ Free-form markdown about the night. Optional.
 ```
 
 A one-band night can skip the list and just say `title: Turnstile`.
+
+`rating` fills proportionally, so `3.2` really shows a fifth of the fourth horn.
+Omitting it renders no rating at all — unrated is not zero, and unrated entries
+stay out of the average shown at the top of the page. `solo: true` swaps the
+companion names for a **SOLO RUN · 1P** badge; setting both fails the build.
 
 A festival gets `type: festival` and a `title` instead, because the event is not
 a band — that keeps its name out of the "bands seen" count while its optional

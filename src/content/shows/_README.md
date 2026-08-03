@@ -18,6 +18,9 @@ lineup:
 date: 2026-06-20
 venue: Hollywood Palladium
 city: Los Angeles, CA
+rating: 4.5               # out of 5 horns, partials welcome
+with:
+  - Jasmine P.
 video: https://youtu.be/xxxxx
 standout: true
 ---
@@ -26,6 +29,18 @@ Free-form markdown about the night. Optional.
 ```
 
 A one-band night can skip the list and just say `title: Turnstile`.
+
+## Rating
+
+`rating` is out of 5 🤘🏽 and takes any number in between — `4.5`, `3.2`, `4.75`.
+The row fills proportionally, so a `3.2` really does show a fifth of the fourth
+horn. Leave it off entirely and no rating renders; unrated is not the same as
+zero, and unrated shows are excluded from the average at the top of the page.
+
+## Who you went with
+
+`with` is a list of names. Went alone? Use `solo: true` instead and the entry
+gets a **SOLO RUN · 1P** badge. Setting both is an error — the build will say so.
 
 ## A festival
 
@@ -55,6 +70,10 @@ lineup:
 | `endDate` | no | Multi-day festivals. Renders as "Nov 15–16". |
 | `city` | yes | |
 | `venue` | no | Omit for festivals with no fixed venue |
+| `rating` | no | 0–5 horns, decimals allowed. Omit for unrated. |
+| `with` | no | List of names you went with |
+| `solo` | no | `true` for a solo run. Mutually exclusive with `with`. |
+| `subtitle` | no | Qualifier under the heading, e.g. "Day 1" |
 | `video` | no | Full URL. Renders a Watch link. |
 | `standout` | no | Adds a flame and pins it to the ticker |
 

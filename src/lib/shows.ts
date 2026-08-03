@@ -2,10 +2,14 @@ import { shows as rawShows } from "virtual:shows";
 
 export type ShowType = "show" | "festival";
 
+export const MAX_RATING = 5;
+
 export interface Show {
   slug: string;
   /** Display heading: the festival's name, or whoever topped the bill. */
   title: string;
+  /** Optional qualifier under the heading, e.g. "Day 1". */
+  subtitle: string;
   type: ShowType;
   /** `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`. */
   date: string;
@@ -19,6 +23,12 @@ export interface Show {
    * in here — a festival is not a band.
    */
   lineup: string[];
+  /** Out of {@link MAX_RATING} horns, partials allowed. `null` means unrated. */
+  rating: number | null;
+  /** Who came along. Written as `with:` in frontmatter. */
+  companions: string[];
+  /** Went alone, deliberately recorded rather than merely unstated. */
+  solo: boolean;
   /** Full URL to a video of the night. */
   video: string;
   standout: boolean;
@@ -64,13 +74,23 @@ function mostFrequent(values: string[]): { name: string; count: number } | undef
 // `lineup` already excludes festival names, so every entry here is a band.
 const allBands = shows.flatMap((show) => show.lineup);
 
+const rated = shows.filter((show) => show.rating != null);
+const allCompanions = shows.flatMap((show) => show.companions);
+
 export const showStats = {
   total: shows.length,
   bands: new Set(allBands).size,
   venues: new Set(shows.map((show) => show.venue).filter(Boolean)).size,
   cities: new Set(shows.map((show) => show.city)).size,
   festivals: shows.filter((show) => show.type === "festival").length,
+  solo: shows.filter((show) => show.solo).length,
   mostSeen: mostFrequent(allBands),
+  /** Averaged over rated entries only, so unrated shows do not drag it down. */
+  averageRating: rated.length
+    ? rated.reduce((sum, show) => sum + (show.rating ?? 0), 0) / rated.length
+    : null,
+  ratedCount: rated.length,
+  mostSeenWith: mostFrequent(allCompanions),
   latest: shows[0] as Show | undefined,
   firstYear: shows.at(-1)?.date.slice(0, 4),
 };

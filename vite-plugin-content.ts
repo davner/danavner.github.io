@@ -9,6 +9,7 @@ const WORDS_PER_MINUTE = 200;
 
 const POST_CATEGORIES = ["work", "personal"];
 const SHOW_TYPES = ["show", "festival"];
+const MAX_RATING = 5;
 
 /** `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` — you remember some nights better than others. */
 const DATE = /^\d{4}(-\d{2}(-\d{2})?)?$/;
@@ -152,15 +153,42 @@ function parseShow({ file, meta, body, slug }: Frontmatter) {
     fail("shows", file, "`video` must be a full http(s) URL");
   }
 
+  // Out of five horns, partials allowed. `null` means unrated, which is not the
+  // same as zero and must not render as an empty rating.
+  let rating: number | null = null;
+  if (meta.rating != null && meta.rating !== "") {
+    const parsed = typeof meta.rating === "number" ? meta.rating : Number(meta.rating);
+    if (!Number.isFinite(parsed)) fail("shows", file, "`rating` must be a number");
+    if (parsed < 0 || parsed > MAX_RATING) {
+      fail("shows", file, `\`rating\` must be between 0 and ${MAX_RATING}`);
+    }
+    rating = parsed;
+  }
+
+  // `with` is nicer to write in frontmatter than `companions` is; the awkward
+  // keyword stays out of the app by renaming it here.
+  const companions = asStringArray(meta.with)
+    .map((name) => name.trim())
+    .filter(Boolean);
+  const solo = meta.solo === true;
+
+  if (solo && companions.length > 0) {
+    fail("shows", file, "`solo: true` contradicts `with` — drop one");
+  }
+
   return {
     slug,
     title,
+    subtitle: asTrimmedString(meta.subtitle),
     type,
     date,
     endDate,
     venue: asTrimmedString(meta.venue),
     city,
     lineup,
+    rating,
+    companions,
+    solo,
     video,
     standout: meta.standout === true,
     body,

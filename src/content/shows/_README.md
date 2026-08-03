@@ -1,8 +1,12 @@
 # Show log
 
 One markdown file per show. The filename becomes the slug. Everything at the top of
-`/shows` — total, bands seen, venues, most-seen act, the year groups — is derived
-from these files, so adding a show is dropping a file in here and nothing else.
+`/shows` — total, bands seen, venues, most-seen act, average rating, the year groups
+— is derived from these files, so adding a show is dropping a file in here and
+nothing else.
+
+The same reference lives in the root `README.md`; this copy is here so it is next
+to the files it describes. Files starting with `_` (like this one) are ignored.
 
 ## A normal show
 

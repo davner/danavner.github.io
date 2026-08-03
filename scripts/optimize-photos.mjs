@@ -1,11 +1,14 @@
 #!/usr/bin/env node
 /**
- * Prepares phone photos for the show log.
+ * Prepares phone photos for the site.
  *
- *   node scripts/optimize-photos.mjs <show-slug> <file-or-directory>...
+ *   node scripts/optimize-photos.mjs <destination> <file-or-directory>...
  *
- * Writes web-sized JPEGs to `public/img/shows/<show-slug>/`. Three things
- * matter here beyond the file size:
+ * `<destination>` is a folder under `public/img/`, so `about` writes to
+ * `public/img/about/` and `shows/warped-2026` to `public/img/shows/warped-2026/`.
+ * Pass `--name=<basename>` to rename a single photo on the way through.
+ *
+ * Three things matter here beyond the file size:
  *
  * - EXIF is dropped. Phone photos carry GPS coordinates, and a show log is a
  *   list of places you were at a known time. That does not belong in a repo.
@@ -47,14 +50,19 @@ function collect(target) {
     .map((entry) => path.join(target, entry));
 }
 
-const [slug, ...targets] = process.argv.slice(2);
+const args = process.argv.slice(2);
+const renameTo = args.find((arg) => arg.startsWith("--name="))?.slice("--name=".length);
+const [destination, ...targets] = args.filter((arg) => !arg.startsWith("--"));
 
-if (!slug || targets.length === 0) {
-  console.error("usage: node scripts/optimize-photos.mjs <show-slug> <file-or-directory>...");
+if (!destination || targets.length === 0) {
+  console.error(
+    "usage: node scripts/optimize-photos.mjs <destination> [--name=<basename>] <file-or-directory>...\n" +
+      "  <destination> is a folder under public/img/, e.g. `about` or `shows/warped-2026`",
+  );
   process.exit(1);
 }
 
-const outDir = path.resolve("public/img/shows", slug);
+const outDir = path.resolve("public/img", destination);
 mkdirSync(outDir, { recursive: true });
 
 const sources = targets.flatMap(collect);
@@ -66,29 +74,34 @@ if (sources.length === 0) {
 const taken = new Set();
 let savedBytes = 0;
 
+if (renameTo && sources.length > 1) {
+  console.error("--name renames a single photo; you passed " + sources.length);
+  process.exit(1);
+}
+
 for (const source of sources) {
-  let name = kebab(path.basename(source));
+  let name = renameTo ? kebab(renameTo) : kebab(path.basename(source));
   // Two different source folders can both hold an IMG_0001; keep both.
   for (let n = 2; taken.has(name); n++) name = `${kebab(path.basename(source))}-${n}`;
   taken.add(name);
 
-  const destination = path.join(outDir, `${name}.jpg`);
+  const outPath = path.join(outDir, `${name}.jpg`);
 
   const output = await sharp(source)
     .rotate() // Applies the EXIF orientation before the tag is discarded.
     .resize({ width: MAX_EDGE, height: MAX_EDGE, fit: "inside", withoutEnlargement: true })
     .jpeg({ quality: QUALITY, mozjpeg: true })
-    .toFile(destination);
+    .toFile(outPath);
 
   const before = statSync(source).size;
   savedBytes += before - output.size;
 
   const kb = (bytes) => `${Math.round(bytes / 1024)} kB`;
   console.log(
-    `${path.basename(source)} -> /img/shows/${slug}/${name}.jpg` +
+    `${path.basename(source)} -> /img/${destination}/${name}.jpg` +
       `  ${output.width}x${output.height}  ${kb(before)} -> ${kb(output.size)}`,
   );
 }
 
 console.log(`\n${sources.length} photo(s), ${Math.round(savedBytes / 1024)} kB saved, EXIF stripped`);
-console.log(`Reference them in the show's frontmatter as /img/shows/${slug}/<name>.jpg`);
+console.log(`Reference them as /img/${destination}/<name>.jpg`);

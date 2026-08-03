@@ -39,3 +39,7 @@ live site. See `README.md` for the stack, the content model, and the CI layout.
 - `npm test` runs Playwright against the built site. Build first.
 - Deploys from `main` via GitHub Actions.
 - Adding a show to the log is the `add-show` skill, not a freehand edit.
+- Every image entering the repo goes through
+  `node scripts/optimize-photos.mjs <folder-under-public/img> <files...>` first.
+  It resizes, re-encodes, and strips EXIF - phone photos carry GPS. Then look at
+  the result and write real `alt` text for it.

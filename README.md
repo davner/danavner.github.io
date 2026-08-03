@@ -78,7 +78,7 @@ file, down to checking that a photo path actually exists in `public/`.
 ```
 public/                   served as-is (CNAME, favicon, photos)
 scripts/
-  optimize-photos.mjs     resizes show photos and strips their EXIF
+  optimize-photos.mjs     resizes any image and strips its EXIF
 vite-plugin-content.ts    reads + validates the markdown collections at build time
 vite-plugin-share-pages.ts writes one HTML file per show so links preview properly
 vite.config.ts            aliases, Tailwind, the 404.html fallback
@@ -216,8 +216,13 @@ metadata - which matters, because phone photos carry GPS coordinates and a show
 log is a list of places you were at a known time:
 
 ```bash
-node scripts/optimize-photos.mjs <show-slug> ~/Pictures/that-night
+node scripts/optimize-photos.mjs shows/<show-slug> ~/Pictures/that-night
 ```
+
+The first argument is a folder under `public/img/`, so the same script handles
+every image on the site - `node scripts/optimize-photos.mjs about photo.jpg`
+writes `public/img/about/photo.jpg`. Add `--name=<basename>` to rename a single
+photo on the way through.
 
 There is also an `add-show` skill in `.claude/skills/` that runs the whole
 routine: looks up the tour name, venue, and openers, optimizes the photos,

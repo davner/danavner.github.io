@@ -247,7 +247,9 @@ test.describe("chrome", () => {
 
   test("the email address is not in the page until you ask for it", async ({ page }) => {
     const EMAIL = /[\w.+-]+@[\w-]+\.[\w.]{2,}/;
-    await page.goto("/");
+    // The footer signs off rather than listing an address, so the reveal lives
+    // on Career now.
+    await page.goto("/career");
 
     // Split in the source and joined in an event handler, so a harvester
     // scraping the served HTML finds nothing to take.

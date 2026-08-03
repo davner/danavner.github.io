@@ -53,11 +53,15 @@ through the optimizer, which resizes to a 1600px long edge, re-encodes, strips
 all metadata, and bakes in the rotation:
 
 ```bash
-node scripts/optimize-photos.mjs <show-slug> ~/path/to/photos
+node scripts/optimize-photos.mjs shows/<show-slug> ~/path/to/photos
 ```
 
-It accepts files or directories and writes to `public/img/shows/<show-slug>/`.
-Rename the outputs to something descriptive before referencing them.
+The first argument is a folder under `public/img/`, so this writes to
+`public/img/shows/<show-slug>/`. It accepts files or directories, and
+`--name=<basename>` renames a single photo on the way through. Rename the
+outputs to something descriptive before referencing them.
+
+This applies to any image entering the repo, not just show photos.
 
 ## 4. Caption them
 

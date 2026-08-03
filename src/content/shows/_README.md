@@ -127,10 +127,11 @@ re-encodes, bakes in the EXIF rotation, and strips the metadata - phone photos
 carry GPS coordinates, and this is a list of places you were at a known time:
 
 ```bash
-node scripts/optimize-photos.mjs <show-slug> ~/Pictures/that-night
+node scripts/optimize-photos.mjs shows/<show-slug> ~/Pictures/that-night
 ```
 
-Output lands in `public/img/shows/<show-slug>/`. Reference the paths in
+The first argument is a folder under `public/img/`, so the same script handles
+every image on the site. Output lands in `public/img/shows/<show-slug>/`. Reference the paths in
 `photos:` and give each one an `alt` and a `caption`.
 
 ## Slug and sharing

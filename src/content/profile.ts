@@ -36,8 +36,14 @@ export interface Education {
 
 export interface Interest {
   name: string;
-  icon: "dumbbell" | "telescope" | "gamepad-2" | "guitar" | "blocks" | "swords";
+  icon: "music" | "telescope" | "gamepad-2" | "swords" | "disc" | "book-open" | "blocks";
   note: string;
+  /** A handle worth sharing, e.g. a gamertag. `href` makes it a link. */
+  handle?: { label: string; value: string; href?: string };
+  /** Internal route this interest has more of, if there is one. */
+  to?: string;
+  /** Renders across the full width of the grid. One at most, and first. */
+  feature?: boolean;
 }
 
 export const profile = {
@@ -57,6 +63,8 @@ export const profile = {
    * list of one. Player two.
    */
   partner: "Alexis A.",
+  /** How she is referred to in prose, as opposed to in a companions list. */
+  partnerFirstName: "Alexis",
   /** The homepage voice: a person who happens to have a career. */
   blurb:
     "I write software for telescopes, point a much smaller one at the same sky, and spend the rest of my time at loud shows, under a barbell, or building something that did not need building.",
@@ -177,43 +185,45 @@ export const education: Education[] = [
 
 export const interests: Interest[] = [
   {
-    name: "Weightlifting",
-    icon: "dumbbell",
-    note: "The one part of my week that gives immediate, honest feedback.",
+    name: "Live music",
+    icon: "music",
+    note: "I have been going to shows since I was a teenager and never really stopped. Mostly metalcore, occasionally something completely different. Every show gets logged and rated.",
+    to: "/shows",
+    feature: true,
   },
   {
     name: "Astrophotography",
     icon: "telescope",
-    note: "A small telescope in the backyard, a cold night, and a lot of stacked frames.",
+    note: "Mostly just me, a Sony camera, a tripod, and stealing as many photons as I can before sunrise.",
   },
   {
     name: "Video games",
     icon: "gamepad-2",
-    note: "Backlog enormous, discipline questionable, enthusiasm undiminished.",
-  },
-  {
-    name: "Guitar",
-    icon: "guitar",
-    note: "Loud, physical, and getting slightly less terrible every year.",
+    note: "Mass Effect is still my favorite game ever made. Lately you will find me on PlayStation, pretending I will finally clear my backlog.",
+    handle: { label: "PlayStation", value: "treslechesplzz" },
   },
   {
     name: "Fortnite",
     icon: "swords",
-    note: "An indefensible amount of build practice for a grown adult.",
+    note: "I have a great squad and an even better duo. Alexis is the perfect sweat to my sweat, and we are always looking for more people to drop in with.",
+    handle: { label: "Epic", value: "danwiththeyams" },
+  },
+  {
+    name: "Vinyl",
+    icon: "disc",
+    note: "Always digging for something new. My favorite record is the Record Store Day 2026 pressing of All We Know Is Falling with the Summer Tic EP - huge thanks to babe for tracking one down after what felt like a statewide scavenger hunt.",
+    handle: { label: "Discogs", value: "dnafam", href: "https://www.discogs.com/user/dnafam" },
+  },
+  {
+    name: "Comic books",
+    icon: "book-open",
+    note: "Wednesday means new comic day. You will usually find me at the shop with my comic book cuties, Mikey and Kiwi, arguing about what to pull next.",
   },
   {
     name: "Legos",
     icon: "blocks",
-    note: "Instructions that always work, and a table permanently out of commission.",
+    note: "I still love building sets, especially with my nephew Nathan. Turns out they are just as fun as they were twenty years ago.",
   },
 ];
-
-/** The Fortnite subsection on About. Fun, not a dossier. */
-export const fortnite = {
-  gamertag: "danwiththeyams",
-  squad: "I have an amazing squad.",
-  duo: "My favorite duo is my wife.",
-  note: "If you see the yams in the lobby, say hi. If you see the yams in the storm, say nothing.",
-} as const;
 
 export const funFact = "Was once ranked 2nd in the state of Florida for bowling.";

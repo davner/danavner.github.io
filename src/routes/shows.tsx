@@ -1,19 +1,14 @@
-import { ArrowUpRight, Flame, Music, Users, Youtube } from "lucide-react";
+import { ArrowUpRight, Flame, Music, Users } from "lucide-react";
 import type { ReactNode } from "react";
-import Markdown from "react-markdown";
 import { Link } from "react-router";
-import remarkGfm from "remark-gfm";
 
 import { BandList } from "@/components/band-list";
 import { Marquee } from "@/components/marquee";
 import { PageHeader, PageShell, Section } from "@/components/page";
 import { DuoBadge } from "@/components/duo-badge";
-import { PhotoCarousel } from "@/components/photo-carousel";
 import { Rating } from "@/components/rating";
-import { ShareShow } from "@/components/share-show";
 import { SoloBadge } from "@/components/solo-badge";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   formatShowDate,
   isDuo,
@@ -30,10 +25,19 @@ function ShowRow({ show }: { show: Show }) {
   const support = supportFor(show);
   const tags = [show.type === "festival" ? "Festival" : "", show.subtitle].filter(Boolean);
 
+  const inside = [
+    show.photos.length > 0
+      ? `${show.photos.length} ${show.photos.length === 1 ? "photo" : "photos"}`
+      : "",
+    show.body ? "Notes" : "",
+    show.setlists.length > 0 ? "Setlists" : "",
+    show.video ? (show.videoIsPlaylist ? "Playlist" : "Video") : "",
+  ].filter(Boolean);
+
   return (
     <li
       data-slot="show"
-      className="cut-corners group grid gap-x-6 gap-y-3 border-b border-border px-3 py-7 transition-colors hover:bg-card/60 sm:grid-cols-[6rem_minmax(0,1fr)_minmax(0,15rem)]"
+      className="cut-corners group relative grid gap-x-6 gap-y-3 border-b border-border px-3 py-7 transition-colors hover:bg-card/60 sm:grid-cols-[6rem_minmax(0,1fr)_minmax(0,15rem)]"
     >
       {/* A year-only entry has no day label; the grid column keeps the
           alignment, so nothing needs to stand in for it. */}
@@ -43,7 +47,7 @@ function ShowRow({ show }: { show: Show }) {
         <h3 className="display flex items-center gap-3 text-2xl sm:text-3xl">
           <Link
             to={`/shows/${show.slug}`}
-            className="inline-flex items-center gap-2 transition-colors group-hover:text-ember"
+            className="inline-flex items-center gap-2 transition-colors group-hover:text-ember after:absolute after:inset-0"
           >
             {show.title}
             <ArrowUpRight className="size-4 shrink-0 opacity-0 transition-opacity group-hover:opacity-70" />
@@ -97,30 +101,11 @@ function ShowRow({ show }: { show: Show }) {
           </p>
         ) : null}
 
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          {show.video ? (
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className="readout relative z-10 rounded-none text-muted-foreground hover:border-ember hover:text-ember"
-            >
-              <a href={show.video} target="_blank" rel="noreferrer noopener">
-                <Youtube />
-                {show.videoIsPlaylist ? "Playlist" : "Watch"}
-              </a>
-            </Button>
-          ) : null}
-          <ShareShow show={show} />
-        </div>
-
-        {show.body ? (
-          <div className="prose-dan mt-4 max-w-prose border-l-2 border-border pl-4 text-sm leading-relaxed">
-            <Markdown remarkPlugins={[remarkGfm]}>{show.body}</Markdown>
-          </div>
+        {/* Says what is behind the click, so the row is honest about having
+            more rather than just ending. */}
+        {inside.length > 0 ? (
+          <p className="readout-dim mt-4">{inside.join(" · ")}</p>
         ) : null}
-
-        <PhotoCarousel photos={show.photos} label={show.title} />
       </div>
 
       <div className="sm:text-right">

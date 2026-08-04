@@ -195,18 +195,28 @@ test.describe("shows", () => {
     }
   });
 
-  test("the photo strip only appears with photos, and every photo has alt text", async ({
-    page,
-  }) => {
-    const figures = page.locator("figure");
-    for (let i = 0; i < (await figures.count()); i++) {
-      await expect(figures.nth(i).locator("img").first()).toBeAttached();
-    }
+  test("the log lists no photos, notes, or share controls", async ({ page }) => {
+    // Those all live on the show's own page now. Putting them back here is what
+    // made the rows a screen tall each and left nothing to click through for.
+    await expect(page.locator("[data-slot=show] figure")).toHaveCount(0);
+    await expect(page.locator("[data-slot=show] .prose-dan")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /^Share/ })).toHaveCount(0);
 
-    const images = page.locator("figure img");
-    for (let i = 0; i < (await images.count()); i++) {
-      expect((await images.nth(i).getAttribute("alt"))?.trim()).toBeTruthy();
+    // One destination per row and nothing competing with it.
+    const rows = page.locator("[data-slot=show]");
+    for (let i = 0; i < (await rows.count()); i++) {
+      await expect(rows.nth(i).locator("a, button")).toHaveCount(1);
     }
+  });
+
+  test("a row says what is behind the click", async ({ page }) => {
+    // The Bilmuri night has photos, notes, and setlists, so its row should
+    // advertise all three rather than just stopping.
+    const row = page.locator("[data-slot=show]").filter({ hasText: "Bilmuri" });
+    const summary = await row.innerText();
+    expect(summary).toMatch(/5 PHOTOS/i);
+    expect(summary).toMatch(/NOTES/i);
+    expect(summary).toMatch(/SETLISTS/i);
   });
 
   test("setlist buttons link to setlist.fm and only name a band from the bill", async ({

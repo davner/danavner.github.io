@@ -102,10 +102,14 @@ test.describe("share", () => {
     await page.reload();
 
     await page.getByRole("button", { name: /^Share/ }).click();
-    await expect(page.getByRole("group", { name: /^Share / })).toBeFocused({ timeout: 15_000 });
+    await expect(page.getByRole("dialog", { name: /^Share / })).toBeVisible({ timeout: 15_000 });
 
     await page.getByRole("button", { name: /Share the card/ }).click();
-    await page.getByRole("button", { name: /Send the link/ }).click();
+    // On a phone the panel is taller than the viewport and scrolls, so the
+    // second action can sit below the fold.
+    const sendLink = page.getByRole("button", { name: /Send the link/ });
+    await sendLink.scrollIntoViewIfNeeded();
+    await sendLink.click();
 
     const payloads = await page.evaluate(
       () => (window as unknown as { __shared: Record<string, unknown>[] }).__shared,
@@ -128,7 +132,7 @@ test.describe("share", () => {
     await trigger.click();
 
     // Opening moves focus into the panel, which is also when Escape is armed.
-    await expect(page.getByRole("group", { name: /^Share / })).toBeFocused({ timeout: 15_000 });
+    await expect(page.getByRole("dialog", { name: /^Share / })).toBeVisible({ timeout: 15_000 });
 
     await page.keyboard.press("Escape");
     await expect(page.locator("img[alt^='Share card']")).toHaveCount(0);
@@ -149,11 +153,12 @@ test.describe("share", () => {
 
     await page.goto("/shows/warped-tour-long-beach-2026-day-2");
     await page.getByRole("button", { name: /^Share/ }).click();
-    await expect(page.getByRole("group", { name: /^Share / })).toBeFocused({ timeout: 15_000 });
+    await expect(page.getByRole("dialog", { name: /^Share / })).toBeVisible({ timeout: 15_000 });
 
     const covers = page.getByRole("radio");
+    // The picker only appears once the first card has rendered, so wait on it.
+    await expect(covers.first()).toHaveAttribute("aria-checked", "true", { timeout: 15_000 });
     expect(await covers.count()).toBeGreaterThan(1);
-    await expect(covers.first()).toHaveAttribute("aria-checked", "true");
 
     const before = await cardHash();
 

@@ -2,6 +2,8 @@ import { Check, Copy, Download, ImageIcon, Link2, Loader2, Share2, X } from "luc
 import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { renderShowCard, showUrl } from "@/lib/show-card";
 import { showHeading } from "@/lib/show-summary";
 import type { Show } from "@/lib/shows";
@@ -18,14 +20,15 @@ type Status = "idle" | "working" | "ready" | "failed";
  * whole lineup as a paragraph, and the link underneath. Sending one thing at a
  * time means the story gets the poster and the message gets a link that
  * previews itself.
+ *
+ * The panel is a shadcn Popover, so open/close, focus return, Escape, click
+ * outside, and positioning are Radix's job rather than hand-rolled here.
  */
 export function ShareShow({ show, className }: { show: Show; className?: string }) {
+  const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<Status>("idle");
   const [card, setCard] = useState<{ url: string; blob: Blob; index: number } | null>(null);
   const [copied, setCopied] = useState(false);
-  const panelRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const wasOpen = useRef(false);
   const building = useRef(false);
 
   const url = showUrl(show);
@@ -33,37 +36,6 @@ export function ShareShow({ show, className }: { show: Show; className?: string 
 
   // Object URLs outlive the component unless they are handed back.
   useEffect(() => () => { if (card) URL.revokeObjectURL(card.url); }, [card]);
-
-  /*
-   * The panel stays up while a new cover renders, so "open" is not the same as
-   * "ready" any more - it is any state where a card exists and the panel has
-   * not been dismissed.
-   */
-  const panelOpen = card != null && (status === "ready" || status === "working");
-
-  // Focus moves into the panel in the same pass that arms Escape, so there is
-  // never a frame where the panel is on screen and the key does nothing.
-  useEffect(() => {
-    if (!panelOpen) return;
-
-    // Only on the way in. Re-focusing on every render would yank focus off the
-    // cover button the moment you picked a different photo.
-    if (!wasOpen.current) panelRef.current?.focus();
-    wasOpen.current = true;
-
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") close();
-    }
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [panelOpen]);
-
-  function close() {
-    setStatus("idle");
-    wasOpen.current = false;
-    // Send focus back where it came from rather than dropping it on the body.
-    triggerRef.current?.focus();
-  }
 
   async function build(index: number) {
     // A ref rather than the status, which is stale inside this closure. Two
@@ -85,12 +57,12 @@ export function ShareShow({ show, className }: { show: Show; className?: string 
     }
   }
 
-  async function open() {
-    if (card) {
-      setStatus("ready");
-      return;
-    }
-    await build(0);
+  // Opening builds the first card if there isn't one yet; a card already in
+  // hand is reused, so reopening is instant.
+  function onOpenChange(next: boolean) {
+    setOpen(next);
+    if (next && !card) build(0);
+    if (!next) setCopied(false);
   }
 
   /** Swallows the cancel that every OS share sheet throws on dismissal. */
@@ -116,129 +88,139 @@ export function ShareShow({ show, className }: { show: Show; className?: string 
     }
   }
 
-  const action = "readout w-full justify-start rounded-none hover:border-ember hover:text-ember";
+  const action = "readout w-full justify-start rounded-none hover:border-ember hover:bg-ember/10 hover:text-ember";
 
   return (
-    <span className={cn("relative inline-block", className)}>
-      <Button
-        ref={triggerRef}
-        variant="outline"
-        size="sm"
-        onClick={open}
-        disabled={status === "working" && !card}
-        aria-expanded={panelOpen}
-        className="readout relative z-10 rounded-none text-muted-foreground hover:border-ember hover:text-ember"
-      >
-        {status === "working" && !card ? <Loader2 className="animate-spin" /> : <Share2 />}
-        Share
-      </Button>
-
-      {status === "failed" ? (
-        <span className="readout-dim relative z-10 ml-3">Could not build the card</span>
-      ) : null}
-
-      {panelOpen && card ? (
-        <div
-          ref={panelRef}
-          tabIndex={-1}
-          role="group"
-          aria-label={`Share ${heading}`}
-          className="absolute top-full left-0 z-30 mt-2 max-h-[70vh] w-[min(20rem,calc(100vw-2rem))] overflow-y-auto border border-border bg-background p-4 shadow-2xl"
+    <Popover open={open} onOpenChange={onOpenChange}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className={cn(
+            "readout rounded-none text-muted-foreground hover:border-ember hover:bg-ember/10 hover:text-ember",
+            className,
+          )}
         >
-          <div className="flex items-start justify-between gap-3">
-            <p className="readout text-ember">Share</p>
-            <button
-              type="button"
-              onClick={close}
-              aria-label="Close share panel"
-              className="-mt-1 -mr-1 p-1 text-muted-foreground transition-colors hover:text-ember"
-            >
-              <X className="size-4" />
-            </button>
-          </div>
+          {status === "working" && !card ? <Loader2 className="animate-spin" /> : <Share2 />}
+          Share
+        </Button>
+      </PopoverTrigger>
 
-          <img
-            src={card.url}
-            alt={`Share card for ${heading}`}
-            aria-busy={status === "working"}
-            className={cn(
-              "mt-3 max-h-56 w-full border border-border object-contain transition-opacity",
-              status === "working" && "opacity-50",
-            )}
-          />
-
-          {/* Which photo tops the card. Only worth showing when there is a
-              choice to make - one photo is not a picker, it is a thumbnail of
-              the picture already on screen. */}
-          {show.photos.length > 1 ? (
-            <div className="mt-3">
-              <p className="readout-dim">Cover</p>
-              <div
-                role="radiogroup"
-                aria-label="Photo on the card"
-                className="mt-2 flex gap-2 overflow-x-auto pb-1"
-              >
-                {show.photos.map((photo, index) => (
-                  <button
-                    key={photo.src}
-                    type="button"
-                    role="radio"
-                    aria-checked={card.index === index}
-                    aria-label={photo.caption}
-                    onClick={() => build(index)}
-                    className={cn(
-                      "size-12 shrink-0 border transition-colors",
-                      card.index === index
-                        ? "border-ember"
-                        : "border-border opacity-60 hover:opacity-100",
-                    )}
-                  >
-                    <img src={photo.src} alt="" className="size-full object-cover" />
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : null}
-
-          <div className="mt-3 flex flex-col gap-2">
-            {canShareImage ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => share({ files: [file!] })}
-                className={action}
-              >
-                <ImageIcon />
-                Share the card
-              </Button>
-            ) : null}
-
-            <Button asChild variant="outline" size="sm" className={action}>
-              <a href={card.url} download={`${show.slug}.png`}>
-                <Download />
-                Save the card
-              </a>
-            </Button>
-
-            {canShareLink ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => share({ title: heading, url })}
-                className={action}
-              >
-                <Link2 />
-                Send the link
-              </Button>
-            ) : null}
-
-            <Button variant="outline" size="sm" onClick={copyLink} className={action}>
-              {copied ? <Check className="text-ember" /> : <Copy />}
-              {copied ? "Link copied" : "Copy the link"}
-            </Button>
-          </div>
+      <PopoverContent
+        align="start"
+        aria-label={`Share ${heading}`}
+        className="max-h-(--radix-popover-content-available-height) w-[min(20rem,calc(100vw-2rem))] overflow-y-auto rounded-none border-border bg-background p-4 shadow-2xl"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <p className="readout text-ember">Share</p>
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            aria-label="Close share panel"
+            className="-mt-1 -mr-1 p-1 text-muted-foreground transition-colors hover:text-ember"
+          >
+            <X className="size-4" />
+          </button>
         </div>
-      ) : null}
-    </span>
+
+        {card ? (
+          <>
+            <img
+              src={card.url}
+              alt={`Share card for ${heading}`}
+              aria-busy={status === "working"}
+              className={cn(
+                "mt-3 max-h-56 w-full border border-border object-contain transition-opacity",
+                status === "working" && "opacity-50",
+              )}
+            />
+
+            {/* Which photo tops the card. Only worth showing when there is a
+                choice to make - one photo is not a picker, it is a thumbnail of
+                the picture already on screen. */}
+            {show.photos.length > 1 ? (
+              <div className="mt-3">
+                <p className="readout-dim">Cover</p>
+                <ToggleGroup
+                  type="single"
+                  value={String(card.index)}
+                  onValueChange={(value) => {
+                    if (value) build(Number(value));
+                  }}
+                  aria-label="Photo on the card"
+                  className="mt-2 w-full justify-start gap-2 overflow-x-auto pb-1"
+                >
+                  {show.photos.map((photo, index) => (
+                    <ToggleGroupItem
+                      key={photo.src}
+                      value={String(index)}
+                      aria-label={photo.caption}
+                      className="size-12 flex-none rounded-none border border-border p-0 opacity-60 transition-opacity hover:opacity-100 data-[state=on]:border-ember data-[state=on]:opacity-100"
+                    >
+                      <img src={photo.src} alt="" className="size-full object-cover" />
+                    </ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
+              </div>
+            ) : null}
+
+            <div className="mt-3 flex flex-col gap-2">
+              {canShareImage ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => share({ files: [file!] })}
+                  className={action}
+                >
+                  <ImageIcon />
+                  Share the card
+                </Button>
+              ) : null}
+
+              <Button asChild variant="outline" size="sm" className={action}>
+                <a href={card.url} download={`${show.slug}.png`}>
+                  <Download />
+                  Save the card
+                </a>
+              </Button>
+
+              {canShareLink ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => share({ title: heading, url })}
+                  className={action}
+                >
+                  <Link2 />
+                  Send the link
+                </Button>
+              ) : null}
+
+              <Button variant="outline" size="sm" onClick={copyLink} className={action}>
+                {copied ? <Check className="text-ember" /> : <Copy />}
+                {copied ? "Link copied" : "Copy the link"}
+              </Button>
+            </div>
+          </>
+        ) : status === "failed" ? (
+          <div className="mt-3">
+            <p className="text-sm text-muted-foreground">Could not build the card.</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => build(0)}
+              className={cn(action, "mt-3")}
+            >
+              Try again
+            </Button>
+          </div>
+        ) : (
+          <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="size-4 animate-spin" />
+            Building the card…
+          </p>
+        )}
+      </PopoverContent>
+    </Popover>
   );
 }

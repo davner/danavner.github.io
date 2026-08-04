@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 
+import { ANALYTICS_HOSTS } from "../src/lib/analytics";
 import { ROUTES } from "./routes";
 
 /**
@@ -63,13 +64,17 @@ test.describe("internal links", () => {
     expect(failed).toEqual([]);
   });
 
-  test("nothing phones home", async ({ page, baseURL }) => {
-    // Backs the README's claim: no analytics, no font CDN, no third-party scripts.
+  test("nothing phones home except the visitor counter", async ({ page, baseURL }) => {
+    // Backs the README's claim: no font CDN, no third-party scripts, and the
+    // only analytics is the cookie-free GoatCounter visitor counter, which is
+    // allowed to reach exactly these hosts and nothing else.
+    const allowed = new Set(ANALYTICS_HOSTS);
     const external = new Set<string>();
     page.on("request", (request) => {
       const url = request.url();
       if (/^https?:\/\//.test(url) && !url.startsWith(baseURL!)) {
-        external.add(new URL(url).host);
+        const host = new URL(url).host;
+        if (!allowed.has(host)) external.add(host);
       }
     });
 

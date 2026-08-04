@@ -1,3 +1,4 @@
+import { execSync } from "node:child_process";
 import { copyFileSync } from "node:fs";
 import path from "node:path";
 
@@ -7,6 +8,20 @@ import { defineConfig, type Plugin } from "vite";
 
 import { contentPlugin } from "./vite-plugin-content";
 import { sharePagesPlugin } from "./vite-plugin-share-pages";
+
+/**
+ * The date of the last commit, stamped in at build time for the footer's "last
+ * updated" line. Since the site deploys on push to main, the last commit is the
+ * last change that reached the live site. Falls back to the build time if git is
+ * unavailable (e.g. a source tarball with no history).
+ */
+function lastUpdatedISO(): string {
+  try {
+    return execSync("git log -1 --format=%cI", { encoding: "utf8" }).trim();
+  } catch {
+    return new Date().toISOString();
+  }
+}
 
 /**
  * GitHub Pages has no SPA rewrite rule, so a deep link like /blog/some-post
@@ -25,6 +40,9 @@ function githubPagesSpaFallback(): Plugin {
 }
 
 export default defineConfig({
+  define: {
+    __LAST_UPDATED__: JSON.stringify(lastUpdatedISO()),
+  },
   plugins: [react(), tailwindcss(), contentPlugin(), githubPagesSpaFallback(), sharePagesPlugin()],
   resolve: {
     alias: {

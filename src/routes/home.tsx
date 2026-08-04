@@ -6,6 +6,7 @@ import { FramedPhoto } from "@/components/framed-photo";
 import { Marquee } from "@/components/marquee";
 import { Section } from "@/components/page";
 import { SocialLinks } from "@/components/social-links";
+import { VisitorTicker } from "@/components/visitor-ticker";
 import { profile } from "@/content/profile";
 import { posts } from "@/lib/blog";
 import { formatShowDate, showLocation, showStats, supportFor } from "@/lib/shows";
@@ -121,6 +122,10 @@ export function Home() {
       </section>
 
       <Marquee items={TICKER} />
+
+      <div className="mx-auto flex max-w-6xl justify-center px-4 pt-10 sm:px-6">
+        <VisitorTicker />
+      </div>
 
       {/* `pb-8` rather than a matching `pb-20`, so the gap down to the footer is
           PageShell's, not double it. */}

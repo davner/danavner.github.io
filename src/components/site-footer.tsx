@@ -12,6 +12,13 @@ const LINKS = [
   { to: "/trips", label: "Trips" },
 ];
 
+/** Build-time commit date, formatted like "Aug 4, 2026". */
+const LAST_UPDATED = new Date(__LAST_UPDATED__).toLocaleDateString("en-US", {
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+});
+
 export function SiteFooter() {
   return (
     <footer className="mt-20 border-t border-border">
@@ -36,9 +43,12 @@ export function SiteFooter() {
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p className="readout-dim">
-            © {new Date().getFullYear()} {profile.name} · Built in the dark with good music on
-          </p>
+          <div className="space-y-1">
+            <p className="readout-dim">
+              © {new Date().getFullYear()} {profile.name} · Built in the dark with good music on
+            </p>
+            <p className="readout-dim">Last updated {LAST_UPDATED}</p>
+          </div>
           {/* The last thing anyone reads should be a wave, not a job title. */}
           <p className="readout">
             <span aria-hidden>👋🏽</span> See ya later, alligator <span aria-hidden>🐊</span>

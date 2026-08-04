@@ -27,8 +27,10 @@ If you want to fork it and make it yours, see [Making it yours](#making-it-yours
 | Hosting | GitHub Pages | Free, already where the repo lives |
 
 Every dependency is permissively licensed (MIT, ISC, Apache-2.0, BSD-3-Clause,
-OFL-1.1 for the fonts). Nothing here phones home - no analytics, no font CDN,
-no third-party scripts.
+OFL-1.1 for the fonts). The only thing that leaves the origin is the landing
+page's visitor counter, which uses [GoatCounter](https://www.goatcounter.com) -
+cookie-free, no personal data. Otherwise nothing here phones home: no font CDN,
+no third-party scripts, no other analytics.
 
 ### Running it
 
@@ -62,8 +64,8 @@ mobile viewports, and covers four things:
   The palettes are independent, and contrast is the easiest thing to break.
 - **Links and assets** - every in-site link resolves to a real route rather
   than the SPA's 404 fallback, and no image is broken.
-- **No third parties** - fails if any request leaves the origin, which is what
-  keeps the "nothing phones home" claim above honest.
+- **No third parties** - fails if any request leaves the origin except the
+  GoatCounter visitor counter, which keeps the claim above honest.
 
 External links are deliberately excluded from CI. They rot for reasons no
 commit caused - a venue folds, a host starts refusing bots - and a red build

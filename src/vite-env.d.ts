@@ -1,5 +1,8 @@
 /// <reference types="vite/client" />
 
+/** ISO date of the last commit, injected by `define` in `vite.config.ts`. */
+declare const __LAST_UPDATED__: string;
+
 declare module "virtual:blog" {
   import type { Post } from "@/lib/blog";
 

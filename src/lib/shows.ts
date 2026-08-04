@@ -50,6 +50,12 @@ export interface Show {
   /** Per-band setlist.fm links, in bill order. Empty when none were found. */
   setlists: Setlist[];
   photos: Photo[];
+  /**
+   * The photo that fades in behind the header, or `null` when the show has no
+   * photos. Defaults to the first photo; a photo marked `banner: true` in
+   * frontmatter overrides that.
+   */
+  banner: Photo | null;
   standout: boolean;
   /** Markdown notes about the night. */
   body: string;

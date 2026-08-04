@@ -67,6 +67,7 @@ photos:
   - src: /img/shows/warped-tour-long-beach-2026-day-1/stage.jpg
     alt: Underoath mid-set, lit red        # described for screen readers
     caption: Underoath                     # overlaid on the photo
+    banner: true                           # this one fades in behind the header
 ```
 
 They render as a swipeable strip with prev/next buttons and a counter. One photo
@@ -74,6 +75,13 @@ drops the controls. No photos, no strip at all.
 
 Alt text falls back to a generated description, but write your own where the
 photo actually shows something.
+
+### Banner
+
+The show page fades one photo in behind its title, dissolving into the page.
+It is the first photo by default; mark a different one with `banner: true` to
+choose which. Only one photo may carry the flag, and the picked photo still
+appears in the strip below like any other. A show with no photos gets no banner.
 
 ## Setlists
 
@@ -131,6 +139,7 @@ lineup:
 | `video` | no | Full URL. A YouTube playlist labels itself "Playlist". |
 | `setlists` | no | `{ band, url }` pairs. Each `band` must be in `lineup`. Renders as per-band buttons. |
 | `photos` | no | Objects with `src` / `alt` / `caption`. All three required. |
+| `banner` | no | Set `banner: true` on one photo to fade it in behind the header. Defaults to the first. |
 | `standout` | no | Adds a flame and pins it to the ticker |
 
 Notes:

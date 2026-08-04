@@ -153,6 +153,36 @@ function asPhotos(collection: string, value: unknown, file: string, publicDir: s
 }
 
 /**
+ * Which photo fades in behind a show's header. One photo in the list may carry
+ * `banner: true`; with none marked, the first photo is used. The flag rides on
+ * the photo so the choice sits next to the image it points at, and `asPhotos`
+ * keeps only `src`, `alt`, and `caption`, so the flag never reaches the app.
+ */
+function resolveShowBanner(
+  value: unknown,
+  photos: { src: string; alt: string; caption: string }[],
+  file: string,
+) {
+  if (photos.length === 0) return null;
+
+  const entries = value == null ? [] : Array.isArray(value) ? value : [value];
+  const marked = entries.flatMap((entry, index) =>
+    entry &&
+    typeof entry === "object" &&
+    !Array.isArray(entry) &&
+    (entry as Record<string, unknown>).banner === true
+      ? [index]
+      : [],
+  );
+
+  if (marked.length > 1) {
+    fail("shows", file, "only one photo can be the `banner` - mark a single photo with `banner: true`");
+  }
+
+  return photos[marked[0] ?? 0] ?? photos[0];
+}
+
+/**
  * Per-band setlist.fm links, written as objects that name the band and its URL:
  *
  *   setlists:
@@ -297,6 +327,8 @@ function parseShow({ file, meta, body, slug }: Frontmatter, publicDir: string) {
     fail("shows", file, "`solo: true` contradicts `with` - drop one");
   }
 
+  const photos = asPhotos("shows", meta.photos, file, publicDir);
+
   return {
     slug,
     title,
@@ -317,7 +349,8 @@ function parseShow({ file, meta, body, slug }: Frontmatter, publicDir: string) {
     // link labels itself rather than needing a second field.
     videoIsPlaylist: /[?&]list=/.test(video),
     setlists: asSetlists(meta.setlists, file, lineup),
-    photos: asPhotos("shows", meta.photos, file, publicDir),
+    photos,
+    banner: resolveShowBanner(meta.photos, photos, file),
     standout: meta.standout === true,
     body,
   };

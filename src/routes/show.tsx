@@ -24,9 +24,30 @@ import { ShareShow } from "@/components/share-show";
 import { SoloBadge } from "@/components/solo-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import type { Photo } from "@/lib/photo";
 import { fullShowDate, showSummary } from "@/lib/show-summary";
 import { isDuo, shows } from "@/lib/shows";
 import { useDocumentMeta } from "@/lib/use-document-meta";
+
+/**
+ * The highlight photo, faded in behind the top of the page and dissolving into
+ * the background so the title stays readable over it. Decorative: the same photo
+ * runs in the carousel below with its real alt text and caption, so it carries
+ * none here.
+ */
+function ShowBanner({ photo }: { photo: Photo }) {
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-x-0 top-0 h-72 overflow-hidden sm:h-96"
+    >
+      <img src={photo.src} alt="" className="size-full object-cover object-center opacity-30" />
+      {/* Transparent at the top, solid background at the bottom, so the image
+          has no hard edge and the header sits on clean page colour. */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/80 to-background" />
+    </div>
+  );
+}
 
 /**
  * One show, on its own page.
@@ -72,178 +93,183 @@ function ShowBody({ show }: { show: (typeof shows)[number] }) {
   const facts = showFacts(show);
 
   return (
-    <PageShell>
-      <PageHeader title={show.title}>
-        {/* The tour, or which day of the festival. It reads as a subtitle to
-            the name above it, which is what it is - a badge made it look like
-            a category someone filed the night under. */}
-        {show.subtitle ? (
-          <p className="readout-dim mt-3 text-pretty">{show.subtitle}</p>
-        ) : null}
+    <div className="relative">
+      {show.banner ? <ShowBanner photo={show.banner} /> : null}
+      <div className="relative z-10">
+        <PageShell>
+          <PageHeader title={show.title}>
+            {/* The tour, or which day of the festival. It reads as a subtitle to
+                the name above it, which is what it is - a badge made it look like
+                a category someone filed the night under. */}
+            {show.subtitle ? (
+              <p className="readout-dim mt-3 text-pretty">{show.subtitle}</p>
+            ) : null}
 
-        {/* This page is the target of every share link, so when someone opens
-            it from a text message the date and the room are the first thing
-            they need, and they are stated nowhere else on the page. */}
-        <FactLine items={facts} className="mt-6" />
+            {/* This page is the target of every share link, so when someone opens
+                it from a text message the date and the room are the first thing
+                they need, and they are stated nowhere else on the page. */}
+            <FactLine items={facts} className="mt-6" />
 
-        <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2">
-          {show.type === "festival" ? <Badge variant="ion">Festival</Badge> : null}
-          {/* Outline rather than ion, so a measurement never reads as a label
-              someone chose to put on the night. A ticket, because the building
-              is the venue itself and the people icon means the people who
-              actually came. */}
-          {show.capacity ? (
-            <Badge variant="outline" className="rounded-none border-border">
-              <Ticket />
-              {show.capacity.toLocaleString("en-US")} cap
-            </Badge>
+            <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2">
+              {show.type === "festival" ? <Badge variant="ion">Festival</Badge> : null}
+              {/* Outline rather than ion, so a measurement never reads as a label
+                  someone chose to put on the night. A ticket, because the building
+                  is the venue itself and the people icon means the people who
+                  actually came. */}
+              {show.capacity ? (
+                <Badge variant="outline" className="rounded-none border-border">
+                  <Ticket />
+                  {show.capacity.toLocaleString("en-US")} cap
+                </Badge>
+              ) : null}
+              {show.standout ? (
+                <Badge variant="ember">
+                  <Flame />
+                  Standout
+                </Badge>
+              ) : null}
+              {show.rating != null ? <Rating value={show.rating} /> : null}
+            </div>
+
+            <div className="mt-7 flex flex-wrap items-center gap-3">
+              <ShareShow show={show} />
+              {show.video ? (
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
+                  className="readout rounded-none text-muted-foreground hover:border-ember hover:text-ember"
+                >
+                  <a href={show.video} target="_blank" rel="noreferrer noopener">
+                    <Youtube />
+                    {show.videoIsPlaylist ? "Playlist" : "Watch"}
+                  </a>
+                </Button>
+              ) : null}
+            </div>
+
+          </PageHeader>
+
+          {/*
+           * One row per band, rather than a lineup list and a setlist grid printing
+           * the same names twice down the page. A setlist is a fact about a band,
+           * not a parallel collection, so it lives on that band's row.
+           *
+           * The headliner is in here too, which it never was when this section was
+           * "Support" - so its own setlist finally has somewhere to go.
+           */}
+          {show.lineup.length > 0 ? (
+            <Section title="Lineup">
+              <ul className="grid gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
+                {show.lineup.map((band) => {
+                  const setlist = show.setlists.find((entry) => entry.band === band);
+                  const inner = <span className="text-lg">{band}</span>;
+
+                  return (
+                    <li key={band} className="flex bg-background">
+                      {setlist ? (
+                        <a
+                          href={setlist.url}
+                          target="_blank"
+                          rel="noreferrer noopener"
+                          aria-label={`${band} setlist on setlist.fm`}
+                          className="group flex w-full flex-wrap items-center gap-x-3 gap-y-2 px-4 py-4 transition-colors hover:bg-card/60 hover:text-ember"
+                        >
+                          {inner}
+                          <span className="readout-dim ml-auto flex shrink-0 items-center gap-1.5 transition-colors group-hover:text-ember">
+                            <ListMusic className="size-3.5 text-ember" aria-hidden />
+                            Setlist
+                            <ArrowUpRight className="size-3 opacity-0 transition-opacity group-hover:opacity-70" />
+                          </span>
+                        </a>
+                      ) : (
+                        <div className="flex w-full flex-wrap items-center gap-x-3 gap-y-2 px-4 py-4 text-muted-foreground">
+                          {inner}
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
+
+                {/*
+                 * The grid paints its own background through the 1px gaps, so a
+                 * part-filled last row shows as a grey slab where the missing
+                 * cells are - four bands across three columns leaves two. These
+                 * fill it, one set per column count, each only visible at the
+                 * breakpoint whose arithmetic it was computed for.
+                 */}
+                {Array.from({ length: (3 - (show.lineup.length % 3)) % 3 }, (_, index) => (
+                  <li key={`fill-lg-${index}`} aria-hidden className="hidden bg-background lg:block" />
+                ))}
+                {Array.from({ length: (2 - (show.lineup.length % 2)) % 2 }, (_, index) => (
+                  <li
+                    key={`fill-sm-${index}`}
+                    aria-hidden
+                    className="hidden bg-background sm:block lg:hidden"
+                  />
+                ))}
+              </ul>
+            </Section>
           ) : null}
-          {show.standout ? (
-            <Badge variant="ember">
-              <Flame />
-              Standout
-            </Badge>
-          ) : null}
-          {show.rating != null ? <Rating value={show.rating} /> : null}
-        </div>
 
-        <div className="mt-7 flex flex-wrap items-center gap-3">
-          <ShareShow show={show} />
-          {show.video ? (
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className="readout rounded-none text-muted-foreground hover:border-ember hover:text-ember"
+          {show.bestSong || show.solo || show.companions.length > 0 ? (
+            <Section title="The night">
+              <div className="space-y-4">
+                {show.bestSong ? (
+                  <p className="flex items-center gap-2 text-muted-foreground">
+                    <Music className="size-4 shrink-0 text-ember" aria-hidden />
+                    <span>
+                      <span className="readout-dim">Best live</span> {show.bestSong}
+                    </span>
+                  </p>
+                ) : null}
+
+                {show.solo ? (
+                  <p>
+                    <SoloBadge />
+                  </p>
+                ) : isDuo(show) ? (
+                  <p>
+                    <DuoBadge partner={show.companions[0]} />
+                  </p>
+                ) : show.companions.length > 0 ? (
+                  <p className="flex items-center gap-2 text-muted-foreground">
+                    <Users className="size-4 shrink-0 text-ember" aria-hidden />
+                    <span>
+                      <span className="sr-only">Went with </span>
+                      {show.companions.join(", ")}
+                    </span>
+                  </p>
+                ) : null}
+              </div>
+            </Section>
+          ) : null}
+
+          {show.body ? (
+            <Section>
+              <div className="prose-dan max-w-prose border-l-2 border-ember/40 pl-5 leading-relaxed">
+                <Markdown remarkPlugins={[remarkGfm]}>{show.body}</Markdown>
+              </div>
+            </Section>
+          ) : null}
+
+          {show.photos.length > 0 ? (
+            <Section>
+              <PhotoCarousel photos={show.photos} label={show.title} />
+            </Section>
+          ) : null}
+
+          <Section>
+            <Link
+              to="/shows"
+              className="readout group inline-flex items-center gap-2 border border-border px-5 py-3 text-muted-foreground transition-colors hover:border-ember hover:bg-ember/10 hover:text-ember"
             >
-              <a href={show.video} target="_blank" rel="noreferrer noopener">
-                <Youtube />
-                {show.videoIsPlaylist ? "Playlist" : "Watch"}
-              </a>
-            </Button>
-          ) : null}
-        </div>
-
-      </PageHeader>
-
-      {/*
-       * One row per band, rather than a lineup list and a setlist grid printing
-       * the same names twice down the page. A setlist is a fact about a band,
-       * not a parallel collection, so it lives on that band's row.
-       *
-       * The headliner is in here too, which it never was when this section was
-       * "Support" - so its own setlist finally has somewhere to go.
-       */}
-      {show.lineup.length > 0 ? (
-        <Section title="Lineup">
-          <ul className="grid gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
-            {show.lineup.map((band) => {
-              const setlist = show.setlists.find((entry) => entry.band === band);
-              const inner = <span className="text-lg">{band}</span>;
-
-              return (
-                <li key={band} className="flex bg-background">
-                  {setlist ? (
-                    <a
-                      href={setlist.url}
-                      target="_blank"
-                      rel="noreferrer noopener"
-                      aria-label={`${band} setlist on setlist.fm`}
-                      className="group flex w-full flex-wrap items-center gap-x-3 gap-y-2 px-4 py-4 transition-colors hover:bg-card/60 hover:text-ember"
-                    >
-                      {inner}
-                      <span className="readout-dim ml-auto flex shrink-0 items-center gap-1.5 transition-colors group-hover:text-ember">
-                        <ListMusic className="size-3.5 text-ember" aria-hidden />
-                        Setlist
-                        <ArrowUpRight className="size-3 opacity-0 transition-opacity group-hover:opacity-70" />
-                      </span>
-                    </a>
-                  ) : (
-                    <div className="flex w-full flex-wrap items-center gap-x-3 gap-y-2 px-4 py-4 text-muted-foreground">
-                      {inner}
-                    </div>
-                  )}
-                </li>
-              );
-            })}
-
-            {/*
-             * The grid paints its own background through the 1px gaps, so a
-             * part-filled last row shows as a grey slab where the missing
-             * cells are - four bands across three columns leaves two. These
-             * fill it, one set per column count, each only visible at the
-             * breakpoint whose arithmetic it was computed for.
-             */}
-            {Array.from({ length: (3 - (show.lineup.length % 3)) % 3 }, (_, index) => (
-              <li key={`fill-lg-${index}`} aria-hidden className="hidden bg-background lg:block" />
-            ))}
-            {Array.from({ length: (2 - (show.lineup.length % 2)) % 2 }, (_, index) => (
-              <li
-                key={`fill-sm-${index}`}
-                aria-hidden
-                className="hidden bg-background sm:block lg:hidden"
-              />
-            ))}
-          </ul>
-        </Section>
-      ) : null}
-
-      {show.bestSong || show.solo || show.companions.length > 0 ? (
-        <Section title="The night">
-          <div className="space-y-4">
-            {show.bestSong ? (
-              <p className="flex items-center gap-2 text-muted-foreground">
-                <Music className="size-4 shrink-0 text-ember" aria-hidden />
-                <span>
-                  <span className="readout-dim">Best live</span> {show.bestSong}
-                </span>
-              </p>
-            ) : null}
-
-            {show.solo ? (
-              <p>
-                <SoloBadge />
-              </p>
-            ) : isDuo(show) ? (
-              <p>
-                <DuoBadge partner={show.companions[0]} />
-              </p>
-            ) : show.companions.length > 0 ? (
-              <p className="flex items-center gap-2 text-muted-foreground">
-                <Users className="size-4 shrink-0 text-ember" aria-hidden />
-                <span>
-                  <span className="sr-only">Went with </span>
-                  {show.companions.join(", ")}
-                </span>
-              </p>
-            ) : null}
-          </div>
-        </Section>
-      ) : null}
-
-      {show.body ? (
-        <Section>
-          <div className="prose-dan max-w-prose border-l-2 border-ember/40 pl-5 leading-relaxed">
-            <Markdown remarkPlugins={[remarkGfm]}>{show.body}</Markdown>
-          </div>
-        </Section>
-      ) : null}
-
-      {show.photos.length > 0 ? (
-        <Section>
-          <PhotoCarousel photos={show.photos} label={show.title} />
-        </Section>
-      ) : null}
-
-      <Section>
-        <Link
-          to="/shows"
-          className="readout group inline-flex items-center gap-2 border border-border px-5 py-3 text-muted-foreground transition-colors hover:border-ember hover:bg-ember/10 hover:text-ember"
-        >
-          <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
-          All shows
-        </Link>
-      </Section>
-    </PageShell>
+              <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
+              All shows
+            </Link>
+          </Section>
+        </PageShell>
+      </div>
+    </div>
   );
 }

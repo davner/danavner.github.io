@@ -50,7 +50,7 @@ const TICKER = [
 ];
 
 export function Home() {
-  useDocumentMeta("Dan Avner", profile.blurb);
+  useDocumentMeta("Dan Avner", `${profile.greeting} ${profile.blurb}`);
 
   const latestPost = posts[0];
   const latestShow = showStats.latest;
@@ -58,12 +58,20 @@ export function Home() {
   return (
     <>
       <section className="mx-auto max-w-6xl px-4 pt-10 pb-14 sm:px-6 sm:pt-16">
+        {/* A HUD line over the name. Only the label takes the accent - the two
+            sentences stay full weight so that when the rail stacks at 320px
+            they never blur into the dimmed metadata under them. Each phrase is
+            its own flex item, so wrapping breaks between sentences, never
+            mid-thought. */}
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-border pb-3">
-          <p className="readout text-ember">Best enjoyed loud</p>
+          <p className="readout flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            <span className="text-ember">{profile.quest.label}:</span>
+            <span>{profile.quest.main}</span>
+            <span>{profile.quest.aside}</span>
+          </p>
           <ul className="flex flex-wrap gap-x-5 gap-y-1">
             <li className="readout-dim">{profile.location}</li>
             <li className="readout-dim">He/him</li>
-            <li className="readout-dim">Chasing dark skies</li>
           </ul>
         </div>
 
@@ -75,7 +83,7 @@ export function Home() {
             </h1>
 
             <p className="mt-8 max-w-xl text-xl leading-snug text-pretty sm:text-2xl">
-              {profile.blurb}
+              <span className="text-ember">{profile.greeting}</span> {profile.blurb}
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-3">

@@ -73,9 +73,19 @@ export const profile = {
   partner: "Alexis A.",
   /** How she is referred to in prose, as opposed to in a companions list. */
   partnerFirstName: "Alexis",
-  /** The homepage voice: a person who happens to have a career. */
+  /**
+   * The status line above the name on the landing page. Split into three so the
+   * label can carry the accent and each sentence can wrap as a unit.
+   */
+  quest: {
+    label: "Main quest",
+    main: "Live a life worth remembering.",
+    aside: "Side quests encouraged.",
+  },
+  /** The homepage voice. Kept apart from the blurb so it can be accented. */
+  greeting: "Hi, I'm Dan.",
   blurb:
-    "I write software for telescopes. Most of the job is making complicated things feel simple to someone who is tired. The rest of this site has nothing to do with work.",
+    "This is where I share the things I build, the concerts I never skip, the quiet summer nights at the park with Alexis and our pup, and the adventures we find along the way.",
   /** The career voice, used on the Career page and in its meta description. */
   tagline: "I write production software for telescopes and the people who have to use it at 3 a.m.",
   intro:

@@ -32,33 +32,59 @@ export function ShowDetail() {
   return <ShowBody show={show} />;
 }
 
-/** "Hollywood Palladium · 3,700 cap · 2nd time here", minus whatever is unknown. */
-function venueLine(show: (typeof shows)[number]) {
-  if (!show.venue) return "";
+/**
+ * The show's own record, in reading order and minus whatever is unknown:
+ * ["April 20, 2026", "Hollywood Palladium", "3,700 cap", "2nd time here",
+ * "Los Angeles, CA"]. One entry per fact so they can be set with a separator
+ * between them rather than pre-joined into a string.
+ */
+function showFacts(show: (typeof shows)[number]) {
+  const nth = show.venue ? timesAtVenue(show) : 0;
 
-  const nth = timesAtVenue(show);
   return [
+    fullShowDate(show),
     show.venue,
     show.capacity ? `${show.capacity.toLocaleString("en-US")} cap` : "",
     nth > 1 ? `${ordinal(nth)} time here` : "",
-  ]
-    .filter(Boolean)
-    .join(" · ");
+    show.city,
+  ].filter(Boolean);
 }
 
 function ShowBody({ show }: { show: (typeof shows)[number] }) {
   useDocumentMeta(show.title, showSummary(show));
 
   const support = supportFor(show);
+  const facts = showFacts(show);
   const tags = [show.type === "festival" ? "Festival" : "", show.subtitle].filter(Boolean);
 
   return (
     <PageShell>
-      <PageHeader
-        eyebrow="Show log"
-        title={show.title}
-        meta={[fullShowDate(show), venueLine(show), show.city].filter(Boolean)}
-      >
+      <PageHeader title={show.title}>
+        {/* Set at reading size rather than as a small readout. This page is the
+            target of every share link, so when someone opens it from a text
+            message the date and the room are the first thing they need, and
+            they are stated nowhere else on the page. */}
+        {facts.length > 0 ? (
+          <p
+            data-slot="show-facts"
+            className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 text-lg text-muted-foreground"
+          >
+            {/* The separator travels with the fact after it rather than sitting
+                between them as its own item. Wrapping this line otherwise
+                strands a dot at the end of a row, where it reads as a typo. */}
+            {facts.map((fact, index) => (
+              <span key={fact} className="flex items-center gap-x-3">
+                {index > 0 ? (
+                  <span className="text-ember" aria-hidden>
+                    ·
+                  </span>
+                ) : null}
+                {fact}
+              </span>
+            ))}
+          </p>
+        ) : null}
+
         <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2">
           {tags.map((tag) => (
             <Badge key={tag} variant="ion">

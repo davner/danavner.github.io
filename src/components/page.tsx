@@ -15,24 +15,14 @@ export function PageShell({ className, children }: { className?: string; childre
  * wants one or two short words - long phrases go in `lede`.
  */
 export function PageHeader({
-  eyebrow,
   title,
   lede,
-  meta,
   children,
   aside,
   asideAlign = "end",
 }: {
-  /**
-   * Small accented label on the top rule. Optional - a page whose title
-   * already says where you are does not need it, and the meta rail slides
-   * left to take the space.
-   */
-  eyebrow?: string;
   title: ReactNode;
   lede?: ReactNode;
-  /** Small mono readouts shown along the top rule. */
-  meta?: string[];
   children?: ReactNode;
   /**
    * Optional media shown beside the title on large screens and stacked below it
@@ -43,19 +33,12 @@ export function PageHeader({
    * How the aside lines up with the title column. `end` sits it at the bottom
    * (good when the media is shorter than the text); `start` tops it out level
    * with the title (good when the media is the taller column).
-   *
-   * `start` picks up the same `mt-6` the title has, so it lines up with the
-   * title rather than with the rule above it.
    */
   asideAlign?: "start" | "end";
 }) {
-  // The title's top margin is spacing away from the rule, so with no rule to
-  // clear it would push the page down past the shell's own padding.
-  const rule = Boolean(eyebrow || meta?.length);
-
   const intro = (
     <>
-      <h1 className={cn("display text-[clamp(3.25rem,13vw,9rem)]", rule && "mt-6")}>{title}</h1>
+      <h1 className="display text-[clamp(3.25rem,13vw,9rem)]">{title}</h1>
 
       {lede ? (
         <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground text-pretty">
@@ -69,24 +52,6 @@ export function PageHeader({
 
   return (
     <header className="mb-16">
-      {/* With only one child left, `justify-between` puts it at the start, so
-          dropping the eyebrow slides the meta rail under the title rather than
-          leaving it stranded on the right. No rule at all when both are gone. */}
-      {rule ? (
-        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-border pb-3">
-          {eyebrow ? <p className="readout text-ember">{eyebrow}</p> : null}
-          {meta?.length ? (
-            <ul className="flex flex-wrap gap-x-5 gap-y-1">
-              {meta.map((item) => (
-                <li key={item} className="readout-dim">
-                  {item}
-                </li>
-              ))}
-            </ul>
-          ) : null}
-        </div>
-      ) : null}
-
       {aside ? (
         <div
           className={cn(
@@ -95,7 +60,7 @@ export function PageHeader({
           )}
         >
           <div>{intro}</div>
-          <div className={cn(asideAlign === "end" ? "lg:pb-1" : rule && "lg:mt-6")}>{aside}</div>
+          <div className={asideAlign === "end" ? "lg:pb-1" : undefined}>{aside}</div>
         </div>
       ) : (
         intro

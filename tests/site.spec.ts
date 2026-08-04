@@ -284,6 +284,34 @@ test.describe("shows", () => {
     }
   });
 
+  test("a show page states its own date and room", async ({ page }) => {
+    // These used to sit on a rail above the title, and they are stated nowhere
+    // else on the page. A show page is the target of every share link, so if
+    // they stop rendering, someone arriving from a text message gets a band
+    // name and no way to tell which night it was.
+    const hrefs: string[] = await page
+      .locator('a[href^="/shows/"]')
+      .evaluateAll((els) =>
+        Array.from(
+          new Set(els.map((el) => (el as HTMLAnchorElement).getAttribute("href") ?? "")),
+        ).filter(Boolean),
+      );
+    expect(hrefs.length).toBeGreaterThan(0);
+
+    for (const href of hrefs) {
+      await page.goto(href);
+      await page.getByRole("heading", { level: 1 }).waitFor();
+
+      const facts = page.locator("[data-slot=show-facts]");
+      await expect(facts).toHaveCount(1);
+
+      const stated = await facts.innerText();
+      // When it happened, and where. "July 26, 2026 · ... · Long Beach, CA".
+      expect(stated).toMatch(/\b\d{4}\b/);
+      expect(stated).toMatch(/,\s*\S/);
+    }
+  });
+
   test("the collection README is not parsed as an entry", async ({ page }) => {
     const titles = await page.locator("[data-slot=show] h3").allInnerTexts();
     expect(titles.some((title) => /SHOW LOG/i.test(title))).toBe(false);

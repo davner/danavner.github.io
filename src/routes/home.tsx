@@ -58,20 +58,12 @@ export function Home() {
   return (
     <>
       <section className="mx-auto max-w-6xl px-4 pt-10 pb-14 sm:px-6 sm:pt-16">
-        {/* A HUD line over the name. Only the label takes the accent - the two
-            sentences stay full weight so that when the rail stacks at 320px
-            they never blur into the dimmed metadata under them. Each phrase is
-            its own flex item, so wrapping breaks between sentences, never
-            mid-thought. */}
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-border pb-3">
-          <p className="readout flex flex-wrap items-baseline gap-x-2 gap-y-1">
-            <span className="text-ember">{profile.quest.label}:</span>
-            <span>{profile.quest.main}</span>
-            <span>{profile.quest.aside}</span>
-          </p>
+          <p className="readout text-ember">Best enjoyed loud</p>
           <ul className="flex flex-wrap gap-x-5 gap-y-1">
             <li className="readout-dim">{profile.location}</li>
             <li className="readout-dim">He/him</li>
+            <li className="readout-dim">Chasing dark skies</li>
           </ul>
         </div>
 
@@ -82,7 +74,18 @@ export function Home() {
               <span className="display-outline block">Avner</span>
             </h1>
 
-            <p className="mt-8 max-w-xl text-xl leading-snug text-pretty sm:text-2xl">
+            {/* A kicker between the name and the hello. Muted all the way
+                through, because the greeting under it already takes the accent
+                and two ember lines stacked would fight. Each sentence is its
+                own flex item, so wrapping breaks between sentences rather than
+                mid-thought. */}
+            <p className="readout-dim mt-8 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+              <span>{profile.quest.label}:</span>
+              <span>{profile.quest.main}</span>
+              <span>{profile.quest.aside}</span>
+            </p>
+
+            <p className="mt-4 max-w-xl text-xl leading-snug text-pretty sm:text-2xl">
               <span className="text-ember">{profile.greeting}</span> {profile.blurb}
             </p>
 

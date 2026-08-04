@@ -74,8 +74,8 @@ export const profile = {
   /** How she is referred to in prose, as opposed to in a companions list. */
   partnerFirstName: "Alexis",
   /**
-   * The status line above the name on the landing page. Split into three so the
-   * label can carry the accent and each sentence can wrap as a unit.
+   * The kicker between the name and the greeting on the landing page. Split
+   * into three so each sentence can wrap as its own unit.
    */
   quest: {
     label: "Main quest",

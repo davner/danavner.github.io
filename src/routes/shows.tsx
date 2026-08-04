@@ -131,7 +131,6 @@ export function Shows() {
     return (
       <PageShell>
         <PageHeader
-          eyebrow="Shows"
           title={
             <>
               <span className="block">Every show</span>
@@ -180,18 +179,12 @@ export function Shows() {
     <>
       <PageShell className="pb-0">
         <PageHeader
-          eyebrow="Shows"
           title={
             <>
               <span className="block">Every show</span>
               <span className="display-outline-ember block">so far</span>
             </>
           }
-          meta={[
-            `${showStats.total} logged`,
-            showStats.firstYear ? `Since ${showStats.firstYear}` : "",
-            "Ears: negotiable",
-          ].filter(Boolean)}
           lede="I keep a list. Mostly metalcore, occasionally something with clean vocals, and I am always somewhere near the front. Openers count too. Half the best sets I have seen went on at 7:15 to about forty people."
         />
       </PageShell>

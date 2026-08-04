@@ -37,14 +37,12 @@ export function Blog() {
   return (
     <PageShell>
       <PageHeader
-        eyebrow="Blog"
         title={
           <>
             <span className="block">Notes on</span>
             <span className="display-outline block">whatever</span>
           </>
         }
-        meta={[`${posts.length} ${posts.length === 1 ? "post" : "posts"}`, "No schedule"]}
         lede="Some of this is about building software for astronomy. The rest is about records, lifting, or whatever else has my attention that week. It all lives in one place, so filter it if you only want one kind."
       >
         {/* A single-select filter is a radio group, which is what ToggleGroup

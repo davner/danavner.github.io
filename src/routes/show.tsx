@@ -221,16 +221,17 @@ function ShowBody({ show }: { show: (typeof shows)[number] }) {
         </Section>
       ) : null}
 
+      {/* The photos and the night's notes are one block. The carousel has no
+          heading to fill a full section gap, so pull it up to a tighter spacing,
+          and let the notes sit close under it as a caption. */}
       {show.photos.length > 0 ? (
-        <Section>
+        <Section className="mt-10">
           <PhotoCarousel photos={show.photos} label={show.title} />
         </Section>
       ) : null}
 
-      {/* The night's notes read as a caption to the photos above, so they sit
-          close under them rather than a full section gap away. */}
       {show.body ? (
-        <Section className={show.photos.length > 0 ? "mt-10" : undefined}>
+        <Section className="mt-10">
           <div className="prose-dan max-w-prose border-l-2 border-ember/40 pl-5 leading-relaxed">
             <Markdown remarkPlugins={[remarkGfm]}>{show.body}</Markdown>
           </div>

@@ -20,19 +20,37 @@ const ENDPOINT = `https://${GOATCOUNTER_CODE}.goatcounter.com`;
 /** The hosts the counter talks to, so the "nothing phones home" test can allow exactly these. */
 export const ANALYTICS_HOSTS = ["gc.zgo.at", `${GOATCOUNTER_CODE}.goatcounter.com`];
 
+declare global {
+  interface Window {
+    goatcounter?: {
+      count?: (vars?: Record<string, unknown>) => void;
+      no_onload?: boolean;
+    };
+  }
+}
+
 /**
  * Injects the GoatCounter pageview script once per full page load. It records
  * the visit; it does not read anything back. Guarded by id so a hot reload or a
  * second call does not stack duplicate scripts.
+ *
+ * count.js normally counts on the window `load` event, but this runs from the
+ * app entry, after that event has already fired, so the built-in auto-count
+ * never triggers. We turn it off with `no_onload` and count once explicitly when
+ * the script is ready - GoatCounter's documented pattern for single-page apps.
+ * count.js still skips localhost on its own, so dev never records.
  */
 export function initVisitorCount() {
   if (typeof document === "undefined" || document.getElementById("goatcounter")) return;
+
+  window.goatcounter = { no_onload: true };
 
   const script = document.createElement("script");
   script.id = "goatcounter";
   script.async = true;
   script.src = "//gc.zgo.at/count.js";
   script.dataset.goatcounter = `${ENDPOINT}/count`;
+  script.addEventListener("load", () => window.goatcounter?.count?.());
   document.head.appendChild(script);
 }
 

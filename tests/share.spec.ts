@@ -179,32 +179,56 @@ test.describe("share", () => {
     }
   });
 
-  test("a band is marked on every repeat and on nothing else", async ({ page }) => {
-    // Derived from the files rather than hard-coded: the number of markers the
-    // site should show is every lineup entry beyond a band's first appearance.
-    const entries = SLUGS.flatMap(
+  test("the repeat boards count what the files say", async ({ page }) => {
+    // Derived from the markdown rather than hard-coded, so the numbers cannot
+    // drift as entries are added.
+    const read = (slug: string) => readFileSync(path.join(SHOWS_DIR, `${slug}.md`), "utf8");
+
+    const bands = SLUGS.flatMap(
       (slug) =>
         /lineup:\n((?:\s+-\s.*\n)+)/
-          .exec(readFileSync(path.join(SHOWS_DIR, `${slug}.md`), "utf8"))?.[1]
+          .exec(read(slug))?.[1]
           .trim()
           .split("\n")
           .map((line) => line.replace(/^\s*-\s*/, "").trim()) ?? [],
     );
-    const expected = entries.length - new Set(entries).size;
+    const venues = SLUGS.map((slug) => /^venue:\s*(.+)$/m.exec(read(slug))?.[1].trim() ?? "").filter(
+      Boolean,
+    );
 
-    let marks = 0;
-    for (const slug of SLUGS) {
-      await page.goto(`/shows/${slug}`);
-      await page.getByRole("heading", { level: 1 }).waitFor();
+    /** Top five by count, repeats only, ties alphabetical - the board's rule. */
+    const ranked = (values: string[]) => {
+      const tally = new Map<string, number>();
+      for (const value of values) tally.set(value, (tally.get(value) ?? 0) + 1);
+      return [...tally]
+        .filter(([, count]) => count > 1)
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .slice(0, 5);
+    };
 
-      // "1st time" is the counter being wrong, not a repeat worth printing.
-      const text = await page.locator("main").innerText();
-      expect(text, `${slug} marks a first sighting`).not.toMatch(/\b1st time\b/i);
+    await page.goto("/shows");
+    await page.getByRole("heading", { level: 1 }).waitFor();
 
-      marks += await page.locator("[data-slot=band-repeat]").count();
+    for (const [slot, expected, unit] of [
+      ["seen-most", ranked(bands), "time"],
+      ["been-most", ranked(venues), "night"],
+    ] as const) {
+      const rows = page.locator(`[data-slot=${slot}] li`);
+      await expect(rows, `${slot} row count`).toHaveCount(expected.length);
+
+      for (const [index, [name, count]] of expected.entries()) {
+        // `readout-dim` uppercases the count, so compare case-insensitively.
+        const text = (await rows.nth(index).innerText()).replace(/\s+/g, " ").toLowerCase();
+        expect(text, `${slot} row ${index}`).toContain(name.toLowerCase());
+        expect(text, `${slot} row ${index}`).toContain(
+          `${count} ${unit}${count === 1 ? "" : "s"}`.toLowerCase(),
+        );
+      }
     }
 
-    expect(marks, "one marker per repeat sighting, no more and no fewer").toBe(expected);
+    // The whole point is repeats; a board padded out with one-offs is the log
+    // again in a different order.
+    expect(ranked(venues).length, "no venue repeats to check").toBeGreaterThan(0);
   });
 
   test("an unknown show slug falls back to the log", async ({ page }) => {

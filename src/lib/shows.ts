@@ -150,53 +150,6 @@ export const showStats = {
   firstYear: shows.at(-1)?.date.slice(0, 4),
 };
 
-/**
- * Running totals as of each night, counted from the oldest entry forward.
- *
- * A gig log is more interesting for what repeats than for what it lists, so
- * every entry knows whether it was the first time you saw a band or the fourth,
- * and how many times you had been to that room before.
- */
-const bandRun = new Map<string, number>();
-const venueRun = new Map<string, number>();
-
-{
-  const bands = new Map<string, number>();
-  const venues = new Map<string, number>();
-
-  // `shows` is newest-first for display; counting has to run the other way.
-  for (const show of [...shows].reverse()) {
-    for (const band of show.lineup) {
-      const nth = (bands.get(band) ?? 0) + 1;
-      bands.set(band, nth);
-      bandRun.set(`${show.slug}\u0000${band}`, nth);
-    }
-
-    if (show.venue) {
-      const nth = (venues.get(show.venue) ?? 0) + 1;
-      venues.set(show.venue, nth);
-      venueRun.set(show.slug, nth);
-    }
-  }
-}
-
-/** 1 on the night you first saw them, 2 the next time, and so on. */
-export function timesSeen(show: Pick<Show, "slug">, band: string): number {
-  return bandRun.get(`${show.slug}\u0000${band}`) ?? 1;
-}
-
-/** How many times you had been to this venue, this night included. */
-export function timesAtVenue(show: Pick<Show, "slug">): number {
-  return venueRun.get(show.slug) ?? 0;
-}
-
-/** "1st", "2nd", "3rd", "4th". */
-export function ordinal(value: number): string {
-  const tens = value % 100;
-  if (tens >= 11 && tens <= 13) return `${value}th`;
-  return `${value}${["th", "st", "nd", "rd"][value % 10] ?? "th"}`;
-}
-
 export const standouts = shows.filter((show) => show.standout);
 
 const MONTHS = [

@@ -25,7 +25,7 @@ import { SoloBadge } from "@/components/solo-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { fullShowDate, showSummary } from "@/lib/show-summary";
-import { isDuo, ordinal, shows, timesSeen } from "@/lib/shows";
+import { isDuo, shows } from "@/lib/shows";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
 /**
@@ -132,33 +132,14 @@ function ShowBody({ show }: { show: (typeof shows)[number] }) {
        * not a parallel collection, so it lives on that band's row.
        *
        * The headliner is in here too, which it never was when this section was
-       * "Support" - so its own setlist and its own repeat count finally show.
+       * "Support" - so its own setlist finally has somewhere to go.
        */}
       {show.lineup.length > 0 ? (
         <Section title="Lineup" index="01">
           <ul className="grid gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
             {show.lineup.map((band) => {
-              const nth = timesSeen(show, band);
               const setlist = show.setlists.find((entry) => entry.band === band);
-
-              // Repeats are the interesting part of a log, so a band only gets
-              // a marker once it is not the first time. Everything saying "1st
-              // time" would just be noise.
-              const inner = (
-                <>
-                  <span className="text-lg">{band}</span>
-                  {nth > 1 ? (
-                    <Badge
-                      data-slot="band-repeat"
-                      variant="outline"
-                      size="sm"
-                      className="shrink-0 rounded-none border-border"
-                    >
-                      {ordinal(nth)} time
-                    </Badge>
-                  ) : null}
-                </>
-              );
+              const inner = <span className="text-lg">{band}</span>;
 
               return (
                 <li key={band} className="flex bg-background">

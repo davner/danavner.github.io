@@ -155,12 +155,15 @@ function ShowRow({ show }: { show: Show }) {
  * after it.
  */
 function RepeatList({
+  slot,
   label,
   icon,
   entries,
   unit,
   empty,
 }: {
+  /** `data-slot` hook, so a test can target one board without matching text. */
+  slot: string;
   label: string;
   icon: ReactNode;
   entries: Tally[];
@@ -169,7 +172,7 @@ function RepeatList({
   empty: string;
 }) {
   return (
-    <div className="col-span-2 bg-background p-5 sm:p-6">
+    <div data-slot={slot} className="col-span-2 bg-background p-5 sm:p-6">
       <p className="readout flex items-center gap-2 text-ember">
         {icon}
         {label}
@@ -272,6 +275,7 @@ export function Shows() {
           {hasRepeats ? (
             <>
               <RepeatList
+                slot="seen-most"
                 label="Seen most"
                 icon={<Music className="size-3.5" aria-hidden />}
                 entries={showStats.topBands}
@@ -279,6 +283,7 @@ export function Shows() {
                 empty="No band twice yet."
               />
               <RepeatList
+                slot="been-most"
                 label="Been most"
                 icon={<Building2 className="size-3.5" aria-hidden />}
                 entries={showStats.topVenues}

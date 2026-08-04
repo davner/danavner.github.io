@@ -12,12 +12,8 @@ const LINKS = [
   { to: "/trips", label: "Trips" },
 ];
 
-/** Build-time commit date, formatted like "Aug 4, 2026". */
-const LAST_UPDATED = new Date(__LAST_UPDATED__).toLocaleDateString("en-US", {
-  year: "numeric",
-  month: "short",
-  day: "numeric",
-});
+/** Last-commit date (UTC), already formatted like "Aug 4, 2026" in `vite.config.ts`. */
+const LAST_UPDATED = __LAST_UPDATED__;
 
 export function SiteFooter() {
   return (

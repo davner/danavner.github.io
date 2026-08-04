@@ -10,16 +10,30 @@ import { contentPlugin } from "./vite-plugin-content";
 import { sharePagesPlugin } from "./vite-plugin-share-pages";
 
 /**
- * The date of the last commit, stamped in at build time for the footer's "last
- * updated" line. Since the site deploys on push to main, the last commit is the
- * last change that reached the live site. Falls back to the build time if git is
- * unavailable (e.g. a source tarball with no history).
+ * The date of the last commit, formatted for the footer's "last updated" line.
+ * Since the site deploys on push to main, the last commit is the last change
+ * that reached the live site.
+ *
+ * `%ct` is the committer date as a Unix timestamp, which carries no timezone of
+ * its own, and it is formatted in UTC. So the value is the same on every build
+ * machine and the same for every visitor, rather than shifting with whoever's
+ * clock happens to render it. Falls back to the build time if git is unavailable
+ * (e.g. a source tarball with no history).
  */
-function lastUpdatedISO(): string {
+function lastUpdated(): string {
+  const format = (date: Date) =>
+    new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      timeZone: "UTC",
+    }).format(date);
+
   try {
-    return execSync("git log -1 --format=%cI", { encoding: "utf8" }).trim();
+    const seconds = Number(execSync("git log -1 --format=%ct", { encoding: "utf8" }).trim());
+    return format(new Date(seconds * 1000));
   } catch {
-    return new Date().toISOString();
+    return format(new Date());
   }
 }
 
@@ -41,7 +55,7 @@ function githubPagesSpaFallback(): Plugin {
 
 export default defineConfig({
   define: {
-    __LAST_UPDATED__: JSON.stringify(lastUpdatedISO()),
+    __LAST_UPDATED__: JSON.stringify(lastUpdated()),
   },
   plugins: [react(), tailwindcss(), contentPlugin(), githubPagesSpaFallback(), sharePagesPlugin()],
   resolve: {

@@ -25,7 +25,7 @@ import { SoloBadge } from "@/components/solo-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { fullShowDate, showSummary } from "@/lib/show-summary";
-import { isDuo, ordinal, shows, timesAtVenue, timesSeen } from "@/lib/shows";
+import { isDuo, ordinal, shows, timesSeen } from "@/lib/shows";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
 /**
@@ -66,53 +66,38 @@ function showFacts(show: (typeof shows)[number]) {
   ].filter(Boolean);
 }
 
-/**
- * How big the room was and whether I had been there before. Measurements rather
- * than identity, so they sit with the tags instead of in the line that says
- * which show this is.
- */
-function showMeasures(show: (typeof shows)[number]) {
-  const nth = show.venue ? timesAtVenue(show) : 0;
-
-  return [
-    show.capacity ? `${show.capacity.toLocaleString("en-US")} cap` : "",
-    nth > 1 ? `${ordinal(nth)} time here` : "",
-  ].filter(Boolean);
-}
-
 function ShowBody({ show }: { show: (typeof shows)[number] }) {
   useDocumentMeta(show.title, showSummary(show));
 
   const facts = showFacts(show);
-  const measures = showMeasures(show);
-  const tags = [show.type === "festival" ? "Festival" : "", show.subtitle].filter(Boolean);
 
   return (
     <PageShell>
       <PageHeader title={show.title}>
+        {/* The tour, or which day of the festival. It reads as a subtitle to
+            the name above it, which is what it is - a badge made it look like
+            a category someone filed the night under. */}
+        {show.subtitle ? (
+          <p className="readout-dim mt-3 text-pretty">{show.subtitle}</p>
+        ) : null}
+
         {/* This page is the target of every share link, so when someone opens
             it from a text message the date and the room are the first thing
             they need, and they are stated nowhere else on the page. */}
         <FactLine items={facts} className="mt-6" />
 
         <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2">
-          {/* Long tour names wrap rather than forcing the header wider than
-              the screen; the badge default is `whitespace-nowrap`. */}
-          {tags.map((tag) => (
-            <Badge key={tag} variant="ion" className="max-w-full whitespace-normal">
-              {tag}
-            </Badge>
-          ))}
+          {show.type === "festival" ? <Badge variant="ion">Festival</Badge> : null}
           {/* Outline rather than ion, so a measurement never reads as a label
-              someone chose to put on the night. A ticket for capacity, because
-              the building is the venue itself and the people icon means the
-              people who actually came. */}
-          {measures.map((measure) => (
-            <Badge key={measure} variant="outline" className="rounded-none border-border">
-              {measure.endsWith("cap") ? <Ticket /> : null}
-              {measure}
+              someone chose to put on the night. A ticket, because the building
+              is the venue itself and the people icon means the people who
+              actually came. */}
+          {show.capacity ? (
+            <Badge variant="outline" className="rounded-none border-border">
+              <Ticket />
+              {show.capacity.toLocaleString("en-US")} cap
             </Badge>
-          ))}
+          ) : null}
           {show.standout ? (
             <Badge variant="ember">
               <Flame />

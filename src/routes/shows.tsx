@@ -24,7 +24,6 @@ import { useDocumentMeta } from "@/lib/use-document-meta";
 function ShowRow({ show }: { show: Show }) {
   const date = formatShowDate(show);
   const support = supportFor(show);
-  const tags = [show.type === "festival" ? "Festival" : "", show.subtitle].filter(Boolean);
 
   const inside = [
     show.photos.length > 0
@@ -69,17 +68,16 @@ function ShowRow({ show }: { show: Show }) {
           ) : null}
         </h3>
 
-        {tags.length > 0 || show.rating != null ? (
-          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
-            {/* A tour name can run long - "The Sound A Body Makes When It's
-                Still Tour" is 42 characters - and the badge default is
-                `whitespace-nowrap`, which pushed the whole row past a 320px
-                screen. These wrap; the short ones are unaffected. */}
-            {tags.map((tag) => (
-              <Badge key={tag} variant="ion" className="max-w-full whitespace-normal">
-                {tag}
-              </Badge>
-            ))}
+        {/* The tour, or which day of the festival - a subtitle to the name
+            above it rather than a badge. It also wraps, which a badge did not:
+            a 42-character tour name used to push the row off a 320px screen. */}
+        {show.subtitle ? (
+          <p className="readout-dim mt-2 text-pretty">{show.subtitle}</p>
+        ) : null}
+
+        {show.type === "festival" || show.rating != null ? (
+          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+            {show.type === "festival" ? <Badge variant="ion">Festival</Badge> : null}
             {show.rating != null ? <Rating value={show.rating} /> : null}
           </div>
         ) : null}
@@ -171,7 +169,7 @@ function RepeatList({
   empty: string;
 }) {
   return (
-    <div className="bg-background p-6 sm:p-8">
+    <div className="col-span-2 bg-background p-5 sm:p-6">
       <p className="readout flex items-center gap-2 text-ember">
         {icon}
         {label}
@@ -234,13 +232,6 @@ export function Shows() {
         ) : null,
       show: showStats.averageRating != null,
     },
-    showStats.mostSeen
-      ? {
-          label: `Most seen (${showStats.mostSeen.count}×)`,
-          value: showStats.mostSeen.name,
-          show: true,
-        }
-      : { label: "", value: null, show: false },
     { label: "Festivals", value: String(showStats.festivals), show: showStats.festivals > 0 },
     { label: "Solo runs", value: String(showStats.solo), show: showStats.solo > 0 },
     { label: "Venues", value: String(showStats.venues), show: showStats.venues > 0 },
@@ -250,8 +241,6 @@ export function Shows() {
     .filter((stat) => stat.show)
     .slice(0, 4);
 
-  // The index numbers run as one spine down the page, so the year groups start
-  // after Repeats rather than both claiming 01.
   const hasRepeats = showStats.topBands.length > 0 || showStats.topVenues.length > 0;
 
   return (
@@ -268,29 +257,20 @@ export function Shows() {
         />
       </PageShell>
 
+      {/* The counts and the rankings are the same idea at two resolutions, so
+          they share one block rather than the rankings taking a section and a
+          heading of their own. */}
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <dl className="grid grid-cols-2 gap-px border border-border bg-border sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-px border border-border bg-border sm:grid-cols-4">
           {stats.map((stat) => (
-            <div key={stat.label} className="bg-background p-5 sm:p-6">
+            <dl key={stat.label} className="bg-background p-5 sm:p-6">
               <dt className="readout-dim">{stat.label}</dt>
               <dd className="display mt-2 text-2xl text-balance sm:text-3xl">{stat.value}</dd>
-            </div>
+            </dl>
           ))}
-        </dl>
-      </div>
 
-      {/*
-       * A log is only interesting for what repeats in it, and the stat grid
-       * has room for one "most seen" and no more. This is where a band you
-       * keep going back to and a room you keep ending up in actually show.
-       *
-       * It stays hidden until something has repeated, rather than printing two
-       * empty columns from the first entry onward.
-       */}
-      {hasRepeats ? (
-        <PageShell className="pt-16 pb-0">
-          <Section title="Repeats" index="01" className="mt-0">
-            <div className="grid gap-px border border-border bg-border sm:grid-cols-2">
+          {hasRepeats ? (
+            <>
               <RepeatList
                 label="Seen most"
                 icon={<Music className="size-3.5" aria-hidden />}
@@ -299,16 +279,16 @@ export function Shows() {
                 empty="No band twice yet."
               />
               <RepeatList
-                label="Rooms I keep going back to"
+                label="Been most"
                 icon={<Building2 className="size-3.5" aria-hidden />}
                 entries={showStats.topVenues}
                 unit="night"
                 empty="No room twice yet."
               />
-            </div>
-          </Section>
-        </PageShell>
-      ) : null}
+            </>
+          ) : null}
+        </div>
+      </div>
 
       {standouts.length > 0 ? (
         <div className="mt-16">
@@ -328,7 +308,7 @@ export function Shows() {
           <Section
             key={group.year}
             title={group.year}
-            index={String(groupIndex + 1 + (hasRepeats ? 1 : 0)).padStart(2, "0")}
+            index={String(groupIndex + 1).padStart(2, "0")}
             className={groupIndex === 0 ? "mt-0" : undefined}
             action={
               <span className="readout-dim">

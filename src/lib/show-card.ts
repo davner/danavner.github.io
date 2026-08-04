@@ -1,4 +1,4 @@
-import { showHeading, showLocationOf, fullShowDate, support } from "@/lib/show-summary";
+import { showLocationOf, fullShowDate, support } from "@/lib/show-summary";
 import { MAX_RATING, type Show } from "@/lib/shows";
 import { SITE_URL } from "@/lib/site";
 
@@ -152,9 +152,10 @@ export async function renderShowCard(show: Show, photoIndex = 0): Promise<Blob> 
   readout("Show log", EMBER);
   y += 74;
 
-  // Headline in the display face, shrinking a step at a time until it fits in
-  // three lines. A long festival name should not blow the layout apart.
-  const heading = showHeading(show).toUpperCase();
+  // Just the name. `showHeading` folds the subtitle in, which is right for a
+  // link-preview title but would print the tour twice here now that it is set
+  // as its own line underneath.
+  const heading = show.title.toUpperCase();
   let size = 132;
   let lines: string[] = [];
   for (; size >= 64; size -= 8) {
@@ -167,6 +168,20 @@ export async function renderShowCard(show: Show, photoIndex = 0): Promise<Blob> 
   for (const line of lines) {
     y += size * 0.92;
     context.fillText(line, PAD, y);
+  }
+
+  // The tour, or which day of a festival - the same subtitle the page prints
+  // under the heading, so a shared card says which night this was rather than
+  // just which band. Wrapped, because a tour name can run long.
+  if (show.subtitle) {
+    context.font = '500 30px "JetBrains Mono Variable", ui-monospace, monospace';
+    context.letterSpacing = "6px";
+    context.fillStyle = DIM;
+    for (const line of wrap(context, show.subtitle.toUpperCase(), WIDTH - PAD * 2).slice(0, 2)) {
+      y += 46;
+      context.fillText(line, PAD, y);
+    }
+    context.letterSpacing = "0px";
   }
 
   y += 64;

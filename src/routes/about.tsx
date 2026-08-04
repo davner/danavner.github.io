@@ -112,14 +112,41 @@ export function About() {
       >
         <div className="mt-10 max-w-xl space-y-6 text-lg leading-relaxed text-muted-foreground text-pretty">
           <p>
-            I live in Los Angeles County with my wife{" "}
-            <span className="text-foreground">{profile.partnerFirstName}</span>, our dog Milly, and
-            our cat Penny. She's the best person I know, and the other two love me right back. They
-            go by Stinky and the Brainless. You can guess which is which.
+            I live in Los Angeles County. I moved here to be near my wife's family and stayed for
+            the food, which is some of the best I've had anywhere. The traffic and the beach parking
+            are worse than I'd like. Living here is also why I got a Disneyland pass. I dropped it
+            when it got too expensive, and I still miss it.
           </p>
           <p>
-            Most of my time goes to dropping into Fortnite and hanging with these three. When we get
-            out, it's travel and live music. The day job has{" "}
+            I met my wife{" "}
+            <span className="text-foreground">{profile.partnerFirstName}</span> online in Flagstaff.
+            Her profile photo had space in it, so I opened by making fun of astronomy, which I have
+            a degree in and actually love. She didn't know that yet. On our first date she was
+            thirty minutes late and ate a whole chicken, and I knew pretty much right away. We've
+            got a dog, Milly, and a cat, Penny. We call them Stinky and the Brainless.
+          </p>
+          <p>
+            A normal day: I wake up later than I meant to, feed the girls, and work from home.
+            Somewhere in there I wonder if this is really the plan for the next twenty-five years. I
+            cook, since that's my job in the relationship, and we take Milly for a walk. After that
+            we're either yelling at friends over Fortnite or having people over.
+          </p>
+          <p>
+            I'm good at anything with muscle memory, probably from years of bowling and golf. I'm
+            bad at soccer and baseball, and I miss kayaking back in Florida. I'm proud of the road
+            that got me here, and of the Trader Joe's charcuterie boards I put together on a budget.
+          </p>
+          <p>
+            There's also an asteroid named after my mom, Lillian, officially{" "}
+            <a
+              href="https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=20500&view=OPD"
+              target="_blank"
+              rel="noreferrer noopener"
+              className="text-ember underline underline-offset-4"
+            >
+              (20500) Avner
+            </a>
+            , which more than makes up for all the astronomy jokes. The day job has{" "}
             <Link to="/career" className="text-ember underline underline-offset-4">
               its own page
             </Link>

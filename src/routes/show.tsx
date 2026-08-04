@@ -1,4 +1,4 @@
-import { ArrowLeft, Flame, ListMusic, Music, Users, Youtube } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, Flame, ListMusic, Music, Users, Youtube } from "lucide-react";
 import Markdown from "react-markdown";
 import { Link, Navigate, useParams } from "react-router";
 import remarkGfm from "remark-gfm";
@@ -34,20 +34,25 @@ export function ShowDetail() {
 }
 
 /**
- * The show's own record, in reading order and minus whatever is unknown:
- * ["April 20, 2026", "Hollywood Palladium", "3,700 cap", "2nd time here",
- * "Los Angeles, CA"]. One entry per fact so they can be set with a separator
- * between them rather than pre-joined into a string.
+ * Which night this was: ["April 20, 2026", "Hollywood Palladium",
+ * "Los Angeles, CA"]. Only what identifies the show - five facts on this line
+ * wrapped into three ragged rows on a phone.
  */
 function showFacts(show: (typeof shows)[number]) {
+  return [fullShowDate(show), show.venue, show.city].filter(Boolean);
+}
+
+/**
+ * How big the room was and whether I had been there before. Measurements rather
+ * than identity, so they sit with the tags instead of in the line that says
+ * which show this is.
+ */
+function showMeasures(show: (typeof shows)[number]) {
   const nth = show.venue ? timesAtVenue(show) : 0;
 
   return [
-    fullShowDate(show),
-    show.venue,
     show.capacity ? `${show.capacity.toLocaleString("en-US")} cap` : "",
     nth > 1 ? `${ordinal(nth)} time here` : "",
-    show.city,
   ].filter(Boolean);
 }
 
@@ -56,6 +61,7 @@ function ShowBody({ show }: { show: (typeof shows)[number] }) {
 
   const support = supportFor(show);
   const facts = showFacts(show);
+  const measures = showMeasures(show);
   const tags = [show.type === "festival" ? "Festival" : "", show.subtitle].filter(Boolean);
 
   return (
@@ -70,6 +76,13 @@ function ShowBody({ show }: { show: (typeof shows)[number] }) {
           {tags.map((tag) => (
             <Badge key={tag} variant="ion">
               {tag}
+            </Badge>
+          ))}
+          {/* Outline rather than ion, so a measurement never reads as a label
+              someone chose to put on the night. */}
+          {measures.map((measure) => (
+            <Badge key={measure} variant="outline" className="rounded-none border-border">
+              {measure}
             </Badge>
           ))}
           {show.standout ? (
@@ -98,30 +111,30 @@ function ShowBody({ show }: { show: (typeof shows)[number] }) {
           ) : null}
         </div>
 
+        {/* A grid rather than a row of pills. Band names run from "Delux" to "I
+            Set My Friends On Fire", so flowing them inline left ragged rows
+            that broke wherever the longest name happened to land. Equal cells
+            make a festival bill scannable. */}
         {show.setlists.length > 0 ? (
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <span className="readout-dim self-center text-xs" aria-hidden>
-              Setlists
-            </span>
-            {show.setlists.map((set) => (
-              <Button
-                key={set.band}
-                asChild
-                variant="outline"
-                size="sm"
-                className="readout h-7 rounded-none px-2.5 text-xs text-muted-foreground hover:border-ember hover:text-ember"
-              >
-                <a
-                  href={set.url}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  aria-label={`${set.band} setlist on setlist.fm`}
-                >
-                  <ListMusic />
-                  {set.band}
-                </a>
-              </Button>
-            ))}
+          <div className="mt-8">
+            <p className="readout-dim">Setlists</p>
+            <ul className="mt-3 grid gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
+              {show.setlists.map((set) => (
+                <li key={set.band}>
+                  <a
+                    href={set.url}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    aria-label={`${set.band} setlist on setlist.fm`}
+                    className="group flex h-full items-center gap-2.5 bg-background px-4 py-3.5 text-muted-foreground transition-colors hover:bg-card/60 hover:text-ember"
+                  >
+                    <ListMusic className="size-3.5 shrink-0 text-ember" aria-hidden />
+                    <span className="readout">{set.band}</span>
+                    <ArrowUpRight className="ml-auto size-3.5 shrink-0 opacity-0 transition-opacity group-hover:opacity-70" />
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
         ) : null}
       </PageHeader>

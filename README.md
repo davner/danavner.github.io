@@ -295,6 +295,34 @@ title, description, and `og:image`. Crawlers behind iMessage, Slack, and
 WhatsApp read the served HTML and never run the router, so without those files
 every shared show would preview as the same generic site card.
 
+#### Why a Spotify link looks better than an image, and where it does not
+
+Two different mechanisms get confused for each other.
+
+**In Messages, WhatsApp, Slack, Discord** a Spotify link expands into a card
+because Spotify serves Open Graph tags and the app fetches them. That is exactly
+what the per-show HTML above does, so **sending the link already behaves the
+same way** - the show's photo, its title, and its summary, rendered by the
+receiving app. Nothing more is needed there.
+
+**In an Instagram story** Spotify gets a *tappable* sticker, and that is not Open
+Graph. It is Instagram's native Sharing to Stories integration: the app writes
+`com.instagram.sharedSticker.stickerImage` and
+`com.instagram.sharedSticker.contentURL` to the system pasteboard and opens
+`instagram-stories://share?source_application=<Meta App ID>`. The `contentURL` is
+what becomes the link.
+
+That path needs a native app, a registered Meta App ID, and Meta's approval.
+`navigator.share()` cannot write pasteboard sticker keys or pass an app ID, so a
+static site has no route to it - the image arrives in the story editor as a
+plain photo. Instagram also ignores anything embedded in the image itself, and
+feed captions do not linkify.
+
+So the honest split: **the link is already as good as Spotify's; the image can
+never be.** The workarounds are adding a link sticker by hand in the story
+editor, or putting a QR on the poster so the picture leads somewhere on its own
+(see `TODO.md`).
+
 `og:image` is the show's first photo. A show with no photos gets
 `public/img/share-card.jpg` instead of the site portrait, because a festival
 link that previews as a headshot looks like the wrong link. That image is

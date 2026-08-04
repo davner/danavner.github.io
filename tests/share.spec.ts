@@ -81,7 +81,11 @@ test.describe("share", () => {
       "download",
       "bruno-mars-madrid-2026.png",
     );
-    await expect(page.getByText("danavner.com/shows/bruno-mars-madrid-2026")).toBeVisible();
+    // The printed link is the whole URL, matching what "Copy the link" puts on
+    // the clipboard rather than a trimmed version of it.
+    await expect(
+      page.getByText("https://danavner.com/shows/bruno-mars-madrid-2026", { exact: true }),
+    ).toBeVisible();
   });
 
   test("the card and the link are separate actions", async ({ page }) => {

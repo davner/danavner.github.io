@@ -238,7 +238,12 @@ export function ShareShow({ show, className }: { show: Show; className?: string 
             </Button>
           </div>
 
-          <p className="readout-dim mt-3 break-all">{url.replace(/^https?:\/\//, "")}</p>
+          {/* The whole thing, protocol included. This is what "Copy the link"
+              puts on the clipboard, so printing a trimmed version of it meant
+              the panel showed one string and handed over another. There is no
+              shortener to offer instead - that would be a third-party service
+              on a site that makes a point of not calling one. */}
+          <p className="readout-dim mt-3 break-all select-all">{url}</p>
         </div>
       ) : null}
     </span>

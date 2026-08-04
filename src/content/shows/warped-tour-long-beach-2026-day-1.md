@@ -23,6 +23,7 @@ photos:
   - src: /img/shows/warped-tour-long-beach-2026-day-1/frog-squad.jpg
     alt: Two of us in matching green and black frog bucket hats in front of the Warped Tour '26 schedule board
     caption: "#FrogSquad"
+    banner: true
   - src: /img/shows/warped-tour-long-beach-2026-day-1/barricade.jpg
     alt: Selfie on the rail in the afternoon sun, the festival merch tent and palm trees behind the crowd
     caption: On the rail

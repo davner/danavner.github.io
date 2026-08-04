@@ -1,4 +1,4 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useParams } from "react-router";
 
 import { Backdrop } from "@/components/backdrop";
@@ -31,6 +31,16 @@ const TripDetail = lazy(() =>
 );
 
 export function App() {
+  // Take the loading splash down once the app has painted (this effect runs
+  // after mount) and the fonts are in, so it hides the swap it was covering
+  // rather than uncovering a half-styled page. The splash's own hard cap is the
+  // backstop if the Font Loading API is missing or a font never arrives.
+  useEffect(() => {
+    const dismiss = () => window.__dismissSplash?.();
+    if (document.fonts?.ready) document.fonts.ready.then(dismiss, dismiss);
+    else dismiss();
+  }, []);
+
   return (
     <BrowserRouter>
       <ScrollToTop />

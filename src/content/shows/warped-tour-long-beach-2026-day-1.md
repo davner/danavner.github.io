@@ -3,6 +3,7 @@ title: Vans Warped Tour
 subtitle: Day 1
 type: festival
 date: 2026-07-25
+venue: Shoreline Waterfront
 city: Long Beach, CA
 rating: 5
 bestSong: Stone Cold Summer

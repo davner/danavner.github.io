@@ -209,6 +209,17 @@ test.describe("shows", () => {
     }
   });
 
+  test("a capacity is printed where it can be compared", async ({ page }) => {
+    // A room size only means something next to another room size, so it belongs
+    // in the list and not only on the show's own page.
+    const rows = page.locator("[data-slot=show]");
+    const withCap = rows.filter({ hasText: /\d,\d{3} CAP/i });
+    expect(await withCap.count()).toBeGreaterThan(0);
+
+    // Thousands separators, or 70692 reads as a phone number.
+    await expect(rows.filter({ hasText: "Riyadh Air" })).toContainText("70,692");
+  });
+
   test("a row says what is behind the click", async ({ page }) => {
     // The Bilmuri night has photos, notes, and setlists, so its row should
     // advertise all three rather than just stopping.

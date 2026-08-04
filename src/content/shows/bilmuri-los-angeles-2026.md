@@ -6,6 +6,7 @@ lineup:
 subtitle: The Kinda Hard Tour
 date: 2026-04-20
 venue: Hollywood Palladium
+capacity: 3700
 city: Los Angeles, CA
 rating: 5
 bestSong: 2016 Cavaliers (Ohio)

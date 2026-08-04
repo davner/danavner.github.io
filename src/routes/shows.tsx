@@ -111,6 +111,11 @@ function ShowRow({ show }: { show: Show }) {
       <div className="sm:text-right">
         {show.venue ? <p className="font-mono text-sm">{show.venue}</p> : null}
         <p className="readout-dim mt-1">{show.city}</p>
+        {/* Capacity only means anything next to another capacity, so it lives
+            in the list rather than only on the show's own page. */}
+        {show.capacity ? (
+          <p className="readout-dim mt-1">{show.capacity.toLocaleString("en-US")} cap</p>
+        ) : null}
       </div>
     </li>
   );

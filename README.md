@@ -201,6 +201,7 @@ Free-form markdown about the night. Optional.
 | `endDate` | no | Multi-day festivals. Renders as "Nov 15–16". |
 | `city` | yes | |
 | `venue` | no | Omit for festivals with no fixed venue |
+| `capacity` | no | How many the room holds. Look it up; never guess. |
 | `subtitle` | no | Qualifier under the heading, e.g. "Day 1" |
 | `rating` | no | 0–5 🤘, decimals allowed. Omit for unrated. |
 | `with` | no | List of names. Mutually exclusive with `solo`. |

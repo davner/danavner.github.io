@@ -7,6 +7,7 @@ lineup:
 subtitle: The Romantic Tour
 date: 2026-07-10
 venue: Riyadh Air Metropolitano
+capacity: 70692
 city: Madrid, Spain
 rating: 5
 bestSong: Locked Out of Heaven

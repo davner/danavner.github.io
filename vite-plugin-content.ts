@@ -250,6 +250,17 @@ function parseShow({ file, meta, body, slug }: Frontmatter, publicDir: string) {
 
   const bestSong = asTrimmedString(meta.bestSong);
 
+  // How many people the room holds. Optional, because plenty of venues never
+  // publish one and a guessed capacity is worse than no capacity.
+  let capacity: number | null = null;
+  if (meta.capacity != null && meta.capacity !== "") {
+    const parsed = typeof meta.capacity === "number" ? meta.capacity : Number(meta.capacity);
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+      fail("shows", file, "`capacity` must be a whole number of people");
+    }
+    capacity = parsed;
+  }
+
   const video = asTrimmedString(meta.video);
   if (video && !/^https?:\/\//.test(video)) {
     fail("shows", file, "`video` must be a full http(s) URL");
@@ -286,6 +297,7 @@ function parseShow({ file, meta, body, slug }: Frontmatter, publicDir: string) {
     date,
     endDate,
     venue: asTrimmedString(meta.venue),
+    capacity,
     city,
     bestSong,
     lineup,

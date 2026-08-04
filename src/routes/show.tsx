@@ -3,7 +3,6 @@ import Markdown from "react-markdown";
 import { Link, Navigate, useParams } from "react-router";
 import remarkGfm from "remark-gfm";
 
-import { BandList } from "@/components/band-list";
 import { DuoBadge } from "@/components/duo-badge";
 import { PageHeader, PageShell, Section } from "@/components/page";
 import { PhotoCarousel } from "@/components/photo-carousel";
@@ -13,7 +12,7 @@ import { SoloBadge } from "@/components/solo-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { fullShowDate, showSummary } from "@/lib/show-summary";
-import { isDuo, shows, supportFor } from "@/lib/shows";
+import { isDuo, ordinal, shows, supportFor, timesAtVenue, timesSeen } from "@/lib/shows";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
 /**
@@ -33,6 +32,20 @@ export function ShowDetail() {
   return <ShowBody show={show} />;
 }
 
+/** "Hollywood Palladium · 3,700 cap · 2nd time here", minus whatever is unknown. */
+function venueLine(show: (typeof shows)[number]) {
+  if (!show.venue) return "";
+
+  const nth = timesAtVenue(show);
+  return [
+    show.venue,
+    show.capacity ? `${show.capacity.toLocaleString("en-US")} cap` : "",
+    nth > 1 ? `${ordinal(nth)} time here` : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 function ShowBody({ show }: { show: (typeof shows)[number] }) {
   useDocumentMeta(show.title, showSummary(show));
 
@@ -44,7 +57,7 @@ function ShowBody({ show }: { show: (typeof shows)[number] }) {
       <PageHeader
         eyebrow="Show log"
         title={show.title}
-        meta={[fullShowDate(show), show.venue, show.city].filter(Boolean)}
+        meta={[fullShowDate(show), venueLine(show), show.city].filter(Boolean)}
       >
         <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2">
           {tags.map((tag) => (
@@ -108,9 +121,29 @@ function ShowBody({ show }: { show: (typeof shows)[number] }) {
 
       {support.length > 0 ? (
         <Section title={show.type === "festival" ? "Lineup" : "Support"} index="01">
-          <p className="text-lg leading-relaxed text-muted-foreground text-pretty">
-            <BandList bands={support} />
-          </p>
+          {/* Repeats are the interesting part of a log, so a band only gets a
+              marker once it is not the first time. Everything saying "1st
+              time" would just be noise. */}
+          <ul className="flex flex-wrap items-center gap-x-4 gap-y-2 text-lg text-muted-foreground">
+            {support.map((band) => {
+              const nth = timesSeen(show, band);
+              return (
+                <li key={band} className="flex items-center gap-2">
+                  <span className="whitespace-nowrap">{band}</span>
+                  {nth > 1 ? (
+                    <Badge
+                      data-slot="band-repeat"
+                      variant="outline"
+                      size="sm"
+                      className="rounded-none border-border"
+                    >
+                      {ordinal(nth)} time
+                    </Badge>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
         </Section>
       ) : null}
 

@@ -26,10 +26,13 @@ Use `WebSearch` to fill in what the user did not say. Worth looking up, in
 order of how often it helps:
 
 1. **Venue** - from the artist, city, and date.
-2. **Tour name** - goes in `subtitle`, e.g. `The Romantic Tour`.
-3. **Openers** - the user often only remembers the headliner. Support acts
+2. **Capacity** - what the venue publishes for a standing show, from the venue's
+   own site or Wikipedia. Leave it out when nothing authoritative says; a room
+   size is the sort of number people check.
+3. **Tour name** - goes in `subtitle`, e.g. `The Romantic Tour`.
+4. **Openers** - the user often only remembers the headliner. Support acts
    round out `lineup` and count toward "bands seen".
-4. **City** precision - `Long Beach, CA` rather than `LA`.
+5. **City** precision - `Long Beach, CA` rather than `LA`.
 5. **Setlists** - for **every band on the bill**, search setlist.fm for that
    band at that venue on that date. Each page you can confirm becomes a per-band
    button on the show page, listed in `setlists` (see step 5). The headliner's
@@ -108,6 +111,7 @@ lineup:
 subtitle: Suffocation Tour     # the tour name, if you confirmed one
 date: 2026-06-20
 venue: Hollywood Palladium
+capacity: 3700                   # only if the venue publishes one
 city: Los Angeles, CA
 rating: 4.5
 with:

@@ -142,6 +142,34 @@ test.describe("share", () => {
     }
   });
 
+  test("a band is marked on every repeat and on nothing else", async ({ page }) => {
+    // Derived from the files rather than hard-coded: the number of markers the
+    // site should show is every lineup entry beyond a band's first appearance.
+    const entries = SLUGS.flatMap(
+      (slug) =>
+        /lineup:\n((?:\s+-\s.*\n)+)/
+          .exec(readFileSync(path.join(SHOWS_DIR, `${slug}.md`), "utf8"))?.[1]
+          .trim()
+          .split("\n")
+          .map((line) => line.replace(/^\s*-\s*/, "").trim()) ?? [],
+    );
+    const expected = entries.length - new Set(entries).size;
+
+    let marks = 0;
+    for (const slug of SLUGS) {
+      await page.goto(`/shows/${slug}`);
+      await page.getByRole("heading", { level: 1 }).waitFor();
+
+      // "1st time" is the counter being wrong, not a repeat worth printing.
+      const text = await page.locator("main").innerText();
+      expect(text, `${slug} marks a first sighting`).not.toMatch(/\b1st time\b/i);
+
+      marks += await page.locator("[data-slot=band-repeat]").count();
+    }
+
+    expect(marks, "one marker per repeat sighting, no more and no fewer").toBe(expected);
+  });
+
   test("an unknown show slug falls back to the log", async ({ page }) => {
     await page.goto("/shows/not-a-show");
     await page.waitForURL("**/shows");

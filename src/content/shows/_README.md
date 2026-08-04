@@ -122,6 +122,7 @@ lineup:
 | `endDate` | no | Multi-day festivals. Renders as "Nov 15–16". |
 | `city` | yes | |
 | `venue` | no | Omit for festivals with no fixed venue |
+| `capacity` | no | How many the room holds. Look it up; never guess. |
 | `rating` | no | 0–5 horns, decimals allowed. Omit for unrated. |
 | `bestSong` | no | The one that stayed with you. Shown as "Best live". |
 | `with` | no | List of names you went with |
@@ -134,6 +135,12 @@ lineup:
 
 Notes:
 
+- **Repeats mark themselves.** A band carries a "2nd time" badge on its show page
+  once you have seen it before, and a venue says "3rd time here". Both are
+  counted from the log itself, so there is nothing to write down.
+- `capacity` is the number the venue publishes for a standing show. Plenty of
+  places never publish one, and an absent capacity renders nothing, so leave it
+  out rather than estimating.
 - A festival's `title` never counts toward "bands seen" - only its `lineup` does.
 - Partial dates render to their precision: `2026` gets no day label under the 2026
   heading, `2026-06` renders as "Jun", a full date renders as "Jun 20".

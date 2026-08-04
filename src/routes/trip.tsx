@@ -1,4 +1,4 @@
-import { ArrowLeft, Check, Users, Utensils, X } from "lucide-react";
+import { ArrowLeft, Check, MapPin, Users, Utensils, X } from "lucide-react";
 import Markdown from "react-markdown";
 import { Link, Navigate, useParams } from "react-router";
 import remarkGfm from "remark-gfm";
@@ -46,7 +46,16 @@ function TripBody({ trip }: { trip: (typeof trips)[number] }) {
 
   // When it was and where it reached. The stops get their own section, so this
   // line names countries rather than repeating the whole itinerary.
-  const facts = [formatTripDate(trip), countryList(trip)].filter(Boolean);
+  const countries = countryList(trip);
+  const facts = [
+    formatTripDate(trip),
+    countries ? (
+      <span className="flex items-center gap-2">
+        <MapPin className="size-4 shrink-0 text-ember" aria-hidden />
+        {countries}
+      </span>
+    ) : null,
+  ].filter(Boolean);
 
   let sectionIndex = 0;
   const nextIndex = () => String(++sectionIndex).padStart(2, "0");

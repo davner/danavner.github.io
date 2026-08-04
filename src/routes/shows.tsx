@@ -1,4 +1,4 @@
-import { ArrowUpRight, Flame, Music, Users } from "lucide-react";
+import { ArrowUpRight, Building2, Flame, MapPin, Music, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 
@@ -108,13 +108,21 @@ function ShowRow({ show }: { show: Show }) {
         ) : null}
       </div>
 
-      <div className="sm:text-right">
+      {/* Pin means where, building means how big the room is. The people icon
+          is spoken for - it means the people who came along. */}
+      <div className="space-y-1.5 sm:text-right">
         {show.venue ? <p className="font-mono text-sm">{show.venue}</p> : null}
-        <p className="readout-dim mt-1">{show.city}</p>
+        <p className="readout-dim flex items-center gap-1.5 sm:justify-end">
+          <MapPin className="size-3.5 shrink-0 text-ember" aria-hidden />
+          {show.city}
+        </p>
         {/* Capacity only means anything next to another capacity, so it lives
             in the list rather than only on the show's own page. */}
         {show.capacity ? (
-          <p className="readout-dim mt-1">{show.capacity.toLocaleString("en-US")} cap</p>
+          <p className="readout-dim flex items-center gap-1.5 sm:justify-end">
+            <Building2 className="size-3.5 shrink-0 text-ember" aria-hidden />
+            {show.capacity.toLocaleString("en-US")} cap
+          </p>
         ) : null}
       </div>
     </li>

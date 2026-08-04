@@ -250,8 +250,6 @@ test.describe("shows", () => {
 
       const buttons = page.getByRole("link", { name: /setlist on setlist\.fm$/i });
       const count = await buttons.count();
-      // Every band named on the page - the headliner and the support acts.
-      const bill = (await page.locator("main").innerText()).toLowerCase();
 
       for (let i = 0; i < count; i++) {
         const button = buttons.nth(i);
@@ -260,10 +258,31 @@ test.describe("shows", () => {
         await expect(button).toHaveAttribute("target", "_blank");
         await expect(button).toHaveAttribute("rel", /noopener/);
 
-        const band = (await button.innerText()).trim();
+        // The visible text is only the word "Setlist" - the band lives in the
+        // accessible name, or a bill of six reads as six identical links.
+        const label = (await button.getAttribute("aria-label")) ?? "";
+        const band = label.replace(/setlist on setlist\.fm$/i, "").trim();
         expect(band.length).toBeGreaterThan(0);
-        // A button never promises a set from a band the entry does not list.
-        expect(bill).toContain(band.toLowerCase());
+
+        // The link sits on that band's own row, so the row has to be the band
+        // it names.
+        expect((await button.innerText()).toLowerCase()).toContain(band.toLowerCase());
+
+        /*
+         * And the URL has to be that band's too. A setlist.fm path carries the
+         * band slug, which is the only thing on the page that knows the
+         * pairing independently of the name we rendered next to it - without
+         * this, looking a setlist up by position instead of by band would put
+         * GANG!'s set on Bilmuri's row and read correctly in every other way.
+         */
+        const slug = band
+          .normalize("NFD")
+          .replace(/[̀-ͯ]/g, "")
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "");
+        const href = (await button.getAttribute("href")) ?? "";
+        expect(href).toContain(`/setlist/${slug}/`);
         seen++;
       }
     }

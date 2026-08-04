@@ -1,4 +1,4 @@
-import { ArrowUpRight, Quote, Users } from "lucide-react";
+import { ArrowUpRight, MapPin, Quote, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 
@@ -92,11 +92,14 @@ function TripRow({ trip }: { trip: Trip }) {
         {inside.length > 0 ? <p className="readout-dim mt-4">{inside.join(" · ")}</p> : null}
       </div>
 
-      <div className="sm:text-right">
+      <div className="space-y-1.5 sm:text-right">
         {/* Cities rather than the full "City, Country" strings - the countries
             are named right under them, and repeating them reads as stutter. */}
         <p className="font-mono text-sm">{trip.stops.map(cityOf).join(" → ")}</p>
-        <p className="readout-dim mt-1">{countryList(trip)}</p>
+        <p className="readout-dim flex items-center gap-1.5 sm:justify-end">
+          <MapPin className="size-3.5 shrink-0 text-ember" aria-hidden />
+          {countryList(trip)}
+        </p>
       </div>
     </li>
   );

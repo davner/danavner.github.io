@@ -1,4 +1,14 @@
-import { ArrowLeft, ArrowUpRight, Flame, ListMusic, Music, Users, Youtube } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowUpRight,
+  Building2,
+  Flame,
+  ListMusic,
+  MapPin,
+  Music,
+  Users,
+  Youtube,
+} from "lucide-react";
 import Markdown from "react-markdown";
 import { Link, Navigate, useParams } from "react-router";
 import remarkGfm from "remark-gfm";
@@ -13,7 +23,7 @@ import { SoloBadge } from "@/components/solo-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { fullShowDate, showSummary } from "@/lib/show-summary";
-import { isDuo, ordinal, shows, supportFor, timesAtVenue, timesSeen } from "@/lib/shows";
+import { isDuo, ordinal, shows, timesAtVenue, timesSeen } from "@/lib/shows";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
 /**
@@ -34,12 +44,21 @@ export function ShowDetail() {
 }
 
 /**
- * Which night this was: ["April 20, 2026", "Hollywood Palladium",
- * "Los Angeles, CA"]. Only what identifies the show - five facts on this line
- * wrapped into three ragged rows on a phone.
+ * Which night this was: the date, the room, and the pin on the map. Only what
+ * identifies the show - five facts on this line wrapped into three ragged rows
+ * on a phone.
  */
 function showFacts(show: (typeof shows)[number]) {
-  return [fullShowDate(show), show.venue, show.city].filter(Boolean);
+  return [
+    fullShowDate(show),
+    show.venue,
+    show.city ? (
+      <span className="flex items-center gap-2">
+        <MapPin className="size-4 shrink-0 text-ember" aria-hidden />
+        {show.city}
+      </span>
+    ) : null,
+  ].filter(Boolean);
 }
 
 /**
@@ -59,7 +78,6 @@ function showMeasures(show: (typeof shows)[number]) {
 function ShowBody({ show }: { show: (typeof shows)[number] }) {
   useDocumentMeta(show.title, showSummary(show));
 
-  const support = supportFor(show);
   const facts = showFacts(show);
   const measures = showMeasures(show);
   const tags = [show.type === "festival" ? "Festival" : "", show.subtitle].filter(Boolean);
@@ -79,9 +97,12 @@ function ShowBody({ show }: { show: (typeof shows)[number] }) {
             </Badge>
           ))}
           {/* Outline rather than ion, so a measurement never reads as a label
-              someone chose to put on the night. */}
+              someone chose to put on the night. The building marks the room's
+              size; a people icon would collide with the one that means the
+              people who actually came. */}
           {measures.map((measure) => (
             <Badge key={measure} variant="outline" className="rounded-none border-border">
+              {measure.endsWith("cap") ? <Building2 /> : null}
               {measure}
             </Badge>
           ))}
@@ -111,55 +132,64 @@ function ShowBody({ show }: { show: (typeof shows)[number] }) {
           ) : null}
         </div>
 
-        {/* A grid rather than a row of pills. Band names run from "Delux" to "I
-            Set My Friends On Fire", so flowing them inline left ragged rows
-            that broke wherever the longest name happened to land. Equal cells
-            make a festival bill scannable. */}
-        {show.setlists.length > 0 ? (
-          <div className="mt-8">
-            <p className="readout-dim">Setlists</p>
-            <ul className="mt-3 grid gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
-              {show.setlists.map((set) => (
-                <li key={set.band}>
-                  <a
-                    href={set.url}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    aria-label={`${set.band} setlist on setlist.fm`}
-                    className="group flex h-full items-center gap-2.5 bg-background px-4 py-3.5 text-muted-foreground transition-colors hover:bg-card/60 hover:text-ember"
-                  >
-                    <ListMusic className="size-3.5 shrink-0 text-ember" aria-hidden />
-                    <span className="readout">{set.band}</span>
-                    <ArrowUpRight className="ml-auto size-3.5 shrink-0 opacity-0 transition-opacity group-hover:opacity-70" />
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
       </PageHeader>
 
-      {support.length > 0 ? (
-        <Section title={show.type === "festival" ? "Lineup" : "Support"} index="01">
-          {/* Repeats are the interesting part of a log, so a band only gets a
-              marker once it is not the first time. Everything saying "1st
-              time" would just be noise. */}
-          <ul className="flex flex-wrap items-center gap-x-4 gap-y-2 text-lg text-muted-foreground">
-            {support.map((band) => {
+      {/*
+       * One row per band, rather than a lineup list and a setlist grid printing
+       * the same names twice down the page. A setlist is a fact about a band,
+       * not a parallel collection, so it lives on that band's row.
+       *
+       * The headliner is in here too, which it never was when this section was
+       * "Support" - so its own setlist and its own repeat count finally show.
+       */}
+      {show.lineup.length > 0 ? (
+        <Section title="Lineup" index="01">
+          <ul className="grid gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
+            {show.lineup.map((band) => {
               const nth = timesSeen(show, band);
-              return (
-                <li key={band} className="flex items-center gap-2">
-                  <span className="whitespace-nowrap">{band}</span>
+              const setlist = show.setlists.find((entry) => entry.band === band);
+
+              // Repeats are the interesting part of a log, so a band only gets
+              // a marker once it is not the first time. Everything saying "1st
+              // time" would just be noise.
+              const inner = (
+                <>
+                  <span className="text-lg">{band}</span>
                   {nth > 1 ? (
                     <Badge
                       data-slot="band-repeat"
                       variant="outline"
                       size="sm"
-                      className="rounded-none border-border"
+                      className="shrink-0 rounded-none border-border"
                     >
                       {ordinal(nth)} time
                     </Badge>
                   ) : null}
+                </>
+              );
+
+              return (
+                <li key={band} className="flex bg-background">
+                  {setlist ? (
+                    <a
+                      href={setlist.url}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      aria-label={`${band} setlist on setlist.fm`}
+                      className="group flex w-full flex-wrap items-center gap-x-3 gap-y-2 px-4 py-4 transition-colors hover:bg-card/60 hover:text-ember"
+                    >
+                      {inner}
+                      <span className="readout-dim ml-auto flex shrink-0 items-center gap-1.5 transition-colors group-hover:text-ember">
+                        <ListMusic className="size-3.5 text-ember" aria-hidden />
+                        Setlist
+                        <ArrowUpRight className="size-3 opacity-0 transition-opacity group-hover:opacity-70" />
+                      </span>
+                    </a>
+                  ) : (
+                    <div className="flex w-full flex-wrap items-center gap-x-3 gap-y-2 px-4 py-4 text-muted-foreground">
+                      {inner}
+                    </div>
+                  )}
                 </li>
               );
             })}
@@ -168,7 +198,7 @@ function ShowBody({ show }: { show: (typeof shows)[number] }) {
       ) : null}
 
       {show.bestSong || show.solo || show.companions.length > 0 ? (
-        <Section title="The night" index={support.length > 0 ? "02" : "01"}>
+        <Section title="The night" index={show.lineup.length > 0 ? "02" : "01"}>
           <div className="space-y-4">
             {show.bestSong ? (
               <p className="flex items-center gap-2 text-muted-foreground">

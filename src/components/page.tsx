@@ -23,7 +23,12 @@ export function PageHeader({
   aside,
   asideAlign = "end",
 }: {
-  eyebrow: string;
+  /**
+   * Small accented label on the top rule. Optional - a page whose title
+   * already says where you are does not need it, and the meta rail slides
+   * left to take the space.
+   */
+  eyebrow?: string;
   title: ReactNode;
   lede?: ReactNode;
   /** Small mono readouts shown along the top rule. */
@@ -60,18 +65,23 @@ export function PageHeader({
 
   return (
     <header className="mb-16">
-      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-border pb-3">
-        <p className="readout text-ember">{eyebrow}</p>
-        {meta?.length ? (
-          <ul className="flex flex-wrap gap-x-5 gap-y-1">
-            {meta.map((item) => (
-              <li key={item} className="readout-dim">
-                {item}
-              </li>
-            ))}
-          </ul>
-        ) : null}
-      </div>
+      {/* With only one child left, `justify-between` puts it at the start, so
+          dropping the eyebrow slides the meta rail under the title rather than
+          leaving it stranded on the right. No rule at all when both are gone. */}
+      {eyebrow || meta?.length ? (
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-border pb-3">
+          {eyebrow ? <p className="readout text-ember">{eyebrow}</p> : null}
+          {meta?.length ? (
+            <ul className="flex flex-wrap gap-x-5 gap-y-1">
+              {meta.map((item) => (
+                <li key={item} className="readout-dim">
+                  {item}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      ) : null}
 
       {aside ? (
         <div

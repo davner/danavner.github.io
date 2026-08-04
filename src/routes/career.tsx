@@ -18,7 +18,6 @@ export function Career() {
   return (
     <PageShell>
       <PageHeader
-        eyebrow="Career"
         title={
           <>
             <span className="block">Built for</span>

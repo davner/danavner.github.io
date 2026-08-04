@@ -59,7 +59,6 @@ export function Home() {
     <>
       <section className="mx-auto max-w-6xl px-4 pt-10 pb-14 sm:px-6 sm:pt-16">
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-border pb-3">
-          <p className="readout text-ember">Best enjoyed loud</p>
           <ul className="flex flex-wrap gap-x-5 gap-y-1">
             <li className="readout-dim">{profile.location}</li>
             <li className="readout-dim">He/him</li>

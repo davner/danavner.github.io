@@ -65,7 +65,6 @@ export function About() {
   return (
     <PageShell>
       <PageHeader
-        eyebrow="About"
         title={
           <>
             <span className="block">Who is</span>

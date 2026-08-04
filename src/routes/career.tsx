@@ -95,11 +95,11 @@ export function Career() {
 
       <Section title="On sky" index="02">
         <div className="grid gap-px border border-border bg-border sm:grid-cols-[auto_minmax(0,1fr)]">
-          <div className="bg-background p-8 sm:px-10">
+          <div className="bg-background p-6 sm:p-8">
             <p className="display text-6xl text-ember sm:text-7xl">{observing.nights}</p>
             <p className="readout-dim mt-2">Nights observing</p>
           </div>
-          <div className="bg-background p-8">
+          <div className="bg-background p-6 sm:p-8">
             <p className="text-muted-foreground text-pretty">
               I have spent a lot of nights actually observing, and it changes how you write the
               software. You learn what breaks at 2 a.m., and what a confusing button costs when the

@@ -135,7 +135,7 @@ export function BlogPost() {
           {older ? (
             <Link
               to={`/blog/${older.slug}`}
-              className="group bg-background p-6 transition-colors hover:bg-card/60"
+              className="group bg-background p-6 transition-colors hover:bg-card/60 sm:p-8"
             >
               <span className="readout-dim flex items-center gap-2">
                 <ArrowLeft className="size-3.5 transition-transform group-hover:-translate-x-0.5" />
@@ -152,7 +152,7 @@ export function BlogPost() {
           {newer ? (
             <Link
               to={`/blog/${newer.slug}`}
-              className="group bg-background p-6 text-right transition-colors hover:bg-card/60 sm:col-start-2"
+              className="group bg-background p-6 text-right transition-colors hover:bg-card/60 sm:col-start-2 sm:p-8"
             >
               <span className="readout-dim flex items-center justify-end gap-2">
                 Newer

@@ -84,6 +84,30 @@ export const showsByYear: ShowYear[] = shows.reduce<ShowYear[]>((years, show) =>
   return years;
 }, []);
 
+export interface Tally {
+  name: string;
+  count: number;
+}
+
+/**
+ * The things that came up more than once, most first.
+ *
+ * Anything seen exactly once is dropped rather than padding the list out to
+ * length: a leaderboard where the bottom half reads "1×" is not a leaderboard,
+ * it is the log again in a different order. Ties break alphabetically so the
+ * order cannot jitter between builds.
+ */
+function repeats(values: string[], limit: number): Tally[] {
+  const tally = new Map<string, number>();
+  for (const value of values) tally.set(value, (tally.get(value) ?? 0) + 1);
+
+  return [...tally]
+    .filter(([, count]) => count > 1)
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
+    .slice(0, limit);
+}
+
 function mostFrequent(values: string[]): { name: string; count: number } | undefined {
   const tally = new Map<string, number>();
   for (const value of values) tally.set(value, (tally.get(value) ?? 0) + 1);
@@ -118,6 +142,10 @@ export const showStats = {
     : null,
   ratedCount: rated.length,
   mostSeenWith: mostFrequent(allCompanions),
+  /** Bands seen more than once, most first. Empty until something repeats. */
+  topBands: repeats(allBands, 5),
+  /** Rooms you keep ending up in. Festival grounds count as rooms. */
+  topVenues: repeats(shows.map((show) => show.venue).filter(Boolean), 5),
   latest: shows[0] as Show | undefined,
   firstYear: shows.at(-1)?.date.slice(0, 4),
 };

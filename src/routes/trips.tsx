@@ -1,4 +1,4 @@
-import { ArrowUpRight, MapPin, Quote, Users } from "lucide-react";
+import { ArrowUpRight, Calendar, MapPin, Quote, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 
@@ -37,7 +37,12 @@ function TripRow({ trip }: { trip: Trip }) {
       data-slot="trip"
       className="cut-corners group relative grid gap-x-6 gap-y-3 border-b border-border px-3 py-7 transition-colors hover:bg-card/60 sm:grid-cols-[9rem_minmax(0,1fr)_minmax(0,13rem)]"
     >
-      <p className="readout-dim">{formatTripDate(trip)}</p>
+      {/* `self-start`: the grid row stretches this to the tallest column, and
+          centring inside that would float the date down the row. */}
+      <p className="readout-dim flex items-center gap-1.5 self-start">
+        <Calendar className="size-3.5 shrink-0 text-ember" aria-hidden />
+        {formatTripDate(trip)}
+      </p>
 
       <div>
         <h3 className="display flex items-center gap-3 text-2xl sm:text-3xl">

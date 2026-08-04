@@ -1,4 +1,4 @@
-import { ArrowLeft, Check, MapPin, Users, Utensils, X } from "lucide-react";
+import { ArrowLeft, Calendar, Check, MapPin, Users, Utensils, X } from "lucide-react";
 import Markdown from "react-markdown";
 import { Link, Navigate, useParams } from "react-router";
 import remarkGfm from "remark-gfm";
@@ -48,7 +48,10 @@ function TripBody({ trip }: { trip: (typeof trips)[number] }) {
   // line names countries rather than repeating the whole itinerary.
   const countries = countryList(trip);
   const facts = [
-    formatTripDate(trip),
+    <span className="flex items-center gap-2">
+      <Calendar className="size-4 shrink-0 text-ember" aria-hidden />
+      {formatTripDate(trip)}
+    </span>,
     countries ? (
       <span className="flex items-center gap-2">
         <MapPin className="size-4 shrink-0 text-ember" aria-hidden />

@@ -1,4 +1,4 @@
-import { ArrowUpRight, Building2, Flame, MapPin, Music, Users } from "lucide-react";
+import { ArrowUpRight, Building2, Calendar, Flame, MapPin, Music, Ticket, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 
@@ -17,6 +17,7 @@ import {
   standouts,
   supportFor,
   type Show,
+  type Tally,
 } from "@/lib/shows";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
@@ -40,8 +41,19 @@ function ShowRow({ show }: { show: Show }) {
       className="cut-corners group relative grid gap-x-6 gap-y-3 border-b border-border px-3 py-7 transition-colors hover:bg-card/60 sm:grid-cols-[6rem_minmax(0,1fr)_minmax(0,15rem)]"
     >
       {/* A year-only entry has no day label; the grid column keeps the
-          alignment, so nothing needs to stand in for it. */}
-      {date ? <p className="readout-dim tabular-nums">{date}</p> : <span />}
+          alignment, so nothing needs to stand in for it.
+
+          `self-start` because the grid stretches this cell to the tallest
+          column, and centring inside a stretched cell drops the date to the
+          middle of the row. */}
+      {date ? (
+        <p className="readout-dim flex items-center gap-1.5 self-start tabular-nums">
+          <Calendar className="size-3.5 shrink-0 text-ember" aria-hidden />
+          {date}
+        </p>
+      ) : (
+        <span />
+      )}
 
       <div>
         <h3 className="display flex items-center gap-3 text-2xl sm:text-3xl">
@@ -108,10 +120,16 @@ function ShowRow({ show }: { show: Show }) {
         ) : null}
       </div>
 
-      {/* Pin means where, building means how big the room is. The people icon
-          is spoken for - it means the people who came along. */}
+      {/* One glyph, one meaning, everywhere: calendar is when, building is the
+          room, pin is where on a map, ticket is how many the room holds, and
+          people means the people who actually came. */}
       <div className="space-y-1.5 sm:text-right">
-        {show.venue ? <p className="font-mono text-sm">{show.venue}</p> : null}
+        {show.venue ? (
+          <p className="flex items-center gap-1.5 font-mono text-sm sm:justify-end">
+            <Building2 className="size-3.5 shrink-0 text-ember" aria-hidden />
+            {show.venue}
+          </p>
+        ) : null}
         <p className="readout-dim flex items-center gap-1.5 sm:justify-end">
           <MapPin className="size-3.5 shrink-0 text-ember" aria-hidden />
           {show.city}
@@ -120,12 +138,57 @@ function ShowRow({ show }: { show: Show }) {
             in the list rather than only on the show's own page. */}
         {show.capacity ? (
           <p className="readout-dim flex items-center gap-1.5 sm:justify-end">
-            <Building2 className="size-3.5 shrink-0 text-ember" aria-hidden />
+            <Ticket className="size-3.5 shrink-0 text-ember" aria-hidden />
             {show.capacity.toLocaleString("en-US")} cap
           </p>
         ) : null}
       </div>
     </li>
+  );
+}
+
+/**
+ * One column of the repeats board. The count sits in the display face so the
+ * column scans as a ranking rather than as a list that happens to have numbers
+ * after it.
+ */
+function RepeatList({
+  label,
+  icon,
+  entries,
+  unit,
+  empty,
+}: {
+  label: string;
+  icon: ReactNode;
+  entries: Tally[];
+  /** Singularised already; the "s" is added when the count is not one. */
+  unit: string;
+  empty: string;
+}) {
+  return (
+    <div className="bg-background p-6 sm:p-8">
+      <p className="readout flex items-center gap-2 text-ember">
+        {icon}
+        {label}
+      </p>
+
+      {entries.length > 0 ? (
+        <ol className="mt-5 space-y-3">
+          {entries.map((entry) => (
+            <li key={entry.name} className="flex items-baseline justify-between gap-4">
+              <span className="text-lg text-pretty">{entry.name}</span>
+              <span className="readout-dim shrink-0 tabular-nums">
+                {entry.count} {unit}
+                {entry.count === 1 ? "" : "s"}
+              </span>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p className="mt-5 text-muted-foreground">{empty}</p>
+      )}
+    </div>
   );
 }
 
@@ -183,6 +246,10 @@ export function Shows() {
     .filter((stat) => stat.show)
     .slice(0, 4);
 
+  // The index numbers run as one spine down the page, so the year groups start
+  // after Repeats rather than both claiming 01.
+  const hasRepeats = showStats.topBands.length > 0 || showStats.topVenues.length > 0;
+
   return (
     <>
       <PageShell className="pb-0">
@@ -208,6 +275,37 @@ export function Shows() {
         </dl>
       </div>
 
+      {/*
+       * A log is only interesting for what repeats in it, and the stat grid
+       * has room for one "most seen" and no more. This is where a band you
+       * keep going back to and a room you keep ending up in actually show.
+       *
+       * It stays hidden until something has repeated, rather than printing two
+       * empty columns from the first entry onward.
+       */}
+      {hasRepeats ? (
+        <PageShell className="pt-16 pb-0">
+          <Section title="Repeats" index="01" className="mt-0">
+            <div className="grid gap-px border border-border bg-border sm:grid-cols-2">
+              <RepeatList
+                label="Seen most"
+                icon={<Music className="size-3.5" aria-hidden />}
+                entries={showStats.topBands}
+                unit="time"
+                empty="No band twice yet."
+              />
+              <RepeatList
+                label="Rooms I keep going back to"
+                icon={<Building2 className="size-3.5" aria-hidden />}
+                entries={showStats.topVenues}
+                unit="night"
+                empty="No room twice yet."
+              />
+            </div>
+          </Section>
+        </PageShell>
+      ) : null}
+
       {standouts.length > 0 ? (
         <div className="mt-16">
           <Marquee
@@ -226,7 +324,7 @@ export function Shows() {
           <Section
             key={group.year}
             title={group.year}
-            index={String(groupIndex + 1).padStart(2, "0")}
+            index={String(groupIndex + 1 + (hasRepeats ? 1 : 0)).padStart(2, "0")}
             className={groupIndex === 0 ? "mt-0" : undefined}
             action={
               <span className="readout-dim">

@@ -2,10 +2,12 @@ import {
   ArrowLeft,
   ArrowUpRight,
   Building2,
+  Calendar,
   Flame,
   ListMusic,
   MapPin,
   Music,
+  Ticket,
   Users,
   Youtube,
 } from "lucide-react";
@@ -49,15 +51,18 @@ export function ShowDetail() {
  * on a phone.
  */
 function showFacts(show: (typeof shows)[number]) {
-  return [
-    fullShowDate(show),
-    show.venue,
-    show.city ? (
+  const fact = (Icon: typeof Calendar, text: string) =>
+    text ? (
       <span className="flex items-center gap-2">
-        <MapPin className="size-4 shrink-0 text-ember" aria-hidden />
-        {show.city}
+        <Icon className="size-4 shrink-0 text-ember" aria-hidden />
+        {text}
       </span>
-    ) : null,
+    ) : null;
+
+  return [
+    fact(Calendar, fullShowDate(show)),
+    fact(Building2, show.venue),
+    fact(MapPin, show.city),
   ].filter(Boolean);
 }
 
@@ -97,12 +102,12 @@ function ShowBody({ show }: { show: (typeof shows)[number] }) {
             </Badge>
           ))}
           {/* Outline rather than ion, so a measurement never reads as a label
-              someone chose to put on the night. The building marks the room's
-              size; a people icon would collide with the one that means the
+              someone chose to put on the night. A ticket for capacity, because
+              the building is the venue itself and the people icon means the
               people who actually came. */}
           {measures.map((measure) => (
             <Badge key={measure} variant="outline" className="rounded-none border-border">
-              {measure.endsWith("cap") ? <Building2 /> : null}
+              {measure.endsWith("cap") ? <Ticket /> : null}
               {measure}
             </Badge>
           ))}

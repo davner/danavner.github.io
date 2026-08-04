@@ -80,7 +80,6 @@ export function Home() {
             <p className="readout-dim mt-6 flex flex-wrap items-baseline gap-x-2 gap-y-1">
               <span>{profile.quest.label}:</span>
               <span>{profile.quest.main}</span>
-              <span>{profile.quest.aside}</span>
             </p>
 
             <p className="mt-4 max-w-xl text-xl leading-snug text-pretty sm:text-2xl">

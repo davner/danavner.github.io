@@ -79,17 +79,16 @@ export const profile = {
    */
   quest: {
     label: "Main quest",
-    main: "Live a life worth remembering.",
-    aside: "Side quests encouraged.",
+    main: "Live a life worth remembering and accept all side quests.",
   },
   /** The homepage voice. Kept apart from the blurb so it can be accented. */
   greeting: "Hi, I'm Dan.",
   blurb:
-    "This is where I share the things I build, the concerts I never skip, the quiet summer nights at the park with Alexis and our pup, and the adventures we find along the way.",
+    "This is where I share the things I build, the concerts I sometimes skip, the quiet summer nights at the park with Alexis and our pup, and the adventures we find along the way.",
   /** The career voice, used on the Career page and in its meta description. */
   tagline: "I write production software for telescopes and the people who have to use it at 3 a.m.",
   intro:
-    "I have spent about a decade writing the software that sits between a telescope and the astronomer using it. Some of that is the services that run an observation. A lot of it is the interface someone is staring at when the weather turns at 2 a.m. Right now I lead the architecture for GPP Resource, a Gemini Program Platform project at NOIRLab.",
+    "I have spent about a decade writing the software that sits between a telescope and the astronomer using it. Some of that is the services that run an observation. A lot of it is the interface someone is staring at when the weather turns at 2 a.m. Right now I lead the architecture and frontend design for GPP Resource, a Gemini Program Platform project at NOIRLab.",
 } as const;
 
 export const socials: SocialLink[] = [
@@ -218,7 +217,7 @@ export const interests: Interest[] = [
   {
     name: "Video games",
     icon: "gamepad-2",
-    note: "Mass Effect is the best game ever made and I will not be taking questions. These days I am mostly on PlayStation, playing Fortnite. I still have not finished Expedition 33.",
+    note: "Mass Effect is the best game ever made. These days I am mostly on PlayStation, playing Fortnite. I still have not finished Expedition 33.",
     handle: {
       label: "PlayStation",
       value: "treslechesplzz",
@@ -238,7 +237,7 @@ export const interests: Interest[] = [
   {
     name: "Vinyl",
     icon: "disc",
-    note: "My favorite record is the Record Store Day 2026 pressing of All We Know Is Falling with the Summer Tic EP. Babe tracked one down after what turned into a nationwide scavenger hunt. Still digging for the next one.",
+    note: "My favorite record is the Record Store Day 2026 pressing of All We Know Is Falling with the Summer Tic EP. Alexis tracked one down after what turned into a nationwide scavenger hunt.",
     handle: { label: "Discogs", value: "dnafam", href: "https://www.discogs.com/user/dnafam" },
   },
   {

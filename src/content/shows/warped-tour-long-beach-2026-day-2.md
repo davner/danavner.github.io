@@ -14,6 +14,19 @@ lineup:
   - Delux
   - Alemeda
   - Jiluka
+photos:
+  - src: /img/shows/warped-tour-long-beach-2026-day-2/walking-in.jpg
+    alt: Selfie walking in to the festival in a green frog bucket hat and a Warped Tour 2025 shirt
+    caption: Back for day two
+  - src: /img/shows/warped-tour-long-beach-2026-day-2/warped-flags.jpg
+    alt: Selfie under two Vans Warped Tour flags against a bright blue sky
+    caption: Flags up
+  - src: /img/shows/warped-tour-long-beach-2026-day-2/pacific-pals.jpg
+    alt: Posing with three Aquarium of the Pacific mascots - a shark in Save Sharks sunglasses, a sea otter, and a turtle
+    caption: Met the Pacific Pals
+  - src: /img/shows/warped-tour-long-beach-2026-day-2/the-waterfront.jpg
+    alt: The Long Beach waterfront from the path, swan pedal boats moored along the water and towers behind the bridge
+    caption: The waterfront
 setlists:
   - band: I Set My Friends On Fire
     url: https://www.setlist.fm/setlist/i-set-my-friends-on-fire/2026/shoreline-waterfront-long-beach-ca-usa-6b4bca4a.html

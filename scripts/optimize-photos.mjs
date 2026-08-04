@@ -39,7 +39,17 @@ const SOURCE_TYPES = /\.(jpe?g|png|heic|heif|webp|tiff?)$/i;
  * frame back to front. A stored JPEG essentially never needs mirroring, so the
  * rotation is applied and the flip is dropped.
  */
-const DROP_MIRROR = { 2: 1, 4: 3, 5: 8, 7: 6 };
+/*
+ * The rotation left over once the mirror is dropped.
+ *
+ * 5 and 7 are the two diagonal mirrors, and they are easy to get backwards.
+ * Orientation 5 is a transpose - a 90° clockwise turn plus a horizontal flip -
+ * so dropping the flip leaves 90°, which is tag 6. Orientation 7 is the other
+ * diagonal, 270° plus a flip, so it leaves 270°, which is tag 8. Having these
+ * two swapped lands the photo 180° out: upright in the frame, upside down on
+ * the page.
+ */
+const DROP_MIRROR = { 2: 1, 4: 3, 5: 6, 7: 8 };
 const ANGLE = { 1: 0, 3: 180, 6: 90, 8: 270 };
 
 async function uprightPipeline(source) {

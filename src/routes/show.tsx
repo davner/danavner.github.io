@@ -96,8 +96,10 @@ function ShowBody({ show }: { show: (typeof shows)[number] }) {
         <FactLine items={facts} className="mt-6" />
 
         <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2">
+          {/* Long tour names wrap rather than forcing the header wider than
+              the screen; the badge default is `whitespace-nowrap`. */}
           {tags.map((tag) => (
-            <Badge key={tag} variant="ion">
+            <Badge key={tag} variant="ion" className="max-w-full whitespace-normal">
               {tag}
             </Badge>
           ))}
@@ -198,6 +200,24 @@ function ShowBody({ show }: { show: (typeof shows)[number] }) {
                 </li>
               );
             })}
+
+            {/*
+             * The grid paints its own background through the 1px gaps, so a
+             * part-filled last row shows as a grey slab where the missing
+             * cells are - four bands across three columns leaves two. These
+             * fill it, one set per column count, each only visible at the
+             * breakpoint whose arithmetic it was computed for.
+             */}
+            {Array.from({ length: (3 - (show.lineup.length % 3)) % 3 }, (_, index) => (
+              <li key={`fill-lg-${index}`} aria-hidden className="hidden bg-background lg:block" />
+            ))}
+            {Array.from({ length: (2 - (show.lineup.length % 2)) % 2 }, (_, index) => (
+              <li
+                key={`fill-sm-${index}`}
+                aria-hidden
+                className="hidden bg-background sm:block lg:hidden"
+              />
+            ))}
           </ul>
         </Section>
       ) : null}

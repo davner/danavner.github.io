@@ -71,8 +71,12 @@ function ShowRow({ show }: { show: Show }) {
 
         {tags.length > 0 || show.rating != null ? (
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
+            {/* A tour name can run long - "The Sound A Body Makes When It's
+                Still Tour" is 42 characters - and the badge default is
+                `whitespace-nowrap`, which pushed the whole row past a 320px
+                screen. These wrap; the short ones are unaffected. */}
             {tags.map((tag) => (
-              <Badge key={tag} variant="ion">
+              <Badge key={tag} variant="ion" className="max-w-full whitespace-normal">
                 {tag}
               </Badge>
             ))}

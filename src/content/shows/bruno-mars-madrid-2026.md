@@ -23,7 +23,6 @@ photos:
   - src: /img/shows/bruno-mars-madrid-2026/outside-the-stadium.jpg
     alt: Dan and Alexis outside the stadium, under a banner reading Bruno Mars, The Romantic Tour, Sold Out
     caption: Sold out, before doors
-    banner: true
   - src: /img/shows/bruno-mars-madrid-2026/in-our-seats.jpg
     alt: Dan and Alexis in their seats, the stadium filling up behind them and The Romantic Dedications on the screen
     caption: The Romantic Dedications, pre-show

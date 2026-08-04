@@ -28,7 +28,6 @@ photos:
     caption: Sidewalk, before doors
   - src: /img/shows/bilmuri-los-angeles-2026/the-crew.jpg
     alt: Five of us lined up under the lit marquee after the show, string lights overhead
-    banner: true
     caption: The whole crew
   - src: /img/shows/bilmuri-los-angeles-2026/in-the-crowd.jpg
     alt: Packed crowd washed in red light, arms up, mid-set

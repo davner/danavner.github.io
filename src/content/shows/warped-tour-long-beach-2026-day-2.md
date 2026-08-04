@@ -26,7 +26,6 @@ photos:
   - src: /img/shows/warped-tour-long-beach-2026-day-2/pacific-pals.jpg
     alt: Posing with three Aquarium of the Pacific mascots - a shark in Save Sharks sunglasses, a sea otter, and a turtle
     caption: Met the Pacific Pals
-    banner: true
   - src: /img/shows/warped-tour-long-beach-2026-day-2/the-waterfront.jpg
     alt: The Long Beach waterfront from the path, swan pedal boats moored along the water and towers behind the bridge
     caption: The waterfront

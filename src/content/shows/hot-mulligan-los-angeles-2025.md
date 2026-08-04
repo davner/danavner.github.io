@@ -26,7 +26,6 @@ photos:
   - src: /img/shows/hot-mulligan-los-angeles-2025/out-front.jpg
     alt: Two people grinning in a selfie on the sidewalk under the lit Palladium marquee, one in a Haunt Mulligan shirt
     caption: Out front with Mikey
-    banner: true
   - src: /img/shows/hot-mulligan-los-angeles-2025/second-row.jpg
     alt: Selfie throwing a peace sign from the floor, the stage behind lit pink and blue with the curtain still down
     caption: And that's a wrap

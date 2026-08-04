@@ -15,7 +15,8 @@
  * - EXIF is dropped. Phone photos carry GPS coordinates, and a show log is a
  *   list of places you were at a known time. That does not belong in a repo.
  * - Orientation is baked in first, so a portrait photo does not arrive sideways
- *   once the tag it depended on is gone.
+ *   once the tag it depended on is gone. The rotation in that tag is honoured;
+ *   the mirror is not. See `uprightPipeline`.
  * - Output is deterministic: same input, same bytes, so re-running does not
  *   churn the diff.
  */
@@ -28,6 +29,30 @@ import sharp from "sharp";
 const MAX_EDGE = 1600;
 const QUALITY = 80;
 const SOURCE_TYPES = /\.(jpe?g|png|heic|heif|webp|tiff?)$/i;
+
+/**
+ * EXIF orientations that include a mirror, mapped to the rotation-only value
+ * underneath them.
+ *
+ * Phones write these on selfies, and twice now the mirror has been wrong: the
+ * stored pixels already read correctly and flipping them left every sign in
+ * frame back to front. A stored JPEG essentially never needs mirroring, so the
+ * rotation is applied and the flip is dropped.
+ */
+const DROP_MIRROR = { 2: 1, 4: 3, 5: 8, 7: 6 };
+const ANGLE = { 1: 0, 3: 180, 6: 90, 8: 270 };
+
+async function uprightPipeline(source) {
+  const { orientation } = await sharp(source).metadata();
+  const rotationOnly = DROP_MIRROR[orientation];
+
+  // An explicit angle tells sharp not to auto-orient from the tag, so this
+  // rotates the raw pixels and ignores the mirror the tag asked for.
+  if (rotationOnly !== undefined) return sharp(source).rotate(ANGLE[rotationOnly]);
+
+  // Rotation-only tags have been reliable; let sharp apply them.
+  return sharp(source).rotate();
+}
 
 function kebab(name) {
   return (
@@ -90,8 +115,7 @@ for (const source of sources) {
 
   const outPath = path.join(outDir, `${name}.jpg`);
 
-  const output = await sharp(source)
-    .rotate() // Applies the EXIF orientation before the tag is discarded.
+  const output = await (await uprightPipeline(source))
     .resize({ width: maxEdge, height: maxEdge, fit: "inside", withoutEnlargement: true })
     .jpeg({ quality: QUALITY, mozjpeg: true })
     .toFile(outPath);

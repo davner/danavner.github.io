@@ -17,6 +17,22 @@ lineup:
   - Good Terms
   - Underoath
   - South Arcade
+photos:
+  - src: /img/shows/warped-tour-long-beach-2026-day-1/frog-squad.jpg
+    alt: Two of us in matching green and black frog bucket hats in front of the Warped Tour '26 schedule board
+    caption: "#FrogSquad"
+  - src: /img/shows/warped-tour-long-beach-2026-day-1/barricade.jpg
+    alt: Selfie on the rail in the afternoon sun, the festival merch tent and palm trees behind the crowd
+    caption: On the rail
+  - src: /img/shows/warped-tour-long-beach-2026-day-1/on-stage.jpg
+    alt: Two guitarists on a small stage, one crouched low over a yellow Telecaster, the other mid-headbang
+    caption: Stage right
+  - src: /img/shows/warped-tour-long-beach-2026-day-1/main-stage.jpg
+    alt: Band mid-set on the main stage under smoke and afternoon sun, hands and phones up across the crowd
+    caption: Main stage, hands up
+  - src: /img/shows/warped-tour-long-beach-2026-day-1/golden-hour.jpg
+    alt: Selfie looking up at a sky full of mackerel clouds at the end of the day, string lights overhead
+    caption: End of the day
 setlists:
   - band: Hot Mulligan
     url: https://www.setlist.fm/setlist/hot-mulligan/2026/shoreline-waterfront-long-beach-ca-usa-7b73ba0c.html

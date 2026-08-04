@@ -133,6 +133,41 @@ test.describe("share", () => {
     await expect(trigger).toBeFocused();
   });
 
+  test("picking a different cover redraws the card", async ({ page }) => {
+    // Hashing the PNG rather than watching the object URL: a fresh URL is
+    // handed out on every render whether or not the pixels changed, so it
+    // would pass even if the chosen photo never reached the canvas.
+    const cardHash = () =>
+      page.evaluate(async () => {
+        const img = document.querySelector<HTMLImageElement>("img[alt^='Share card']")!;
+        const bytes = await (await fetch(img.src)).arrayBuffer();
+        const digest = await crypto.subtle.digest("SHA-256", bytes);
+        return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+      });
+
+    await page.goto("/shows/warped-tour-long-beach-2026-day-2");
+    await page.getByRole("button", { name: /^Share/ }).click();
+    await expect(page.getByRole("group", { name: /^Share / })).toBeFocused({ timeout: 15_000 });
+
+    const covers = page.getByRole("radio");
+    expect(await covers.count()).toBeGreaterThan(1);
+    await expect(covers.first()).toHaveAttribute("aria-checked", "true");
+
+    const before = await cardHash();
+
+    await covers.nth(2).click();
+    await expect(covers.nth(2)).toHaveAttribute("aria-checked", "true");
+    await expect.poll(cardHash, { timeout: 15_000 }).not.toBe(before);
+
+    // The panel survives the redraw - it used to render only in the "ready"
+    // state, so switching cover made it vanish mid-render.
+    await expect(page.getByRole("radiogroup", { name: /Photo on the card/ })).toBeVisible();
+
+    // And focus stays on the cover you pressed rather than being yanked back
+    // to the panel, which is what re-running the open effect would do.
+    await expect(covers.nth(2)).toBeFocused();
+  });
+
   test("every logged show links to its own page", async ({ page }) => {
     await page.goto("/shows");
     await page.getByRole("heading", { level: 1 }).waitFor();

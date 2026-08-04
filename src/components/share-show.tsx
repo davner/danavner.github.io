@@ -21,10 +21,12 @@ type Status = "idle" | "working" | "ready" | "failed";
  */
 export function ShareShow({ show, className }: { show: Show; className?: string }) {
   const [status, setStatus] = useState<Status>("idle");
-  const [card, setCard] = useState<{ url: string; blob: Blob } | null>(null);
+  const [card, setCard] = useState<{ url: string; blob: Blob; index: number } | null>(null);
   const [copied, setCopied] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const wasOpen = useRef(false);
+  const building = useRef(false);
 
   const url = showUrl(show);
   const heading = showHeading(show);
@@ -32,24 +34,55 @@ export function ShareShow({ show, className }: { show: Show; className?: string 
   // Object URLs outlive the component unless they are handed back.
   useEffect(() => () => { if (card) URL.revokeObjectURL(card.url); }, [card]);
 
+  /*
+   * The panel stays up while a new cover renders, so "open" is not the same as
+   * "ready" any more - it is any state where a card exists and the panel has
+   * not been dismissed.
+   */
+  const panelOpen = card != null && (status === "ready" || status === "working");
+
   // Focus moves into the panel in the same pass that arms Escape, so there is
   // never a frame where the panel is on screen and the key does nothing.
   useEffect(() => {
-    if (status !== "ready") return;
+    if (!panelOpen) return;
 
-    panelRef.current?.focus();
+    // Only on the way in. Re-focusing on every render would yank focus off the
+    // cover button the moment you picked a different photo.
+    if (!wasOpen.current) panelRef.current?.focus();
+    wasOpen.current = true;
 
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") close();
     }
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [status]);
+  }, [panelOpen]);
 
   function close() {
     setStatus("idle");
+    wasOpen.current = false;
     // Send focus back where it came from rather than dropping it on the body.
     triggerRef.current?.focus();
+  }
+
+  async function build(index: number) {
+    // A ref rather than the status, which is stale inside this closure. Two
+    // fast presses would otherwise race and the loser could land last.
+    if (building.current) return;
+    building.current = true;
+    setStatus("working");
+
+    try {
+      const blob = await renderShowCard(show, index);
+      // Replacing `card` revokes the previous object URL through the cleanup
+      // above, so switching photos does not leak one per press.
+      setCard({ blob, url: URL.createObjectURL(blob), index });
+      setStatus("ready");
+    } catch {
+      setStatus("failed");
+    } finally {
+      building.current = false;
+    }
   }
 
   async function open() {
@@ -57,16 +90,7 @@ export function ShareShow({ show, className }: { show: Show; className?: string 
       setStatus("ready");
       return;
     }
-
-    setStatus("working");
-
-    try {
-      const blob = await renderShowCard(show);
-      setCard({ blob, url: URL.createObjectURL(blob) });
-      setStatus("ready");
-    } catch {
-      setStatus("failed");
-    }
+    await build(0);
   }
 
   /** Swallows the cancel that every OS share sheet throws on dismissal. */
@@ -101,11 +125,11 @@ export function ShareShow({ show, className }: { show: Show; className?: string 
         variant="outline"
         size="sm"
         onClick={open}
-        disabled={status === "working"}
-        aria-expanded={status === "ready"}
+        disabled={status === "working" && !card}
+        aria-expanded={panelOpen}
         className="readout relative z-10 rounded-none text-muted-foreground hover:border-ember hover:text-ember"
       >
-        {status === "working" ? <Loader2 className="animate-spin" /> : <Share2 />}
+        {status === "working" && !card ? <Loader2 className="animate-spin" /> : <Share2 />}
         Share
       </Button>
 
@@ -113,7 +137,7 @@ export function ShareShow({ show, className }: { show: Show; className?: string 
         <span className="readout-dim relative z-10 ml-3">Could not build the card</span>
       ) : null}
 
-      {status === "ready" && card ? (
+      {panelOpen && card ? (
         <div
           ref={panelRef}
           tabIndex={-1}
@@ -136,8 +160,45 @@ export function ShareShow({ show, className }: { show: Show; className?: string 
           <img
             src={card.url}
             alt={`Share card for ${heading}`}
-            className="mt-3 max-h-56 w-full border border-border object-contain"
+            aria-busy={status === "working"}
+            className={cn(
+              "mt-3 max-h-56 w-full border border-border object-contain transition-opacity",
+              status === "working" && "opacity-50",
+            )}
           />
+
+          {/* Which photo tops the card. Only worth showing when there is a
+              choice to make - one photo is not a picker, it is a thumbnail of
+              the picture already on screen. */}
+          {show.photos.length > 1 ? (
+            <div className="mt-3">
+              <p className="readout-dim">Cover</p>
+              <div
+                role="radiogroup"
+                aria-label="Photo on the card"
+                className="mt-2 flex gap-2 overflow-x-auto pb-1"
+              >
+                {show.photos.map((photo, index) => (
+                  <button
+                    key={photo.src}
+                    type="button"
+                    role="radio"
+                    aria-checked={card.index === index}
+                    aria-label={photo.caption}
+                    onClick={() => build(index)}
+                    className={cn(
+                      "size-12 shrink-0 border transition-colors",
+                      card.index === index
+                        ? "border-ember"
+                        : "border-border opacity-60 hover:opacity-100",
+                    )}
+                  >
+                    <img src={photo.src} alt="" className="size-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
 
           <div className="mt-3 flex flex-col gap-2">
             {canShareImage ? (

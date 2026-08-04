@@ -87,7 +87,7 @@ function drawCover(
  * server - the whole site is static - and the browser already has the fonts and
  * the photos loaded.
  */
-export async function renderShowCard(show: Show): Promise<Blob> {
+export async function renderShowCard(show: Show, photoIndex = 0): Promise<Blob> {
   // The display and mono faces are what make it look like the site rather than
   // a generic card, so wait for them before measuring anything.
   await document.fonts.ready;
@@ -100,7 +100,11 @@ export async function renderShowCard(show: Show): Promise<Blob> {
   context.fillStyle = VOID;
   context.fillRect(0, 0, WIDTH, HEIGHT);
 
-  const photo = show.photos[0] ? await loadImage(show.photos[0].src) : null;
+  // Whichever photo was picked in the share panel. An out-of-range index falls
+  // back to the first rather than rendering a photoless card, which would look
+  // like the picture failed to load.
+  const chosen = show.photos[photoIndex] ?? show.photos[0];
+  const photo = chosen ? await loadImage(chosen.src) : null;
 
   // Photo across the top third, fading into the card so it reads as one piece
   // rather than a picture with a caption stapled under it.

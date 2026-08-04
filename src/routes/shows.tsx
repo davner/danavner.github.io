@@ -167,7 +167,6 @@ function ShowRow({ show }: { show: Show }) {
 function RepeatList({
   slot,
   label,
-  icon,
   entries,
   unit,
   empty,
@@ -175,7 +174,6 @@ function RepeatList({
   /** `data-slot` hook, so a test can target one board without matching text. */
   slot: string;
   label: string;
-  icon: ReactNode;
   entries: Tally[];
   /** Singularised already; the "s" is added when the count is not one. */
   unit: string;
@@ -183,10 +181,7 @@ function RepeatList({
 }) {
   return (
     <div data-slot={slot} className="col-span-2 bg-background p-5 sm:p-6">
-      <p className="readout flex items-center gap-2 text-ember">
-        {icon}
-        {label}
-      </p>
+      <p className="readout-dim">{label}</p>
 
       {entries.length > 0 ? (
         <ol className="mt-5 space-y-3">
@@ -287,7 +282,6 @@ export function Shows() {
               <RepeatList
                 slot="seen-most"
                 label="Seen most"
-                icon={<Music className="size-3.5" aria-hidden />}
                 entries={showStats.topBands}
                 unit="time"
                 empty="No band twice yet."
@@ -295,7 +289,6 @@ export function Shows() {
               <RepeatList
                 slot="been-most"
                 label="Been most"
-                icon={<Building2 className="size-3.5" aria-hidden />}
                 entries={showStats.topVenues}
                 unit="night"
                 empty="No room twice yet."
@@ -329,13 +322,8 @@ export function Shows() {
               className="group/year border-b border-border"
             >
               <summary className="group/sum flex cursor-pointer list-none items-center justify-between gap-6 py-4 select-none marker:hidden [&::-webkit-details-marker]:hidden">
-                <span className="flex items-baseline gap-3">
-                  <span className="font-mono text-xs text-ember">
-                    {String(groupIndex + 1).padStart(2, "0")}
-                  </span>
-                  <span className="display text-2xl transition-colors group-hover/sum:text-ember sm:text-3xl">
-                    {group.year}
-                  </span>
+                <span className="display text-2xl transition-colors group-hover/sum:text-ember sm:text-3xl">
+                  {group.year}
                 </span>
                 <span className="flex items-center gap-3 text-muted-foreground">
                   <span className="readout-dim">

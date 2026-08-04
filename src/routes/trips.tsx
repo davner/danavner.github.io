@@ -175,7 +175,6 @@ export function Trips() {
           <Section
             key={group.year}
             title={group.year}
-            index={String(groupIndex + 1).padStart(2, "0")}
             className={groupIndex === 0 ? "mt-0" : undefined}
             action={
               <span className="readout-dim">

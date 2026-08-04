@@ -50,7 +50,7 @@ export function Career() {
         </div>
       </PageHeader>
 
-      <Section title="Experience" index="01">
+      <Section title="Experience">
         <ol>
           {roles.map((role) => (
             <li
@@ -93,7 +93,7 @@ export function Career() {
         </ol>
       </Section>
 
-      <Section title="On sky" index="02">
+      <Section title="On sky">
         <div className="grid gap-px border border-border bg-border sm:grid-cols-[auto_minmax(0,1fr)]">
           <div className="bg-background p-6 sm:p-8">
             <p className="display text-6xl text-ember sm:text-7xl">{observing.nights}</p>
@@ -118,7 +118,7 @@ export function Career() {
         </div>
       </Section>
 
-      <Section title="Toolkit" index="03">
+      <Section title="Toolkit">
         <dl className="grid gap-px border border-border bg-border sm:grid-cols-2">
           {skills.map((group) => (
             <div key={group.label} className="bg-background p-6 sm:p-8">
@@ -139,7 +139,7 @@ export function Career() {
         </dl>
       </Section>
 
-      <Section title="Education" index="04">
+      <Section title="Education">
         <div className="grid gap-px border border-border bg-border sm:grid-cols-2">
           {education.map((entry) => (
             <div key={entry.school} className="bg-background p-6 sm:p-8">

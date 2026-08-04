@@ -78,8 +78,8 @@ export function Blog() {
 
       {visible.length > 0 ? (
         <div className="grid gap-px border border-border bg-border sm:grid-cols-2">
-          {visible.map((post, index) => (
-            <PostCard key={post.slug} post={post} index={visible.length - index} />
+          {visible.map((post) => (
+            <PostCard key={post.slug} post={post} />
           ))}
         </div>
       ) : (

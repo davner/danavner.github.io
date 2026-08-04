@@ -4,18 +4,13 @@ import { Link } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { CATEGORY_LABEL, formatDate, type Post } from "@/lib/blog";
 
-export function PostCard({ post, index }: { post: Post; index?: number }) {
+export function PostCard({ post }: { post: Post }) {
   return (
     <article className="cut-corners group relative flex flex-col bg-background p-6 transition-colors hover:bg-card/60 sm:p-8">
       <div className="flex items-center justify-between gap-4">
         <Badge variant={post.category === "work" ? "ember" : "ion"}>
           {CATEGORY_LABEL[post.category]}
         </Badge>
-        {index != null ? (
-          <span className="font-mono text-xs text-muted-foreground">
-            {String(index).padStart(2, "0")}
-          </span>
-        ) : null}
       </div>
 
       <h3 className="display mt-5 text-3xl text-balance transition-colors group-hover:text-ember sm:text-4xl">

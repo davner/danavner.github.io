@@ -135,7 +135,7 @@ function ShowBody({ show }: { show: (typeof shows)[number] }) {
        * "Support" - so its own setlist finally has somewhere to go.
        */}
       {show.lineup.length > 0 ? (
-        <Section title="Lineup" index="01">
+        <Section title="Lineup">
           <ul className="grid gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
             {show.lineup.map((band) => {
               const setlist = show.setlists.find((entry) => entry.band === band);
@@ -189,7 +189,7 @@ function ShowBody({ show }: { show: (typeof shows)[number] }) {
       ) : null}
 
       {show.bestSong || show.solo || show.companions.length > 0 ? (
-        <Section title="The night" index={show.lineup.length > 0 ? "02" : "01"}>
+        <Section title="The night">
           <div className="space-y-4">
             {show.bestSong ? (
               <p className="flex items-center gap-2 text-muted-foreground">

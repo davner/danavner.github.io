@@ -74,15 +74,12 @@ export function PageHeader({
 
 export function Section({
   title,
-  index,
   id,
   className,
   action,
   children,
 }: {
   title?: string;
-  /** Tracklist-style number shown before the title. */
-  index?: string;
   id?: string;
   className?: string;
   action?: ReactNode;
@@ -92,10 +89,7 @@ export function Section({
     <section id={id} className={cn("mt-24 first:mt-0", className)}>
       {title ? (
         <div className="mb-8 flex items-end justify-between gap-6 border-b border-border pb-3">
-          <h2 className="flex items-baseline gap-3">
-            {index ? <span className="font-mono text-xs text-ember">{index}</span> : null}
-            <span className="display text-2xl sm:text-3xl">{title}</span>
-          </h2>
+          <h2 className="display text-2xl sm:text-3xl">{title}</h2>
           {action}
         </div>
       ) : null}

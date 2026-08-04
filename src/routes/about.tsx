@@ -128,20 +128,19 @@ export function About() {
         </div>
       </PageHeader>
 
-      <Section title="Outside of work" index="01">
+      <Section title="Outside of work">
         <ul className="grid gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
           {interests.map((interest, index) => (
             <InterestCard
               key={interest.name}
               interest={interest}
-              index={index}
               fill={index === interests.length - 1 ? trailingSpan : undefined}
             />
           ))}
         </ul>
       </Section>
 
-      <Section title="Fun fact" index="02">
+      <Section title="Fun fact">
         <div className="flex flex-col items-start gap-6 border border-ember/40 p-8 sm:flex-row sm:items-center sm:p-12">
           <Trophy className="size-10 shrink-0 text-ember" />
           <div className="flex-1">
@@ -187,11 +186,9 @@ function Handle({ handle }: { handle: NonNullable<Interest["handle"]> }) {
 
 function InterestCard({
   interest,
-  index,
   fill,
 }: {
   interest: Interest;
-  index: number;
   /** Columns this card should occupy, when it is the one closing the grid. */
   fill?: { sm: number; lg: number };
 }) {
@@ -201,9 +198,6 @@ function InterestCard({
     <>
       <div className="flex items-start justify-between">
         <Icon className="size-6 text-ember" />
-        <span className="font-mono text-xs text-muted-foreground">
-          {String(index + 1).padStart(2, "0")}
-        </span>
       </div>
 
       <div

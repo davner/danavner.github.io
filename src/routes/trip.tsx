@@ -60,9 +60,6 @@ function TripBody({ trip }: { trip: (typeof trips)[number] }) {
     ) : null,
   ].filter(Boolean);
 
-  let sectionIndex = 0;
-  const nextIndex = () => String(++sectionIndex).padStart(2, "0");
-
   return (
     <PageShell>
       <PageHeader title={trip.title}>
@@ -105,7 +102,7 @@ function TripBody({ trip }: { trip: (typeof trips)[number] }) {
         ) : null}
       </PageHeader>
 
-      <Section title="Where we went" index={nextIndex()}>
+      <Section title="Where we went">
         {/* An ordered list, because the order is the route. The arrow is
             decorative - the numbering already carries the sequence for anyone
             not looking at it. */}
@@ -124,7 +121,7 @@ function TripBody({ trip }: { trip: (typeof trips)[number] }) {
       </Section>
 
       {trip.highlights.length > 0 ? (
-        <Section title="Highlights" index={nextIndex()}>
+        <Section title="Highlights">
           <ul className="max-w-prose space-y-3">
             {trip.highlights.map((highlight) => (
               <li key={highlight} className="flex gap-3 text-muted-foreground">
@@ -137,7 +134,7 @@ function TripBody({ trip }: { trip: (typeof trips)[number] }) {
       ) : null}
 
       {trip.oneThing || trip.bestMeal ? (
-        <Section title="Worth saying" index={nextIndex()}>
+        <Section title="Worth saying">
           <div className="grid gap-px border border-border bg-border sm:grid-cols-2">
             {trip.oneThing ? (
               <div className="bg-background p-6 sm:p-8">

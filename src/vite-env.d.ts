@@ -13,3 +13,10 @@ declare module "virtual:shows" {
   /** Supplied by `contentPlugin()` in `vite-plugin-content.ts`. */
   export const shows: Show[];
 }
+
+declare module "virtual:trips" {
+  import type { Trip } from "@/lib/trips";
+
+  /** Supplied by `contentPlugin()` in `vite-plugin-content.ts`. */
+  export const trips: Trip[];
+}

@@ -18,7 +18,7 @@ test.describe("navigation", () => {
 
   test("home links to every section", async ({ page }) => {
     await page.goto("/");
-    for (const path of ["/about", "/career", "/blog", "/shows"]) {
+    for (const path of ["/about", "/career", "/blog", "/shows", "/trips"]) {
       await expect(page.locator(`a[href="${path}"]`).first()).toBeAttached();
     }
   });
@@ -29,6 +29,7 @@ test.describe("navigation", () => {
       "/career": "Career · Dan Avner",
       "/blog": "Blog · Dan Avner",
       "/shows": "Shows · Dan Avner",
+      "/trips": "Trips · Dan Avner",
     };
 
     for (const [path, title] of Object.entries(titles)) {

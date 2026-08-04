@@ -23,6 +23,13 @@ const ShowDetail = lazy(() =>
   import("@/routes/show").then((module) => ({ default: module.ShowDetail })),
 );
 
+// Trips render markdown notes as well, so they load on demand for the same
+// reason the show pages do.
+const Trips = lazy(() => import("@/routes/trips").then((module) => ({ default: module.Trips })));
+const TripDetail = lazy(() =>
+  import("@/routes/trip").then((module) => ({ default: module.TripDetail })),
+);
+
 export function App() {
   return (
     <BrowserRouter>
@@ -66,6 +73,22 @@ export function App() {
               element={
                 <Suspense fallback={<PostSkeleton />}>
                   <ShowDetail />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/trips"
+              element={
+                <Suspense fallback={<PostSkeleton />}>
+                  <Trips />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/trips/:slug"
+              element={
+                <Suspense fallback={<PostSkeleton />}>
+                  <TripDetail />
                 </Suspense>
               }
             />

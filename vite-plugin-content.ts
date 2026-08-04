@@ -9,6 +9,7 @@ const WORDS_PER_MINUTE = 200;
 
 const POST_CATEGORIES = ["work", "personal"];
 const SHOW_TYPES = ["show", "festival"];
+const TRIP_TYPES = ["vacation", "family", "work", "tour"];
 const MAX_RATING = 5;
 
 /** `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` - you remember some nights better than others. */
@@ -104,7 +105,7 @@ function parsePost({ file, meta, body, slug }: Frontmatter) {
  *
  * `alt` and `caption` are both required; a bare path is rejected.
  */
-function asPhotos(value: unknown, file: string, publicDir: string) {
+function asPhotos(collection: string, value: unknown, file: string, publicDir: string) {
   if (value == null) return [];
 
   return (Array.isArray(value) ? value : [value]).map((entry, index) => {
@@ -113,13 +114,13 @@ function asPhotos(value: unknown, file: string, publicDir: string) {
         ? { src: entry }
         : entry && typeof entry === "object" && !Array.isArray(entry)
           ? (entry as Record<string, unknown>)
-          : fail("shows", file, `\`photos[${index}]\` must be a path or a mapping with \`src\``);
+          : fail(collection, file, `\`photos[${index}]\` must be a path or a mapping with \`src\``);
 
     const src = asTrimmedString(raw.src);
-    if (!src) fail("shows", file, `\`photos[${index}]\` needs a \`src\``);
+    if (!src) fail(collection, file, `\`photos[${index}]\` needs a \`src\``);
     if (!src.startsWith("/") && !/^https?:\/\//.test(src)) {
       fail(
-        "shows",
+        collection,
         file,
         `\`photos[${index}].src\` must start with "/" (a path under public/) or be a full URL`,
       );
@@ -128,17 +129,17 @@ function asPhotos(value: unknown, file: string, publicDir: string) {
     // A typo in a photo path would otherwise ship as a broken image; local
     // files are cheap to confirm, remote ones are not this build's problem.
     if (src.startsWith("/") && !existsSync(path.join(publicDir, src))) {
-      fail("shows", file, `\`photos[${index}].src\` does not exist: public${src}`);
+      fail(collection, file, `\`photos[${index}].src\` does not exist: public${src}`);
     }
 
     // Alt text and a caption are both required. A photo without alt text is
     // invisible to anyone using a screen reader, and one without a caption
     // gives no context to anyone else - neither should reach the site.
     const alt = asTrimmedString(raw.alt);
-    if (!alt) fail("shows", file, `\`photos[${index}]\` needs \`alt\` describing what is in the frame`);
+    if (!alt) fail(collection, file, `\`photos[${index}]\` needs \`alt\` describing what is in the frame`);
 
     const caption = asTrimmedString(raw.caption);
-    if (!caption) fail("shows", file, `\`photos[${index}]\` needs a \`caption\``);
+    if (!caption) fail(collection, file, `\`photos[${index}]\` needs a \`caption\``);
 
     return { src, alt, caption };
   });
@@ -309,8 +310,95 @@ function parseShow({ file, meta, body, slug }: Frontmatter, publicDir: string) {
     // link labels itself rather than needing a second field.
     videoIsPlaylist: /[?&]list=/.test(video),
     setlists: asSetlists(meta.setlists, file, lineup),
-    photos: asPhotos(meta.photos, file, publicDir),
+    photos: asPhotos("shows", meta.photos, file, publicDir),
     standout: meta.standout === true,
+    body,
+  };
+}
+
+function parseTrip({ file, meta, body, slug }: Frontmatter, publicDir: string) {
+  const title = asTrimmedString(meta.title);
+  if (!title) fail("trips", file, "frontmatter needs a `title` - where the trip was");
+
+  const type = asTrimmedString(meta.type) || "vacation";
+  if (!TRIP_TYPES.includes(type)) {
+    fail("trips", file, `\`type\` must be one of: ${TRIP_TYPES.join(", ")}`);
+  }
+
+  // Same precision rules as a show. A trip you only remember the month of is
+  // still worth logging, so a bare `YYYY-MM` is valid and renders as "June".
+  const date = asDate(meta.date);
+  if (!DATE.test(date)) {
+    fail("trips", file, "frontmatter needs a `date` as `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`");
+  }
+
+  const endDate = asDate(meta.endDate);
+  if (endDate && !DATE.test(endDate)) {
+    fail("trips", file, "`endDate` must be `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`");
+  }
+  if (endDate && endDate < date) fail("trips", file, "`endDate` is before `date`");
+
+  /*
+   * Every place the trip touched, in the order you went, written "City,
+   * Country". The country is split off here so the index can count countries
+   * without every page re-parsing the same strings.
+   */
+  const stops = asStringArray(meta.stops)
+    .map((stop) => stop.trim())
+    .filter(Boolean);
+  if (stops.length === 0) {
+    fail("trips", file, "frontmatter needs `stops` listing where you went, in order");
+  }
+
+  const duplicates = stops.filter((stop, index) => stops.indexOf(stop) !== index);
+  if (duplicates.length > 0) {
+    fail("trips", file, `\`stops\` lists the same place twice: ${[...new Set(duplicates)].join(", ")}`);
+  }
+
+  for (const [index, stop] of stops.entries()) {
+    if (!stop.includes(",")) {
+      fail("trips", file, `\`stops[${index}]\` must be "City, Country" - got "${stop}"`);
+    }
+  }
+
+  const highlights = asStringArray(meta.highlights)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+
+  const companions = asStringArray(meta.with)
+    .map((name) => name.trim())
+    .filter(Boolean);
+  const solo = meta.solo === true;
+
+  if (solo && companions.length > 0) {
+    fail("trips", file, "`solo: true` contradicts `with` - drop one");
+  }
+
+  // Deliberately three states. `null` is "have not decided", which is not the
+  // same as "no", and must not render as a verdict either way.
+  let wouldGoBack: boolean | null = null;
+  if (meta.wouldGoBack != null && meta.wouldGoBack !== "") {
+    if (typeof meta.wouldGoBack !== "boolean") {
+      fail("trips", file, "`wouldGoBack` must be true or false");
+    }
+    wouldGoBack = meta.wouldGoBack;
+  }
+
+  return {
+    slug,
+    title,
+    type,
+    date,
+    endDate,
+    stops,
+    countries: [...new Set(stops.map((stop) => stop.split(",").at(-1)!.trim()).filter(Boolean))],
+    highlights,
+    oneThing: asTrimmedString(meta.oneThing),
+    bestMeal: asTrimmedString(meta.bestMeal),
+    wouldGoBack,
+    companions,
+    solo,
+    photos: asPhotos("trips", meta.photos, file, publicDir),
     body,
   };
 }
@@ -325,6 +413,7 @@ interface Collection {
 const COLLECTIONS: Collection[] = [
   { name: "blog", exportName: "posts", parse: parsePost },
   { name: "shows", exportName: "shows", parse: parseShow },
+  { name: "trips", exportName: "trips", parse: parseTrip },
 ];
 
 function readCollection(collection: Collection, dir: string, publicDir: string) {

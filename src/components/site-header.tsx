@@ -8,6 +8,7 @@ const NAV = [
   { to: "/career", label: "Career" },
   { to: "/blog", label: "Blog" },
   { to: "/shows", label: "Shows" },
+  { to: "/trips", label: "Trips" },
 ];
 
 export function SiteHeader() {
@@ -24,7 +25,7 @@ export function SiteHeader() {
             )
           }
         >
-          {/* Four section labels plus a toggle leave no room for the full
+          {/* Five section labels plus a toggle leave no room for the full
               wordmark on the narrowest phones, so it contracts to initials. */}
           <span className="display text-xl sm:text-2xl">
             <span className="sm:hidden">DA</span>

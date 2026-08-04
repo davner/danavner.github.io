@@ -38,7 +38,8 @@ live site. See `README.md` for the stack, the content model, and the CI layout.
 - `npm run build` type-checks and builds.
 - `npm test` runs Playwright against the built site. Build first.
 - Deploys from `main` via GitHub Actions.
-- Adding a show to the log is the `add-show` skill, not a freehand edit.
+- Adding a show to the log is the `add-show` skill, not a freehand edit. Adding
+  a trip is the `add-trip` skill, same rule.
 - Every image entering the repo goes through
   `node scripts/optimize-photos.mjs <folder-under-public/img> <files...>` first.
   It resizes, re-encodes, and strips EXIF - phone photos carry GPS. Then look at

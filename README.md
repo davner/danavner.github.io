@@ -88,6 +88,7 @@ src/
     profile.ts            everything the Home / About / Career pages render
     blog/*.md             one markdown file per post
     shows/*.md            one markdown file per show
+    trips/*.md            one markdown file per trip
   routes/                 one file per page
   components/
     ui/                   shadcn/ui: Button, Badge, Carousel, Toggle, ToggleGroup
@@ -97,6 +98,7 @@ src/
     shows.ts              sorting, year grouping, derived show stats
     show-summary.ts       one-line show description, shared with the Node build
     show-card.ts          draws the shareable poster on a canvas
+    trips.ts              sorting, year grouping, derived trip stats
     theme.ts              light/dark store, synced with the pre-paint script
   index.css               design tokens, utilities, and the poster primitives
   fonts.css               self-hosted @font-face declarations
@@ -111,10 +113,11 @@ reimplementing them.
 
 ### How content works
 
-`vite-plugin-content.ts` reads `src/content/blog/` and `src/content/shows/` in
-Node at build time, validates the frontmatter, and exposes each collection as a
-virtual module (`virtual:blog`, `virtual:shows`). Three things fall out of doing
-it there rather than in the browser:
+`vite-plugin-content.ts` reads `src/content/blog/`, `src/content/shows/`, and
+`src/content/trips/` in Node at build time, validates the frontmatter, and
+exposes each collection as a virtual module (`virtual:blog`, `virtual:shows`,
+`virtual:trips`). Three things fall out of doing it there rather than in the
+browser:
 
 - **Bad frontmatter fails the build**, naming the offending file, instead of
   rendering a broken card on the live site.
@@ -283,6 +286,57 @@ link that previews as a headshot looks like the wrong link. That image is
 generated once by `scripts/make-share-fallback.mjs` and committed; the build
 does not call it, since rendering a card at build time would mean shipping a
 headless browser or a font stack with the site.
+
+---
+
+## Adding a trip
+
+One markdown file in `src/content/trips/`. The filename becomes the slug, and
+everything at the top of `/trips` - trips, countries, cities, nights away, the
+year groups - is derived from these files.
+
+```md
+---
+title: Spain and Portugal
+date: 2026-06-12          # YYYY, YYYY-MM, or YYYY-MM-DD
+endDate: 2026-06-20       # optional; both ends dated gives "8 nights"
+type: vacation            # vacation | family | work | tour
+stops:                    # in the order you went, always "City, Country"
+  - Madrid, Spain
+  - Barcelona, Spain
+  - Lisbon, Portugal
+with:
+  - Alexis A.
+highlights:
+  - Got rained on in the Alhambra gardens and stayed anyway
+oneThing: Go in June, before the heat makes the afternoons useless.
+bestMeal: Tinned mussels at a bar in Lisbon with no name on the door.
+wouldGoBack: true
+photos:
+  - src: /img/trips/spain-2026/alhambra.jpg
+    alt: The Alhambra's Court of the Lions in flat grey light, rain on the stone
+    caption: Worth the soaking
+---
+
+Optional markdown, for a trip with a story worth telling.
+```
+
+`src/content/trips/_README.md` carries the full field table next to the files.
+Photos follow the show rules exactly - `src`, `alt`, and `caption` on every one,
+paths checked at build time, and every image through
+`scripts/optimize-photos.mjs` first.
+
+Three things differ from the show log on purpose:
+
+- **No ratings.** A trip is not the kind of thing that gets a score. The
+  opinionated fields are `oneThing`, `bestMeal`, and `wouldGoBack`, and
+  `wouldGoBack` has three states - leaving it out means undecided and renders
+  nothing, which is not the same as `false`.
+- **`stops` is the route, in order**, and each one is `City, Country` so the
+  index can count countries without re-parsing strings on every render.
+- **Nights are only counted when both ends carry a day.** A trip written as a
+  bare month has no length, and a guessed one would put a made-up number into a
+  total that is supposed to be a record.
 
 ---
 

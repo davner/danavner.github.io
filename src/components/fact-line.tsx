@@ -21,29 +21,27 @@ export function FactLine({
 }) {
   if (items.length === 0) return null;
 
-  // Three facts do not fit a phone line, and flowing them wrapped into ragged
-  // rows breaking wherever the longest venue name landed. Two short ones fit,
-  // so stacking a post's date and reading time would only add a row.
-  const stacked = items.length > 2;
-
   return (
     <ul
       data-slot="facts"
       className={cn(
-        "flex flex-wrap items-center gap-x-3 gap-y-1 text-lg text-muted-foreground",
-        stacked && "max-sm:flex-col max-sm:items-start",
+        "flex flex-col gap-y-1 text-lg text-muted-foreground",
+        "sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3",
         className,
       )}
     >
-      {/* The separator only exists in the one-line layout, so a stacked row
-          never opens with an orphan dot.
+      {/* One fact per row on a phone. Flowing them inline wrapped wherever the
+          longest venue name happened to land, and any wrap left a row opening
+          with an orphan dot - two facts is enough to do it once a date and a
+          country pair up. The separators only exist in the one-line layout, so
+          there is nothing to strand.
 
           A fixed, ordered list of facts about one thing - the index is the
           identity, so nothing reorders behind the key. */}
       {items.map((item, index) => (
         <li key={index} className="flex items-center gap-x-3">
           {index > 0 ? (
-            <span className={cn("text-ember", stacked && "max-sm:hidden")} aria-hidden>
+            <span className="hidden text-ember sm:inline" aria-hidden>
               ·
             </span>
           ) : null}

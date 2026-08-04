@@ -32,6 +32,11 @@ const INDEX = [
     title: "Shows",
     blurb: "Every gig I have been to since I started keeping track, logged and rated.",
   },
+  {
+    to: "/trips",
+    title: "Trips",
+    blurb: "Where we went, who came along, and the photos that came back.",
+  },
 ];
 
 const TICKER = [

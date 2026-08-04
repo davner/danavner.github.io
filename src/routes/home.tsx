@@ -14,25 +14,21 @@ import { useDocumentMeta } from "@/lib/use-document-meta";
 const INDEX = [
   {
     to: "/about",
-    number: "01",
     title: "About",
     blurb: "Alexis, Milly and Penny, shows, records, comics, Legos, and one bowling statistic.",
   },
   {
     to: "/career",
-    number: "02",
     title: "Career",
     blurb: "The day job, and the decade of telescope software behind it.",
   },
   {
     to: "/blog",
-    number: "03",
     title: "Blog",
     blurb: "Notes on whatever has my attention, which is usually not work.",
   },
   {
     to: "/shows",
-    number: "04",
     title: "Shows",
     blurb: "Every gig I have been to since I started keeping track, logged and rated.",
   },
@@ -63,7 +59,7 @@ export function Home() {
     <>
       <section className="mx-auto max-w-6xl px-4 pt-10 pb-14 sm:px-6 sm:pt-16">
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-border pb-3">
-          <p className="readout text-ember">Personal site</p>
+          <p className="readout text-ember">Best enjoyed loud</p>
           <ul className="flex flex-wrap gap-x-5 gap-y-1">
             <li className="readout-dim">{profile.location}</li>
             <li className="readout-dim">He/him</li>
@@ -127,9 +123,6 @@ export function Home() {
                   to={entry.to}
                   className="group flex items-center gap-4 border-b border-border py-6 transition-colors hover:bg-card/60 sm:gap-8 sm:py-8"
                 >
-                  <span className="font-mono text-xs text-ember transition-transform duration-200 group-hover:translate-x-1 sm:text-sm">
-                    {entry.number}
-                  </span>
                   <span className="display text-4xl transition-all duration-200 group-hover:translate-x-1 group-hover:text-ember sm:text-6xl">
                     {entry.title}
                   </span>

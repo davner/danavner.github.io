@@ -75,7 +75,7 @@ export const profile = {
   partnerFirstName: "Alexis",
   /** The homepage voice: a person who happens to have a career. */
   blurb:
-    "My corner of the web. I write software for telescopes for a living, and off the clock I'm chasing clear skies, live shows, and plane tickets, usually with my family in tow.",
+    "I write software for telescopes. Most of the job is making complicated things feel simple to someone who is tired. The rest of this site has nothing to do with work.",
   /** The career voice, used on the Career page and in its meta description. */
   tagline: "I write production software for telescopes and the people who have to use it at 3 a.m.",
   intro:

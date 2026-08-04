@@ -130,7 +130,16 @@ export function Shows() {
   if (showStats.total === 0) {
     return (
       <PageShell>
-        <PageHeader eyebrow="Shows" title="Shows" lede="Nothing logged yet. Give it a weekend." />
+        <PageHeader
+          eyebrow="Shows"
+          title={
+            <>
+              <span className="block">Every show</span>
+              <span className="display-outline-ember block">so far</span>
+            </>
+          }
+          lede="Nothing logged yet. Give it a weekend."
+        />
       </PageShell>
     );
   }
@@ -172,7 +181,12 @@ export function Shows() {
       <PageShell className="pb-0">
         <PageHeader
           eyebrow="Shows"
-          title="Shows"
+          title={
+            <>
+              <span className="block">Every show</span>
+              <span className="display-outline-ember block">so far</span>
+            </>
+          }
           meta={[
             `${showStats.total} logged`,
             showStats.firstYear ? `Since ${showStats.firstYear}` : "",

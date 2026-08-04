@@ -58,15 +58,7 @@ export function Home() {
   return (
     <>
       <section className="mx-auto max-w-6xl px-4 pt-10 pb-14 sm:px-6 sm:pt-16">
-        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-border pb-3">
-          <ul className="flex flex-wrap gap-x-5 gap-y-1">
-            <li className="readout-dim">{profile.location}</li>
-            <li className="readout-dim">He/him</li>
-            <li className="readout-dim">Chasing dark skies</li>
-          </ul>
-        </div>
-
-        <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-end lg:gap-12">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-end lg:gap-12">
           <div>
             <h1 className="display text-[clamp(4rem,17vw,12.5rem)]">
               <span className="block">Dan</span>

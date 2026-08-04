@@ -71,7 +71,6 @@ export function About() {
             <span className="display-outline block">Dan?</span>
           </>
         }
-        meta={[profile.location, "He/him", "Loud"]}
         lede="I'm Dan. I write telescope software for a living; this page is the rest of the day."
         asideAlign="start"
         aside={

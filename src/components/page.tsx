@@ -49,9 +49,13 @@ export function PageHeader({
    */
   asideAlign?: "start" | "end";
 }) {
+  // The title's top margin is spacing away from the rule, so with no rule to
+  // clear it would push the page down past the shell's own padding.
+  const rule = Boolean(eyebrow || meta?.length);
+
   const intro = (
     <>
-      <h1 className="display mt-6 text-[clamp(3.25rem,13vw,9rem)]">{title}</h1>
+      <h1 className={cn("display text-[clamp(3.25rem,13vw,9rem)]", rule && "mt-6")}>{title}</h1>
 
       {lede ? (
         <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground text-pretty">
@@ -68,7 +72,7 @@ export function PageHeader({
       {/* With only one child left, `justify-between` puts it at the start, so
           dropping the eyebrow slides the meta rail under the title rather than
           leaving it stranded on the right. No rule at all when both are gone. */}
-      {eyebrow || meta?.length ? (
+      {rule ? (
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-border pb-3">
           {eyebrow ? <p className="readout text-ember">{eyebrow}</p> : null}
           {meta?.length ? (
@@ -91,7 +95,7 @@ export function PageHeader({
           )}
         >
           <div>{intro}</div>
-          <div className={asideAlign === "end" ? "lg:pb-1" : "lg:mt-6"}>{aside}</div>
+          <div className={cn(asideAlign === "end" ? "lg:pb-1" : rule && "lg:mt-6")}>{aside}</div>
         </div>
       ) : (
         intro

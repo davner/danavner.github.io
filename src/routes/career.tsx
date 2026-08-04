@@ -24,7 +24,6 @@ export function Career() {
             <span className="display-outline-ember block">the dark</span>
           </>
         }
-        meta={[profile.role, profile.org, "2013 - present"]}
         lede={profile.intro}
         aside={
           <FramedPhoto

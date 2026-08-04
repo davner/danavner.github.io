@@ -8,7 +8,7 @@ export function NotFound() {
   useDocumentMeta("Not found", "That page does not exist.");
 
   return (
-    <PageShell className="max-w-2xl py-24 text-center">
+    <PageShell className="max-w-2xl text-center">
       <p className="display text-[clamp(6rem,25vw,14rem)] text-ember">404</p>
       <h1 className="display mt-4 text-3xl text-balance sm:text-4xl">
         Nothing at these coordinates

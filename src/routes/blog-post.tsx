@@ -53,10 +53,10 @@ export function BlogPost() {
             ) : null}
           </div>
 
-          <h1 className="display mt-7 text-[clamp(2.5rem,8vw,5rem)]">{post.title}</h1>
+          <h1 className="display mt-6 text-[clamp(2.5rem,8vw,5rem)]">{post.title}</h1>
 
           {post.summary ? (
-            <p className="mt-6 text-lg leading-relaxed text-muted-foreground text-pretty">
+            <p className="mt-7 text-lg leading-relaxed text-muted-foreground text-pretty">
               {post.summary}
             </p>
           ) : null}

@@ -171,7 +171,7 @@ export function Career() {
       </Section>
 
       <Section>
-        <div className="border border-ember/40 p-8 text-center sm:p-14">
+        <div className="border border-ember/40 p-8 text-center sm:p-12">
           <p className="readout text-ember">Sidereal Software</p>
           <h2 className="display mx-auto mt-5 max-w-3xl text-4xl text-balance sm:text-6xl">
             Science is hard enough. The software should not be.

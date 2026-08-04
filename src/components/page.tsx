@@ -38,6 +38,9 @@ export function PageHeader({
    * How the aside lines up with the title column. `end` sits it at the bottom
    * (good when the media is shorter than the text); `start` tops it out level
    * with the title (good when the media is the taller column).
+   *
+   * `start` picks up the same `mt-6` the title has, so it lines up with the
+   * title rather than with the rule above it.
    */
   asideAlign?: "start" | "end";
 }) {
@@ -78,7 +81,7 @@ export function PageHeader({
           )}
         >
           <div>{intro}</div>
-          <div className={asideAlign === "end" ? "lg:pb-1" : undefined}>{aside}</div>
+          <div className={asideAlign === "end" ? "lg:pb-1" : "lg:mt-6"}>{aside}</div>
         </div>
       ) : (
         intro

@@ -1,4 +1,5 @@
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import { Suspense, lazy } from "react";
 import Markdown from "react-markdown";
 import { Link, useParams } from "react-router";
 import rehypeHighlight from "rehype-highlight";
@@ -11,6 +12,12 @@ import { Badge } from "@/components/ui/badge";
 import { CATEGORY_LABEL, formatDate, getPost, posts } from "@/lib/blog";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 import { NotFound } from "@/routes/not-found";
+
+// Most posts are words only, and the carousel is ~24kB of embla that they would
+// otherwise all pay for. Loaded on demand so only a post with photos fetches it.
+const PhotoCarousel = lazy(() =>
+  import("@/components/photo-carousel").then((module) => ({ default: module.PhotoCarousel })),
+);
 
 export function BlogPost() {
   const { slug } = useParams();
@@ -107,6 +114,17 @@ export function BlogPost() {
             {post.body}
           </Markdown>
         </div>
+
+        {/* Below the writing rather than inside it. A post's photos are the
+            same carousel a show or a trip gets, so they carry captions and alt
+            text the build has already checked. */}
+        {post.photos.length > 0 ? (
+          <Suspense fallback={null}>
+            <div className="mt-12">
+              <PhotoCarousel photos={post.photos} label={post.title} />
+            </div>
+          </Suspense>
+        ) : null}
       </article>
 
       {newer || older ? (

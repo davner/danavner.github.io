@@ -1,18 +1,11 @@
 import { shows as rawShows } from "virtual:shows";
 
 import { profile } from "@/content/profile";
+import type { Photo } from "@/lib/photo";
 
 export type ShowType = "show" | "festival";
 
 export const MAX_RATING = 5;
-
-export interface Photo {
-  /** Path under `public/`, or a full URL. */
-  src: string;
-  /** Falls back to a generated description when empty. */
-  alt: string;
-  caption: string;
-}
 
 export interface Setlist {
   /** The band the setlist belongs to. Always one that played this night. */

@@ -64,7 +64,7 @@ function splitFrontmatter(collection: string, file: string, raw: string): Frontm
   };
 }
 
-function parsePost({ file, meta, body, slug }: Frontmatter) {
+function parsePost({ file, meta, body, slug }: Frontmatter, publicDir: string) {
   const title = asTrimmedString(meta.title);
   if (!title) fail("blog", file, "frontmatter needs a `title`");
 
@@ -89,6 +89,13 @@ function parsePost({ file, meta, body, slug }: Frontmatter) {
     category,
     summary: asTrimmedString(meta.summary),
     tags: asStringArray(meta.tags),
+    /*
+     * Optional, and validated exactly like a show's or a trip's. Markdown can
+     * still embed an image inline, but nothing checks those - no required alt
+     * text, no required caption, no build-time check that the file is there.
+     * A post whose photos are the point should use this instead.
+     */
+    photos: asPhotos("blog", meta.photos, file, publicDir),
     draft: meta.draft === true,
     readingTime: Math.max(1, Math.ceil(words / WORDS_PER_MINUTE)),
     body,

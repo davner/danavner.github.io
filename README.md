@@ -1,6 +1,7 @@
 # danavner.com
 
-My personal site - work, writing, and a log of every show I have been to.
+My personal site - work, writing, a log of every show I have been to, and
+where I have travelled.
 Live at **[danavner.com](https://danavner.com)**.
 
 It is a static React site with no backend and no CMS. All the content is
@@ -93,8 +94,10 @@ src/
   components/
     ui/                   shadcn/ui: Button, Badge, Carousel, Toggle, ToggleGroup
     framed-photo.tsx      the site's photo frame, caption printed on the image
+    fact-line.tsx         a detail page's own facts, set under its title
   lib/
     blog.ts               post helpers over the plugin's output
+    photo.ts              the Photo type, shared by all three collections
     shows.ts              sorting, year grouping, derived show stats
     show-summary.ts       one-line show description, shared with the Node build
     show-card.ts          draws the shareable poster on a canvas
@@ -143,6 +146,10 @@ category: personal
 summary: One or two sentences, shown on the card and used as the meta description.
 tags: [writing]
 draft: false
+photos:                   # optional; alt and caption required on each
+  - src: /img/blog/hello-world/table.jpg
+    alt: A long table from above, plates cleared, one candle still going
+    caption: The end of it
 ---
 
 Body in markdown. GFM tables, task lists, and fenced code blocks with syntax
@@ -156,9 +163,17 @@ highlighting all work.
 | `category` | yes | `work` or `personal` - drives the filter on `/blog` |
 | `summary` | no | Recommended; used on cards and for link previews |
 | `tags` | no | Free-form list, shown on the post page |
+| `photos` | no | Same rules and same carousel as a show or a trip |
 | `draft` | no | `true` keeps it in `npm run dev` and out of the build |
 
 Reading time is computed from the word count. Renaming a file changes its URL.
+
+Markdown can embed an image inline with `![]()`, but nothing checks those - no
+required alt text, no required caption, and no build-time check that the file is
+there. Use `photos` when the pictures are part of the post rather than an
+illustration inside it: they are validated like every other photo on the site and
+render in the same carousel, below the writing. The carousel itself is loaded on
+demand, so a post without photos never fetches it.
 
 ---
 

@@ -1,5 +1,7 @@
 import { posts as rawPosts } from "virtual:blog";
 
+import type { Photo } from "@/lib/photo";
+
 export const CATEGORIES = ["work", "personal"] as const;
 export type Category = (typeof CATEGORIES)[number];
 
@@ -11,6 +13,12 @@ export interface Post {
   category: Category;
   summary: string;
   tags: string[];
+  /**
+   * Optional, and validated the way a show's or a trip's are. Markdown in the
+   * body can embed an image inline, but nothing checks those - use this when
+   * the photos are part of the post rather than an illustration in it.
+   */
+  photos: Photo[];
   draft: boolean;
   /** Rounded up, in minutes. */
   readingTime: number;

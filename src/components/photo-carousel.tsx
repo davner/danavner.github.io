@@ -8,7 +8,7 @@ import {
   CarouselPrevious,
   type CarouselApi,
 } from "@/components/ui/carousel";
-import type { Photo } from "@/lib/shows";
+import type { Photo } from "@/lib/photo";
 
 /**
  * Photo strip for a show, built on the shadcn/ui Carousel.

@@ -1,7 +1,7 @@
 import { trips as rawTrips } from "virtual:trips";
 
 import { profile } from "@/content/profile";
-import type { Photo } from "@/lib/shows";
+import type { Photo } from "@/lib/photo";
 
 export type TripType = "vacation" | "family" | "work" | "tour";
 

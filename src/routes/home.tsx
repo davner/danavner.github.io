@@ -66,7 +66,7 @@ export function Home() {
       {/* Matches PageShell's `pt-12 sm:pt-16` so the landing page starts at the
           same height off the nav as every other page. */}
       <section className="mx-auto max-w-6xl px-4 pt-12 pb-14 sm:px-6 sm:pt-16">
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-end lg:gap-12">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start lg:gap-12">
           <div>
             <h1 className="display text-[clamp(4rem,17vw,12.5rem)]">
               <span className="block">Dan</span>
@@ -105,17 +105,17 @@ export function Home() {
             </div>
           </div>
 
-          {/* Duotone until you hover it - poster treatment that still lets the
-              photo be a photo. */}
-          <div className="group w-full max-w-xs justify-self-center lg:max-w-none lg:justify-self-end">
+          {/* Full colour and full width, tops out level with the wordmark the
+              way the about and career hero photos do. */}
+          <div>
             <FramedPhoto
               src="/img/me1.jpg"
               alt={`${profile.name}, smiling, in a patterned shirt`}
               caption="Subject, smiling"
-              width={320}
-              height={400}
+              width={1067}
+              height={1334}
               eager
-              imageClassName="aspect-4/5 grayscale contrast-[1.15] transition-all duration-500 group-hover:grayscale-0 group-hover:contrast-100"
+              imageClassName="aspect-4/5"
             />
           </div>
         </div>

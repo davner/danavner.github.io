@@ -5,6 +5,7 @@ import rehypeHighlight from "rehype-highlight";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 
+import { FactLine } from "@/components/fact-line";
 import { PageShell } from "@/components/page";
 import { Badge } from "@/components/ui/badge";
 import { CATEGORY_LABEL, formatDate, getPost, posts } from "@/lib/blog";
@@ -35,25 +36,24 @@ export function BlogPost() {
 
       <article className="mt-10">
         <header>
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-border pb-3">
+          <h1 className="display text-[clamp(2.5rem,8vw,5rem)]">{post.title}</h1>
+
+          {/* When it went up and what it costs to read, stated the same way a
+              show page states its date and room. */}
+          <FactLine
+            items={[
+              <time dateTime={post.date}>{formatDate(post.date)}</time>,
+              `${post.readingTime} min read`,
+            ]}
+            className="mt-6"
+          />
+
+          <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2">
             <Badge variant={post.category === "work" ? "ember" : "ion"}>
               {CATEGORY_LABEL[post.category]}
             </Badge>
-            <span className="text-border">/</span>
-            <time dateTime={post.date} className="readout-dim">
-              {formatDate(post.date)}
-            </time>
-            <span className="text-border">/</span>
-            <span className="readout-dim">{post.readingTime} min read</span>
-            {post.draft ? (
-              <>
-                <span className="text-border">/</span>
-                <Badge variant="ember">Draft</Badge>
-              </>
-            ) : null}
+            {post.draft ? <Badge variant="ember">Draft</Badge> : null}
           </div>
-
-          <h1 className="display mt-6 text-[clamp(2.5rem,8vw,5rem)]">{post.title}</h1>
 
           {post.summary ? (
             <p className="mt-7 text-lg leading-relaxed text-muted-foreground text-pretty">

@@ -40,8 +40,11 @@ export function PageHeader({
     <>
       <h1 className="display text-[clamp(3.25rem,13vw,9rem)]">{title}</h1>
 
+      {/* `mt-6` is the standing gap under a page title, whatever follows it -
+          a lede here, a fact line on the detail pages, the kicker on the
+          landing page. */}
       {lede ? (
-        <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground text-pretty">
+        <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground text-pretty">
           {lede}
         </p>
       ) : null}

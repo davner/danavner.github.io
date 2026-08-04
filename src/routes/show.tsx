@@ -4,6 +4,7 @@ import { Link, Navigate, useParams } from "react-router";
 import remarkGfm from "remark-gfm";
 
 import { DuoBadge } from "@/components/duo-badge";
+import { FactLine } from "@/components/fact-line";
 import { PageHeader, PageShell, Section } from "@/components/page";
 import { PhotoCarousel } from "@/components/photo-carousel";
 import { Rating } from "@/components/rating";
@@ -60,30 +61,10 @@ function ShowBody({ show }: { show: (typeof shows)[number] }) {
   return (
     <PageShell>
       <PageHeader title={show.title}>
-        {/* Set at reading size rather than as a small readout. This page is the
-            target of every share link, so when someone opens it from a text
-            message the date and the room are the first thing they need, and
-            they are stated nowhere else on the page. */}
-        {facts.length > 0 ? (
-          <p
-            data-slot="show-facts"
-            className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 text-lg text-muted-foreground"
-          >
-            {/* The separator travels with the fact after it rather than sitting
-                between them as its own item. Wrapping this line otherwise
-                strands a dot at the end of a row, where it reads as a typo. */}
-            {facts.map((fact, index) => (
-              <span key={fact} className="flex items-center gap-x-3">
-                {index > 0 ? (
-                  <span className="text-ember" aria-hidden>
-                    ·
-                  </span>
-                ) : null}
-                {fact}
-              </span>
-            ))}
-          </p>
-        ) : null}
+        {/* This page is the target of every share link, so when someone opens
+            it from a text message the date and the room are the first thing
+            they need, and they are stated nowhere else on the page. */}
+        <FactLine items={facts} className="mt-6" />
 
         <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2">
           {tags.map((tag) => (

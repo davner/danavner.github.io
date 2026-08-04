@@ -57,7 +57,9 @@ export function Home() {
 
   return (
     <>
-      <section className="mx-auto max-w-6xl px-4 pt-10 pb-14 sm:px-6 sm:pt-16">
+      {/* Matches PageShell's `pt-12 sm:pt-16` so the landing page starts at the
+          same height off the nav as every other page. */}
+      <section className="mx-auto max-w-6xl px-4 pt-12 pb-14 sm:px-6 sm:pt-16">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-end lg:gap-12">
           <div>
             <h1 className="display text-[clamp(4rem,17vw,12.5rem)]">
@@ -70,7 +72,7 @@ export function Home() {
                 and two ember lines stacked would fight. Each sentence is its
                 own flex item, so wrapping breaks between sentences rather than
                 mid-thought. */}
-            <p className="readout-dim mt-8 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            <p className="readout-dim mt-6 flex flex-wrap items-baseline gap-x-2 gap-y-1">
               <span>{profile.quest.label}:</span>
               <span>{profile.quest.main}</span>
               <span>{profile.quest.aside}</span>
@@ -116,7 +118,9 @@ export function Home() {
 
       <Marquee items={TICKER} />
 
-      <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+      {/* `pb-8` rather than a matching `pb-20`, so the gap down to the footer is
+          PageShell's, not double it. */}
+      <div className="mx-auto max-w-6xl px-4 pt-20 pb-8 sm:px-6">
         <Section>
           <ul className="border-t border-border">
             {INDEX.map((entry) => (

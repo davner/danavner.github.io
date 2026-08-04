@@ -302,7 +302,7 @@ test.describe("shows", () => {
       await page.goto(href);
       await page.getByRole("heading", { level: 1 }).waitFor();
 
-      const facts = page.locator("[data-slot=show-facts]");
+      const facts = page.locator("[data-slot=facts]");
       await expect(facts).toHaveCount(1);
 
       const stated = await facts.innerText();

@@ -26,9 +26,10 @@ Use `WebSearch` to fill in what the user did not say. Worth looking up, in
 order of how often it helps:
 
 1. **Venue** - from the artist, city, and date.
-2. **Capacity** - what the venue publishes for a standing show, from the venue's
-   own site or Wikipedia. Leave it out when nothing authoritative says; a room
-   size is the sort of number people check.
+2. **Capacity** - the standing figure for a room, from the venue's own site or
+   Wikipedia. A festival ground rarely publishes one, so ask the user for the
+   daily attendance instead. Leave it out when neither is available; a room size
+   is the sort of number people check.
 3. **Tour name** - goes in `subtitle`, e.g. `The Romantic Tour`.
 4. **Openers** - the user often only remembers the headliner. Support acts
    round out `lineup` and count toward "bands seen".

@@ -39,22 +39,16 @@ function ShowBanner({ photo }: { photo: Photo }) {
   return (
     <div
       aria-hidden
-      className="pointer-events-none absolute inset-x-0 top-0 h-[24rem] overflow-hidden sm:h-[34rem]"
+      className="pointer-events-none absolute inset-x-0 top-0 h-80 overflow-hidden sm:h-96"
     >
-      {/* A blurred, over-scaled copy fills the full width so a portrait or a
-          landscape photo both reach the window edges with no empty bars. */}
-      <img
-        src={photo.src}
-        alt=""
-        className="absolute inset-0 size-full scale-110 object-cover opacity-50 blur-2xl"
-      />
-      {/* The whole photo, uncropped, pinned to the top of the band over that
-          fill, so its subject sits above the header text rather than behind it. */}
-      <img src={photo.src} alt="" className="relative size-full object-contain object-top" />
-      {/* A scrim keeps the title and facts legible; the band melts to solid page
-          colour at the bottom, the way the share card fades its photo, so there
-          is no hard edge over the content below. */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/45 to-background" />
+      {/* Covers the whole band edge to edge, so there are no blurred side bars,
+          and sits low enough that the title reads over it. */}
+      <img src={photo.src} alt="" className="size-full object-cover object-center opacity-30" />
+      {/* Fades the photo into the page: soft at the top so the title stays
+          legible, gone into solid page colour at the bottom. The stops are the
+          `background` token, so it dissolves to the right colour in either
+          theme rather than to a fixed dark. */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/80 to-background" />
     </div>
   );
 }

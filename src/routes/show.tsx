@@ -37,14 +37,18 @@ import { useDocumentMeta } from "@/lib/use-document-meta";
  */
 function ShowBanner({ photo }: { photo: Photo }) {
   return (
-    <div
-      aria-hidden
-      className="pointer-events-none absolute inset-x-0 top-0 h-72 overflow-hidden sm:h-96"
-    >
-      <img src={photo.src} alt="" className="size-full object-cover object-center opacity-30" />
-      {/* Transparent at the top, solid background at the bottom, so the image
-          has no hard edge and the header sits on clean page colour. */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/80 to-background" />
+    <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 flex justify-center">
+      {/* Held to the same max-w-6xl padded box as PageShell, so the banner lines
+          up with the Lineup and Information sections rather than bleeding to the
+          window edges. */}
+      <div className="w-full max-w-6xl px-4 sm:px-6">
+        <div className="relative h-72 overflow-hidden sm:h-96">
+          <img src={photo.src} alt="" className="size-full object-cover object-center opacity-45" />
+          {/* Transparent at the top, solid background at the bottom, so the image
+              has no hard edge and the header sits on clean page colour. */}
+          <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/80 to-background" />
+        </div>
+      </div>
     </div>
   );
 }

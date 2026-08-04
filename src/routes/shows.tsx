@@ -1,10 +1,20 @@
-import { ArrowUpRight, Building2, Calendar, Flame, MapPin, Music, Ticket, Users } from "lucide-react";
+import {
+  ArrowUpRight,
+  Building2,
+  Calendar,
+  ChevronDown,
+  Flame,
+  MapPin,
+  Music,
+  Ticket,
+  Users,
+} from "lucide-react";
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 
 import { BandList } from "@/components/band-list";
 import { Marquee } from "@/components/marquee";
-import { PageHeader, PageShell, Section } from "@/components/page";
+import { PageHeader, PageShell } from "@/components/page";
 import { DuoBadge } from "@/components/duo-badge";
 import { Rating } from "@/components/rating";
 import { SoloBadge } from "@/components/solo-badge";
@@ -309,25 +319,39 @@ export function Shows() {
       ) : null}
 
       <PageShell className="pt-16">
-        {showsByYear.map((group, groupIndex) => (
-          <Section
-            key={group.year}
-            title={group.year}
-            index={String(groupIndex + 1).padStart(2, "0")}
-            className={groupIndex === 0 ? "mt-0" : undefined}
-            action={
-              <span className="readout-dim">
-                {group.shows.length} {group.shows.length === 1 ? "entry" : "entries"}
-              </span>
-            }
-          >
-            <ul className="border-t border-border">
-              {group.shows.map((show) => (
-                <ShowRow key={show.slug} show={show} />
-              ))}
-            </ul>
-          </Section>
-        ))}
+        {/* Each year is a collapsible accordion. The most recent year opens by
+            default; older years start minimized so the log stays scannable. */}
+        <div className="border-t border-border">
+          {showsByYear.map((group, groupIndex) => (
+            <details
+              key={group.year}
+              {...(groupIndex === 0 ? { open: true } : {})}
+              className="group/year border-b border-border"
+            >
+              <summary className="group/sum flex cursor-pointer list-none items-center justify-between gap-6 py-4 select-none marker:hidden [&::-webkit-details-marker]:hidden">
+                <span className="flex items-baseline gap-3">
+                  <span className="font-mono text-xs text-ember">
+                    {String(groupIndex + 1).padStart(2, "0")}
+                  </span>
+                  <span className="display text-2xl transition-colors group-hover/sum:text-ember sm:text-3xl">
+                    {group.year}
+                  </span>
+                </span>
+                <span className="flex items-center gap-3 text-muted-foreground">
+                  <span className="readout-dim">
+                    {group.shows.length} {group.shows.length === 1 ? "entry" : "entries"}
+                  </span>
+                  <ChevronDown className="size-4 shrink-0 transition-transform duration-200 group-hover/sum:text-ember group-open/year:rotate-180" />
+                </span>
+              </summary>
+              <ul className="border-t border-border">
+                {group.shows.map((show) => (
+                  <ShowRow key={show.slug} show={show} />
+                ))}
+              </ul>
+            </details>
+          ))}
+        </div>
       </PageShell>
     </>
   );

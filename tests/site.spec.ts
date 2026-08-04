@@ -125,6 +125,11 @@ test.describe("shows", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/shows");
     await page.getByRole("heading", { level: 1 }).waitFor();
+    // Years render as accordions and older ones start collapsed, which hides
+    // their rows from innerText. Open them all so row assertions see every show.
+    await page
+      .locator("details")
+      .evaluateAll((els) => els.forEach((d) => ((d as HTMLDetailsElement).open = true)));
   });
 
   test("row count matches the logged stat", async ({ page }) => {

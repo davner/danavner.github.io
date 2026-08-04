@@ -37,18 +37,17 @@ import { useDocumentMeta } from "@/lib/use-document-meta";
  */
 function ShowBanner({ photo }: { photo: Photo }) {
   return (
-    <div
-      aria-hidden
-      className="pointer-events-none absolute inset-x-0 top-0 h-80 overflow-hidden sm:h-96"
-    >
-      {/* Covers the whole band edge to edge, so there are no blurred side bars,
-          and sits low enough that the title reads over it. */}
-      <img src={photo.src} alt="" className="size-full object-cover object-center opacity-30" />
-      {/* Fades the photo into the page: soft at the top so the title stays
-          legible, gone into solid page colour at the bottom. The stops are the
-          `background` token, so it dissolves to the right colour in either
-          theme rather than to a fixed dark. */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/80 to-background" />
+    <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-dvh overflow-hidden">
+      {/* Covers the whole band edge to edge, so there are no blurred side bars.
+          Runs a full screen tall regardless of the photo's shape, so every show
+          bleeds its photo down the page rather than cutting off in a short band. */}
+      <img src={photo.src} alt="" className="size-full object-cover object-center opacity-55" />
+      {/* Fades the photo into the page over the whole screen: present enough at
+          the top to read as a photo, with a stronger wash right behind the title
+          so it stays legible, then gone into solid page colour lower down. The
+          stops are the `background` token, so it dissolves to the right colour in
+          either theme rather than to a fixed dark. */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background/55 via-background/85 to-background" />
     </div>
   );
 }
@@ -217,7 +216,7 @@ function ShowBody({ show }: { show: (typeof shows)[number] }) {
           ) : null}
 
           {show.bestSong || show.solo || show.companions.length > 0 ? (
-            <Section title="The night">
+            <Section title="The show">
               <div className="space-y-4">
                 {show.bestSong ? (
                   <p className="flex items-center gap-2 text-muted-foreground">

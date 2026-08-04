@@ -31,7 +31,7 @@ photos:
     caption: The whole crew
   - src: /img/shows/bilmuri-los-angeles-2026/in-the-crowd.jpg
     alt: Packed crowd washed in red light, arms up, mid-set
-    caption: Somewhere in the red
+    caption: Screaming along to 2016 Cavaliers (Ohio)
 setlists:
   - band: Bilmuri
     url: https://www.setlist.fm/setlist/bilmuri/2026/hollywood-palladium-los-angeles-ca-3b4b1c38.html

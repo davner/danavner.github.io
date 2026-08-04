@@ -28,7 +28,7 @@ photos:
     caption: Out front with Mikey
   - src: /img/shows/hot-mulligan-los-angeles-2025/second-row.jpg
     alt: Selfie throwing a peace sign from the floor, the stage behind lit pink and blue with the curtain still down
-    caption: Second row, curtain still down
+    caption: And that's a wrap
 ---
 
 Had to see them for the new record, and we got almost to barricade - second row.

@@ -205,7 +205,7 @@ function RepeatList({
 export function Shows() {
   useDocumentMeta(
     "Shows",
-    "A running log of every gig I have been to - who played, where, and how loud it got.",
+    "A running log of every show I have been to - who played, where, and if I lost my hearing.",
   );
 
   if (showStats.total === 0) {
@@ -261,7 +261,7 @@ export function Shows() {
               <span className="display-outline-ember block">so far</span>
             </>
           }
-          lede="I keep a list. Mostly metalcore, occasionally something with clean vocals, and I am always somewhere near the front. Openers count too. Half the best sets I have seen went on at 7:15 to about forty people."
+          lede="I keep a list, call me Santa. Mostly emo, pop punk, and Alexis' favorite artists. I am always somewhere near the front. Openers count too. Some of the best sets I have seen went on first to about thirty people."
         />
       </PageShell>
 

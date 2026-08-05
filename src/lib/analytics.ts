@@ -55,20 +55,32 @@ export function initVisitorCount() {
 }
 
 /**
- * The total site visitor count as a number, or null when it cannot be read
- * (offline, blocked, public counts disabled, or the account does not exist yet).
- * The endpoint returns the number as a formatted string like "1,234".
+ * The visitor total, read from a same-origin file baked at build time by
+ * `scripts/bake-visitor-count.mjs`. It is deliberately NOT read from GoatCounter
+ * in the browser: that is a cross-site request to an analytics host, and Safari
+ * and Firefox content blockers drop exactly those, leaving the counter dead for
+ * anyone running one. Serving the number from our own origin gives a blocker
+ * nothing to catch. `BASE_URL` keeps the path right under any Vite base.
+ */
+const COUNT_URL = `${import.meta.env?.BASE_URL ?? "/"}visitor-count.json`;
+
+/**
+ * The total site visitor count as a positive number, or null when there is
+ * nothing to show (the file is missing or unreadable, or the build could not
+ * read a real total). The baked file holds the number directly, e.g. `1234`.
+ *
+ * A zero is folded into null on purpose: the ticker's offline face is a better
+ * empty state than an all-zeros odometer, which reads as a broken counter on a
+ * site that plainly has traffic. As soon as a real total is baked in the ticker
+ * lights up on its own.
  */
 export async function fetchVisitorCount(signal?: AbortSignal): Promise<number | null> {
   try {
-    const response = await fetch(`${ENDPOINT}/counter/TOTAL.json`, { signal });
+    const response = await fetch(COUNT_URL, { signal });
     if (!response.ok) return null;
 
-    const data = (await response.json()) as { count?: string };
-    if (!data.count) return null;
-
-    const count = Number(data.count.replace(/[^0-9]/g, ""));
-    return Number.isFinite(count) ? count : null;
+    const { count } = (await response.json()) as { count?: number | null };
+    return typeof count === "number" && Number.isFinite(count) && count > 0 ? count : null;
   } catch {
     return null;
   }

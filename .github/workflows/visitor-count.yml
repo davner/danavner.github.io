@@ -1,0 +1,47 @@
+name: Visitor count
+
+# The landing-page counter is served from a committed, same-origin file
+# (public/visitor-count.json) because Safari and Firefox content blockers drop a
+# live cross-site fetch to GoatCounter, leaving the counter dead for anyone
+# running one. This job is the only thing that talks to GoatCounter: nightly, in
+# CI where no blocker exists, it reads the total and commits the number so the
+# site serves it from its own origin. A failed read commits nothing, so the last
+# good number stays and keeps showing. The push triggers the normal deploy; this
+# job runs on a schedule, not on push, so its own commit never re-triggers it.
+
+on:
+  schedule:
+    - cron: "17 7 * * *" # 07:17 UTC nightly; an odd minute dodges cron congestion.
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: visitor-count
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Read the total and update the committed count
+        run: node scripts/update-visitor-count.mjs
+
+      - name: Commit if the number moved
+        run: |
+          if git diff --quiet -- public/visitor-count.json; then
+            echo "visitor-count: unchanged, nothing to commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/visitor-count.json
+          git commit -m "chore(ticker): refresh visitor count"
+          git push

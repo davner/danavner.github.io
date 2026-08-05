@@ -138,7 +138,7 @@ const html = `<!doctype html>
     <div class="glow"></div>
     <div class="content">
       <div class="wordmark"><span>Dan</span><br /><span class="outline">Avner</span></div>
-      <div class="sections">About<span class="dot">&middot;</span>Software<span class="dot">&middot;</span>Blog<span class="dot">&middot;</span>Shows<span class="dot">&middot;</span>Trips</div>
+      <div class="sections">Software<span class="dot">&middot;</span>Blog<span class="dot">&middot;</span>Shows</div>
     </div>
     <div class="url">danavner.com</div>
   </body>

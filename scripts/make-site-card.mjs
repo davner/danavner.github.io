@@ -94,34 +94,35 @@ const html = `<!doctype html>
         padding: 72px 80px;
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
-      }
-      .kicker {
-        font-family: "JBM", monospace;
-        font-weight: 500;
-        font-size: 24px;
-        letter-spacing: 6px;
-        text-transform: uppercase;
-        color: ${EMBER};
+        justify-content: center;
       }
       .wordmark {
         font-family: "Anton", sans-serif;
         font-size: 168px;
         line-height: 0.86;
         text-transform: uppercase;
-        margin: 26px 0 24px;
       }
       .wordmark .outline {
         color: transparent;
         -webkit-text-stroke: 2px ${EMBER};
       }
-      .blurb {
-        font-size: 31px;
-        line-height: 1.35;
-        color: ${DIM};
-        max-width: 560px;
+      /* The site's sections, read like the offerings on a business card. */
+      .sections {
+        margin-top: 34px;
+        font-family: "JBM", monospace;
+        font-weight: 500;
+        font-size: 25px;
+        letter-spacing: 2px;
+        color: ${INK};
+      }
+      .sections .dot {
+        color: ${EMBER};
+        margin: 0 12px;
       }
       .url {
+        position: absolute;
+        left: 80px;
+        bottom: 60px;
         font-family: "JBM", monospace;
         font-weight: 500;
         font-size: 24px;
@@ -136,13 +137,10 @@ const html = `<!doctype html>
     <div class="fade"></div>
     <div class="glow"></div>
     <div class="content">
-      <div>
-        <div class="kicker">Software &middot; Shows &middot; Trips</div>
-        <div class="wordmark"><span>Dan</span><br /><span class="outline">Avner</span></div>
-        <div class="blurb">The things I build, the shows I never skip, and the road in between.</div>
-      </div>
-      <div class="url">danavner.com</div>
+      <div class="wordmark"><span>Dan</span><br /><span class="outline">Avner</span></div>
+      <div class="sections">About<span class="dot">&middot;</span>Software<span class="dot">&middot;</span>Blog<span class="dot">&middot;</span>Shows<span class="dot">&middot;</span>Trips</div>
     </div>
+    <div class="url">danavner.com</div>
   </body>
 </html>`;
 

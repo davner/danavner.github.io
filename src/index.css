@@ -121,11 +121,11 @@
   --radius-lg: calc(var(--radius) + 2px);
   --radius-xl: calc(var(--radius) + 4px);
 
-  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    sans-serif;
-  --font-mono: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, Consolas,
-    monospace;
-  --font-display: "Anton", "Arial Narrow", "Haettenschweiler", Impact, sans-serif;
+  --font-sans: "Inter Variable", "Inter Fallback", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono Variable", "JetBrains Mono Fallback", ui-monospace, SFMono-Regular,
+    Menlo, Consolas, monospace;
+  --font-display: "Anton", "Anton Fallback", "Arial Narrow", "Haettenschweiler", Impact, sans-serif;
 }
 
 @layer base {

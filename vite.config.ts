@@ -38,6 +38,36 @@ function lastUpdated(): string {
 }
 
 /**
+ * Preloads the self-hosted fonts so they start downloading with the first HTML
+ * byte, in parallel with the JS bundle, rather than only once the bundled CSS
+ * has parsed. Paired with the metric-matched fallbacks in `fonts.css`, this is
+ * what makes the real fonts swap in fast and without a layout shift. The font
+ * files are content-hashed at build time, so the links are injected from the
+ * emitted bundle rather than hard-coded in `index.html`.
+ */
+function preloadFonts(): Plugin {
+  return {
+    name: "preload-fonts",
+    apply: "build",
+    transformIndexHtml: {
+      order: "post",
+      handler(html, ctx) {
+        if (!ctx.bundle) return html;
+        const fonts = Object.keys(ctx.bundle).filter((name) => name.endsWith(".woff2"));
+        return {
+          html,
+          tags: fonts.map((name) => ({
+            tag: "link",
+            attrs: { rel: "preload", as: "font", type: "font/woff2", href: `/${name}`, crossorigin: "" },
+            injectTo: "head",
+          })),
+        };
+      },
+    },
+  };
+}
+
+/**
  * GitHub Pages has no SPA rewrite rule, so a deep link like /blog/some-post
  * 404s on a hard refresh. Pages serves 404.html for unknown paths, so shipping
  * a copy of index.html under that name lets the client router take over.
@@ -57,7 +87,14 @@ export default defineConfig({
   define: {
     __LAST_UPDATED__: JSON.stringify(lastUpdated()),
   },
-  plugins: [react(), tailwindcss(), contentPlugin(), githubPagesSpaFallback(), sharePagesPlugin()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    contentPlugin(),
+    preloadFonts(),
+    githubPagesSpaFallback(),
+    sharePagesPlugin(),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "./src"),

@@ -55,33 +55,70 @@ export function initVisitorCount() {
 }
 
 /**
- * The visitor total, read from a same-origin file baked at build time by
- * `scripts/bake-visitor-count.mjs`. It is deliberately NOT read from GoatCounter
- * in the browser: that is a cross-site request to an analytics host, and Safari
- * and Firefox content blockers drop exactly those, leaving the counter dead for
- * anyone running one. Serving the number from our own origin gives a blocker
- * nothing to catch. `BASE_URL` keeps the path right under any Vite base.
+ * The live total, read straight from GoatCounter so the number is current.
+ * `?start=2020-01-01` (before the site existed) asks for the full running total
+ * and, being part of the computed result, keys a fresh CDN entry - dodging a
+ * copy of TOTAL.json that once wedged serving a stale `0`.
  */
-const COUNT_URL = `${import.meta.env?.BASE_URL ?? "/"}visitor-count.json`;
+const LIVE_URL = `${ENDPOINT}/counter/TOTAL.json?start=2020-01-01`;
 
 /**
- * The total site visitor count as a positive number, or null when there is
- * nothing to show (the file is missing or unreadable, or the build could not
- * read a real total). The baked file holds the number directly, e.g. `1234`.
- *
- * A zero is folded into null on purpose: the ticker's offline face is a better
- * empty state than an all-zeros odometer, which reads as a broken counter on a
- * site that plainly has traffic. As soon as a real total is baked in the ticker
- * lights up on its own.
+ * The stored total, baked same-origin by the nightly job (see
+ * `scripts/update-visitor-count.mjs`). It is the fallback for the large share of
+ * visitors whose browser blocks the cross-site GoatCounter read - Safari and
+ * Firefox content blockers drop requests to analytics domains - so the counter
+ * shows a recent number instead of going dark. `BASE_URL` keeps the path right
+ * under any Vite base.
  */
-export async function fetchVisitorCount(signal?: AbortSignal): Promise<number | null> {
-  try {
-    const response = await fetch(COUNT_URL, { signal });
-    if (!response.ok) return null;
+const STORED_URL = `${import.meta.env?.BASE_URL ?? "/"}visitor-count.json`;
 
+/**
+ * A usable total is a positive integer. Zero and empty fold to null on purpose:
+ * the stored number, or the offline face, reads better than an all-zeros
+ * odometer on a site that plainly has traffic. Accepts GoatCounter's formatted
+ * string ("1,234") or the stored file's bare number.
+ */
+function asPositive(value: unknown): number | null {
+  const n = typeof value === "string" ? Number(value.replace(/[^0-9]/g, "")) : Number(value);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+/** Read the live GoatCounter total. Throws on a network or HTTP failure. */
+async function fetchLiveCount(signal?: AbortSignal): Promise<number | null> {
+  const response = await fetch(LIVE_URL, { signal });
+  if (!response.ok) throw new Error(`GoatCounter responded ${response.status}`);
+  const { count } = (await response.json()) as { count?: string };
+  return asPositive(count);
+}
+
+/** Read the stored same-origin total. Null on any failure - it is the floor. */
+async function fetchStoredCount(signal?: AbortSignal): Promise<number | null> {
+  try {
+    const response = await fetch(STORED_URL, { signal });
+    if (!response.ok) return null;
     const { count } = (await response.json()) as { count?: number | null };
-    return typeof count === "number" && Number.isFinite(count) && count > 0 ? count : null;
+    return asPositive(count);
   } catch {
     return null;
   }
+}
+
+/**
+ * The visitor total for the ticker. Reads GoatCounter live so the number is
+ * current, and falls back to the stored same-origin value when that read fails
+ * or comes back empty - which is exactly what happens for a visitor whose
+ * content blocker drops the cross-site request. The failure is logged so it is
+ * visible in the console rather than silently swallowed. Returns null only when
+ * both sources come up empty, and the ticker shows its offline face.
+ */
+export async function fetchVisitorCount(signal?: AbortSignal): Promise<number | null> {
+  try {
+    const live = await fetchLiveCount(signal);
+    if (live != null) return live;
+    console.warn("Visitor count: live read returned no usable total; using the stored value.");
+  } catch (error) {
+    if (signal?.aborted) return null;
+    console.error("Visitor count: live read failed; using the stored value.", error);
+  }
+  return fetchStoredCount(signal);
 }

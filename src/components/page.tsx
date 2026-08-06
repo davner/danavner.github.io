@@ -11,8 +11,24 @@ export function PageShell({ className, children }: { className?: string; childre
 }
 
 /**
+ * How big the display face is set, by how much title there is to set. Both
+ * live here rather than being spelled out at the call site, so a page cannot
+ * quietly invent a third size.
+ */
+const TITLE_SIZE = {
+  /** One or two short words, set as large as the page will carry. */
+  default: "text-[clamp(3.25rem,13vw,9rem)]",
+  /**
+   * A whole phrase. Same face, sized so a long line still clears a 320px
+   * screen without breaking mid-word.
+   */
+  long: "text-[clamp(1.75rem,6.4vw,4.5rem)]",
+} as const;
+
+/**
  * Page title block. `title` is set in the display face at poster scale, so it
- * wants one or two short words - long phrases go in `lede`.
+ * wants one or two short words - long phrases go in `lede`, or set
+ * `size="long"` when the title itself is the phrase.
  */
 export function PageHeader({
   title,
@@ -20,9 +36,12 @@ export function PageHeader({
   children,
   aside,
   asideAlign = "end",
+  size = "default",
 }: {
   title: ReactNode;
   lede?: ReactNode;
+  /** Picks the display size. See `TITLE_SIZE`. */
+  size?: keyof typeof TITLE_SIZE;
   children?: ReactNode;
   /**
    * Optional media shown beside the title on large screens and stacked below it
@@ -38,7 +57,7 @@ export function PageHeader({
 }) {
   const intro = (
     <>
-      <h1 className="display text-[clamp(3.25rem,13vw,9rem)]">{title}</h1>
+      <h1 className={cn("display", TITLE_SIZE[size])}>{title}</h1>
 
       {/* `mt-6` is the standing gap under a page title, whatever follows it -
           a lede here, a fact line on the detail pages, the kicker on the

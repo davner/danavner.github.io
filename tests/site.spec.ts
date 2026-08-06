@@ -527,6 +527,61 @@ test.describe("vinyl", () => {
   });
 });
 
+test.describe("controls", () => {
+  // Every filter control on the site comes from `components/filter-toggle.tsx`
+  // and is measured there once. Before that existed each page spelled its own
+  // padding out, and /vinyl shipped two rows of pills a quarter-step out of
+  // line with each other. Height is the thing you actually see, so that is the
+  // thing asserted.
+  for (const path of ["/vinyl", "/blog"]) {
+    test(`${path} filter controls share one height`, async ({ page }) => {
+      await page.goto(path);
+      await page.getByRole("heading", { level: 1 }).waitFor();
+      await page.evaluate(() => document.fonts.ready);
+
+      const heights = await page.evaluate(() => {
+        const nodes = [
+          ...document.querySelectorAll("[data-slot=toggle-group-item]"),
+          ...document.querySelectorAll("input[type=search]"),
+        ];
+        return nodes.map((n) => Math.round(n.getBoundingClientRect().height));
+      });
+
+      expect(heights.length).toBeGreaterThan(1);
+      expect([...new Set(heights)]).toHaveLength(1);
+    });
+  }
+
+  test("stat and valuation figures stay inside their tiles at 320px", async ({ page }) => {
+    // Three currency figures side by side used to overflow their own cells on
+    // the narrowest screens - 75px of text in 55px of tile, crossing the
+    // divider into the number beside it. The page still did not scroll
+    // sideways, so the overflow check in links.spec.ts could not see it.
+    await page.setViewportSize({ width: 320, height: 900 });
+    await page.goto("/vinyl");
+    await page.getByRole("heading", { level: 1 }).waitFor();
+    await page.evaluate(() => document.fonts.ready);
+
+    const overflowing = await page.evaluate(() => {
+      const bad: string[] = [];
+      document.querySelectorAll("[data-slot=valuation] dd, [data-slot=stat] dd").forEach((dd) => {
+        const cell = dd.parentElement!;
+        const style = getComputedStyle(cell);
+        const avail =
+          cell.getBoundingClientRect().width -
+          parseFloat(style.paddingLeft) -
+          parseFloat(style.paddingRight);
+        const range = document.createRange();
+        range.selectNodeContents(dd);
+        if (range.getBoundingClientRect().width > avail + 0.5) bad.push(dd.textContent ?? "?");
+      });
+      return bad;
+    });
+
+    expect(overflowing).toEqual([]);
+  });
+});
+
 test.describe("chrome", () => {
   test("the skip link is the first stop for a keyboard", async ({ page }) => {
     await page.goto("/");

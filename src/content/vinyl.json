@@ -1,0 +1,1292 @@
+{
+  "user": "dnafam",
+  "url": "https://www.discogs.com/user/dnafam/collection",
+  "fetched": "2026-08-06",
+  "value": {
+    "minimum": "$1,177.41",
+    "median": "$1,761.73",
+    "maximum": "$2,784.57"
+  },
+  "owners": [
+    {
+      "id": "dan",
+      "name": "Dan",
+      "count": 42
+    },
+    {
+      "id": "alexis",
+      "name": "Alexis",
+      "count": 9
+    }
+  ],
+  "records": [
+    {
+      "id": 37738842,
+      "instanceId": 2159963127,
+      "owner": "dan",
+      "artist": "Doja Cat",
+      "title": "Planet Her",
+      "year": 2026,
+      "label": "Kemosabe Records",
+      "catno": "19958448351",
+      "format": "2×LP",
+      "variant": "Purple Marble [Andromeda], 5th Anniversary",
+      "genres": [
+        "Hip Hop",
+        "Funk / Soul",
+        "Pop"
+      ],
+      "styles": [
+        "Pop Rap",
+        "Contemporary R&B",
+        "Dance-pop",
+        "Trap"
+      ],
+      "added": "2026-06-30",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/37738842",
+      "cover": "/img/vinyl/37738842.webp"
+    },
+    {
+      "id": 34929527,
+      "instanceId": 2159963080,
+      "owner": "dan",
+      "artist": "Novelists",
+      "title": "CODA",
+      "year": 2025,
+      "label": "ACKOR Music",
+      "catno": "AKR001V",
+      "format": "LP",
+      "variant": "Yellow & Black Swirl",
+      "genres": [
+        "Rock"
+      ],
+      "styles": [
+        "Metalcore"
+      ],
+      "added": "2026-06-30",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/34929527",
+      "cover": "/img/vinyl/34929527.webp"
+    },
+    {
+      "id": 21293563,
+      "instanceId": 2159962983,
+      "owner": "dan",
+      "artist": "Daft Punk",
+      "title": "TRON: Legacy (Vinyl Edition Motion Picture Soundtrack)",
+      "year": 2021,
+      "label": "Walt Disney Records",
+      "catno": "D003820601",
+      "format": "LP",
+      "variant": "Blue Transparent",
+      "genres": [
+        "Electronic",
+        "Classical",
+        "Stage & Screen"
+      ],
+      "styles": [
+        "Contemporary",
+        "Score",
+        "Soundtrack",
+        "Tech House"
+      ],
+      "added": "2026-06-30",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/21293563",
+      "cover": "/img/vinyl/21293563.webp"
+    },
+    {
+      "id": 35232754,
+      "instanceId": 2156399193,
+      "owner": "alexis",
+      "artist": "Karol G",
+      "title": "Tropicoqueta",
+      "year": 2025,
+      "label": "Bichota Records",
+      "catno": "0602475949220",
+      "format": "2×LP",
+      "variant": "Tangerine",
+      "genres": [
+        "Latin",
+        "Pop"
+      ],
+      "styles": [
+        "Reggaeton",
+        "Cumbia",
+        "Latin Pop",
+        "Bachata",
+        "Merengue"
+      ],
+      "added": "2026-06-18",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/35232754",
+      "cover": "/img/vinyl/35232754.webp"
+    },
+    {
+      "id": 32866671,
+      "instanceId": 2156398293,
+      "owner": "dan",
+      "artist": "Lana Del Rey",
+      "title": "Born To Die",
+      "year": 2024,
+      "label": "Interscope Records",
+      "catno": "602577673771",
+      "format": "LP",
+      "variant": "Red [Opaque Red], Obi",
+      "genres": [
+        "Rock",
+        "Pop"
+      ],
+      "styles": [
+        "Baroque Pop",
+        "Dream Pop",
+        "Indie Pop",
+        "Alt-Pop"
+      ],
+      "added": "2026-06-18",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/32866671",
+      "cover": "/img/vinyl/32866671.webp"
+    },
+    {
+      "id": 37586709,
+      "instanceId": 2155418084,
+      "owner": "alexis",
+      "artist": "*NSYNC",
+      "title": "No Strings Attached",
+      "year": 2026,
+      "label": "RCA",
+      "catno": "199584362311",
+      "format": "LP",
+      "variant": "Coke Bottle",
+      "genres": [
+        "Pop"
+      ],
+      "styles": [
+        "Ballad"
+      ],
+      "added": "2026-06-15",
+      "rating": 5,
+      "url": "https://www.discogs.com/release/37586709",
+      "cover": "/img/vinyl/37586709.webp"
+    },
+    {
+      "id": 37537815,
+      "instanceId": 2155440675,
+      "owner": "dan",
+      "artist": "Mannequin Pussy",
+      "title": "I Got Heaven",
+      "year": 2026,
+      "label": "Epitaph",
+      "catno": "87968-1",
+      "format": "LP",
+      "variant": "Tie Dye Splash",
+      "genres": [
+        "Rock"
+      ],
+      "styles": [],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/37537815",
+      "cover": "/img/vinyl/37537815.webp"
+    },
+    {
+      "id": 37317108,
+      "instanceId": 2155436196,
+      "owner": "dan",
+      "artist": "Koyo",
+      "title": "Barely Here",
+      "year": 2026,
+      "label": "Pure Noise Records",
+      "catno": "PNE463",
+      "format": "LP",
+      "variant": "Clear Glitter",
+      "genres": [
+        "Rock"
+      ],
+      "styles": [
+        "Hardcore",
+        "Emo",
+        "Pop Punk"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/37317108",
+      "cover": "/img/vinyl/37317108.webp"
+    },
+    {
+      "id": 37285206,
+      "instanceId": 2155431265,
+      "owner": "dan",
+      "artist": "Koyo",
+      "title": "Barely Here",
+      "year": 2026,
+      "label": "Pure Noise Records",
+      "catno": "PNE463",
+      "format": "LP",
+      "variant": "Red & White Marble",
+      "genres": [
+        "Rock"
+      ],
+      "styles": [
+        "Hardcore",
+        "Emo",
+        "Pop Punk"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/37285206",
+      "cover": "/img/vinyl/37285206.webp"
+    },
+    {
+      "id": 37194045,
+      "instanceId": 2155435646,
+      "owner": "dan",
+      "artist": "Footballhead",
+      "title": "Weight of The Truth",
+      "year": 2026,
+      "label": "Tiny Engines",
+      "catno": "TE223",
+      "format": "LP",
+      "variant": "Black/Olive",
+      "genres": [
+        "Rock"
+      ],
+      "styles": [
+        "Alternative Rock"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/37194045",
+      "cover": "/img/vinyl/37194045.webp"
+    },
+    {
+      "id": 37102914,
+      "instanceId": 2155438977,
+      "owner": "dan",
+      "artist": "Various",
+      "title": "KPop Demon Hunters (Soundtrack From The Netflix Film)",
+      "year": 2026,
+      "label": "Republic Records",
+      "catno": "00199957134415",
+      "format": "LP",
+      "variant": "Black Transparent With Blue & Purple Splatter, Gatefold, Saja Boys Edition",
+      "genres": [
+        "Hip Hop",
+        "Pop",
+        "Stage & Screen"
+      ],
+      "styles": [
+        "K-pop",
+        "Soundtrack",
+        "Score"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/37102914",
+      "cover": "/img/vinyl/37102914.webp"
+    },
+    {
+      "id": 37100484,
+      "instanceId": 2155439064,
+      "owner": "dan",
+      "artist": "Various",
+      "title": "KPop Demon Hunters (Soundtrack From The Netflix Film)",
+      "year": 2026,
+      "label": "Republic Records",
+      "catno": "00199957134408",
+      "format": "LP",
+      "variant": "Black With Pink & Cyan Swirl, Gatefold, HUNTR/X Edition",
+      "genres": [
+        "Hip Hop",
+        "Pop",
+        "Stage & Screen"
+      ],
+      "styles": [
+        "K-pop",
+        "Soundtrack"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/37100484",
+      "cover": "/img/vinyl/37100484.webp"
+    },
+    {
+      "id": 37087518,
+      "instanceId": 2155438843,
+      "owner": "dan",
+      "artist": "Paramore",
+      "title": "All We Know Is Falling",
+      "year": 2026,
+      "label": "Fueled By Ramen",
+      "catno": "RCV1 728524",
+      "format": "LP",
+      "variant": "",
+      "genres": [
+        "Rock"
+      ],
+      "styles": [
+        "Emo",
+        "Alternative Rock",
+        "Pop Rock",
+        "Pop Punk"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/37087518",
+      "cover": "/img/vinyl/37087518.webp"
+    },
+    {
+      "id": 37074204,
+      "instanceId": 2155435206,
+      "owner": "dan",
+      "artist": "Joff Bush & The Bluey Music Team",
+      "title": "Up Here (The Orchestral Album)",
+      "year": 2026,
+      "label": "Demon Records",
+      "catno": "DEMREC1339PD",
+      "format": "LP",
+      "variant": "Zoetrope",
+      "genres": [
+        "Classical",
+        "Children's",
+        "Stage & Screen"
+      ],
+      "styles": [
+        "Orchestra",
+        "Score",
+        "Soundtrack",
+        "Theme"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/37074204",
+      "cover": "/img/vinyl/37074204.webp"
+    },
+    {
+      "id": 37064022,
+      "instanceId": 2155431658,
+      "owner": "dan",
+      "artist": "Enter Shikari",
+      "title": "Lose Your Self",
+      "year": 2026,
+      "label": "So Recordings",
+      "catno": "SOAKLP665",
+      "format": "LP",
+      "variant": "Crystal Clear",
+      "genres": [
+        "Electronic",
+        "Rock"
+      ],
+      "styles": [
+        "Alternative Rock"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/37064022",
+      "cover": "/img/vinyl/37064022.webp"
+    },
+    {
+      "id": 37059927,
+      "instanceId": 2155436973,
+      "owner": "dan",
+      "artist": "Bilmuri",
+      "title": "Kinda Hard",
+      "year": 2026,
+      "label": "Columbia",
+      "catno": "none",
+      "format": "LP",
+      "variant": "Red Translucent (Hog's Blood)",
+      "genres": [
+        "Rock",
+        "Folk, World, & Country"
+      ],
+      "styles": [
+        "Metalcore"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/37059927",
+      "cover": "/img/vinyl/37059927.webp"
+    },
+    {
+      "id": 36652033,
+      "instanceId": 2155423136,
+      "owner": "alexis",
+      "artist": "Bruno Mars",
+      "title": "The Romantic",
+      "year": 2026,
+      "label": "Atlantic",
+      "catno": "075678590511",
+      "format": "LP",
+      "variant": "Apple Red",
+      "genres": [
+        "Funk / Soul",
+        "Pop"
+      ],
+      "styles": [],
+      "added": "2026-06-15",
+      "rating": 5,
+      "url": "https://www.discogs.com/release/36652033",
+      "cover": "/img/vinyl/36652033.webp"
+    },
+    {
+      "id": 36456258,
+      "instanceId": 2155433275,
+      "owner": "dan",
+      "artist": "Lorien Testard, Alice Duport-Percier",
+      "title": "Clair Obscur: Expedition 33 (Original Soundtrack)",
+      "year": 2026,
+      "label": "Laced Records",
+      "catno": "LMLP294SX",
+      "format": "LP",
+      "variant": "White Galaxy",
+      "genres": [
+        "Pop",
+        "Folk, World, & Country",
+        "Stage & Screen"
+      ],
+      "styles": [
+        "Soundtrack",
+        "Theme",
+        "Video Game Music"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/36456258",
+      "cover": "/img/vinyl/36456258.webp"
+    },
+    {
+      "id": 36156118,
+      "instanceId": 2155492813,
+      "owner": "dan",
+      "artist": "Bad Bunny",
+      "title": "Debí Tirar Más Fotos",
+      "year": 2026,
+      "label": "Rimas Entertainment",
+      "catno": "BB0007VN",
+      "format": "2×LP",
+      "variant": "Red, MPO Pressing",
+      "genres": [
+        "Hip Hop",
+        "Latin",
+        "Pop"
+      ],
+      "styles": [
+        "Reggaeton",
+        "Salsa",
+        "Merengue",
+        "Trap",
+        "Jibaro",
+        "Bolero",
+        "Synth-pop",
+        "Plena",
+        "Bomba",
+        "Aguinaldo",
+        "Latin Pop"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/36156118",
+      "cover": "/img/vinyl/36156118.webp"
+    },
+    {
+      "id": 35643763,
+      "instanceId": 2155438146,
+      "owner": "dan",
+      "artist": "Various",
+      "title": "Twilight (Original Motion Picture Soundtrack)",
+      "year": 2025,
+      "label": "Atlantic",
+      "catno": "075678609060",
+      "format": "LP",
+      "variant": "Purple Marble [New Twilight]",
+      "genres": [
+        "Electronic",
+        "Rock",
+        "Stage & Screen"
+      ],
+      "styles": [
+        "Alternative Rock",
+        "Folk Rock",
+        "Emo",
+        "Soundtrack",
+        "Score",
+        "Acoustic",
+        "Downtempo",
+        "Synth-pop",
+        "Nu Metal"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/35643763",
+      "cover": "/img/vinyl/35643763.webp"
+    },
+    {
+      "id": 35541184,
+      "instanceId": 2155432233,
+      "owner": "dan",
+      "artist": "Ben Quad",
+      "title": "Wisher",
+      "year": 2025,
+      "label": "Pure Noise Records",
+      "catno": "pne458",
+      "format": "LP",
+      "variant": "Baby Blue, Purple, Orange Split",
+      "genres": [
+        "Rock"
+      ],
+      "styles": [
+        "Emo",
+        "Pop Punk",
+        "Post-Punk"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/35541184",
+      "cover": "/img/vinyl/35541184.webp"
+    },
+    {
+      "id": 35170990,
+      "instanceId": 2155434523,
+      "owner": "dan",
+      "artist": "Greywind",
+      "title": "Afterthoughts",
+      "year": 2024,
+      "label": "Smartpunk Records",
+      "catno": "SPREC1146",
+      "format": "LP",
+      "variant": "Orange",
+      "genres": [
+        "Rock",
+        "Pop"
+      ],
+      "styles": [
+        "Alternative Rock",
+        "Emo"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/35170990",
+      "cover": "/img/vinyl/35170990.webp"
+    },
+    {
+      "id": 35090219,
+      "instanceId": 2155437187,
+      "owner": "dan",
+      "artist": "Dance Gavin Dance",
+      "title": "Pantheon",
+      "year": 2025,
+      "label": "Rise Records",
+      "catno": "RISE 559-1",
+      "format": "2×LP",
+      "variant": "White, Black, And Neon Violet Smush With Magenta And Violet Splatter",
+      "genres": [
+        "Rock"
+      ],
+      "styles": [
+        "Post-Hardcore"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/35090219",
+      "cover": "/img/vinyl/35090219.webp"
+    },
+    {
+      "id": 34628587,
+      "instanceId": 2155431997,
+      "owner": "dan",
+      "artist": "Various",
+      "title": "Scott Pilgrim Vs. The World (Original Motion Picture Soundtrack)",
+      "year": 2025,
+      "label": "ABKCO",
+      "catno": "2235-1",
+      "format": "LP",
+      "variant": "Blue And Green Splatter",
+      "genres": [
+        "Rock",
+        "Stage & Screen"
+      ],
+      "styles": [
+        "Alternative Rock",
+        "Classic Rock",
+        "Garage Rock",
+        "Indie Rock",
+        "Noise Rock",
+        "Soundtrack"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/34628587",
+      "cover": "/img/vinyl/34628587.webp"
+    },
+    {
+      "id": 34466101,
+      "instanceId": 2155431894,
+      "owner": "dan",
+      "artist": "Not Enough Space",
+      "title": "Not Enough Space",
+      "year": 2025,
+      "label": "Artist Friendly Media Co.",
+      "catno": "1686-174781",
+      "format": "12\"",
+      "variant": "Devils Mix (Red w/ Black & White Swirl)",
+      "genres": [
+        "Rock"
+      ],
+      "styles": [
+        "Metalcore"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/34466101",
+      "cover": "/img/vinyl/34466101.webp"
+    },
+    {
+      "id": 33939060,
+      "instanceId": 2155422203,
+      "owner": "alexis",
+      "artist": "Kali Uchis",
+      "title": "Sincerely,",
+      "year": 2025,
+      "label": "Capitol Records",
+      "catno": "00602475438847",
+      "format": "LP",
+      "variant": "Pink",
+      "genres": [
+        "Funk / Soul",
+        "Pop"
+      ],
+      "styles": [
+        "Soul",
+        "Psychedelic",
+        "Neo Soul",
+        "Contemporary R&B"
+      ],
+      "added": "2026-06-15",
+      "rating": 5,
+      "url": "https://www.discogs.com/release/33939060",
+      "cover": "/img/vinyl/33939060.webp"
+    },
+    {
+      "id": 33861543,
+      "instanceId": 2155418910,
+      "owner": "alexis",
+      "artist": "Bad Bunny",
+      "title": "Debí Tirar Más Fotos",
+      "year": 2025,
+      "label": "Rimas Entertainment",
+      "catno": "BB0007VN",
+      "format": "2×LP",
+      "variant": "Blue",
+      "genres": [
+        "Hip Hop",
+        "Latin",
+        "Pop"
+      ],
+      "styles": [
+        "Reggaeton",
+        "Salsa",
+        "Merengue",
+        "Trap",
+        "Jibaro",
+        "Bolero",
+        "Synth-pop",
+        "Plena",
+        "Bomba",
+        "Aguinaldo",
+        "Latin Pop"
+      ],
+      "added": "2026-06-15",
+      "rating": 5,
+      "url": "https://www.discogs.com/release/33861543",
+      "cover": "/img/vinyl/33861543.webp"
+    },
+    {
+      "id": 33670278,
+      "instanceId": 2155437469,
+      "owner": "dan",
+      "artist": "Various",
+      "title": "A Goofy Movie",
+      "year": 2025,
+      "label": "Walt Disney Records",
+      "catno": "D004686401",
+      "format": "LP",
+      "variant": "Special Collector's Edition, 2-Color Splatter",
+      "genres": [
+        "Electronic",
+        "Rock",
+        "Children's",
+        "Stage & Screen"
+      ],
+      "styles": [
+        "Soundtrack",
+        "Pop Rock",
+        "Modern Classical"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/33670278",
+      "cover": "/img/vinyl/33670278.webp"
+    },
+    {
+      "id": 33630378,
+      "instanceId": 2155433689,
+      "owner": "dan",
+      "artist": "Armor For Sleep",
+      "title": "What To Do When You Are Dead",
+      "year": 2025,
+      "label": "Equal Vision Records",
+      "catno": "EVR104",
+      "format": "LP",
+      "variant": "20th Anniversary Edition, Blue, Bone, & Yellow Twister",
+      "genres": [
+        "Rock"
+      ],
+      "styles": [
+        "Emo"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/33630378",
+      "cover": "/img/vinyl/33630378.webp"
+    },
+    {
+      "id": 33417182,
+      "instanceId": 2155435098,
+      "owner": "dan",
+      "artist": "Spiritbox",
+      "title": "Tsunami Sea",
+      "year": 2025,
+      "label": "Pale Chord Music, LLC",
+      "catno": "Rise 549-16",
+      "format": "LP",
+      "variant": "White & Grey Smush",
+      "genres": [
+        "Rock"
+      ],
+      "styles": [
+        "Metalcore",
+        "Alternative Metal",
+        "Progressive Metal"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/33417182",
+      "cover": "/img/vinyl/33417182.webp"
+    },
+    {
+      "id": 32670951,
+      "instanceId": 2155436559,
+      "owner": "dan",
+      "artist": "Good Terms",
+      "title": "Burnout",
+      "year": 2024,
+      "label": "Secret Friends Music Group",
+      "catno": "SFMG027",
+      "format": "LP",
+      "variant": "Ruby Red & Bone White A-Side/B-Side with Opaque Canary Yellow, Opaque Sky Blue, and Black Heavy Splatter (/450)",
+      "genres": [
+        "Rock"
+      ],
+      "styles": [
+        "Emo",
+        "Post-Hardcore",
+        "Pop Punk",
+        "Hardcore",
+        "Indie Rock"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/32670951",
+      "cover": "/img/vinyl/32670951.webp"
+    },
+    {
+      "id": 32621901,
+      "instanceId": 2155431407,
+      "owner": "dan",
+      "artist": "Bilmuri",
+      "title": "American Motor Sports",
+      "year": 2024,
+      "label": "Columbia",
+      "catno": "19802870681",
+      "format": "LP",
+      "variant": "White w/ Red Splatter, 420cc Edition",
+      "genres": [
+        "Rock",
+        "Folk, World, & Country"
+      ],
+      "styles": [
+        "Alternative Metal",
+        "Metalcore"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/32621901",
+      "cover": "/img/vinyl/32621901.webp"
+    },
+    {
+      "id": 32560788,
+      "instanceId": 2155432955,
+      "owner": "dan",
+      "artist": "Koyo",
+      "title": "Would You Miss It?",
+      "year": 2024,
+      "label": "Pure Noise Records",
+      "catno": "PNR384",
+      "format": "LP",
+      "variant": "Koi Pond Marble",
+      "genres": [
+        "Rock"
+      ],
+      "styles": [
+        "Hardcore",
+        "Emo",
+        "Pop Punk",
+        "Melodic Hardcore"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/32560788",
+      "cover": "/img/vinyl/32560788.webp"
+    },
+    {
+      "id": 31423361,
+      "instanceId": 2155439620,
+      "owner": "dan",
+      "artist": "GUNSHIP",
+      "title": "Dark All Day",
+      "year": 2024,
+      "label": "Horsie In The Hedge LLP",
+      "catno": "HITH008LPC",
+      "format": "2×12\"",
+      "variant": "180gm, Gatefold, Lenticular Cover, Orange transparent",
+      "genres": [
+        "Electronic"
+      ],
+      "styles": [
+        "Synth-pop",
+        "Synthwave"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/31423361",
+      "cover": "/img/vinyl/31423361.webp"
+    },
+    {
+      "id": 30902832,
+      "instanceId": 2155436749,
+      "owner": "dan",
+      "artist": "Anamanaguchi And Joseph Trapanese",
+      "title": "Scott Pilgrim Takes Off Original Soundtrack From The Netflix Series",
+      "year": 2024,
+      "label": "Lakeshore Records",
+      "catno": "LKS36478",
+      "format": "LP",
+      "variant": "Black",
+      "genres": [
+        "Rock",
+        "Stage & Screen"
+      ],
+      "styles": [
+        "Soundtrack",
+        "Score"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/30902832",
+      "cover": "/img/vinyl/30902832.webp"
+    },
+    {
+      "id": 29927980,
+      "instanceId": 2155432704,
+      "owner": "dan",
+      "artist": "Calva Louise",
+      "title": "Over The Threshold",
+      "year": 2023,
+      "label": "Romanus Records",
+      "catno": "b3b2dd9a7",
+      "format": "LP",
+      "variant": "Clear With Red And Black Splatter",
+      "genres": [
+        "Rock"
+      ],
+      "styles": [
+        "Alternative Metal",
+        "Hardcore",
+        "Progressive Metal"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/29927980",
+      "cover": "/img/vinyl/29927980.webp"
+    },
+    {
+      "id": 29320246,
+      "instanceId": 2155432811,
+      "owner": "dan",
+      "artist": "Unknown Artist",
+      "title": "Fortnite: Best Of The Lobby",
+      "year": 2023,
+      "label": "Iam8bit",
+      "catno": "8BIT-8169",
+      "format": "LP",
+      "variant": "Yellow",
+      "genres": [
+        "Electronic",
+        "Stage & Screen"
+      ],
+      "styles": [
+        "Video Game Music",
+        "Soundtrack",
+        "Dance-pop"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/29320246",
+      "cover": "/img/vinyl/29320246.webp"
+    },
+    {
+      "id": 29155048,
+      "instanceId": 2155424791,
+      "owner": "alexis",
+      "artist": "Alicia Keys",
+      "title": "The Diary Of Alicia Keys",
+      "year": 2023,
+      "label": "J Records",
+      "catno": "82876-55712-1",
+      "format": "2×LP",
+      "variant": "White Translucent [Champagne]",
+      "genres": [
+        "Hip Hop",
+        "Funk / Soul"
+      ],
+      "styles": [
+        "Contemporary R&B",
+        "Neo Soul"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/29155048",
+      "cover": "/img/vinyl/29155048.webp"
+    },
+    {
+      "id": 28641820,
+      "instanceId": 2155435400,
+      "owner": "dan",
+      "artist": "Frog Concert",
+      "title": "Slumbering Sounds Of The Frog Fellowship",
+      "year": 2023,
+      "label": "Phantom Lure",
+      "catno": "LURE_127",
+      "format": "LP",
+      "variant": "Green Splatter",
+      "genres": [
+        "Electronic"
+      ],
+      "styles": [
+        "Comfy Synth"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/28641820",
+      "cover": "/img/vinyl/28641820.webp"
+    },
+    {
+      "id": 28526263,
+      "instanceId": 2155435846,
+      "owner": "dan",
+      "artist": "Michael Staple",
+      "title": "Video Game Lofi: Donkey Kong Country 2 Diddy's Kong Quest",
+      "year": 2023,
+      "label": "Curaga Records",
+      "catno": "CURE-0048-V",
+      "format": "LP",
+      "variant": "",
+      "genres": [
+        "Electronic"
+      ],
+      "styles": [
+        "Chillwave"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/28526263",
+      "cover": "/img/vinyl/28526263.webp"
+    },
+    {
+      "id": 28474228,
+      "instanceId": 2155436339,
+      "owner": "dan",
+      "artist": "GUNSHIP",
+      "title": "Unicorn",
+      "year": 2023,
+      "label": "Horsie In The Hedge LLP",
+      "catno": "HITH0023LP",
+      "format": "2×12\"",
+      "variant": "",
+      "genres": [
+        "Electronic"
+      ],
+      "styles": [
+        "Synthwave",
+        "Synth-pop"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/28474228",
+      "cover": "/img/vinyl/28474228.webp"
+    },
+    {
+      "id": 28344769,
+      "instanceId": 2155432412,
+      "owner": "dan",
+      "artist": "Moxy the Band",
+      "title": "Dream Feeling",
+      "year": 2022,
+      "label": "Not On Label (Moxy The Band Self-released)",
+      "catno": "MTB001",
+      "format": "LP",
+      "variant": "White",
+      "genres": [
+        "Electronic",
+        "Rock",
+        "Pop"
+      ],
+      "styles": [
+        "Indie Pop"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/28344769",
+      "cover": "/img/vinyl/28344769.webp"
+    },
+    {
+      "id": 27535197,
+      "instanceId": 2155424226,
+      "owner": "alexis",
+      "artist": "Various",
+      "title": "Barbie The Album",
+      "year": 2023,
+      "label": "Atlantic",
+      "catno": "007567861676",
+      "format": "LP",
+      "variant": "Pink [Hot Pink]",
+      "genres": [
+        "Electronic",
+        "Pop",
+        "Stage & Screen"
+      ],
+      "styles": [
+        "Soundtrack",
+        "Dance-pop",
+        "Disco",
+        "Synth-pop"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/27535197",
+      "cover": "/img/vinyl/27535197.webp"
+    },
+    {
+      "id": 27031743,
+      "instanceId": 2155434158,
+      "owner": "dan",
+      "artist": "Daft Punk",
+      "title": "Random Access Memories (10th Anniversary Edition)",
+      "year": 2023,
+      "label": "Columbia",
+      "catno": "19658773731",
+      "format": "3×LP",
+      "variant": "180 gram",
+      "genres": [
+        "Electronic",
+        "Funk / Soul",
+        "Pop"
+      ],
+      "styles": [
+        "Electro",
+        "Disco",
+        "Funk",
+        "Synth-pop"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/27031743",
+      "cover": "/img/vinyl/27031743.webp"
+    },
+    {
+      "id": 26156411,
+      "instanceId": 2155435961,
+      "owner": "dan",
+      "artist": "Save Point, Nokbient",
+      "title": "Video Game Lofi: Yoshi",
+      "year": 2023,
+      "label": "Curaga Records",
+      "catno": "CURE-0006-V",
+      "format": "LP",
+      "variant": "",
+      "genres": [
+        "Electronic"
+      ],
+      "styles": [
+        "Chillwave",
+        "Bitpop"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/26156411",
+      "cover": "/img/vinyl/26156411.webp"
+    },
+    {
+      "id": 25147387,
+      "instanceId": 2155430671,
+      "owner": "dan",
+      "artist": "Koyo",
+      "title": "Ten Digits Away",
+      "year": 2022,
+      "label": "Pure Noise Records",
+      "catno": "PNE343",
+      "format": "7\"",
+      "variant": "Red [Blood] / Clear With Black Splatter",
+      "genres": [
+        "Rock"
+      ],
+      "styles": [
+        "Emo",
+        "Hardcore"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/25147387",
+      "cover": "/img/vinyl/25147387.webp"
+    },
+    {
+      "id": 23631230,
+      "instanceId": 2155430951,
+      "owner": "dan",
+      "artist": "Anamanaguchi",
+      "title": "Miku",
+      "year": 2022,
+      "label": "Polyvinyl Record Company",
+      "catno": "PRC-439-1",
+      "format": "LP",
+      "variant": "Teal",
+      "genres": [
+        "Electronic",
+        "Pop"
+      ],
+      "styles": [
+        "Chiptune",
+        "J-pop",
+        "Electro House",
+        "Glitch Hop",
+        "Vocaloid"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/23631230",
+      "cover": "/img/vinyl/23631230.webp"
+    },
+    {
+      "id": 23533547,
+      "instanceId": 2155439309,
+      "owner": "dan",
+      "artist": "Anamanaguchi",
+      "title": "Scott Pilgrim Vs. The World: The Game: Complete Edition (Original Videogame Soundtrack)",
+      "year": 2022,
+      "label": "Limited Run Games",
+      "catno": "8775-1",
+      "format": "LP",
+      "variant": "Gold Opaque",
+      "genres": [
+        "Electronic",
+        "Stage & Screen"
+      ],
+      "styles": [
+        "Chiptune",
+        "Video Game Music",
+        "Soundtrack"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/23533547",
+      "cover": "/img/vinyl/23533547.webp"
+    },
+    {
+      "id": 16064054,
+      "instanceId": 2155438698,
+      "owner": "dan",
+      "artist": "Anamanaguchi",
+      "title": "Endless Fantasy",
+      "year": 2020,
+      "label": "Polyvinyl Record Company",
+      "catno": "PRC-406",
+      "format": "2×LP",
+      "variant": "Clear w/ Rainbow Splatter",
+      "genres": [
+        "Electronic",
+        "Rock",
+        "Pop"
+      ],
+      "styles": [
+        "Chiptune",
+        "Pop Punk",
+        "Synth-pop"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/16064054",
+      "cover": "/img/vinyl/16064054.webp"
+    },
+    {
+      "id": 15569094,
+      "instanceId": 2155427124,
+      "owner": "alexis",
+      "artist": "Selena",
+      "title": "Ones",
+      "year": 2020,
+      "label": "Capitol Latin",
+      "catno": "B0032226-01",
+      "format": "2×LP",
+      "variant": "Target Exclusive",
+      "genres": [
+        "Latin",
+        "Pop"
+      ],
+      "styles": [
+        "Cumbia",
+        "Tejano",
+        "Latin Pop"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/15569094",
+      "cover": "/img/vinyl/15569094.webp"
+    },
+    {
+      "id": 14070237,
+      "instanceId": 2155426765,
+      "owner": "alexis",
+      "artist": "J. Balvin & Bad Bunny",
+      "title": "Oasis",
+      "year": 2019,
+      "label": "Universal Music Latino",
+      "catno": "B0030839-01",
+      "format": "LP",
+      "variant": "",
+      "genres": [
+        "Latin",
+        "Pop"
+      ],
+      "styles": [
+        "Reggaeton"
+      ],
+      "added": "2026-06-15",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/14070237",
+      "cover": "/img/vinyl/14070237.webp"
+    }
+  ]
+}

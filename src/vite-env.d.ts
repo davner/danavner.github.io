@@ -17,9 +17,12 @@ declare module "virtual:shows" {
   export const shows: Show[];
 }
 
-declare module "virtual:trips" {
-  import type { Trip } from "@/lib/trips";
+declare module "virtual:vinyl" {
+  import type { VinylPayload } from "@/lib/vinyl";
 
-  /** Supplied by `contentPlugin()` in `vite-plugin-content.ts`. */
-  export const trips: Trip[];
+  /**
+   * The record collection, read from Discogs nightly and validated at build
+   * time. Supplied by `contentPlugin()` in `vite-plugin-content.ts`.
+   */
+  export const vinyl: VinylPayload;
 }

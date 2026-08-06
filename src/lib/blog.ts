@@ -14,7 +14,7 @@ export interface Post {
   summary: string;
   tags: string[];
   /**
-   * Optional, and validated the way a show's or a trip's are. Markdown in the
+   * Optional, and validated the way a show's photos are. Markdown in the
    * body can embed an image inline, but nothing checks those - use this when
    * the photos are part of the post rather than an illustration in it.
    */

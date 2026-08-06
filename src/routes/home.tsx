@@ -34,9 +34,9 @@ const INDEX = [
     blurb: "Every gig I have been to since I started keeping track, logged and rated.",
   },
   {
-    to: "/trips",
-    title: "Trips",
-    blurb: "Where we went, who came along, and the photos that came back.",
+    to: "/vinyl",
+    title: "Vinyl",
+    blurb: "Every record Alexis and I own, pulled straight from the Discogs shelf.",
   },
 ];
 

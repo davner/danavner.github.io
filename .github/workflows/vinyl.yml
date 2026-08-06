@@ -1,0 +1,65 @@
+name: Vinyl
+
+# The record collection is committed rather than fetched in the browser, for
+# three reasons the page could not work around. The folder split (whose record
+# is it) and the collection value are both authenticated Discogs reads, and a
+# token cannot ship in a client bundle. The site's standing promise is that
+# nothing phones home except the visitor counter, which `tests/links.spec.ts`
+# asserts on every run. And the cover art is Discogs' CDN, not ours to lean on.
+#
+# So this job is the only thing that talks to Discogs: nightly, it reads the
+# collection, writes `src/content/vinyl.json`, and commits the sleeves it had to
+# download. A failed read commits nothing, so the last good collection stays and
+# keeps showing. The push triggers the normal deploy; this runs on a schedule,
+# not on push, so its own commit never re-triggers it.
+
+on:
+  schedule:
+    - cron: "42 8 * * *" # 08:42 UTC nightly, an hour after the visitor count.
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: vinyl
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    env:
+      DISCOGS_TOKEN: ${{ secrets.DISCOGS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # sharp does the cover resizing, so this needs real dependencies rather
+      # than the bare runtime the visitor-count job gets away with.
+      - run: npm ci
+
+      # Without the secret the script can only see a single "All" folder and no
+      # prices, so it would commit a payload with the owner filter and every
+      # value stripped out. Skipping is the safe read of a missing secret.
+      - name: Read the collection from Discogs
+        if: ${{ env.DISCOGS_TOKEN != '' }}
+        run: node scripts/update-vinyl.mjs
+
+      # `git status --porcelain` rather than `git diff`: a newly bought record
+      # arrives as an untracked cover file, which `git diff` does not see at
+      # all - so the first run of this job would have skipped its own commit.
+      - name: Commit if the shelf moved
+        run: |
+          if [ -z "$(git status --porcelain -- src/content/vinyl.json public/img/vinyl)" ]; then
+            echo "vinyl: unchanged, nothing to commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A -- src/content/vinyl.json public/img/vinyl
+          git commit -m "chore(vinyl): refresh the record collection"
+          git push

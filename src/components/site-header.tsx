@@ -8,7 +8,7 @@ const NAV = [
   { to: "/career", label: "Career" },
   { to: "/blog", label: "Blog" },
   { to: "/shows", label: "Shows" },
-  { to: "/trips", label: "Trips" },
+  { to: "/vinyl", label: "Vinyl" },
 ];
 
 export function SiteHeader() {

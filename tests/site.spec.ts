@@ -18,7 +18,7 @@ test.describe("navigation", () => {
 
   test("home links to every section", async ({ page }) => {
     await page.goto("/");
-    for (const path of ["/about", "/career", "/blog", "/shows", "/trips"]) {
+    for (const path of ["/about", "/career", "/blog", "/shows", "/vinyl"]) {
       await expect(page.locator(`a[href="${path}"]`).first()).toBeAttached();
     }
   });
@@ -29,7 +29,7 @@ test.describe("navigation", () => {
       "/career": "Career · Dan Avner",
       "/blog": "Blog · Dan Avner",
       "/shows": "Shows · Dan Avner",
-      "/trips": "Trips · Dan Avner",
+      "/vinyl": "Vinyl · Dan Avner",
     };
 
     for (const [path, title] of Object.entries(titles)) {
@@ -62,6 +62,10 @@ test.describe("navigation", () => {
       ["/work", "**/career"],
       ["/writing", "**/blog"],
       ["/writing/welcome", "**/blog/welcome"],
+      // Trips was a section of its own until the travel writing moved into the
+      // blog. Anything already linking to it lands there rather than on a 404.
+      ["/trips", "**/blog"],
+      ["/trips/spain-2026", "**/blog"],
     ] as const) {
       await page.goto(from);
       await page.waitForURL(to);
@@ -340,6 +344,186 @@ test.describe("shows", () => {
   test("the collection README is not parsed as an entry", async ({ page }) => {
     const titles = await page.locator("[data-slot=show] h3").allInnerTexts();
     expect(titles.some((title) => /SHOW LOG/i.test(title))).toBe(false);
+  });
+});
+
+test.describe("vinyl", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/vinyl");
+    await page.getByRole("heading", { level: 1 }).waitFor();
+  });
+
+  test("tile count matches the records stat", async ({ page }) => {
+    const tiles = await page.locator("[data-slot=record]").count();
+    const counted = Number(await page.locator("[data-slot=stat] dd").first().innerText());
+    expect(tiles).toBe(counted);
+    expect(tiles).toBeGreaterThan(0);
+  });
+
+  test("no stat renders a meaningless zero", async ({ page }) => {
+    // Same rule the show log follows: a stat with nothing to say is left out
+    // rather than printed as a zero.
+    const values = await page.locator("[data-slot=stat] dd").allInnerTexts();
+    for (const value of values) expect(value.trim()).not.toBe("0");
+    expect(values.length).toBeGreaterThan(0);
+    expect(values.length).toBeLessThanOrEqual(4);
+  });
+
+  test("the valuation is marked as covering the whole collection", async ({ page }) => {
+    await expect(page.locator("[data-slot=valuation]")).toBeVisible();
+
+    const total = await page.locator("[data-slot=record]").count();
+    const heading = page.getByRole("heading", { name: /what the whole shelf is worth/i });
+    await expect(heading).toContainText(`All ${total} records`);
+
+    // Discogs values a collection, never a folder, so filtering must not leave
+    // a whole-collection figure sitting next to one person's record count
+    // without saying which it is.
+    const filter = page.getByRole("radiogroup", { name: /whose they are/i });
+    await expect(filter).toBeVisible();
+
+    await filter.getByRole("radio").nth(1).click();
+    // Poll for the narrowed grid: the first tile stays visible across the
+    // change, so waiting on visibility waits for nothing and the count below
+    // can still read the unfiltered shelf.
+    await expect.poll(() => page.locator("[data-slot=record]").count()).toBeLessThan(total);
+    await expect(heading).toContainText(`All ${total} records`);
+  });
+
+  test("the owner filter narrows the shelf and syncs the URL", async ({ page }) => {
+    const tiles = page.locator("[data-slot=record]");
+    const everything = await tiles.count();
+
+    // The committed collection has two folders, so the control must be there.
+    // Skipping when it is missing would hide the filter disappearing entirely.
+    const filter = page.getByRole("radiogroup", { name: /whose they are/i });
+    await expect(filter).toBeVisible();
+
+    const options = filter.getByRole("radio");
+    // Index 0 is "Everything"; the rest are the people.
+    const owners = (await options.count()) - 1;
+    expect(owners).toBeGreaterThan(0);
+
+    let split = 0;
+    for (let i = 1; i <= owners; i++) {
+      const option = options.nth(i);
+      // The number printed on the pill itself, e.g. "Alexis 9".
+      const badge = Number(/(\d+)\s*$/.exec((await option.innerText()).trim())?.[1]);
+      expect(badge).toBeGreaterThan(0);
+
+      await option.click();
+      await expect(option).toHaveAttribute("aria-checked", "true");
+      expect(new URL(page.url()).searchParams.get("owner")).not.toBeNull();
+
+      /*
+       * Poll rather than read once: clicking sets the URL synchronously but the
+       * grid redraws a tick later, so a bare `count()` here returns the
+       * previous owner's shelf. That is what made this test pass 42 twice and
+       * still add up to a plausible-looking number.
+       *
+       * Asserting against the pill's own count also makes the filter prove it -
+       * a pill claiming 9 while the grid draws 42 is now a failure rather than
+       * something only a careful reader would spot.
+       */
+      await expect.poll(() => tiles.count()).toBe(badge);
+      expect(badge).toBeLessThan(everything);
+      split += badge;
+    }
+
+    // Every record belongs to exactly one person, so the parts have to add back
+    // up to the whole. If they do not, a folder is being dropped or counted
+    // twice and the stats above are quietly wrong.
+    expect(split).toBe(everything);
+  });
+
+  test("a filtered shelf survives a reload", async ({ page }) => {
+    const filter = page.getByRole("radiogroup", { name: /whose they are/i });
+    await expect(filter).toBeVisible();
+
+    const owner = filter.getByRole("radio").nth(1);
+    const label = (await owner.innerText()).split("\n")[0]!.trim();
+    await owner.click();
+
+    const url = page.url();
+    expect(url).toContain("owner=");
+
+    await page.goto(url);
+    await expect(page.getByRole("radio", { name: new RegExp(label, "i") })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+  });
+
+  test("sorting reorders the shelf and syncs the URL", async ({ page }) => {
+    const first = () => page.locator("[data-slot=record] h3").first().innerText();
+    const byNewest = await first();
+
+    await page.getByRole("radio", { name: /^Artist/i }).click();
+    await page.waitForURL("**/vinyl?sort=artist");
+    const byArtist = await page.locator("[data-slot=record] p").first().innerText();
+
+    // Sorted by artist, the shelf actually has to start at the top of the
+    // alphabet rather than just claiming to.
+    const artists = await page
+      .locator("[data-slot=record] a > div > p:first-child")
+      .allInnerTexts();
+    const sorted = [...artists].sort((a, b) => a.localeCompare(b));
+    expect(artists).toEqual(sorted);
+    expect(byArtist.length).toBeGreaterThan(0);
+    expect(await first()).not.toBe("");
+    expect(byNewest.length).toBeGreaterThan(0);
+  });
+
+  test("search narrows the shelf without moving the stats", async ({ page }) => {
+    const tiles = page.locator("[data-slot=record]");
+    const everything = await tiles.count();
+    const counted = await page.locator("[data-slot=stat] dd").first().innerText();
+
+    const artist = (await page.locator("[data-slot=record] a > div > p:first-child").first().innerText())
+      .trim()
+      .slice(0, 6);
+
+    await page.getByRole("searchbox", { name: /search the collection/i }).fill(artist);
+    await expect.poll(() => tiles.count()).toBeLessThanOrEqual(everything);
+    expect(await tiles.count()).toBeGreaterThan(0);
+
+    // Typing in the search box narrows what is listed. It must not restate what
+    // the shelf is worth, or searching "misfits" would claim the whole
+    // collection is worth one record.
+    expect(await page.locator("[data-slot=stat] dd").first().innerText()).toBe(counted);
+  });
+
+  test("a search with no match says so", async ({ page }) => {
+    await page
+      .getByRole("searchbox", { name: /search the collection/i })
+      .fill("zzzzz-not-a-record-zzzzz");
+    await expect(page.locator("[data-slot=record]")).toHaveCount(0);
+    await expect(page.getByText(/Nothing on the shelf matches/i)).toBeVisible();
+  });
+
+  test("every tile opens its Discogs page safely", async ({ page }) => {
+    const links = page.locator("[data-slot=record] a");
+    const count = await links.count();
+    expect(count).toBeGreaterThan(0);
+
+    for (let i = 0; i < count; i++) {
+      const link = links.nth(i);
+      await expect(link).toHaveAttribute("href", /^https:\/\/www\.discogs\.com\/release\/\d+$/);
+      await expect(link).toHaveAttribute("target", "_blank");
+      await expect(link).toHaveAttribute("rel", /noopener/);
+    }
+  });
+
+  test("cover art is served from this site, not Discogs", async ({ page }) => {
+    // The whole reason the collection is committed rather than fetched: leaning
+    // on Discogs' CDN would put a third-party request on every page view and
+    // break the guarantee in links.spec.ts.
+    const sources = await page
+      .locator("[data-slot=record] img")
+      .evaluateAll((images) => images.map((img) => img.getAttribute("src") ?? ""));
+
+    expect(sources.length).toBeGreaterThan(0);
+    for (const src of sources) expect(src).toMatch(/^\/img\/vinyl\//);
   });
 });
 

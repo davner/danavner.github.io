@@ -9,7 +9,6 @@ const WORDS_PER_MINUTE = 200;
 
 const POST_CATEGORIES = ["work", "personal"];
 const SHOW_TYPES = ["show", "festival"];
-const TRIP_TYPES = ["vacation", "family", "work", "tour"];
 const MAX_RATING = 5;
 
 /** `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` - you remember some nights better than others. */
@@ -90,7 +89,7 @@ function parsePost({ file, meta, body, slug }: Frontmatter, publicDir: string) {
     summary: asTrimmedString(meta.summary),
     tags: asStringArray(meta.tags),
     /*
-     * Optional, and validated exactly like a show's or a trip's. Markdown can
+     * Optional, and validated exactly like a show's. Markdown can
      * still embed an image inline, but nothing checks those - no required alt
      * text, no required caption, no build-time check that the file is there.
      * A post whose photos are the point should use this instead.
@@ -323,93 +322,6 @@ function parseShow({ file, meta, body, slug }: Frontmatter, publicDir: string) {
   };
 }
 
-function parseTrip({ file, meta, body, slug }: Frontmatter, publicDir: string) {
-  const title = asTrimmedString(meta.title);
-  if (!title) fail("trips", file, "frontmatter needs a `title` - where the trip was");
-
-  const type = asTrimmedString(meta.type) || "vacation";
-  if (!TRIP_TYPES.includes(type)) {
-    fail("trips", file, `\`type\` must be one of: ${TRIP_TYPES.join(", ")}`);
-  }
-
-  // Same precision rules as a show. A trip you only remember the month of is
-  // still worth logging, so a bare `YYYY-MM` is valid and renders as "June".
-  const date = asDate(meta.date);
-  if (!DATE.test(date)) {
-    fail("trips", file, "frontmatter needs a `date` as `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`");
-  }
-
-  const endDate = asDate(meta.endDate);
-  if (endDate && !DATE.test(endDate)) {
-    fail("trips", file, "`endDate` must be `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`");
-  }
-  if (endDate && endDate < date) fail("trips", file, "`endDate` is before `date`");
-
-  /*
-   * Every place the trip touched, in the order you went, written "City,
-   * Country". The country is split off here so the index can count countries
-   * without every page re-parsing the same strings.
-   */
-  const stops = asStringArray(meta.stops)
-    .map((stop) => stop.trim())
-    .filter(Boolean);
-  if (stops.length === 0) {
-    fail("trips", file, "frontmatter needs `stops` listing where you went, in order");
-  }
-
-  const duplicates = stops.filter((stop, index) => stops.indexOf(stop) !== index);
-  if (duplicates.length > 0) {
-    fail("trips", file, `\`stops\` lists the same place twice: ${[...new Set(duplicates)].join(", ")}`);
-  }
-
-  for (const [index, stop] of stops.entries()) {
-    if (!stop.includes(",")) {
-      fail("trips", file, `\`stops[${index}]\` must be "City, Country" - got "${stop}"`);
-    }
-  }
-
-  const highlights = asStringArray(meta.highlights)
-    .map((entry) => entry.trim())
-    .filter(Boolean);
-
-  const companions = asStringArray(meta.with)
-    .map((name) => name.trim())
-    .filter(Boolean);
-  const solo = meta.solo === true;
-
-  if (solo && companions.length > 0) {
-    fail("trips", file, "`solo: true` contradicts `with` - drop one");
-  }
-
-  // Deliberately three states. `null` is "have not decided", which is not the
-  // same as "no", and must not render as a verdict either way.
-  let wouldGoBack: boolean | null = null;
-  if (meta.wouldGoBack != null && meta.wouldGoBack !== "") {
-    if (typeof meta.wouldGoBack !== "boolean") {
-      fail("trips", file, "`wouldGoBack` must be true or false");
-    }
-    wouldGoBack = meta.wouldGoBack;
-  }
-
-  return {
-    slug,
-    title,
-    type,
-    date,
-    endDate,
-    stops,
-    countries: [...new Set(stops.map((stop) => stop.split(",").at(-1)!.trim()).filter(Boolean))],
-    highlights,
-    oneThing: asTrimmedString(meta.oneThing),
-    bestMeal: asTrimmedString(meta.bestMeal),
-    wouldGoBack,
-    companions,
-    solo,
-    photos: asPhotos("trips", meta.photos, file, publicDir),
-    body,
-  };
-}
-
 interface Collection {
   /** Directory under `src/content/`, and the export name on the virtual module. */
   name: string;
@@ -420,7 +332,6 @@ interface Collection {
 const COLLECTIONS: Collection[] = [
   { name: "blog", exportName: "posts", parse: parsePost },
   { name: "shows", exportName: "shows", parse: parseShow },
-  { name: "trips", exportName: "trips", parse: parseTrip },
 ];
 
 function readCollection(collection: Collection, dir: string, publicDir: string) {
@@ -444,6 +355,156 @@ function readCollection(collection: Collection, dir: string, publicDir: string) 
   );
 }
 
+/** One validated record. Mirrors `VinylRecord` in `src/lib/vinyl.ts`. */
+interface VinylRecordJson {
+  id: number;
+  instanceId: number;
+  owner: string | null;
+  artist: string;
+  title: string;
+  year: number | null;
+  label: string;
+  catno: string;
+  format: string;
+  variant: string;
+  genres: string[];
+  styles: string[];
+  added: string;
+  rating: number;
+  url: string;
+  cover: string;
+}
+
+/**
+ * The record collection, read from `src/content/vinyl.json` - written nightly
+ * from Discogs by `scripts/update-vinyl.mjs` rather than typed by hand.
+ *
+ * It is generated, so the validation here is aimed at a different failure than
+ * the markdown collections': not a typo, but a fetch that half-succeeded and
+ * committed a payload with records missing their artist, or pointing at cover
+ * files that were never written. Both would ship as a broken page, and both are
+ * cheap to catch here.
+ *
+ * A missing file is not an error. The repo builds before the first fetch has
+ * ever run, and the page renders its empty state - the same way an empty
+ * content directory is a log with nothing in it rather than a broken build.
+ */
+function readVinyl(root: string, publicDir: string) {
+  const file = path.resolve(root, "src/content/vinyl.json");
+  const empty = {
+    user: "",
+    url: "",
+    fetched: "",
+    value: { minimum: "", median: "", maximum: "" },
+    owners: [] as { id: string; name: string; count: number }[],
+    records: [] as VinylRecordJson[],
+  };
+
+  if (!existsSync(file)) return empty;
+
+  const fail = (message: string): never => {
+    throw new Error(`Invalid vinyl payload - src/content/vinyl.json: ${message}`);
+  };
+
+  let payload: Record<string, unknown>;
+  try {
+    payload = JSON.parse(readFileSync(file, "utf8"));
+  } catch (error) {
+    return fail(`could not be parsed as JSON (${(error as Error).message})`);
+  }
+
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    fail("must be a JSON object");
+  }
+
+  const owners = Array.isArray(payload.owners) ? (payload.owners as Record<string, unknown>[]) : [];
+  for (const [index, owner] of owners.entries()) {
+    if (!asTrimmedString(owner.id) || !asTrimmedString(owner.name)) {
+      fail(`\`owners[${index}]\` needs an \`id\` and a \`name\``);
+    }
+  }
+  const ownerIds = new Set(owners.map((owner) => asTrimmedString(owner.id)));
+
+  const rawRecords = Array.isArray(payload.records)
+    ? (payload.records as Record<string, unknown>[])
+    : fail("`records` must be an array");
+
+  const seen = new Set<number>();
+
+  const records = rawRecords.map((record, index) => {
+    const where = `\`records[${index}]\``;
+
+    const instanceId = Number(record.instanceId);
+    if (!Number.isInteger(instanceId)) fail(`${where} needs a numeric \`instanceId\``);
+    // The instance id keys the list in React, so a duplicate would silently
+    // drop a record from the page rather than render two.
+    if (seen.has(instanceId)) fail(`${where} repeats \`instanceId\` ${instanceId}`);
+    seen.add(instanceId);
+
+    const artist = asTrimmedString(record.artist);
+    const title = asTrimmedString(record.title);
+    if (!artist) fail(`${where} has no \`artist\``);
+    if (!title) fail(`${where} has no \`title\``);
+
+    // `null` is a record in Discogs' Uncategorized folder, which is a real
+    // state. A non-empty owner that names nobody is a bug in the fetch.
+    const owner = record.owner == null ? null : asTrimmedString(record.owner);
+    if (owner && !ownerIds.has(owner)) {
+      fail(`${where} is owned by "${owner}", who is not in \`owners\``);
+    }
+
+    // A cover path that points at nothing would ship as a broken tile, exactly
+    // like a mistyped photo path in a show.
+    const cover = asTrimmedString(record.cover);
+    if (cover && !existsSync(path.join(publicDir, cover))) {
+      fail(`${where}.cover does not exist: public${cover}`);
+    }
+
+    return {
+      id: Number(record.id) || 0,
+      instanceId,
+      owner: owner || null,
+      artist,
+      title,
+      year: Number(record.year) || null,
+      label: asTrimmedString(record.label),
+      catno: asTrimmedString(record.catno),
+      format: asTrimmedString(record.format),
+      variant: asTrimmedString(record.variant),
+      genres: asStringArray(record.genres),
+      styles: asStringArray(record.styles),
+      added: asTrimmedString(record.added),
+      rating: Number(record.rating) || 0,
+      url: asTrimmedString(record.url),
+      cover,
+    };
+  });
+
+  // Whole-collection figures, already formatted by Discogs with a currency
+  // symbol. There is no per-owner breakdown to validate because there is no way
+  // to get one - see the note in `scripts/update-vinyl.mjs`.
+  const rawValue = (payload.value ?? {}) as Record<string, unknown>;
+
+  return {
+    user: asTrimmedString(payload.user),
+    url: asTrimmedString(payload.url),
+    fetched: asTrimmedString(payload.fetched),
+    value: {
+      minimum: asTrimmedString(rawValue.minimum),
+      median: asTrimmedString(rawValue.median),
+      maximum: asTrimmedString(rawValue.maximum),
+    },
+    // Counts are recomputed from the records rather than trusted, so a stale
+    // count in the payload can never disagree with what the page lists.
+    owners: owners.map((owner) => ({
+      id: asTrimmedString(owner.id),
+      name: asTrimmedString(owner.name),
+      count: records.filter((record) => record.owner === asTrimmedString(owner.id)).length,
+    })),
+    records,
+  };
+}
+
 /**
  * The published shows, parsed the same way the app sees them. Exported so the
  * build can write a real HTML page per show without a second parser drifting
@@ -457,8 +518,9 @@ export function readShows(root: string, publicDir: string) {
 }
 
 /**
- * Reads and validates the markdown collections under `src/content/` at build
- * time and exposes each as a virtual module (`virtual:blog`, `virtual:shows`).
+ * Reads and validates everything under `src/content/` at build time and exposes
+ * each collection as a virtual module: the markdown ones as `virtual:blog` and
+ * `virtual:shows`, and the generated record collection as `virtual:vinyl`.
  *
  * Doing this in Node rather than in the browser buys three things the runtime
  * version could not: malformed frontmatter fails the build instead of the live
@@ -468,8 +530,16 @@ export function readShows(root: string, publicDir: string) {
  */
 export function contentPlugin(): Plugin {
   const dirs = new Map<string, string>();
+  let root = "";
   let publicDir = "";
   let includeDrafts = false;
+
+  /**
+   * The record collection is one generated JSON file rather than a directory of
+   * hand-written markdown, so it gets its own virtual module instead of being
+   * bent into the `Collection` shape for a single member.
+   */
+  const VINYL = "vinyl";
 
   function virtualId(name: string) {
     return `virtual:${name}`;
@@ -495,16 +565,22 @@ export function contentPlugin(): Plugin {
       for (const collection of COLLECTIONS) {
         dirs.set(collection.name, path.resolve(config.root, "src/content", collection.name));
       }
+      root = config.root;
       publicDir = config.publicDir;
       includeDrafts = config.command === "serve";
     },
 
     resolveId(id) {
+      if (id === virtualId(VINYL)) return resolvedId(VINYL);
       const collection = COLLECTIONS.find((entry) => id === virtualId(entry.name));
       return collection ? resolvedId(collection.name) : null;
     },
 
     load(id) {
+      if (id === resolvedId(VINYL)) {
+        return `export const vinyl = ${JSON.stringify(readVinyl(root, publicDir))};`;
+      }
+
       const collection = COLLECTIONS.find((entry) => id === resolvedId(entry.name));
       return collection ? load(collection) : null;
     },
@@ -512,14 +588,21 @@ export function contentPlugin(): Plugin {
     configureServer(server) {
       // Editing, adding, or deleting an entry should refresh the browser.
       const invalidate = (file: string) => {
+        const reload = (name: string) => {
+          const module = server.moduleGraph.getModuleById(resolvedId(name));
+          if (module) server.moduleGraph.invalidateModule(module);
+          server.ws.send({ type: "full-reload" });
+        };
+
+        // A local run of the Discogs fetch should show up without a restart.
+        if (file === path.resolve(root, "src/content/vinyl.json")) return reload(VINYL);
+
         if (!file.endsWith(".md")) return;
 
         const collection = COLLECTIONS.find((entry) => file.startsWith(dirs.get(entry.name)!));
         if (!collection) return;
 
-        const module = server.moduleGraph.getModuleById(resolvedId(collection.name));
-        if (module) server.moduleGraph.invalidateModule(module);
-        server.ws.send({ type: "full-reload" });
+        return reload(collection.name);
       };
 
       server.watcher.on("add", invalidate);

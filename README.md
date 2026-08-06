@@ -83,7 +83,8 @@ public/                   served as-is (CNAME, favicon, photos)
 scripts/
   optimize-photos.mjs     resizes any image and strips its EXIF
   make-share-fallback.mjs draws the social image for a show with no photos
-vite-plugin-content.ts    reads + validates the markdown collections at build time
+  update-vinyl.mjs        reads the Discogs collection nightly, saves the sleeves
+vite-plugin-content.ts    reads + validates every content collection at build time
 vite-plugin-share-pages.ts writes one HTML file per show so links preview properly
 vite.config.ts            aliases, Tailwind, the 404.html fallback
 src/
@@ -91,7 +92,7 @@ src/
     profile.ts            everything the Home / About / Career pages render
     blog/*.md             one markdown file per post
     shows/*.md            one markdown file per show
-    trips/*.md            one markdown file per trip
+    vinyl.json            the record collection, written nightly from Discogs
   routes/                 one file per page
   components/
     ui/                   shadcn/ui: Button, Badge, Carousel, Toggle, ToggleGroup
@@ -99,11 +100,11 @@ src/
     fact-line.tsx         a detail page's own facts, set under its title
   lib/
     blog.ts               post helpers over the plugin's output
-    photo.ts              the Photo type, shared by all three collections
+    photo.ts              the Photo type, shared by the markdown collections
     shows.ts              sorting, year grouping, derived show stats
     show-summary.ts       one-line show description, shared with the Node build
     show-card.ts          draws the shareable poster on a canvas
-    trips.ts              sorting, year grouping, derived trip stats
+    vinyl.ts              filtering, sorting, and derived collection stats
     theme.ts              light/dark store, synced with the pre-paint script
   index.css               design tokens, utilities, and the poster primitives
   fonts.css               self-hosted @font-face declarations
@@ -118,11 +119,11 @@ reimplementing them.
 
 ### How content works
 
-`vite-plugin-content.ts` reads `src/content/blog/`, `src/content/shows/`, and
-`src/content/trips/` in Node at build time, validates the frontmatter, and
-exposes each collection as a virtual module (`virtual:blog`, `virtual:shows`,
-`virtual:trips`). Three things fall out of doing it there rather than in the
-browser:
+`vite-plugin-content.ts` reads `src/content/blog/` and `src/content/shows/` in
+Node at build time, validates the frontmatter, and exposes each collection as a
+virtual module (`virtual:blog`, `virtual:shows`). It validates
+`src/content/vinyl.json` the same way and exposes it as `virtual:vinyl`. Three
+things fall out of doing it there rather than in the browser:
 
 - **Bad frontmatter fails the build**, naming the offending file, instead of
   rendering a broken card on the live site.
@@ -165,7 +166,7 @@ highlighting all work.
 | `category` | yes | `work` or `personal` - drives the filter on `/blog` |
 | `summary` | no | Recommended; used on cards and for link previews |
 | `tags` | no | Free-form list, shown on the post page |
-| `photos` | no | Same rules and same carousel as a show or a trip |
+| `photos` | no | Same rules and same carousel as a show |
 | `draft` | no | `true` keeps it in `npm run dev` and out of the build |
 
 Reading time is computed from the word count. Renaming a file changes its URL.
@@ -334,54 +335,75 @@ headless browser or a font stack with the site.
 
 ---
 
-## Adding a trip
+## The record collection
 
-One markdown file in `src/content/trips/`. The filename becomes the slug, and
-everything at the top of `/trips` - trips, countries, cities, nights away, the
-year groups - is derived from these files.
+`/vinyl` is the one page whose content nobody writes. It is the Discogs
+collection for the user `dnafam`, read nightly by `scripts/update-vinyl.mjs`,
+committed as `src/content/vinyl.json`, and validated at build time like
+everything else under `src/content/`.
 
-```md
----
-title: Spain and Portugal
-date: 2026-06-12          # YYYY, YYYY-MM, or YYYY-MM-DD
-endDate: 2026-06-20       # optional; both ends dated gives "8 nights"
-type: vacation            # vacation | family | work | tour
-stops:                    # in the order you went, always "City, Country"
-  - Madrid, Spain
-  - Barcelona, Spain
-  - Lisbon, Portugal
-with:
-  - Alexis A.
-highlights:
-  - Got rained on in the Alhambra gardens and stayed anyway
-oneThing: Go in June, before the heat makes the afternoons useless.
-bestMeal: Tinned mussels at a bar in Lisbon with no name on the door.
-wouldGoBack: true
-photos:
-  - src: /img/trips/spain-2026/alhambra.jpg
-    alt: The Alhambra's Court of the Lions in flat grey light, rain on the stone
-    caption: Worth the soaking
----
+### Why it is committed rather than fetched
 
-Optional markdown, for a trip with a story worth telling.
+The obvious version of this page calls the Discogs API from the browser on
+load. It cannot work here, for three reasons in descending order of how binding
+they are:
+
+1. **The interesting half needs a token.** Unauthenticated,
+   `/users/dnafam/collection/folders` returns a single "All" folder and
+   `/collection/value` returns nothing. The Dan/Alexis split and every value
+   stat are authenticated reads, and a token cannot ship in a client bundle.
+2. **The site does not phone home.** `tests/links.spec.ts` fails if any request
+   leaves the origin except the GoatCounter counter. A live Discogs call breaks
+   the test and the claim it protects.
+3. **The sleeves are Discogs' bandwidth.** Hotlinking their CDN for every
+   visitor is not ours to spend, so the covers are downloaded, squared off to
+   500px WebP, and served from `public/img/vinyl/`.
+
+The nightly job is the same shape as the visitor counter's: a failed read
+writes nothing, so the last good collection stays committed and keeps showing,
+and the file only changes when the shelf actually moved.
+
+### Running it
+
+```sh
+DISCOGS_TOKEN=... node scripts/update-vinyl.mjs
 ```
 
-`src/content/trips/_README.md` carries the full field table next to the files.
-Photos follow the show rules exactly - `src`, `alt`, and `caption` on every one,
-paths checked at build time, and every image through
-`scripts/optimize-photos.mjs` first.
+The token is a personal access token from
+[discogs.com/settings/developers](https://www.discogs.com/settings/developers).
+CI reads it from the `DISCOGS_TOKEN` repository secret; the workflow skips the
+fetch entirely when the secret is missing, because a tokenless run would commit
+a payload with the owner filter and every price stripped out.
 
-Three things differ from the show log on purpose:
+Whose record is whose comes from the Discogs folder it sits in - a folder named
+`Dan` becomes the `dan` filter, `Alexis` becomes `alexis`. Adding a third
+folder adds a third button with no code change. A record left in Discogs'
+`Uncategorized` folder still counts in the totals but belongs to nobody.
 
-- **No ratings.** A trip is not the kind of thing that gets a score. The
-  opinionated fields are `oneThing`, `bestMeal`, and `wouldGoBack`, and
-  `wouldGoBack` has three states - leaving it out means undecided and renders
-  nothing, which is not the same as `false`.
-- **`stops` is the route, in order**, and each one is `City, Country` so the
-  index can count countries without re-parsing strings on every render.
-- **Nights are only counted when both ends carry a day.** A trip written as a
-  bare month has no length, and a guessed one would put a made-up number into a
-  total that is supposed to be a record.
+### The valuation is whole-collection only, and the page says so
+
+Discogs values a *collection*. It will not value a record, and it will not
+value a folder.
+
+The endpoint that prices one release, `/marketplace/price_suggestions`, is
+gated behind seller privileges - on a buyer's account it returns an empty
+object for every release, which is exactly what it did here on the first run.
+So there is no per-record number to sum, and therefore no way to answer "what
+is Alexis' shelf worth".
+
+`/users/dnafam/collection/value` does work, and returns a low, median, and high
+figure for everything together, pre-formatted with a currency symbol. Those are
+carried through as strings rather than parsed and reformatted.
+
+Because they cannot follow the owner filter, they are deliberately **not** in
+the stat grid. They sit in their own block under a heading that names the count
+they cover ("All 51 records"), so filtering down to Alexis' nine never leaves a
+seventeen-hundred-dollar figure sitting next to them. `tests/site.spec.ts`
+asserts that heading still reads the full count after the filter is applied.
+
+Everything in the stat grid above it - records, discs, artists, labels, colored
+wax - is computed in the browser from the filtered list, so those all do follow
+the filter.
 
 ---
 

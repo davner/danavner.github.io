@@ -116,7 +116,7 @@ export function BlogPost() {
         </div>
 
         {/* Below the writing rather than inside it. A post's photos are the
-            same carousel a show or a trip gets, so they carry captions and alt
+            same carousel a show gets, so they carry captions and alt
             text the build has already checked. */}
         {post.photos.length > 0 ? (
           <Suspense fallback={null}>

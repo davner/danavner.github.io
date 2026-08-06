@@ -23,12 +23,9 @@ const ShowDetail = lazy(() =>
   import("@/routes/show").then((module) => ({ default: module.ShowDetail })),
 );
 
-// Trips render markdown notes as well, so they load on demand for the same
-// reason the show pages do.
-const Trips = lazy(() => import("@/routes/trips").then((module) => ({ default: module.Trips })));
-const TripDetail = lazy(() =>
-  import("@/routes/trip").then((module) => ({ default: module.TripDetail })),
-);
+// The record collection is a page of its own with a cover grid and a stat
+// board, and nothing else needs it, so it loads on demand too.
+const Vinyl = lazy(() => import("@/routes/vinyl").then((module) => ({ default: module.Vinyl })));
 
 export function App() {
   return (
@@ -77,27 +74,23 @@ export function App() {
               }
             />
             <Route
-              path="/trips"
+              path="/vinyl"
               element={
                 <Suspense fallback={<PostSkeleton />}>
-                  <Trips />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/trips/:slug"
-              element={
-                <Suspense fallback={<PostSkeleton />}>
-                  <TripDetail />
+                  <Vinyl />
                 </Suspense>
               }
             />
 
             {/* The sections were called Work and Writing before; keep both
-                resolving so nothing already linked breaks. */}
+                resolving so nothing already linked breaks. Trips was a section
+                of its own until the travel writing moved into the blog, so its
+                paths land there rather than on the 404. */}
             <Route path="/work" element={<Navigate to="/career" replace />} />
             <Route path="/writing" element={<Navigate to="/blog" replace />} />
             <Route path="/writing/:slug" element={<LegacyPostRedirect />} />
+            <Route path="/trips" element={<Navigate to="/blog" replace />} />
+            <Route path="/trips/:slug" element={<Navigate to="/blog" replace />} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>

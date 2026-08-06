@@ -4,8 +4,18 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
+/*
+ * Two deliberate departures from upstream shadcn, so a future `shadcn add
+ * toggle --diff` reads them as intent rather than drift:
+ *
+ *   rounded-none    the site is square-cornered everywhere; `rounded-md` is the
+ *                   upstream default.
+ *   cursor-pointer  Tailwind v4's preflight sets `button { cursor: default }`,
+ *                   and upstream does not put it back, so every toggle on the
+ *                   site showed an arrow instead of a finger.
+ */
 const toggleVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-none text-sm font-medium whitespace-nowrap transition-colors outline-none hover:bg-muted hover:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "inline-flex cursor-pointer items-center justify-center gap-2 rounded-none text-sm font-medium whitespace-nowrap transition-colors outline-none hover:bg-muted hover:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {

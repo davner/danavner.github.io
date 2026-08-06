@@ -61,6 +61,18 @@ export function FilterToggle<T extends string>({
           value={option.value}
           className={cn(
             CONTROL_CLASS,
+            /*
+             * `flex-none` overrides the `flex-1` shadcn puts on every
+             * ToggleGroupItem. `flex-1` means `flex: 1 1 0%`, so the pills in a
+             * row are all forced to one width no matter what is written on
+             * them - and with `min-w-0` and `whitespace-nowrap`, the longest
+             * label then spills straight through its own padding and touches
+             * the edges. "Everything 51" wanted 105px of text in the 72px its
+             * share of the row left inside the padding, while "Dan 42" wanted
+             * 46px and looked twice as roomy. Sized to content, every pill
+             * keeps the same 20px either side.
+             */
+            "flex-none",
             "gap-2 bg-background text-muted-foreground",
             "hover:bg-background hover:text-ember",
             "data-[state=on]:bg-ember data-[state=on]:text-primary-foreground",

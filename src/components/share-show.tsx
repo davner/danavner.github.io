@@ -117,7 +117,7 @@ export function ShareShow({ show, className }: { show: Show; className?: string 
             type="button"
             onClick={() => setOpen(false)}
             aria-label="Close share panel"
-            className="-mt-1 -mr-1 p-1 text-muted-foreground transition-colors hover:text-ember"
+            className="-mt-1 -mr-1 cursor-pointer p-1 text-muted-foreground transition-colors hover:text-ember"
           >
             <X className="size-4" />
           </button>

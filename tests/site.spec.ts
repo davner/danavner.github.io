@@ -552,6 +552,63 @@ test.describe("controls", () => {
     });
   }
 
+  for (const path of ["/vinyl", "/blog"]) {
+    test(`${path} filter labels keep their padding`, async ({ page }) => {
+      /*
+       * shadcn puts `flex-1` on every ToggleGroupItem, which forces one width
+       * across the row whatever the labels say. Combined with `min-w-0` and
+       * `whitespace-nowrap`, the longest label spills through its own padding
+       * and sits against the pill's edge - "Everything 51" wanted 105px of
+       * text in the 72px its share of the row left inside the padding, while
+       * "Dan 42" wanted 46px and looked twice as roomy.
+       */
+      await page.goto(path);
+      await page.getByRole("heading", { level: 1 }).waitFor();
+      await page.evaluate(() => document.fonts.ready);
+
+      const spilling = await page.evaluate(() => {
+        const bad: string[] = [];
+        document.querySelectorAll("[data-slot=toggle-group-item]").forEach((el) => {
+          const style = getComputedStyle(el as HTMLElement);
+          const inner =
+            el.getBoundingClientRect().width -
+            parseFloat(style.paddingLeft) -
+            parseFloat(style.paddingRight);
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          if (range.getBoundingClientRect().width > inner + 0.5) {
+            bad.push((el.textContent ?? "?").trim());
+          }
+        });
+        return bad;
+      });
+
+      expect(spilling).toEqual([]);
+    });
+  }
+
+  test("everything clickable shows a finger, not an arrow", async ({ page }) => {
+    // Tailwind v4's preflight sets `button { cursor: default }` and shadcn does
+    // not put it back, so this was every button on the site until the two cva
+    // bases in components/ui/ were fixed.
+    for (const [path, selector] of [
+      ["/vinyl", "[data-slot=toggle-group-item]"],
+      ["/blog", "[data-slot=toggle-group-item]"],
+      ["/", "header button"],
+      ["/career", "button"],
+    ] as const) {
+      await page.goto(path);
+      await page.getByRole("heading", { level: 1 }).waitFor();
+
+      const cursors = await page
+        .locator(selector)
+        .evaluateAll((els) => els.map((el) => getComputedStyle(el).cursor));
+
+      expect(cursors.length, `${path} ${selector} matched nothing`).toBeGreaterThan(0);
+      for (const cursor of cursors) expect(cursor, `${path} ${selector}`).toBe("pointer");
+    }
+  });
+
   test("stat and valuation figures stay inside their tiles at 320px", async ({ page }) => {
     // Three currency figures side by side used to overflow their own cells on
     // the narrowest screens - 75px of text in 55px of tile, crossing the

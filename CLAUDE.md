@@ -29,6 +29,19 @@ when that kind of work starts.
 Do not commit or push unless explicitly told to. Full rules load from the
 `git-workflow` skill when committing.
 
+`main` keeps a linear history. This repo overrides the global rule that rebase
+needs approval every time: when a push is rejected because `main` moved under
+you, rebase onto it rather than merging. That happens routinely here, because
+the nightly `visitor-count` and `vinyl` jobs commit to `main` on their own
+schedule, and merging each one back leaves a merge commit that says nothing
+about the work.
+
+Rebasing your own unpushed commits onto the new tip needs no further approval.
+Everything else in the `git-workflow` skill still stands - in particular,
+force-pushing to rewrite commits that are already on the remote is still a
+separate ask, and `--force-with-lease` is the only acceptable form of it, so a
+bot push landing mid-rebase fails the push instead of being overwritten.
+
 ## This project
 
 Static React site, no backend. Content is markdown validated at build time, so

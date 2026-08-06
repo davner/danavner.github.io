@@ -29,12 +29,28 @@ by the user alone.
 Explain why the change was needed, not just what changed. Wrap the body at 80
 columns.
 
+## Rebasing onto a moved `main`
+
+`main` keeps a linear history, so this one case is pre-approved: when a push is
+rejected because `main` moved under you, rebase your own unpushed commits onto
+the new tip rather than merging. No need to ask.
+
+It comes up on its own here. The nightly `visitor-count` and `vinyl` jobs commit
+to `main` on their own schedule, and a push that races one of them would
+otherwise leave a merge commit describing nothing but the collision.
+
+Rebasing commits that are already on the remote is a different thing, and still
+needs asking - see below.
+
 ## Never without explicit approval
 
-- `git commit --amend`
-- `git rebase` in any form, including `filter-branch` and history rewriting
+- `git commit --amend` on a commit that is already pushed
+- `git rebase` that rewrites commits already on the remote, plus
+  `filter-branch` and history rewriting generally
 - `git reset` that discards commits
-- `git push --force` or `--force-with-lease`
+- `git push --force`. When a force-push is approved, `--force-with-lease` is the
+  only acceptable form: it refuses the push if a bot landed a commit while you
+  were rewriting, instead of silently overwriting it.
 - deleting a branch, local or remote
 
 Asking is cheap. Recovering a force-pushed branch is not.

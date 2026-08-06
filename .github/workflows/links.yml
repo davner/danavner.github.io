@@ -25,25 +25,51 @@ jobs:
       # asset tags and nothing else, and its root-relative paths cannot be
       # resolved without a root dir. Internal links and assets are covered by
       # the Playwright suite in ci.yml, which checks them in a real browser.
+      #
+      # `[!_]*.md` rather than `*.md`, because a leading underscore marks a
+      # file as notes-to-self rather than an entry - the same rule the content
+      # plugin follows. Those files carry illustrative URLs ending in "...",
+      # which are placeholders and were being reported as dead.
       - name: Check outbound links
         id: lychee
         uses: lycheeverse/lychee-action@v2
         with:
-          # Social profiles routinely 403 an unauthenticated crawler; the point
-          # is finding dead URLs, not fighting bot walls.
+          # The excluded hosts all wall off an anonymous crawler rather than
+          # answering it, so a result from them says nothing about whether the
+          # link is any good:
+          #
+          #   linkedin, instagram, discogs,
+          #   leagueofcomicgeeks, epicgames   403 outright
+          #   setlist.fm                      serves a captcha page - and which
+          #                                   status it uses depends on the
+          #                                   user agent (202 for a browser
+          #                                   string, 200 with a challenge body
+          #                                   for a plain one), so leaving it in
+          #                                   makes this job flaky rather than
+          #                                   thorough
+          #
+          # The point is finding dead URLs, not fighting bot walls.
+          # No `--exclude-mail`: it was removed in lychee 0.24, which is what
+          # lychee-action@v2 pins, and an unknown flag exits 2 - which this job
+          # reads as "links are broken" and files an issue about, every week,
+          # whatever the links actually say. Mail addresses are skipped by
+          # default now; `--include-mail` opts back in.
           args: >-
             --no-progress
             --max-retries 2
             --accept 200,206,429
-            --exclude-mail
             --exclude 'linkedin\.com'
             --exclude 'instagram\.com'
+            --exclude 'discogs\.com'
+            --exclude 'leagueofcomicgeeks\.com'
+            --exclude 'store\.epicgames\.com'
+            --exclude 'setlist\.fm'
             --exclude 'localhost'
             --exclude '127\.0\.0\.1'
             --exclude 'xxxxx'
             'README.md'
             'src/content/profile.ts'
-            'src/content/**/*.md'
+            'src/content/**/[!_]*.md'
           fail: false
           output: lychee-report.md
 

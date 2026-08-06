@@ -69,7 +69,12 @@ export function Blog() {
                 )}
               >
                 <span className="readout">{filter.label}</span>
-                <span className="font-mono text-[0.65rem] opacity-70">{count}</span>
+                {/* No `opacity-70` here: dimming the count to 70% drops it to
+                    3.3:1 against the pill, under the 4.5:1 AA floor. The mono
+                    face at 0.65rem is already secondary to the label without
+                    it. axe only flags this once a count reaches two digits, so
+                    the single-digit case was failing silently too. */}
+                <span className="font-mono text-[0.65rem]">{count}</span>
               </ToggleGroupItem>
             );
           })}

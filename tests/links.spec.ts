@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 
+import { ANALYTICS_HOSTS } from "../src/lib/analytics";
 import { ROUTES } from "./routes";
 
 /**
@@ -47,6 +48,12 @@ test.describe("internal links", () => {
   test("every image and asset loads", async ({ page }) => {
     const failed: string[] = [];
     page.on("response", (response) => {
+      // GoatCounter is excluded on purpose. It is a third party the site does
+      // not need in order to work - a content blocker, a sandboxed network, or
+      // an outage takes it out and nothing on the page changes. Scoring it as a
+      // broken asset makes this test fail on the network it happens to run on,
+      // which it did.
+      if (ANALYTICS_HOSTS.includes(new URL(response.url()).host)) return;
       if (response.status() >= 400)
         failed.push(`${response.status()} ${response.url()}`);
     });
@@ -74,16 +81,17 @@ test.describe("internal links", () => {
     expect(failed).toEqual([]);
   });
 
-  test("nothing phones home", async ({ page, baseURL }) => {
-    // Backs the README's claim, which is now absolute: no font CDN, no
-    // third-party scripts, no analytics. Every request a visitor's browser
-    // makes goes to this origin. There is no allowed-host list any more,
-    // because nothing is allowed.
+  test("nothing phones home except GoatCounter", async ({ page, baseURL }) => {
+    // Backs the README's claim: no font CDN, no third-party scripts, and the
+    // only analytics is the cookie-free GoatCounter pageview beacon, which is
+    // allowed to reach exactly these hosts and nothing else.
+    const allowed = new Set(ANALYTICS_HOSTS);
     const external = new Set<string>();
     page.on("request", (request) => {
       const url = request.url();
       if (/^https?:\/\//.test(url) && !url.startsWith(baseURL!)) {
-        external.add(new URL(url).host);
+        const host = new URL(url).host;
+        if (!allowed.has(host)) external.add(host);
       }
     });
 

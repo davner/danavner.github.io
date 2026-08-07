@@ -4,8 +4,8 @@ name: Vinyl
 # three reasons the page could not work around. The folder split (whose record
 # is it) and the collection value are both authenticated Discogs reads, and a
 # token cannot ship in a client bundle. The site's standing promise is that
-# nothing phones home at all, which `tests/links.spec.ts` asserts on every run.
-# And the cover art is Discogs' CDN, not ours to lean on.
+# nothing phones home except the GoatCounter beacon, which `tests/links.spec.ts`
+# asserts on every run. And the cover art is Discogs' CDN, not ours to lean on.
 #
 # So this job is the only thing that talks to Discogs: nightly, it reads the
 # collection, writes `src/content/vinyl.json`, and commits the sleeves it had to

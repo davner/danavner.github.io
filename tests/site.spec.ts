@@ -13,7 +13,9 @@ test.describe("navigation", () => {
 
     // The poster look depends entirely on Anton actually arriving.
     await expect(heading).toHaveCSS("font-family", /Anton/);
-    expect(await page.evaluate(() => document.fonts.check('400 100px "Anton"'))).toBe(true);
+    expect(
+      await page.evaluate(() => document.fonts.check('400 100px "Anton"')),
+    ).toBe(true);
   });
 
   test("home links to every section", async ({ page }) => {
@@ -76,7 +78,8 @@ test.describe("navigation", () => {
 test.describe("theme", () => {
   test("toggles and survives a reload", async ({ page }) => {
     await page.goto("/");
-    const isDark = () => page.evaluate(() => document.documentElement.classList.contains("dark"));
+    const isDark = () =>
+      page.evaluate(() => document.documentElement.classList.contains("dark"));
 
     await page.emulateMedia({ colorScheme: "dark" });
     await page.reload();
@@ -84,7 +87,9 @@ test.describe("theme", () => {
 
     await page.getByRole("button", { name: /Switch to light mode/ }).click();
     expect(await isDark()).toBe(false);
-    expect(await page.evaluate(() => localStorage.getItem("theme"))).toBe("light");
+    expect(await page.evaluate(() => localStorage.getItem("theme"))).toBe(
+      "light",
+    );
 
     await page.reload();
     expect(await isDark()).toBe(false);
@@ -92,31 +97,38 @@ test.describe("theme", () => {
 });
 
 test.describe("blog", () => {
+  // Counted rather than hardcoded, so publishing a post does not fail the suite.
   test("filter narrows the list and syncs the URL", async ({ page }) => {
     await page.goto("/blog");
     const posts = page.locator("article");
-    await expect(posts).toHaveCount(2);
+    const total = await posts.count();
+    expect(total).toBeGreaterThan(1);
 
     await page.getByRole("radio", { name: /^Work/i }).click();
     await page.waitForURL("**/blog?category=work");
-    await expect(posts).toHaveCount(1);
-    await expect(posts.locator("h3")).toContainText(/HOW THIS SITE IS BUILT/i);
+    const work = await posts.count();
+    expect(work).toBeGreaterThan(0);
+    expect(work).toBeLessThan(total);
+    await expect(
+      posts.locator("h3").filter({ hasText: /HOW THIS SITE IS BUILT/i }),
+    ).toHaveCount(1);
 
     await page.getByRole("radio", { name: /^Personal/i }).click();
     await page.waitForURL("**/blog?category=personal");
-    await expect(posts).toHaveCount(1);
+    await expect(posts).toHaveCount(total - work);
   });
 
   test("filter survives a reload", async ({ page }) => {
     await page.goto("/blog?category=personal");
-    await expect(page.locator("article")).toHaveCount(1);
-    await expect(page.getByRole("radio", { name: /^Personal/i })).toHaveAttribute(
-      "aria-checked",
-      "true",
-    );
+    expect(await page.locator("article").count()).toBeGreaterThan(0);
+    await expect(
+      page.getByRole("radio", { name: /^Personal/i }),
+    ).toHaveAttribute("aria-checked", "true");
   });
 
-  test("a post renders markdown, code, tables, and heading anchors", async ({ page }) => {
+  test("a post renders markdown, code, tables, and heading anchors", async ({
+    page,
+  }) => {
     await page.goto("/blog/building-this-site");
     await expect(page).toHaveTitle("How this site is built · Dan Avner");
     await expect(page.locator("pre code .hljs-keyword").first()).toBeAttached();
@@ -133,7 +145,9 @@ test.describe("shows", () => {
     // their rows from innerText. Open them all so row assertions see every show.
     await page
       .locator("details")
-      .evaluateAll((els) => els.forEach((d) => ((d as HTMLDetailsElement).open = true)));
+      .evaluateAll((els) =>
+        els.forEach((d) => ((d as HTMLDetailsElement).open = true)),
+      );
   });
 
   test("row count matches the logged stat", async ({ page }) => {
@@ -157,11 +171,15 @@ test.describe("shows", () => {
       const heading = (await row.locator("h3").innerText()).trim();
       const support = row.locator('p:has-text("w/")');
       if ((await support.count()) === 0) continue;
-      expect((await support.first().innerText()).toUpperCase()).not.toContain(heading);
+      expect((await support.first().innerText()).toUpperCase()).not.toContain(
+        heading,
+      );
     }
   });
 
-  test("who you were with renders exactly one way per entry", async ({ page }) => {
+  test("who you were with renders exactly one way per entry", async ({
+    page,
+  }) => {
     const rows = page.locator("[data-slot=show]");
     let recorded = 0;
 
@@ -169,7 +187,8 @@ test.describe("shows", () => {
       const row = rows.nth(i);
       const solo = (await row.locator(".solo-badge").count()) > 0;
       const duo = (await row.locator(".duo-badge").count()) > 0;
-      const names = (await row.getByText("Went with", { exact: false }).count()) > 0;
+      const names =
+        (await row.getByText("Went with", { exact: false }).count()) > 0;
 
       // Solo, duo, and a plain list are three states, never two at once.
       expect([solo, duo, names].filter(Boolean).length).toBeLessThanOrEqual(1);
@@ -179,7 +198,9 @@ test.describe("shows", () => {
     expect(recorded).toBeGreaterThan(0);
   });
 
-  test("the duo badge names the partner and reads as two players", async ({ page }) => {
+  test("the duo badge names the partner and reads as two players", async ({
+    page,
+  }) => {
     const duo = page.locator(".duo-badge");
     if ((await duo.count()) === 0) return;
 
@@ -205,7 +226,9 @@ test.describe("shows", () => {
     }
   });
 
-  test("the log lists no photos, notes, or share controls", async ({ page }) => {
+  test("the log lists no photos, notes, or share controls", async ({
+    page,
+  }) => {
     // Those all live on the show's own page now. Putting them back here is what
     // made the rows a screen tall each and left nothing to click through for.
     await expect(page.locator("[data-slot=show] figure")).toHaveCount(0);
@@ -227,7 +250,9 @@ test.describe("shows", () => {
     expect(await withCap.count()).toBeGreaterThan(0);
 
     // Thousands separators, or 70692 reads as a phone number.
-    await expect(rows.filter({ hasText: "Riyadh Air" })).toContainText("70,692");
+    await expect(rows.filter({ hasText: "Riyadh Air" })).toContainText(
+      "70,692",
+    );
   });
 
   test("a row says what is behind the click", async ({ page }) => {
@@ -247,7 +272,11 @@ test.describe("shows", () => {
       .locator('a[href^="/shows/"]')
       .evaluateAll((els) =>
         Array.from(
-          new Set(els.map((el) => (el as HTMLAnchorElement).getAttribute("href") ?? "")),
+          new Set(
+            els.map(
+              (el) => (el as HTMLAnchorElement).getAttribute("href") ?? "",
+            ),
+          ),
         ).filter(Boolean),
       );
     expect(hrefs.length).toBeGreaterThan(0);
@@ -257,12 +286,17 @@ test.describe("shows", () => {
       await page.goto(href);
       await page.getByRole("heading", { level: 1 }).waitFor();
 
-      const buttons = page.getByRole("link", { name: /setlist on setlist\.fm$/i });
+      const buttons = page.getByRole("link", {
+        name: /setlist on setlist\.fm$/i,
+      });
       const count = await buttons.count();
 
       for (let i = 0; i < count; i++) {
         const button = buttons.nth(i);
-        await expect(button).toHaveAttribute("href", /^https:\/\/www\.setlist\.fm\//);
+        await expect(button).toHaveAttribute(
+          "href",
+          /^https:\/\/www\.setlist\.fm\//,
+        );
         // Opens off-site, so it has to open safely in its own tab.
         await expect(button).toHaveAttribute("target", "_blank");
         await expect(button).toHaveAttribute("rel", /noopener/);
@@ -275,7 +309,9 @@ test.describe("shows", () => {
 
         // The link sits on that band's own row, so the row has to be the band
         // it names.
-        expect((await button.innerText()).toLowerCase()).toContain(band.toLowerCase());
+        expect((await button.innerText()).toLowerCase()).toContain(
+          band.toLowerCase(),
+        );
 
         /*
          * And the URL has to be that band's too. A setlist.fm path carries the
@@ -300,7 +336,9 @@ test.describe("shows", () => {
     expect(seen).toBeGreaterThan(0);
   });
 
-  test("a rating's fill width matches its accessible label", async ({ page }) => {
+  test("a rating's fill width matches its accessible label", async ({
+    page,
+  }) => {
     const ratings = page.locator("[role=img][aria-label^='Rated']");
     for (let i = 0; i < (await ratings.count()); i++) {
       const label = (await ratings.nth(i).getAttribute("aria-label")) ?? "";
@@ -309,7 +347,10 @@ test.describe("shows", () => {
         .nth(i)
         .locator("> span:nth-child(2)")
         .evaluate((n) => (n as HTMLElement).style.width);
-      expect(Number.parseFloat(width)).toBeCloseTo((Number(value) / Number(max)) * 100, 1);
+      expect(Number.parseFloat(width)).toBeCloseTo(
+        (Number(value) / Number(max)) * 100,
+        1,
+      );
     }
   });
 
@@ -322,7 +363,11 @@ test.describe("shows", () => {
       .locator('a[href^="/shows/"]')
       .evaluateAll((els) =>
         Array.from(
-          new Set(els.map((el) => (el as HTMLAnchorElement).getAttribute("href") ?? "")),
+          new Set(
+            els.map(
+              (el) => (el as HTMLAnchorElement).getAttribute("href") ?? "",
+            ),
+          ),
         ).filter(Boolean),
       );
     expect(hrefs.length).toBeGreaterThan(0);
@@ -355,7 +400,9 @@ test.describe("vinyl", () => {
 
   test("tile count matches the records stat", async ({ page }) => {
     const tiles = await page.locator("[data-slot=record]").count();
-    const counted = Number(await page.locator("[data-slot=stat] dd").first().innerText());
+    const counted = Number(
+      await page.locator("[data-slot=stat] dd").first().innerText(),
+    );
     expect(tiles).toBe(counted);
     expect(tiles).toBeGreaterThan(0);
   });
@@ -378,11 +425,15 @@ test.describe("vinyl", () => {
      * future change wires the numbers back into the markup.
      */
     await expect(page.locator("[data-slot=valuation]")).toHaveCount(0);
-    await expect(page.getByText(/what the whole shelf is worth/i)).toHaveCount(0);
+    await expect(page.getByText(/what the whole shelf is worth/i)).toHaveCount(
+      0,
+    );
     await expect(page.locator("main")).not.toContainText(/\$[\d,]+\.\d{2}/);
   });
 
-  test("the owner filter narrows the shelf and syncs the URL", async ({ page }) => {
+  test("the owner filter narrows the shelf and syncs the URL", async ({
+    page,
+  }) => {
     const tiles = page.locator("[data-slot=record]");
     const everything = await tiles.count();
 
@@ -400,7 +451,9 @@ test.describe("vinyl", () => {
     for (let i = 1; i <= owners; i++) {
       const option = options.nth(i);
       // The number printed on the pill itself, e.g. "Alexis 9".
-      const badge = Number(/(\d+)\s*$/.exec((await option.innerText()).trim())?.[1]);
+      const badge = Number(
+        /(\d+)\s*$/.exec((await option.innerText()).trim())?.[1],
+      );
       expect(badge).toBeGreaterThan(0);
 
       await option.click();
@@ -440,20 +493,23 @@ test.describe("vinyl", () => {
     expect(url).toContain("owner=");
 
     await page.goto(url);
-    await expect(page.getByRole("radio", { name: new RegExp(label, "i") })).toHaveAttribute(
-      "aria-checked",
-      "true",
-    );
+    await expect(
+      page.getByRole("radio", { name: new RegExp(label, "i") }),
+    ).toHaveAttribute("aria-checked", "true");
   });
 
   test("sorting reorders the shelf and syncs the URL", async ({ page }) => {
-    const first = () => page.locator("[data-slot=record] h3").first().innerText();
+    const first = () =>
+      page.locator("[data-slot=record] h3").first().innerText();
     const byNewest = await first();
 
     const sort = page.getByRole("combobox", { name: /sort records/i });
     await sort.selectOption("artist");
     await page.waitForURL("**/vinyl?sort=artist");
-    const byArtist = await page.locator("[data-slot=record] p").first().innerText();
+    const byArtist = await page
+      .locator("[data-slot=record] p")
+      .first()
+      .innerText();
 
     // Sorted by artist, the shelf actually has to start at the top of the
     // alphabet rather than just claiming to.
@@ -469,26 +525,42 @@ test.describe("vinyl", () => {
     // A sorted shelf is linkable, so the control has to come back showing the
     // order the URL asked for rather than its own default.
     await page.goto("/vinyl?sort=artist");
-    await expect(page.getByRole("combobox", { name: /sort records/i })).toHaveValue("artist");
+    await expect(
+      page.getByRole("combobox", { name: /sort records/i }),
+    ).toHaveValue("artist");
   });
 
-  test("search narrows the shelf without moving the stats", async ({ page }) => {
+  test("search narrows the shelf without moving the stats", async ({
+    page,
+  }) => {
     const tiles = page.locator("[data-slot=record]");
     const everything = await tiles.count();
-    const counted = await page.locator("[data-slot=stat] dd").first().innerText();
+    const counted = await page
+      .locator("[data-slot=stat] dd")
+      .first()
+      .innerText();
 
-    const artist = (await page.locator("[data-slot=record] a > div > p:first-child").first().innerText())
+    const artist = (
+      await page
+        .locator("[data-slot=record] a > div > p:first-child")
+        .first()
+        .innerText()
+    )
       .trim()
       .slice(0, 6);
 
-    await page.getByRole("searchbox", { name: /search the collection/i }).fill(artist);
+    await page
+      .getByRole("searchbox", { name: /search the collection/i })
+      .fill(artist);
     await expect.poll(() => tiles.count()).toBeLessThanOrEqual(everything);
     expect(await tiles.count()).toBeGreaterThan(0);
 
     // Typing in the search box narrows what is listed. It must not restate what
     // the shelf is worth, or searching "misfits" would claim the whole
     // collection is worth one record.
-    expect(await page.locator("[data-slot=stat] dd").first().innerText()).toBe(counted);
+    expect(await page.locator("[data-slot=stat] dd").first().innerText()).toBe(
+      counted,
+    );
   });
 
   test("a search with no match says so", async ({ page }) => {
@@ -506,7 +578,10 @@ test.describe("vinyl", () => {
 
     for (let i = 0; i < count; i++) {
       const link = links.nth(i);
-      await expect(link).toHaveAttribute("href", /^https:\/\/www\.discogs\.com\/release\/\d+$/);
+      await expect(link).toHaveAttribute(
+        "href",
+        /^https:\/\/www\.discogs\.com\/release\/\d+$/,
+      );
       await expect(link).toHaveAttribute("target", "_blank");
       await expect(link).toHaveAttribute("rel", /noopener/);
     }
@@ -518,7 +593,9 @@ test.describe("vinyl", () => {
     // break the guarantee in links.spec.ts.
     const sources = await page
       .locator("[data-slot=record] img")
-      .evaluateAll((images) => images.map((img) => img.getAttribute("src") ?? ""));
+      .evaluateAll((images) =>
+        images.map((img) => img.getAttribute("src") ?? ""),
+      );
 
     expect(sources.length).toBeGreaterThan(0);
     for (const src of sources) expect(src).toMatch(/^\/img\/vinyl\//);
@@ -567,18 +644,20 @@ test.describe("controls", () => {
 
       const spilling = await page.evaluate(() => {
         const bad: string[] = [];
-        document.querySelectorAll("[data-slot=toggle-group-item]").forEach((el) => {
-          const style = getComputedStyle(el as HTMLElement);
-          const inner =
-            el.getBoundingClientRect().width -
-            parseFloat(style.paddingLeft) -
-            parseFloat(style.paddingRight);
-          const range = document.createRange();
-          range.selectNodeContents(el);
-          if (range.getBoundingClientRect().width > inner + 0.5) {
-            bad.push((el.textContent ?? "?").trim());
-          }
-        });
+        document
+          .querySelectorAll("[data-slot=toggle-group-item]")
+          .forEach((el) => {
+            const style = getComputedStyle(el as HTMLElement);
+            const inner =
+              el.getBoundingClientRect().width -
+              parseFloat(style.paddingLeft) -
+              parseFloat(style.paddingRight);
+            const range = document.createRange();
+            range.selectNodeContents(el);
+            if (range.getBoundingClientRect().width > inner + 0.5) {
+              bad.push((el.textContent ?? "?").trim());
+            }
+          });
         return bad;
       });
 
@@ -586,7 +665,9 @@ test.describe("controls", () => {
     });
   }
 
-  test("everything clickable shows a finger, not an arrow", async ({ page }) => {
+  test("everything clickable shows a finger, not an arrow", async ({
+    page,
+  }) => {
     // Tailwind v4's preflight sets `button { cursor: default }` and shadcn does
     // not put it back, so this was every button on the site until the two cva
     // bases in components/ui/ were fixed.
@@ -604,8 +685,12 @@ test.describe("controls", () => {
         .locator(selector)
         .evaluateAll((els) => els.map((el) => getComputedStyle(el).cursor));
 
-      expect(cursors.length, `${path} ${selector} matched nothing`).toBeGreaterThan(0);
-      for (const cursor of cursors) expect(cursor, `${path} ${selector}`).toBe("pointer");
+      expect(
+        cursors.length,
+        `${path} ${selector} matched nothing`,
+      ).toBeGreaterThan(0);
+      for (const cursor of cursors)
+        expect(cursor, `${path} ${selector}`).toBe("pointer");
     }
   });
 
@@ -630,7 +715,8 @@ test.describe("controls", () => {
           parseFloat(style.paddingRight);
         const range = document.createRange();
         range.selectNodeContents(dd);
-        if (range.getBoundingClientRect().width > avail + 0.5) bad.push(dd.textContent ?? "?");
+        if (range.getBoundingClientRect().width > avail + 0.5)
+          bad.push(dd.textContent ?? "?");
       });
       return bad;
     });
@@ -656,7 +742,9 @@ test.describe("chrome", () => {
     await expect(github).toHaveAttribute("rel", /noopener/);
   });
 
-  test("the email address is not in the page until you ask for it", async ({ page }) => {
+  test("the email address is not in the page until you ask for it", async ({
+    page,
+  }) => {
     const EMAIL = /[\w.+-]+@[\w-]+\.[\w.]{2,}/;
     // The footer signs off rather than listing an address, so the reveal lives
     // on Career now.
@@ -679,7 +767,10 @@ test.describe("chrome", () => {
 
   test("the marquee is decorative", async ({ page }) => {
     await page.goto("/");
-    await expect(page.locator(".marquee-host").first()).toHaveAttribute("aria-hidden", "true");
+    await expect(page.locator(".marquee-host").first()).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
   });
 
   test("no page scrolls horizontally", async ({ page }) => {
@@ -695,7 +786,9 @@ test.describe("chrome", () => {
         .poll(
           () =>
             page.evaluate(
-              () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+              () =>
+                document.documentElement.scrollWidth -
+                document.documentElement.clientWidth,
             ),
           { message: `${path} overflows` },
         )

@@ -121,11 +121,15 @@
   --radius-lg: calc(var(--radius) + 2px);
   --radius-xl: calc(var(--radius) + 4px);
 
-  --font-sans: "Inter Variable", "Inter Fallback", ui-sans-serif, system-ui, -apple-system,
+  --font-sans:
+    "Inter Variable", "Inter Fallback", ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", Roboto, sans-serif;
-  --font-mono: "JetBrains Mono Variable", "JetBrains Mono Fallback", ui-monospace, SFMono-Regular,
-    Menlo, Consolas, monospace;
-  --font-display: "Anton", "Anton Fallback", "Arial Narrow", "Haettenschweiler", Impact, sans-serif;
+  --font-mono:
+    "JetBrains Mono Variable", "JetBrains Mono Fallback", ui-monospace,
+    SFMono-Regular, Menlo, Consolas, monospace;
+  --font-display:
+    "Anton", "Anton Fallback", "Arial Narrow", "Haettenschweiler", Impact,
+    sans-serif;
 }
 
 @layer base {
@@ -220,9 +224,13 @@
     background-image:
       linear-gradient(to right, var(--hairline) 1px, transparent 1px),
       linear-gradient(to bottom, var(--hairline) 1px, transparent 1px);
-    background-size: 0.5rem 100%, 100% 1px;
+    background-size:
+      0.5rem 100%,
+      100% 1px;
     background-repeat: repeat-x, no-repeat;
-    background-position: top left, top left;
+    background-position:
+      top left,
+      top left;
   }
 
   /* ---- Marquee ------------------------------------------------------- */
@@ -305,7 +313,12 @@
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(100deg, transparent 30%, var(--ion) 50%, transparent 70%);
+    background: linear-gradient(
+      100deg,
+      transparent 30%,
+      var(--ion) 50%,
+      transparent 70%
+    );
     opacity: 0.2;
     transform: translateX(-100%);
     animation: solo-sweep 4s ease-in-out infinite;
@@ -330,7 +343,12 @@
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(100deg, transparent 30%, var(--ember) 50%, transparent 70%);
+    background: linear-gradient(
+      100deg,
+      transparent 30%,
+      var(--ember) 50%,
+      transparent 70%
+    );
     opacity: 0.18;
     transform: translateX(-100%);
     animation: solo-sweep 4s ease-in-out infinite;
@@ -406,8 +424,10 @@
     @apply mt-2.5;
   }
 
+  /* A pull quote, not an aside. Set larger than the body and given air above and
+     below, so a line worth stopping on actually stops you. */
   .prose-dan blockquote {
-    @apply border-l-2 border-ember pl-5 text-muted-foreground italic;
+    @apply my-10 border-l-2 border-ember pl-6 text-xl leading-snug text-balance text-foreground italic sm:my-12 sm:pl-8 sm:text-2xl;
   }
 
   .prose-dan hr {

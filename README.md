@@ -12,25 +12,31 @@ If you want to fork it and make it yours, see [Making it yours](#making-it-yours
 
 ## Stack
 
-| Layer | Choice | Why |
-| --- | --- | --- |
-| Build | [Vite](https://vite.dev) 7 | Fast dev server, sane defaults, minimal config |
-| UI | [React](https://react.dev) 19 + TypeScript | Type errors catch content mistakes before the browser does |
-| Styling | [Tailwind CSS](https://tailwindcss.com) v4 | CSS-first config - no `tailwind.config.js` to maintain |
-| Components | [shadcn/ui](https://ui.shadcn.com) | Copied into the repo, so they are mine to edit or delete |
-| Carousel | [Embla](https://embla-carousel.com) | What shadcn/ui's Carousel is built on |
-| Icons | [lucide-react](https://lucide.dev) | Consistent 24px stroke set, tree-shakeable, ISC |
-| Type | [Fontsource](https://fontsource.org) | Self-hosted Anton / Inter / JetBrains Mono |
-| Routing | [React Router](https://reactrouter.com) 8 | Client routes, with a 404 fallback for GitHub Pages |
-| Markdown | react-markdown + remark-gfm | GFM tables, task lists, fenced code |
-| Highlighting | rehype-highlight | lowlight's `common` set, themed to the palette |
-| Hosting | GitHub Pages | Free, already where the repo lives |
+| Layer        | Choice                                     | Why                                                        |
+| ------------ | ------------------------------------------ | ---------------------------------------------------------- |
+| Build        | [Vite](https://vite.dev) 7                 | Fast dev server, sane defaults, minimal config             |
+| UI           | [React](https://react.dev) 19 + TypeScript | Type errors catch content mistakes before the browser does |
+| Styling      | [Tailwind CSS](https://tailwindcss.com) v4 | CSS-first config - no `tailwind.config.js` to maintain     |
+| Components   | [shadcn/ui](https://ui.shadcn.com)         | Copied into the repo, so they are mine to edit or delete   |
+| Carousel     | [Embla](https://embla-carousel.com)        | What shadcn/ui's Carousel is built on                      |
+| Icons        | [lucide-react](https://lucide.dev)         | Consistent 24px stroke set, tree-shakeable, ISC            |
+| Type         | [Fontsource](https://fontsource.org)       | Self-hosted Anton / Inter / JetBrains Mono                 |
+| Routing      | [React Router](https://reactrouter.com) 8  | Client routes, with a 404 fallback for GitHub Pages        |
+| Markdown     | react-markdown + remark-gfm                | GFM tables, task lists, fenced code                        |
+| Highlighting | rehype-highlight                           | lowlight's `common` set, themed to the palette             |
+| Hosting      | GitHub Pages                               | Free, already where the repo lives                         |
 
 Every dependency is permissively licensed (MIT, ISC, Apache-2.0, BSD-3-Clause,
 OFL-1.1 for the fonts). The only thing that leaves the origin is the landing
 page's visitor counter, which uses [GoatCounter](https://www.goatcounter.com) -
 cookie-free, no personal data. Otherwise nothing here phones home: no font CDN,
 no third-party scripts, no other analytics.
+
+The counter is read live from GoatCounter on every page load, with no cached or
+committed copy behind it. A browser that blocks analytics domains, which Safari
+and Firefox content blockers do by default, gets a red error under the odometer
+instead of a number. That is deliberate: the count is either current or it says
+why it is not.
 
 ### Running it
 
@@ -49,18 +55,18 @@ CI do it.
 
 ## CI
 
-| Workflow | When | What |
-| --- | --- | --- |
-| `ci.yml` | every push to `main` and every PR | type-check, build, then the full Playwright suite |
-| `deploy.yml` | push to `main` | builds and publishes to GitHub Pages |
-| `links.yml` | weekly, Mondays | external link check; opens an issue if anything is dead |
+| Workflow     | When                              | What                                                    |
+| ------------ | --------------------------------- | ------------------------------------------------------- |
+| `ci.yml`     | every push to `main` and every PR | type-check, build, then the full Playwright suite       |
+| `deploy.yml` | push to `main`                    | builds and publishes to GitHub Pages                    |
+| `links.yml`  | weekly, Mondays                   | external link check; opens an issue if anything is dead |
 
 The Playwright suite runs against the **production build**, on desktop and
 mobile viewports, and covers four things:
 
 - **Behaviour** - routing, titles, the writing filter and its URL state, theme
   persistence, markdown rendering, and the derived show stats.
-- **Accessibility** - axe (WCAG 2.1 A and AA) on every route in *both* themes.
+- **Accessibility** - axe (WCAG 2.1 A and AA) on every route in _both_ themes.
   The palettes are independent, and contrast is the easiest thing to break.
 - **Links and assets** - every in-site link resolves to a real route rather
   than the SPA's 404 fallback, and no image is broken.
@@ -149,7 +155,7 @@ category: personal
 summary: One or two sentences, shown on the card and used as the meta description.
 tags: [writing]
 draft: false
-photos:                   # optional; alt and caption required on each
+photos: # optional; alt and caption required on each
   - src: /img/blog/hello-world/table.jpg
     alt: A long table from above, plates cleared, one candle still going
     caption: The end of it
@@ -159,15 +165,15 @@ Body in markdown. GFM tables, task lists, and fenced code blocks with syntax
 highlighting all work.
 ```
 
-| Field | Required | Notes |
-| --- | --- | --- |
-| `title` | yes | |
-| `date` | yes | `YYYY-MM-DD`. Posts sort newest-first. |
-| `category` | yes | `work` or `personal` - drives the filter on `/blog` |
-| `summary` | no | Recommended; used on cards and for link previews |
-| `tags` | no | Free-form list, shown on the post page |
-| `photos` | no | Same rules and same carousel as a show |
-| `draft` | no | `true` keeps it in `npm run dev` and out of the build |
+| Field      | Required | Notes                                                 |
+| ---------- | -------- | ----------------------------------------------------- |
+| `title`    | yes      |                                                       |
+| `date`     | yes      | `YYYY-MM-DD`. Posts sort newest-first.                |
+| `category` | yes      | `work` or `personal` - drives the filter on `/blog`   |
+| `summary`  | no       | Recommended; used on cards and for link previews      |
+| `tags`     | no       | Free-form list, shown on the post page                |
+| `photos`   | no       | Same rules and same carousel as a show                |
+| `draft`    | no       | `true` keeps it in `npm run dev` and out of the build |
 
 Reading time is computed from the word count. Renaming a file changes its URL.
 
@@ -192,8 +198,8 @@ display and toward "bands seen".
 ```md
 ---
 lineup:
-  - Knocked Loose               # tops the bill, shown large
-  - Show Me the Body            # everyone below is listed as "w/ …"
+  - Knocked Loose # tops the bill, shown large
+  - Show Me the Body # everyone below is listed as "w/ …"
   - Speed
 date: 2026-06-20
 venue: Hollywood Palladium
@@ -213,24 +219,24 @@ standout: true
 Free-form markdown about the night. Optional.
 ```
 
-| Field | Required | Notes |
-| --- | --- | --- |
-| `lineup` | shows | Every band, top billing first. No duplicates. |
-| `title` | festivals | The event name. On a show, shorthand for a one-band night. |
-| `type` | no | `show` (default) or `festival` |
-| `date` | yes | `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` - use what you remember |
-| `endDate` | no | Multi-day festivals. Renders as "Nov 15–16". |
-| `city` | yes | |
-| `venue` | no | Omit for festivals with no fixed venue |
-| `capacity` | no | How many the place holds for a night like this. Confirm it; never guess. |
-| `subtitle` | no | Qualifier under the heading, e.g. "Day 1" |
-| `rating` | no | 0–5 🤘, decimals allowed. Omit for unrated. |
-| `with` | no | List of names. Mutually exclusive with `solo`. |
-| `solo` | no | `true` renders a **SOLO RUN · 1P** badge |
-| `video` | no | Full URL. A YouTube playlist labels itself "Playlist". |
-| `setlists` | no | `{ band, url }` pairs. Each `band` must be in `lineup`. Renders as per-band buttons. |
-| `photos` | no | Objects with `src` / `alt` / `caption`. All three required. |
-| `standout` | no | Adds a flame and pins it to the ticker |
+| Field      | Required  | Notes                                                                                |
+| ---------- | --------- | ------------------------------------------------------------------------------------ |
+| `lineup`   | shows     | Every band, top billing first. No duplicates.                                        |
+| `title`    | festivals | The event name. On a show, shorthand for a one-band night.                           |
+| `type`     | no        | `show` (default) or `festival`                                                       |
+| `date`     | yes       | `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` - use what you remember                           |
+| `endDate`  | no        | Multi-day festivals. Renders as "Nov 15–16".                                         |
+| `city`     | yes       |                                                                                      |
+| `venue`    | no        | Omit for festivals with no fixed venue                                               |
+| `capacity` | no        | How many the place holds for a night like this. Confirm it; never guess.             |
+| `subtitle` | no        | Qualifier under the heading, e.g. "Day 1"                                            |
+| `rating`   | no        | 0–5 🤘, decimals allowed. Omit for unrated.                                          |
+| `with`     | no        | List of names. Mutually exclusive with `solo`.                                       |
+| `solo`     | no        | `true` renders a **SOLO RUN · 1P** badge                                             |
+| `video`    | no        | Full URL. A YouTube playlist labels itself "Playlist".                               |
+| `setlists` | no        | `{ band, url }` pairs. Each `band` must be in `lineup`. Renders as per-band buttons. |
+| `photos`   | no        | Objects with `src` / `alt` / `caption`. All three required.                          |
+| `standout` | no        | Adds a flame and pins it to the ticker                                               |
 
 Photos live in `public/img/shows/<slug>/` and render as a swipeable strip with
 prev/next buttons and a counter. One photo drops the controls.
@@ -285,7 +291,7 @@ rating, venue, date, and the URL. It then opens a panel offering the poster and
 the link as **separate** actions.
 
 That separation is the whole design. Handing `navigator.share()` a payload with
-a file *and* a URL *and* a body of text lets each app decide what to do with all
+a file _and_ a URL _and_ a body of text lets each app decide what to do with all
 three, and Messages decides to stack them, so you get a full-height poster, the
 entire lineup as a paragraph, and the link underneath. Sending one thing at a
 time means an Instagram story gets the poster and a text message gets a link
@@ -308,7 +314,7 @@ what the per-show HTML above does, so **sending the link already behaves the
 same way** - the show's photo, its title, and its summary, rendered by the
 receiving app. Nothing more is needed there.
 
-**In an Instagram story** Spotify gets a *tappable* sticker, and that is not Open
+**In an Instagram story** Spotify gets a _tappable_ sticker, and that is not Open
 Graph. It is Instagram's native Sharing to Stories integration: the app writes
 `com.instagram.sharedSticker.stickerImage` and
 `com.instagram.sharedSticker.contentURL` to the system pasteboard and opens
@@ -359,9 +365,8 @@ they are:
    visitor is not ours to spend, so the covers are downloaded, squared off to
    500px WebP, and served from `public/img/vinyl/`.
 
-The nightly job is the same shape as the visitor counter's: a failed read
-writes nothing, so the last good collection stays committed and keeps showing,
-and the file only changes when the shelf actually moved.
+A failed read writes nothing, so the last good collection stays committed and
+keeps showing, and the file only changes when the shelf actually moved.
 
 ### Running it
 
@@ -382,7 +387,7 @@ folder adds a third button with no code change. A record left in Discogs'
 
 ### The valuation is whole-collection only, and the page says so
 
-Discogs values a *collection*. It will not value a record, and it will not
+Discogs values a _collection_. It will not value a record, and it will not
 value a folder.
 
 The endpoint that prices one release, `/marketplace/price_suggestions`, is

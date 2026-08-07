@@ -13,7 +13,10 @@ import { ROUTES } from "./routes";
  * `.github/workflows/links.yml` runs those weekly instead.
  */
 test.describe("internal links", () => {
-  test("every in-site link points at a real route", async ({ page, baseURL }) => {
+  test("every in-site link points at a real route", async ({
+    page,
+    baseURL,
+  }) => {
     const seen = new Set<string>();
 
     for (const path of ROUTES) {
@@ -27,7 +30,9 @@ test.describe("internal links", () => {
     expect(seen.size).toBeGreaterThan(0);
 
     for (const href of seen) {
-      const response = await page.request.get(new URL(href, baseURL).toString());
+      const response = await page.request.get(
+        new URL(href, baseURL).toString(),
+      );
       // The SPA fallback serves index.html for unknown paths, so a 200 alone
       // proves nothing - the rendered page must not be the 404 route.
       expect(response.status(), `${href} did not respond`).toBe(200);
@@ -43,7 +48,15 @@ test.describe("internal links", () => {
   test("every image and asset loads", async ({ page }) => {
     const failed: string[] = [];
     page.on("response", (response) => {
-      if (response.status() >= 400) failed.push(`${response.status()} ${response.url()}`);
+      // GoatCounter is excluded on purpose. It is a third party the site is
+      // built to survive losing - a content blocker, a sandboxed network, or an
+      // outage takes it out, and the counter is designed to say so rather than
+      // break. Counting that as a broken asset makes this test fail on the
+      // network it happens to run on, which it did.
+      const host = new URL(response.url()).host;
+      if (ANALYTICS_HOSTS.includes(host)) return;
+      if (response.status() >= 400)
+        failed.push(`${response.status()} ${response.url()}`);
     });
 
     for (const path of ROUTES) {
@@ -56,7 +69,12 @@ test.describe("internal links", () => {
             const el = img as HTMLImageElement;
             return el.complete && el.naturalWidth === 0;
           })
-          .map((img) => (img as HTMLImageElement).currentSrc || img.getAttribute("src") || "?"),
+          .map(
+            (img) =>
+              (img as HTMLImageElement).currentSrc ||
+              img.getAttribute("src") ||
+              "?",
+          ),
       );
       expect(broken, `broken images on ${path}`).toEqual([]);
     }
@@ -64,7 +82,10 @@ test.describe("internal links", () => {
     expect(failed).toEqual([]);
   });
 
-  test("nothing phones home except the visitor counter", async ({ page, baseURL }) => {
+  test("nothing phones home except the visitor counter", async ({
+    page,
+    baseURL,
+  }) => {
     // Backs the README's claim: no font CDN, no third-party scripts, and the
     // only analytics is the cookie-free GoatCounter visitor counter, which is
     // allowed to reach exactly these hosts and nothing else.

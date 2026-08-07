@@ -10,15 +10,19 @@
  *   2. "Allow adding visitor counts on your website" is enabled in its settings,
  *      which is what makes the public counter JSON readable.
  *
- * Until then the ticker degrades to a dashed "offline" readout, and pageviews
- * simply are not recorded. Change the code here and the whole feature follows.
+ * Until then the ticker shows dashes and prints the read failure under itself,
+ * and pageviews simply are not recorded. Change the code here and the whole
+ * feature follows.
  */
 export const GOATCOUNTER_CODE = "danavner";
 
 const ENDPOINT = `https://${GOATCOUNTER_CODE}.goatcounter.com`;
 
 /** The hosts the counter talks to, so the "nothing phones home" test can allow exactly these. */
-export const ANALYTICS_HOSTS = ["gc.zgo.at", `${GOATCOUNTER_CODE}.goatcounter.com`];
+export const ANALYTICS_HOSTS = [
+  "gc.zgo.at",
+  `${GOATCOUNTER_CODE}.goatcounter.com`,
+];
 
 declare global {
   interface Window {
@@ -41,7 +45,8 @@ declare global {
  * count.js still skips localhost on its own, so dev never records.
  */
 export function initVisitorCount() {
-  if (typeof document === "undefined" || document.getElementById("goatcounter")) return;
+  if (typeof document === "undefined" || document.getElementById("goatcounter"))
+    return;
 
   window.goatcounter = { no_onload: true };
 
@@ -60,65 +65,46 @@ export function initVisitorCount() {
  * and, being part of the computed result, keys a fresh CDN entry - dodging a
  * copy of TOTAL.json that once wedged serving a stale `0`.
  */
-const LIVE_URL = `${ENDPOINT}/counter/TOTAL.json?start=2020-01-01`;
+const COUNTER_URL = `${ENDPOINT}/counter/TOTAL.json?start=2020-01-01`;
 
 /**
- * The stored total, baked same-origin by the nightly job (see
- * `scripts/update-visitor-count.mjs`). It is the fallback for the large share of
- * visitors whose browser blocks the cross-site GoatCounter read - Safari and
- * Firefox content blockers drop requests to analytics domains - so the counter
- * shows a recent number instead of going dark. `BASE_URL` keeps the path right
- * under any Vite base.
- */
-const STORED_URL = `${import.meta.env?.BASE_URL ?? "/"}visitor-count.json`;
-
-/**
- * A usable total is a positive integer. Zero and empty fold to null on purpose:
- * the stored number, or the offline face, reads better than an all-zeros
- * odometer on a site that plainly has traffic. Accepts GoatCounter's formatted
- * string ("1,234") or the stored file's bare number.
+ * A usable total is a positive integer. Zero and empty are errors rather than
+ * numbers: an all-zeros odometer on a site that plainly has traffic means the
+ * read went wrong, and saying so beats displaying it. Accepts GoatCounter's
+ * formatted string ("1,234") as well as a bare number.
  */
 function asPositive(value: unknown): number | null {
-  const n = typeof value === "string" ? Number(value.replace(/[^0-9]/g, "")) : Number(value);
+  const n =
+    typeof value === "string"
+      ? Number(value.replace(/[^0-9]/g, ""))
+      : Number(value);
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
-/** Read the live GoatCounter total. Throws on a network or HTTP failure. */
-async function fetchLiveCount(signal?: AbortSignal): Promise<number | null> {
-  const response = await fetch(LIVE_URL, { signal });
-  if (!response.ok) throw new Error(`GoatCounter responded ${response.status}`);
-  const { count } = (await response.json()) as { count?: string };
-  return asPositive(count);
-}
-
-/** Read the stored same-origin total. Null on any failure - it is the floor. */
-async function fetchStoredCount(signal?: AbortSignal): Promise<number | null> {
-  try {
-    const response = await fetch(STORED_URL, { signal });
-    if (!response.ok) return null;
-    const { count } = (await response.json()) as { count?: number | null };
-    return asPositive(count);
-  } catch {
-    return null;
-  }
-}
-
 /**
- * The visitor total for the ticker. Reads GoatCounter live so the number is
- * current, and falls back to the stored same-origin value when that read fails
- * or comes back empty - which is exactly what happens for a visitor whose
- * content blocker drops the cross-site request. The failure is logged so it is
- * visible in the console rather than silently swallowed. Returns null only when
- * both sources come up empty, and the ticker shows its offline face.
+ * The visitor total for the ticker, read live from GoatCounter on every page
+ * load. Throws on any failure so the ticker can surface the reason on the page
+ * instead of quietly showing nothing.
+ *
+ * The request is deliberately bare: no headers, no `credentials`. GoatCounter's
+ * `/counter/*.json` endpoint is built for browsers and answers with
+ * `Access-Control-Allow-Origin: *`, which is all a simple cross-origin GET
+ * needs. Adding an `Accept` or `Content-Type` header would push this out of
+ * CORS' safelist and force a preflight `OPTIONS` the endpoint does not answer,
+ * so the fetch would fail on headers meant to help it.
+ *
+ * Worth knowing: Safari and Firefox content blockers drop requests to analytics
+ * domains outright, GoatCounter included. Those visitors get the error message
+ * rather than a number, which is the honest result of reading this live.
  */
-export async function fetchVisitorCount(signal?: AbortSignal): Promise<number | null> {
-  try {
-    const live = await fetchLiveCount(signal);
-    if (live != null) return live;
-    console.warn("Visitor count: live read returned no usable total; using the stored value.");
-  } catch (error) {
-    if (signal?.aborted) return null;
-    console.error("Visitor count: live read failed; using the stored value.", error);
-  }
-  return fetchStoredCount(signal);
+export async function fetchVisitorCount(signal?: AbortSignal): Promise<number> {
+  const response = await fetch(COUNTER_URL, { signal });
+  if (!response.ok) throw new Error(`GoatCounter responded ${response.status}`);
+
+  const { count } = (await response.json()) as { count?: string };
+  const total = asPositive(count);
+  if (total == null)
+    throw new Error(`GoatCounter returned no usable total (got ${count})`);
+
+  return total;
 }

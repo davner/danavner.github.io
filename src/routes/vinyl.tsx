@@ -4,6 +4,7 @@ import { useSearchParams } from "react-router";
 
 import { CONTROL_CLASS, FilterToggle } from "@/components/filter-toggle";
 import { PageHeader, PageShell } from "@/components/page";
+import { SelectControl } from "@/components/select-control";
 import {
   ALL,
   SORTS,
@@ -138,7 +139,7 @@ function TallyList({
 export function Vinyl() {
   useDocumentMeta(
     "Vinyl",
-    "Every record Alexis and I own, read from Discogs nightly - what it is, whose it is, and what the shelf is worth.",
+    "Every record Alexis and I own, read from Discogs nightly - what it is, when it was pressed, and whose shelf it is on.",
   );
 
   // Owner and sort live in the URL so a filtered shelf is linkable and survives
@@ -215,168 +216,129 @@ export function Vinyl() {
   const hasBoards = stats.topArtists.length > 0 || stats.topStyles.length > 0;
 
   /*
-   * Discogs values a whole collection, not a record and not a folder, so these
-   * three cannot follow the owner filter the way everything else does. They get
-   * their own block and their own heading saying so - dropped in beside the
-   * counts, "$1,737" next to "9 records" would read as a claim about Alexis'
-   * nine records.
+   * Each control sits with the thing it changes.
+   *
+   * Whose records it is scopes the entire page, counts included, so it goes in
+   * the header under the sentence that offers it. It used to sit below the
+   * stats, which meant picking "Alexis" changed four numbers you had already
+   * scrolled past - on a phone the whole board was off screen by then.
+   *
+   * Sort and search only touch the list, so they sit directly on top of it.
    */
-  const valuation = [
-    { label: "Low", value: collection.value.minimum },
-    { label: "Median", value: collection.value.median },
-    { label: "High", value: collection.value.maximum },
-  ].filter((entry) => entry.value);
-
   return (
-    <>
-      <PageShell className="pb-0">
-        <PageHeader
-          title={TITLE}
-          size="long"
-          lede="Alexis and I keep one Discogs account and separate opinions about what belongs on it. This is the whole shelf, read straight from there every night, so it is current as of the last thing we carried home. Filter it down to just hers or just mine."
-        />
-      </PageShell>
-
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        {/* What it is all worth, first, because it is the one number that is
-            about the collection rather than about a slice of it. */}
-        {valuation.length > 0 ? (
-          <section aria-labelledby="valuation">
-            <h2 id="valuation" className="readout-dim mb-3">
-              What the whole shelf is worth
-              {/* The filter below cannot reach these, so the heading has to say
-                  whose they are before the numbers do. */}
-              <span className="ml-2 text-ember">All {records.length} records</span>
-            </h2>
-
-            {/* One column until `sm`. Three of these side by side on a 320px
-                screen leaves 55px of cell for a figure that needs 75, and the
-                numbers cross their own dividers - a stat tile gets away with
-                two columns there only because "51" is two characters. */}
-            <dl
-              data-slot="valuation"
-              className="grid grid-cols-1 gap-px border border-border bg-border sm:grid-cols-3"
-            >
-              {valuation.map((entry) => (
-                <div key={entry.label} className="bg-background p-5 sm:p-6">
-                  <dt className="readout-dim">{entry.label}</dt>
-                  <dd className="display mt-2 text-2xl text-balance sm:text-3xl">{entry.value}</dd>
-                </div>
-              ))}
-            </dl>
-          </section>
+    <PageShell>
+      <PageHeader
+        title={TITLE}
+        size="long"
+        lede="Alexis and I keep one Discogs account and separate opinions about what belongs on it. This is the whole shelf, read straight from there every night, so it is current as of the last thing we carried home. Filter it down to just hers or just mine."
+      >
+        {owners.length > 1 ? (
+          <FilterToggle
+            label="Filter records by whose they are"
+            className="mt-8"
+            value={owner}
+            onChange={(value) => update({ owner: value })}
+            options={[
+              { value: ALL, label: "Everything", count: records.length },
+              ...owners.map((entry) => ({
+                value: entry.id,
+                label: entry.name,
+                count: entry.count,
+              })),
+            ]}
+          />
         ) : null}
+      </PageHeader>
 
-        {/* Then the counts, which do follow the filter. */}
-        <div className={valuation.length > 0 ? BLOCK : undefined}>
-          <div className="grid grid-cols-2 gap-px border border-border bg-border sm:grid-cols-4">
-            {tiles.map((tile) => (
-              <dl key={tile.label} data-slot="stat" className="bg-background p-5 sm:p-6">
-                <dt className="readout-dim">{tile.label}</dt>
-                <dd className="display mt-2 text-2xl text-balance sm:text-3xl">{tile.value}</dd>
-              </dl>
-            ))}
+      <section aria-label="What is on the shelf">
+        <div className="grid grid-cols-2 gap-px border border-border bg-border sm:grid-cols-4">
+          {tiles.map((tile) => (
+            <dl key={tile.label} data-slot="stat" className="bg-background p-5 sm:p-6">
+              <dt className="readout-dim">{tile.label}</dt>
+              <dd className="display mt-2 text-2xl text-balance sm:text-3xl">{tile.value}</dd>
+            </dl>
+          ))}
 
-            {hasBoards ? (
-              <>
-                <TallyList
-                  slot="collected-most"
-                  label="Collected most"
-                  entries={stats.topArtists}
-                  empty="No artist twice yet."
-                />
-                <TallyList
-                  slot="sounds-like"
-                  label="Sounds like"
-                  entries={stats.topStyles}
-                  empty="Not enough of a pattern yet."
-                />
-              </>
-            ) : null}
-          </div>
-
-          {asides.length > 0 ? <p className="readout-dim mt-4">{asides.join(" · ")}</p> : null}
+          {hasBoards ? (
+            <>
+              <TallyList
+                slot="collected-most"
+                label="Collected most"
+                entries={stats.topArtists}
+                empty="No artist twice yet."
+              />
+              <TallyList
+                slot="sounds-like"
+                label="Sounds like"
+                entries={stats.topStyles}
+                empty="Not enough of a pattern yet."
+              />
+            </>
+          ) : null}
         </div>
 
-        {/* And last, the controls for digging through it. */}
-        <div className={cn(BLOCK, "flex flex-col gap-4")}>
-          {owners.length > 1 ? (
-            <FilterToggle
-              label="Filter records by whose they are"
-              value={owner}
-              onChange={(value) => update({ owner: value })}
-              options={[
-                { value: ALL, label: "Everything", count: records.length },
-                ...owners.map((entry) => ({
-                  value: entry.id,
-                  label: entry.name,
-                  count: entry.count,
-                })),
-              ]}
-            />
-          ) : null}
+        {asides.length > 0 ? <p className="readout-dim mt-4">{asides.join(" · ")}</p> : null}
+      </section>
 
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <FilterToggle
-              label="Sort records"
-              value={sort}
-              onChange={(value) => update({ sort: value })}
-              options={SORTS.map((option) => ({ value: option, label: SORT_LABEL[option] }))}
-            />
+      {/* A full block below the counts and half of one above the grid, so the
+          row reads as belonging to the sleeves rather than to the stats. */}
+      <div className={cn(BLOCK, "flex flex-col gap-4 sm:flex-row sm:items-center")}>
+        <SelectControl
+          label="Sort records"
+          value={sort}
+          onChange={(value: Sort) => update({ sort: value })}
+          options={SORTS.map((option) => ({ value: option, label: SORT_LABEL[option] }))}
+          className="sm:w-56"
+        />
 
-            <div className="relative sm:ml-auto sm:w-72">
-              <Search
-                className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted-foreground"
-                aria-hidden
-              />
-              {/* Same `CONTROL_CLASS` as the pills beside it, so the row lines
-                  up on one baseline instead of by eye. */}
-              <input
-                type="search"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Artist, label, genre"
-                aria-label="Search the collection"
-                className={cn(
-                  CONTROL_CLASS,
-                  "w-full border border-border bg-background pl-11 text-sm",
-                  "placeholder:text-muted-foreground focus-visible:border-ember focus-visible:outline-none",
-                )}
-              />
-            </div>
-          </div>
+        <div className="relative sm:ml-auto sm:w-72">
+          <Search
+            className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden
+          />
+          {/* Same `CONTROL_CLASS` as the select beside it, so the row lines up
+              on one baseline instead of by eye. */}
+          <input
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Artist, label, genre"
+            aria-label="Search the collection"
+            className={cn(
+              CONTROL_CLASS,
+              "w-full border border-border bg-background pl-11 text-sm",
+              "placeholder:text-muted-foreground focus-visible:border-ember focus-visible:outline-none",
+            )}
+          />
         </div>
       </div>
 
-      <PageShell className="pt-16">
-        {visible.length > 0 ? (
-          <ul className="grid grid-cols-2 gap-px border border-border bg-border sm:grid-cols-3 lg:grid-cols-4">
-            {visible.map((record) => (
-              <RecordTile key={record.instanceId} record={record} />
-            ))}
-          </ul>
-        ) : (
-          <p className="border border-dashed border-border p-16 text-center text-muted-foreground">
-            Nothing on the shelf matches “{query}”.
-          </p>
-        )}
-
-        {/* Says where the numbers came from and when, so a stale figure is
-            visibly stale rather than quietly wrong. */}
-        <p className="readout-dim mt-8">
-          {visible.length} of {records.length} shown ·{" "}
-          <a
-            href={collection.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="transition-colors hover:text-ember"
-          >
-            Read from Discogs
-          </a>{" "}
-          {formatFetched(collection.fetched)}
-          {valuation.length > 0 ? " · Valuation is Discogs' own, for the whole collection" : ""}
+      {visible.length > 0 ? (
+        <ul className="mt-8 grid grid-cols-2 gap-px border border-border bg-border sm:grid-cols-3 lg:grid-cols-4">
+          {visible.map((record) => (
+            <RecordTile key={record.instanceId} record={record} />
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-8 border border-dashed border-border p-16 text-center text-muted-foreground">
+          Nothing on the shelf matches “{query}”.
         </p>
-      </PageShell>
-    </>
+      )}
+
+      {/* Says where the numbers came from and when, so a stale figure is
+          visibly stale rather than quietly wrong. */}
+      <p className="readout-dim mt-8">
+        {visible.length} of {records.length} shown ·{" "}
+        <a
+          href={collection.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="transition-colors hover:text-ember"
+        >
+          Read from Discogs
+        </a>{" "}
+        {formatFetched(collection.fetched)}
+      </p>
+    </PageShell>
   );
 }

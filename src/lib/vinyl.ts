@@ -37,12 +37,17 @@ export interface VinylRecord {
  * What the shelf is worth, as Discogs values it, already formatted with a
  * currency symbol.
  *
- * These cover the whole collection and cannot be broken down by owner: valuing
- * one record needs `/marketplace/price_suggestions`, which is gated behind
- * seller privileges and returns nothing for a buyer's account. So the page
- * shows them apart from the filtered counts and says which they are - a
- * valuation sitting next to "9 records" would read as Alexis' shelf being worth
- * seventeen hundred dollars.
+ * Read nightly and deliberately not rendered. A page about records that opens
+ * with three dollar figures is a page about money, and the number invites a
+ * reading of the collection nobody who keeps one recognises. The data stays so
+ * that it is one component away if it ever earns a place.
+ *
+ * If it comes back, it cannot sit among the counts: these cover the whole
+ * collection and cannot be broken down by owner, because valuing a single
+ * record needs `/marketplace/price_suggestions`, which is gated behind seller
+ * privileges and returns nothing for a buyer's account. Dropped in beside a
+ * filtered "9 records" it would read as Alexis' nine being worth seventeen
+ * hundred dollars.
  */
 export interface VinylValue {
   minimum: string;
@@ -91,11 +96,15 @@ export function recordsFor(owner: OwnerFilter): VinylRecord[] {
 export const SORTS = ["added", "artist", "title", "year"] as const;
 export type Sort = (typeof SORTS)[number];
 
+/**
+ * Read as a whole sentence in the sort control, which shows one option at a
+ * time - "Artist" alone in a box says nothing about what is being done to it.
+ */
 export const SORT_LABEL: Record<Sort, string> = {
-  added: "Newest",
-  artist: "Artist",
-  title: "Title",
-  year: "Pressing",
+  added: "Newest first",
+  artist: "By artist",
+  title: "By title",
+  year: "By pressing year",
 };
 
 export function isSort(value: string | null): value is Sort {

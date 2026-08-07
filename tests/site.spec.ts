@@ -369,25 +369,17 @@ test.describe("vinyl", () => {
     expect(values.length).toBeLessThanOrEqual(4);
   });
 
-  test("the valuation is marked as covering the whole collection", async ({ page }) => {
-    await expect(page.locator("[data-slot=valuation]")).toBeVisible();
-
-    const total = await page.locator("[data-slot=record]").count();
-    const heading = page.getByRole("heading", { name: /what the whole shelf is worth/i });
-    await expect(heading).toContainText(`All ${total} records`);
-
-    // Discogs values a collection, never a folder, so filtering must not leave
-    // a whole-collection figure sitting next to one person's record count
-    // without saying which it is.
-    const filter = page.getByRole("radiogroup", { name: /whose they are/i });
-    await expect(filter).toBeVisible();
-
-    await filter.getByRole("radio").nth(1).click();
-    // Poll for the narrowed grid: the first tile stays visible across the
-    // change, so waiting on visibility waits for nothing and the count below
-    // can still read the unfiltered shelf.
-    await expect.poll(() => page.locator("[data-slot=record]").count()).toBeLessThan(total);
-    await expect(heading).toContainText(`All ${total} records`);
+  test("what the shelf is worth stays off the page", async ({ page }) => {
+    /*
+     * The nightly job still reads Discogs' valuation and it is still in the
+     * payload, because taking it out of the fetch to take it off the page
+     * would be a one-way door. The page is the part that is deliberate: a page
+     * about records does not open with three dollar figures. This fails if a
+     * future change wires the numbers back into the markup.
+     */
+    await expect(page.locator("[data-slot=valuation]")).toHaveCount(0);
+    await expect(page.getByText(/what the whole shelf is worth/i)).toHaveCount(0);
+    await expect(page.locator("main")).not.toContainText(/\$[\d,]+\.\d{2}/);
   });
 
   test("the owner filter narrows the shelf and syncs the URL", async ({ page }) => {
@@ -458,7 +450,8 @@ test.describe("vinyl", () => {
     const first = () => page.locator("[data-slot=record] h3").first().innerText();
     const byNewest = await first();
 
-    await page.getByRole("radio", { name: /^Artist/i }).click();
+    const sort = page.getByRole("combobox", { name: /sort records/i });
+    await sort.selectOption("artist");
     await page.waitForURL("**/vinyl?sort=artist");
     const byArtist = await page.locator("[data-slot=record] p").first().innerText();
 
@@ -472,6 +465,11 @@ test.describe("vinyl", () => {
     expect(byArtist.length).toBeGreaterThan(0);
     expect(await first()).not.toBe("");
     expect(byNewest.length).toBeGreaterThan(0);
+
+    // A sorted shelf is linkable, so the control has to come back showing the
+    // order the URL asked for rather than its own default.
+    await page.goto("/vinyl?sort=artist");
+    await expect(page.getByRole("combobox", { name: /sort records/i })).toHaveValue("artist");
   });
 
   test("search narrows the shelf without moving the stats", async ({ page }) => {
@@ -543,6 +541,7 @@ test.describe("controls", () => {
         const nodes = [
           ...document.querySelectorAll("[data-slot=toggle-group-item]"),
           ...document.querySelectorAll("input[type=search]"),
+          ...document.querySelectorAll("select"),
         ];
         return nodes.map((n) => Math.round(n.getBoundingClientRect().height));
       });
@@ -593,6 +592,7 @@ test.describe("controls", () => {
     // bases in components/ui/ were fixed.
     for (const [path, selector] of [
       ["/vinyl", "[data-slot=toggle-group-item]"],
+      ["/vinyl", "select"],
       ["/blog", "[data-slot=toggle-group-item]"],
       ["/", "header button"],
       ["/career", "button"],
@@ -609,11 +609,11 @@ test.describe("controls", () => {
     }
   });
 
-  test("stat and valuation figures stay inside their tiles at 320px", async ({ page }) => {
-    // Three currency figures side by side used to overflow their own cells on
-    // the narrowest screens - 75px of text in 55px of tile, crossing the
-    // divider into the number beside it. The page still did not scroll
-    // sideways, so the overflow check in links.spec.ts could not see it.
+  test("stat figures stay inside their tiles at 320px", async ({ page }) => {
+    // Figures set in the display face used to overflow their own cells on the
+    // narrowest screens, crossing the divider into the number beside them. The
+    // page still did not scroll sideways, so the overflow check in
+    // links.spec.ts could not see it.
     await page.setViewportSize({ width: 320, height: 900 });
     await page.goto("/vinyl");
     await page.getByRole("heading", { level: 1 }).waitFor();
@@ -621,7 +621,7 @@ test.describe("controls", () => {
 
     const overflowing = await page.evaluate(() => {
       const bad: string[] = [];
-      document.querySelectorAll("[data-slot=valuation] dd, [data-slot=stat] dd").forEach((dd) => {
+      document.querySelectorAll("[data-slot=stat] dd").forEach((dd) => {
         const cell = dd.parentElement!;
         const style = getComputedStyle(cell);
         const avail =

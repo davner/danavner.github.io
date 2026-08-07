@@ -53,7 +53,15 @@ export function FilterToggle<T extends string>({
         if (next) onChange(next as T);
       }}
       aria-label={label}
-      className={cn("max-w-full flex-wrap bg-border", className)}
+      /*
+       * No background here. The seams between pills used to be `bg-border` on
+       * this element showing through `gap-px`, which works only while the row
+       * fits on one line: a flex container that wraps takes the full width
+       * available rather than the width of its longest line, so on a phone the
+       * leftover space beside the last pill of each row painted itself grey.
+       * The seams are drawn by the pills instead - see below.
+       */
+      className={cn("max-w-full flex-wrap", className)}
     >
       {options.map((option) => (
         <ToggleGroupItem
@@ -73,6 +81,13 @@ export function FilterToggle<T extends string>({
              * keeps the same 20px either side.
              */
             "flex-none",
+            /*
+             * The seam, drawn per pill. A 1px spread shadow takes no layout
+             * space, so with the group's `gap-px` a pill's shadow lands on the
+             * exact pixel its neighbour's does - one hairline between them,
+             * however the row wraps, and nothing left over to paint.
+             */
+            "shadow-[0_0_0_1px_var(--color-border)]",
             "gap-2 bg-background text-muted-foreground",
             "hover:bg-background hover:text-ember",
             "data-[state=on]:bg-ember data-[state=on]:text-primary-foreground",

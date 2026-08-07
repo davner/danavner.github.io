@@ -6,17 +6,22 @@ import { FramedPhoto } from "@/components/framed-photo";
 import { Marquee } from "@/components/marquee";
 import { Section } from "@/components/page";
 import { SocialLinks } from "@/components/social-links";
-import { VisitorTicker } from "@/components/visitor-ticker";
 import { profile } from "@/content/profile";
 import { posts } from "@/lib/blog";
-import { formatShowDate, showLocation, showStats, supportFor } from "@/lib/shows";
+import {
+  formatShowDate,
+  showLocation,
+  showStats,
+  supportFor,
+} from "@/lib/shows";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
 const INDEX = [
   {
     to: "/about",
     title: "About",
-    blurb: "Alexis, Milly and Penny, shows, records, comics, Legos, and one bowling statistic.",
+    blurb:
+      "Alexis, Milly and Penny, shows, records, comics, Legos, and one bowling statistic.",
   },
   {
     to: "/career",
@@ -31,12 +36,14 @@ const INDEX = [
   {
     to: "/shows",
     title: "Shows",
-    blurb: "Every gig I have been to since I started keeping track, logged and rated.",
+    blurb:
+      "Every gig I have been to since I started keeping track, logged and rated.",
   },
   {
     to: "/vinyl",
     title: "Vinyl",
-    blurb: "Every record Alexis and I own, pulled straight from the Discogs shelf.",
+    blurb:
+      "Every record Alexis and I own, pulled straight from the Discogs shelf.",
   },
 ];
 
@@ -84,7 +91,8 @@ export function Home() {
             </p>
 
             <p className="mt-4 max-w-xl text-xl leading-snug text-pretty sm:text-2xl">
-              <span className="text-ember">{profile.greeting}</span> {profile.blurb}
+              <span className="text-ember">{profile.greeting}</span>{" "}
+              {profile.blurb}
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-3">
@@ -123,10 +131,6 @@ export function Home() {
 
       <Marquee items={TICKER} />
 
-      <div className="mx-auto flex max-w-6xl justify-center px-4 pt-10 sm:px-6">
-        <VisitorTicker />
-      </div>
-
       {/* `pb-8` rather than a matching `pb-20`, so the gap down to the footer is
           PageShell's, not double it. */}
       <div className="mx-auto max-w-6xl px-4 pt-20 pb-8 sm:px-6">
@@ -150,7 +154,6 @@ export function Home() {
             ))}
           </ul>
         </Section>
-
 
         <Section
           title="Latest"

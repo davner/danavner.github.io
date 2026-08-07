@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
 
-import { ANALYTICS_HOSTS } from "../src/lib/analytics";
 import { ROUTES } from "./routes";
 
 /**
@@ -48,13 +47,6 @@ test.describe("internal links", () => {
   test("every image and asset loads", async ({ page }) => {
     const failed: string[] = [];
     page.on("response", (response) => {
-      // GoatCounter is excluded on purpose. It is a third party the site is
-      // built to survive losing - a content blocker, a sandboxed network, or an
-      // outage takes it out, and the counter is designed to say so rather than
-      // break. Counting that as a broken asset makes this test fail on the
-      // network it happens to run on, which it did.
-      const host = new URL(response.url()).host;
-      if (ANALYTICS_HOSTS.includes(host)) return;
       if (response.status() >= 400)
         failed.push(`${response.status()} ${response.url()}`);
     });
@@ -82,20 +74,16 @@ test.describe("internal links", () => {
     expect(failed).toEqual([]);
   });
 
-  test("nothing phones home except the visitor counter", async ({
-    page,
-    baseURL,
-  }) => {
-    // Backs the README's claim: no font CDN, no third-party scripts, and the
-    // only analytics is the cookie-free GoatCounter visitor counter, which is
-    // allowed to reach exactly these hosts and nothing else.
-    const allowed = new Set(ANALYTICS_HOSTS);
+  test("nothing phones home", async ({ page, baseURL }) => {
+    // Backs the README's claim, which is now absolute: no font CDN, no
+    // third-party scripts, no analytics. Every request a visitor's browser
+    // makes goes to this origin. There is no allowed-host list any more,
+    // because nothing is allowed.
     const external = new Set<string>();
     page.on("request", (request) => {
       const url = request.url();
       if (/^https?:\/\//.test(url) && !url.startsWith(baseURL!)) {
-        const host = new URL(url).host;
-        if (!allowed.has(host)) external.add(host);
+        external.add(new URL(url).host);
       }
     });
 

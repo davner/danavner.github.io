@@ -27,16 +27,27 @@ If you want to fork it and make it yours, see [Making it yours](#making-it-yours
 | Hosting      | GitHub Pages                               | Free, already where the repo lives                         |
 
 Every dependency is permissively licensed (MIT, ISC, Apache-2.0, BSD-3-Clause,
-OFL-1.1 for the fonts). The only thing that leaves the origin is the landing
-page's visitor counter, which uses [GoatCounter](https://www.goatcounter.com) -
-cookie-free, no personal data. Otherwise nothing here phones home: no font CDN,
-no third-party scripts, no other analytics.
+OFL-1.1 for the fonts). Nothing here phones home: no font CDN, no third-party
+scripts, no analytics of any kind. Every request your browser makes loading this
+site goes to this origin, and `tests/links.spec.ts` fails the build if that ever
+stops being true.
 
-The counter is read live from GoatCounter on every page load, with no cached or
-committed copy behind it. A browser that blocks analytics domains, which Safari
-and Firefox content blockers do by default, gets a red error under the odometer
-instead of a number. That is deliberate: the count is either current or it says
-why it is not.
+### No analytics
+
+There used to be a hit counter on the landing page, backed by
+[GoatCounter](https://www.goatcounter.com). It is gone, and I am not using it
+any more.
+
+It was not a privacy problem - GoatCounter is cookie-free and stores nothing
+personal. The problem was that it could not be relied on to show a number. Ad
+blockers and DNS blocklists match on domain, not on intent, so `goatcounter.com`
+is on the lists whatever it does or does not collect. Anyone running uBlock
+Origin, AdGuard or Pi-hole saw a dead counter.
+
+The only real fix is proxying the request through this domain so it is
+first-party, and this site is static hosting with no backend to do that with.
+Given the choice between a counter that lies to some visitors, a nightly job
+baking a stale number, and no counter, I took no counter.
 
 ### Running it
 
@@ -70,8 +81,8 @@ mobile viewports, and covers four things:
   The palettes are independent, and contrast is the easiest thing to break.
 - **Links and assets** - every in-site link resolves to a real route rather
   than the SPA's 404 fallback, and no image is broken.
-- **No third parties** - fails if any request leaves the origin except the
-  GoatCounter visitor counter, which keeps the claim above honest.
+- **No third parties** - fails if any request leaves the origin at all, which
+  keeps the claim above honest.
 
 External links are deliberately excluded from CI. They rot for reasons no
 commit caused - a venue folds, a host starts refusing bots - and a red build
@@ -359,8 +370,8 @@ they are:
    `/collection/value` returns nothing. The Dan/Alexis split and every value
    stat are authenticated reads, and a token cannot ship in a client bundle.
 2. **The site does not phone home.** `tests/links.spec.ts` fails if any request
-   leaves the origin except the GoatCounter counter. A live Discogs call breaks
-   the test and the claim it protects.
+   leaves the origin. A live Discogs call breaks the test and the claim it
+   protects.
 3. **The sleeves are Discogs' bandwidth.** Hotlinking their CDN for every
    visitor is not ours to spend, so the covers are downloaded, squared off to
    500px WebP, and served from `public/img/vinyl/`.

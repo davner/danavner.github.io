@@ -48,7 +48,19 @@ function RecordTile({ record }: { record: VinylRecord }) {
     .join(" · ");
 
   return (
-    <li data-slot="record" className="group relative flex flex-col bg-background">
+    <li
+      data-slot="record"
+      /*
+       * The seam, drawn per sleeve rather than by the grid behind it. Painting
+       * the container and letting `gap-px` show it through works only while the
+       * last row is full - 51 records across four columns leaves three empty
+       * cells, which rendered as a solid grey block. A 1px spread shadow takes
+       * no layout space, so neighbouring tiles land their hairline on the same
+       * pixel and nothing is painted where there is no tile. Same fix as the
+       * filter pills.
+       */
+      className="group relative flex flex-col bg-background shadow-[0_0_0_1px_var(--color-border)]"
+    >
       <a
         href={record.url}
         target="_blank"
@@ -314,7 +326,7 @@ export function Vinyl() {
       </div>
 
       {visible.length > 0 ? (
-        <ul className="mt-8 grid grid-cols-2 gap-px border border-border bg-border sm:grid-cols-3 lg:grid-cols-4">
+        <ul className="mt-8 grid grid-cols-2 gap-px sm:grid-cols-3 lg:grid-cols-4">
           {visible.map((record) => (
             <RecordTile key={record.instanceId} record={record} />
           ))}

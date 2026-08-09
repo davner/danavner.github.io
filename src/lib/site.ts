@@ -17,6 +17,7 @@ export const SECTIONS = [
   { to: "/blog", label: "Blog" },
   { to: "/shows", label: "Shows" },
   { to: "/vinyl", label: "Vinyl" },
+  { to: "/comics", label: "Comics" },
 ] as const;
 
 /**

@@ -30,6 +30,9 @@ const Vinyl = lazy(() => import("@/routes/vinyl").then((module) => ({ default: m
 // The now page renders markdown, so it pulls in the renderer as well.
 const Now = lazy(() => import("@/routes/now").then((module) => ({ default: module.Now })));
 
+// The comics page is a cover grid of its own, loaded on demand like the records.
+const Comics = lazy(() => import("@/routes/comics").then((module) => ({ default: module.Comics })));
+
 export function App() {
   return (
     <BrowserRouter>
@@ -89,6 +92,14 @@ export function App() {
               element={
                 <Suspense fallback={<PostSkeleton />}>
                   <Now />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/comics"
+              element={
+                <Suspense fallback={<PostSkeleton />}>
+                  <Comics />
                 </Suspense>
               }
             />

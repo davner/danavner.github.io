@@ -367,6 +367,20 @@ function readCollection(collection: Collection, dir: string, publicDir: string) 
   );
 }
 
+/** One validated comic. Mirrors `ComicEntry` in `src/lib/comics.ts`. */
+interface ComicEntry {
+  key: string;
+  id: number;
+  name: string;
+  publisher: string;
+  years: string;
+  issues: number | null;
+  price: string;
+  released: string;
+  url: string;
+  cover: string;
+}
+
 /** One validated record. Mirrors `VinylRecord` in `src/lib/vinyl.ts`. */
 interface VinylRecordJson {
   id: number;
@@ -518,6 +532,102 @@ function readVinyl(root: string, publicDir: string) {
 }
 
 /**
+ * The comics, read from `src/content/comics.json` - written nightly from League
+ * of Comic Geeks by `scripts/update-comics.mjs` rather than typed by hand.
+ *
+ * Generated, so this guards the same failure `readVinyl` does, and one more.
+ * That payload comes from an API; this one comes from parsing someone else's
+ * HTML, which can succeed, return the expected number of `<li>`s, and still hand
+ * back entries with every field empty because the markup moved. So a title is
+ * required per entry rather than merely hoped for - a page of untitled tiles is
+ * the exact shape that failure takes.
+ *
+ * A missing file is not an error. The repo builds before the first fetch has
+ * ever run, and the page renders its empty state.
+ */
+function readComics(root: string, publicDir: string) {
+  const file = path.resolve(root, "src/content/comics.json");
+  const empty = {
+    user: "",
+    url: "",
+    fetched: "",
+    series: [] as ComicEntry[],
+    pullList: [] as ComicEntry[],
+    wants: [] as ComicEntry[],
+  };
+
+  if (!existsSync(file)) return empty;
+
+  const fail = (message: string): never => {
+    throw new Error(`Invalid comics payload - src/content/comics.json: ${message}`);
+  };
+
+  let payload: Record<string, unknown>;
+  try {
+    payload = JSON.parse(readFileSync(file, "utf8"));
+  } catch (error) {
+    return fail(`could not be parsed as JSON (${(error as Error).message})`);
+  }
+
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    fail("must be a JSON object");
+  }
+
+  const seen = new Set<string>();
+
+  const readList = (name: "series" | "pullList" | "wants"): ComicEntry[] => {
+    const raw = Array.isArray(payload[name])
+      ? (payload[name] as Record<string, unknown>[])
+      : fail(`\`${name}\` must be an array`);
+
+    return raw.map((entry, index) => {
+      const where = `\`${name}[${index}]\``;
+
+      // The cover filename is keyed on this, and it keys the list in React, so
+      // a duplicate would silently drop a tile rather than render two.
+      const key = asTrimmedString(entry.key);
+      if (!key) fail(`${where} needs a \`key\``);
+      if (seen.has(key)) fail(`${where} repeats \`key\` "${key}"`);
+      seen.add(key);
+
+      const title = asTrimmedString(entry.name);
+      if (!title) fail(`${where} has no \`name\` - the parse found the row but not its title`);
+
+      // A cover path pointing at nothing would ship as a broken tile, exactly
+      // like a mistyped photo path in a show.
+      const cover = asTrimmedString(entry.cover);
+      if (cover && !existsSync(path.join(publicDir, cover))) {
+        fail(`${where}.cover does not exist: public${cover}`);
+      }
+
+      const issues = Number(entry.issues);
+
+      return {
+        key,
+        id: Number(entry.id) || 0,
+        name: title,
+        publisher: asTrimmedString(entry.publisher),
+        years: asTrimmedString(entry.years),
+        issues: Number.isInteger(issues) && issues > 0 ? issues : null,
+        price: asTrimmedString(entry.price),
+        released: asTrimmedString(entry.released),
+        url: asTrimmedString(entry.url),
+        cover,
+      };
+    });
+  };
+
+  return {
+    user: asTrimmedString(payload.user),
+    url: asTrimmedString(payload.url),
+    fetched: asTrimmedString(payload.fetched),
+    series: readList("series"),
+    pullList: readList("pullList"),
+    wants: readList("wants"),
+  };
+}
+
+/**
  * The now page, read from `src/content/now.md`.
  *
  * One file rather than a directory, because there is only ever one now - saying
@@ -585,6 +695,7 @@ export function contentPlugin(): Plugin {
    */
   const VINYL = "vinyl";
   const NOW = "now";
+  const COMICS = "comics";
 
   function virtualId(name: string) {
     return `virtual:${name}`;
@@ -616,7 +727,7 @@ export function contentPlugin(): Plugin {
     },
 
     resolveId(id) {
-      for (const single of [VINYL, NOW]) {
+      for (const single of [VINYL, NOW, COMICS]) {
         if (id === virtualId(single)) return resolvedId(single);
       }
       const collection = COLLECTIONS.find((entry) => id === virtualId(entry.name));
@@ -629,6 +740,9 @@ export function contentPlugin(): Plugin {
       }
       if (id === resolvedId(NOW)) {
         return `export const now = ${JSON.stringify(readNow(root))};`;
+      }
+      if (id === resolvedId(COMICS)) {
+        return `export const comics = ${JSON.stringify(readComics(root, publicDir))};`;
       }
 
       const collection = COLLECTIONS.find((entry) => id === resolvedId(entry.name));
@@ -647,6 +761,8 @@ export function contentPlugin(): Plugin {
         // A local run of the Discogs fetch should show up without a restart.
         if (file === path.resolve(root, "src/content/vinyl.json")) return reload(VINYL);
         if (file === path.resolve(root, "src/content/now.md")) return reload(NOW);
+        // A local run of the comics fetch should show up without a restart too.
+        if (file === path.resolve(root, "src/content/comics.json")) return reload(COMICS);
 
         if (!file.endsWith(".md")) return;
 

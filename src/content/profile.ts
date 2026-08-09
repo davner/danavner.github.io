@@ -2,6 +2,7 @@
  * Everything about Dan that the site renders lives here, so updating the site
  * is editing one file rather than hunting through JSX.
  */
+import accounts from "@/content/accounts.json";
 
 export interface SocialLink {
   label: string;
@@ -238,13 +239,21 @@ export const interests: Interest[] = [
     name: "Vinyl",
     icon: "disc",
     note: "My favorite record is the Record Store Day 2026 pressing of All We Know Is Falling with the Summer Tic EP. Alexis tracked one down after what turned into a nationwide scavenger hunt.",
-    handle: { label: "Discogs", value: "dnafam", href: "https://www.discogs.com/user/dnafam" },
+    handle: {
+      label: "Discogs",
+      value: accounts.discogs,
+      href: `https://www.discogs.com/user/${accounts.discogs}`,
+    },
   },
   {
     name: "Comic books",
     icon: "book-open",
     note: "New comic day is Wednesday. I am usually at the shop with Mikey and Kiwi, my comic book cuties, discussing what to pull next.",
-    handle: { label: "League of Comic Geeks", value: "aspacemansheavyload", href: "https://leagueofcomicgeeks.com/profile/aspacemansheavyload" }
+    handle: {
+      label: "League of Comic Geeks",
+      value: accounts.leagueOfComicGeeks,
+      href: `https://leagueofcomicgeeks.com/profile/${accounts.leagueOfComicGeeks}`,
+    },
   },
   {
     name: "Weightlifting",

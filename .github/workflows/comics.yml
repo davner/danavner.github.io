@@ -1,0 +1,65 @@
+name: Comics
+
+# The comics are committed rather than fetched in the browser, for the same
+# reasons as the record collection.
+#
+# The site's standing promise is that nothing phones home except the GoatCounter
+# beacon, which `tests/links.spec.ts` asserts on every run, and a live call to
+# League of Comic Geeks from the page would break it. The cover art is their CDN,
+# not ours to lean on. And there is no API here at all - `scripts/update-comics.mjs`
+# parses the same HTML the site's own front end asks for, which is not something
+# to do from a visitor's browser even if the promise allowed it.
+#
+# So this job is the only thing that talks to League of Comic Geeks: nightly, it
+# reads the collection, the pull list, and the wish list, writes
+# `src/content/comics.json`, and commits the covers it had to download. A failed
+# read commits nothing, so the last good payload stays and keeps showing. The
+# push triggers the normal deploy; this runs on a schedule, not on push, so its
+# own commit never re-triggers it.
+
+on:
+  schedule:
+    - cron: "42 9 * * *" # 09:42 UTC nightly, an hour after the vinyl job.
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: comics
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      # sharp does the cover resizing and cheerio the parsing, so this needs
+      # real dependencies rather than the bare Node runtime.
+      - run: npm ci
+
+      # No secret to guard on: this reads a public profile. The username comes
+      # from `src/content/accounts.json`, so a rename is one edit there.
+      - name: Read the comics from League of Comic Geeks
+        run: node scripts/update-comics.mjs
+
+      # `git status --porcelain` rather than `git diff`: a newly added comic
+      # arrives as an untracked cover file, which `git diff` does not see at all
+      # - so the first run of this job would have skipped its own commit.
+      - name: Commit if the shelf moved
+        run: |
+          if [ -z "$(git status --porcelain -- src/content/comics.json public/img/comics)" ]; then
+            echo "comics: unchanged, nothing to commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A -- src/content/comics.json public/img/comics
+          git commit -m "chore(comics): refresh the comic collection"
+          git push

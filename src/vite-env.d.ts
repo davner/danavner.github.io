@@ -17,6 +17,16 @@ declare module "virtual:shows" {
   export const shows: Show[];
 }
 
+declare module "virtual:comics" {
+  import type { ComicsPayload } from "@/lib/comics";
+
+  /**
+   * The comics, read from League of Comic Geeks nightly and validated at build
+   * time. Supplied by `contentPlugin()` in `vite-plugin-content.ts`.
+   */
+  export const comics: ComicsPayload;
+}
+
 declare module "virtual:now" {
   import type { Now } from "@/lib/now";
 

@@ -1,0 +1,261 @@
+{
+  "user": "aspacemansheavyload",
+  "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload",
+  "fetched": "2026-08-09",
+  "series": [
+    {
+      "id": 197063,
+      "name": "Absolute Batman: Ark M Special",
+      "publisher": "DC Comics",
+      "years": "2026",
+      "issues": 1,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/collection/197063",
+      "key": "series-197063",
+      "cover": "/img/comics/series-197063.webp"
+    },
+    {
+      "id": 198467,
+      "name": "Absolute Catwoman",
+      "publisher": "DC Comics",
+      "years": "2026 - Present",
+      "issues": 2,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/collection/198467",
+      "key": "series-198467",
+      "cover": "/img/comics/series-198467.webp"
+    },
+    {
+      "id": 178014,
+      "name": "Absolute Wonder Woman",
+      "publisher": "DC Comics",
+      "years": "2024 - Present",
+      "issues": 6,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/collection/178014",
+      "key": "series-178014",
+      "cover": "/img/comics/series-178014.webp"
+    },
+    {
+      "id": 205080,
+      "name": "Alien: King Killer",
+      "publisher": "Marvel Comics",
+      "years": "2026 - Present",
+      "issues": 3,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/collection/205080",
+      "key": "series-205080",
+      "cover": "/img/comics/series-205080.webp"
+    },
+    {
+      "id": 175587,
+      "name": "Aliens vs. Avengers",
+      "publisher": "Marvel Comics",
+      "years": "2024 - 2025",
+      "issues": 4,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/collection/175587",
+      "key": "series-175587",
+      "cover": "/img/comics/series-175587.webp"
+    },
+    {
+      "id": 150812,
+      "name": "Batman / Fortnite: Zero Point",
+      "publisher": "DC Comics",
+      "years": "2021",
+      "issues": 1,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/collection/150812",
+      "key": "series-150812",
+      "cover": "/img/comics/series-150812.webp"
+    },
+    {
+      "id": 139770,
+      "name": "Captain Marvel",
+      "publisher": "Marvel Comics",
+      "years": "2019 - 2023",
+      "issues": 1,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/collection/139770",
+      "key": "series-139770",
+      "cover": "/img/comics/series-139770.webp"
+    },
+    {
+      "id": 197101,
+      "name": "DC K.O.: Harley Quinn vs. Zatanna",
+      "publisher": "DC Comics",
+      "years": "2025",
+      "issues": 1,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/collection/197101",
+      "key": "series-197101",
+      "cover": "/img/comics/series-197101.webp"
+    },
+    {
+      "id": 189123,
+      "name": "Event Horizon: Dark Descent",
+      "publisher": "IDW Publishing",
+      "years": "2025 - 2026",
+      "issues": 4,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/collection/189123",
+      "key": "series-189123",
+      "cover": "/img/comics/series-189123.webp"
+    },
+    {
+      "id": 202482,
+      "name": "Event Horizon: Inferno",
+      "publisher": "IDW Publishing",
+      "years": "2026 - Present",
+      "issues": 3,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/collection/202482",
+      "key": "series-202482",
+      "cover": "/img/comics/series-202482.webp"
+    },
+    {
+      "id": 194870,
+      "name": "Harley & Ivy: Life & Crimes",
+      "publisher": "DC Comics",
+      "years": "2025 - 2026",
+      "issues": 6,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/collection/194870",
+      "key": "series-194870",
+      "cover": "/img/comics/series-194870.webp"
+    },
+    {
+      "id": 143260,
+      "name": "Harley Quinn and Poison Ivy",
+      "publisher": "DC Comics",
+      "years": "2019 - 2020",
+      "issues": 2,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/collection/143260",
+      "key": "series-143260",
+      "cover": "/img/comics/series-143260.webp"
+    },
+    {
+      "id": 119108,
+      "name": "Marvel Swimsuit Special",
+      "publisher": "Marvel Comics",
+      "years": "1992 - 1995",
+      "issues": 1,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/collection/119108",
+      "key": "series-119108",
+      "cover": "/img/comics/series-119108.webp"
+    },
+    {
+      "id": 156772,
+      "name": "Poison Ivy",
+      "publisher": "DC Comics",
+      "years": "2022 - Present",
+      "issues": 1,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/collection/156772",
+      "key": "series-156772",
+      "cover": "/img/comics/series-156772.webp"
+    },
+    {
+      "id": 174841,
+      "name": "X-Men",
+      "publisher": "Marvel Comics",
+      "years": "2024 - Present",
+      "issues": 1,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/collection/174841",
+      "key": "series-174841",
+      "cover": "/img/comics/series-174841.webp"
+    },
+    {
+      "id": 198524,
+      "name": "Zatanna",
+      "publisher": "DC Comics",
+      "years": "2026 - Present",
+      "issues": 4,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/collection/198524",
+      "key": "series-198524",
+      "cover": "/img/comics/series-198524.webp"
+    }
+  ],
+  "pullList": [
+    {
+      "id": 5628938,
+      "name": "Event Horizon: Inferno #4",
+      "publisher": "IDW Publishing",
+      "price": "$4.99",
+      "released": "2026-08-05",
+      "url": "https://leagueofcomicgeeks.com/comic/5628938/event-horizon-inferno-4",
+      "key": "issue-5628938",
+      "cover": "/img/comics/issue-5628938.webp"
+    }
+  ],
+  "wants": [
+    {
+      "id": 214135,
+      "name": "Alien vs. X-Men",
+      "publisher": "Marvel Comics",
+      "years": "2026 - Present",
+      "issues": 1,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/wish-list/214135",
+      "key": "want-214135",
+      "cover": "/img/comics/want-214135.webp"
+    },
+    {
+      "id": 189123,
+      "name": "Event Horizon: Dark Descent",
+      "publisher": "IDW Publishing",
+      "years": "2025 - 2026",
+      "issues": 4,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/wish-list/189123",
+      "key": "want-189123",
+      "cover": "/img/comics/want-189123.webp"
+    },
+    {
+      "id": 202482,
+      "name": "Event Horizon: Inferno",
+      "publisher": "IDW Publishing",
+      "years": "2026 - Present",
+      "issues": 3,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/wish-list/202482",
+      "key": "want-202482",
+      "cover": "/img/comics/want-202482.webp"
+    },
+    {
+      "id": 194870,
+      "name": "Harley & Ivy: Life & Crimes",
+      "publisher": "DC Comics",
+      "years": "2025 - 2026",
+      "issues": 4,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/wish-list/194870",
+      "key": "want-194870",
+      "cover": "/img/comics/want-194870.webp"
+    },
+    {
+      "id": 143260,
+      "name": "Harley Quinn and Poison Ivy",
+      "publisher": "DC Comics",
+      "years": "2019 - 2020",
+      "issues": 9,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/wish-list/143260",
+      "key": "want-143260",
+      "cover": "/img/comics/want-143260.webp"
+    },
+    {
+      "id": 208603,
+      "name": "Marvel Swimsuit Special: Brand New Beach Day",
+      "publisher": "Marvel Comics",
+      "years": "2026",
+      "issues": 1,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/wish-list/208603",
+      "key": "want-208603",
+      "cover": "/img/comics/want-208603.webp"
+    },
+    {
+      "id": 148475,
+      "name": "Punchline",
+      "publisher": "DC Comics",
+      "years": "2020",
+      "issues": 1,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/wish-list/148475",
+      "key": "want-148475",
+      "cover": "/img/comics/want-148475.webp"
+    },
+    {
+      "id": 198524,
+      "name": "Zatanna",
+      "publisher": "DC Comics",
+      "years": "2026 - Present",
+      "issues": 2,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/wish-list/198524",
+      "key": "want-198524",
+      "cover": "/img/comics/want-198524.webp"
+    }
+  ]
+}

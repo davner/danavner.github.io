@@ -611,6 +611,76 @@ test.describe("vinyl", () => {
   });
 });
 
+test.describe("comics", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/comics");
+    await page.getByRole("heading", { level: 1 }).waitFor();
+  });
+
+  test("the shelf filter swaps the list and syncs the URL", async ({ page }) => {
+    const tiles = page.locator("[data-slot=comic]");
+    const filter = page.getByRole("radiogroup", { name: /which comics/i });
+    await expect(filter).toBeVisible();
+
+    // The collection is the default, and it is the bare URL rather than
+    // `?shelf=series` - one address per view.
+    expect(new URL(page.url()).searchParams.has("shelf")).toBe(false);
+    const collection = await tiles.count();
+    expect(collection).toBeGreaterThan(0);
+
+    await filter.getByRole("radio", { name: /^Wants/i }).click();
+    await page.waitForURL("**/comics?shelf=wants");
+
+    /*
+     * The list re-renders a tick after the URL changes, and `count()` reads
+     * once rather than retrying - the same race that made the blog filter test
+     * flaky. Wait for the count to settle before trusting it.
+     */
+    await expect.poll(() => tiles.count()).not.toBe(collection);
+    expect(await tiles.count()).toBeGreaterThan(0);
+  });
+
+  test("every shelf the filter offers can actually be shown", async ({ page }) => {
+    const filter = page.getByRole("radiogroup", { name: /which comics/i });
+    const options = filter.getByRole("radio");
+    const count = await options.count();
+    expect(count).toBe(3);
+
+    for (let i = 0; i < count; i++) {
+      await options.nth(i).click();
+      // Either tiles or an explicit empty state - never a blank page. A pull
+      // list is genuinely empty most of the week, so both are correct.
+      const tiles = await page.locator("[data-slot=comic]").count();
+      if (tiles === 0) {
+        await expect(page.getByText(/Nothing (pulled|on this list)/i)).toBeVisible();
+      }
+    }
+  });
+
+  test("cover art is served from this site, not League of Comic Geeks", async ({ page }) => {
+    // Same reason the records are committed: leaning on their CDN would put a
+    // third-party request on every page view and break links.spec.ts.
+    const sources = await page
+      .locator("[data-slot=comic] img")
+      .evaluateAll((images) => images.map((img) => img.getAttribute("src") ?? ""));
+
+    expect(sources.length).toBeGreaterThan(0);
+    for (const src of sources) expect(src).toMatch(/^\/img\/comics\//);
+  });
+
+  test("every tile opens its League of Comic Geeks page safely", async ({ page }) => {
+    const links = page.locator("[data-slot=comic] a");
+    const count = await links.count();
+    expect(count).toBeGreaterThan(0);
+
+    for (let i = 0; i < count; i++) {
+      const link = links.nth(i);
+      await expect(link).toHaveAttribute("href", /^https:\/\/leagueofcomicgeeks\.com\//);
+      await expect(link).toHaveAttribute("rel", /noopener/);
+    }
+  });
+});
+
 test.describe("controls", () => {
   // Every filter control on the site comes from `components/filter-toggle.tsx`
   // and is measured there once. Before that existed each page spelled its own

@@ -21,8 +21,18 @@ interface Frontmatter {
   slug: string;
 }
 
-function fail(collection: string, file: string, message: string): never {
-  throw new Error(`Invalid ${collection} entry - src/content/${collection}/${file}: ${message}`);
+/**
+ * `where` defaults to the path a collection entry sits at, since almost every
+ * caller is one. The single-file pages live directly under `src/content/` and
+ * pass their own, so an error names the file you actually have to open.
+ */
+function fail(
+  collection: string,
+  file: string,
+  message: string,
+  where = `src/content/${collection}/${file}`,
+): never {
+  throw new Error(`Invalid ${collection} entry - ${where}: ${message}`);
 }
 
 function asStringArray(value: unknown): string[] {
@@ -46,13 +56,15 @@ function asDate(value: unknown): string {
   return asTrimmedString(value);
 }
 
-function splitFrontmatter(collection: string, file: string, raw: string): Frontmatter {
+function splitFrontmatter(collection: string, file: string, raw: string, where?: string): Frontmatter {
   const match = FRONTMATTER.exec(raw);
-  if (!match) fail(collection, file, "missing a `---` frontmatter block at the top of the file");
+  if (!match) {
+    fail(collection, file, "missing a `---` frontmatter block at the top of the file", where);
+  }
 
   const data = parseYaml(match[1]);
   if (data === null || typeof data !== "object" || Array.isArray(data)) {
-    fail(collection, file, "frontmatter must be a YAML mapping of keys to values");
+    fail(collection, file, "frontmatter must be a YAML mapping of keys to values", where);
   }
 
   return {
@@ -506,6 +518,38 @@ function readVinyl(root: string, publicDir: string) {
 }
 
 /**
+ * The now page, read from `src/content/now.md`.
+ *
+ * One file rather than a directory, because there is only ever one now - saying
+ * what you are up to at the moment is the whole premise, and a second entry
+ * would be a blog post. So it sits outside `COLLECTIONS`, which exists to walk a
+ * folder and sort what it finds.
+ *
+ * `updated` is required and load-bearing. A now page with no date on it is just
+ * an about page, and the reader has no way to tell whether "at the moment" means
+ * this week or two years ago.
+ *
+ * A missing file is not an error, the same way an empty content directory is a
+ * log with nothing in it. The page renders its empty state instead.
+ */
+function readNow(root: string) {
+  const where = "src/content/now.md";
+  const file = path.resolve(root, where);
+  if (!existsSync(file)) return { updated: "", body: "" };
+
+  const { meta, body } = splitFrontmatter("now", "now.md", readFileSync(file, "utf8"), where);
+
+  const updated = asDate(meta.updated);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(updated)) {
+    fail("now", "now.md", "frontmatter needs an `updated` date in `YYYY-MM-DD` form", where);
+  }
+
+  if (!body) fail("now", "now.md", "the page has no body", where);
+
+  return { updated, body };
+}
+
+/**
  * The published shows, parsed the same way the app sees them. Exported so the
  * build can write a real HTML page per show without a second parser drifting
  * out of step with this one.
@@ -535,11 +579,12 @@ export function contentPlugin(): Plugin {
   let includeDrafts = false;
 
   /**
-   * The record collection is one generated JSON file rather than a directory of
-   * hand-written markdown, so it gets its own virtual module instead of being
-   * bent into the `Collection` shape for a single member.
+   * Two single-file pages, each its own virtual module rather than bent into
+   * the `Collection` shape for one member. The record collection is generated
+   * JSON rather than hand-written markdown, and there is only ever one now page.
    */
   const VINYL = "vinyl";
+  const NOW = "now";
 
   function virtualId(name: string) {
     return `virtual:${name}`;
@@ -571,7 +616,9 @@ export function contentPlugin(): Plugin {
     },
 
     resolveId(id) {
-      if (id === virtualId(VINYL)) return resolvedId(VINYL);
+      for (const single of [VINYL, NOW]) {
+        if (id === virtualId(single)) return resolvedId(single);
+      }
       const collection = COLLECTIONS.find((entry) => id === virtualId(entry.name));
       return collection ? resolvedId(collection.name) : null;
     },
@@ -579,6 +626,9 @@ export function contentPlugin(): Plugin {
     load(id) {
       if (id === resolvedId(VINYL)) {
         return `export const vinyl = ${JSON.stringify(readVinyl(root, publicDir))};`;
+      }
+      if (id === resolvedId(NOW)) {
+        return `export const now = ${JSON.stringify(readNow(root))};`;
       }
 
       const collection = COLLECTIONS.find((entry) => id === resolvedId(entry.name));
@@ -596,6 +646,7 @@ export function contentPlugin(): Plugin {
 
         // A local run of the Discogs fetch should show up without a restart.
         if (file === path.resolve(root, "src/content/vinyl.json")) return reload(VINYL);
+        if (file === path.resolve(root, "src/content/now.md")) return reload(NOW);
 
         if (!file.endsWith(".md")) return;
 

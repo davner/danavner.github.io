@@ -27,6 +27,9 @@ const ShowDetail = lazy(() =>
 // board, and nothing else needs it, so it loads on demand too.
 const Vinyl = lazy(() => import("@/routes/vinyl").then((module) => ({ default: module.Vinyl })));
 
+// The now page renders markdown, so it pulls in the renderer as well.
+const Now = lazy(() => import("@/routes/now").then((module) => ({ default: module.Now })));
+
 export function App() {
   return (
     <BrowserRouter>
@@ -78,6 +81,14 @@ export function App() {
               element={
                 <Suspense fallback={<PostSkeleton />}>
                   <Vinyl />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/now"
+              element={
+                <Suspense fallback={<PostSkeleton />}>
+                  <Now />
                 </Suspense>
               }
             />

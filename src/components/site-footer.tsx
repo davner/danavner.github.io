@@ -3,14 +3,9 @@ import { Link } from "react-router";
 import { PixelFire } from "@/components/pixel-fire";
 import { SocialLinks } from "@/components/social-links";
 import { profile } from "@/content/profile";
+import { SECTIONS } from "@/lib/site";
 
-const LINKS = [
-  { to: "/about", label: "About" },
-  { to: "/career", label: "Career" },
-  { to: "/blog", label: "Blog" },
-  { to: "/shows", label: "Shows" },
-  { to: "/vinyl", label: "Vinyl" },
-];
+const LINKS = SECTIONS;
 
 /** Last-commit date (UTC), already formatted like "Aug 4, 2026" in `vite.config.ts`. */
 const LAST_UPDATED = __LAST_UPDATED__;

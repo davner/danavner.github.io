@@ -17,6 +17,13 @@ declare module "virtual:shows" {
   export const shows: Show[];
 }
 
+declare module "virtual:now" {
+  import type { Now } from "@/lib/now";
+
+  /** Supplied by `contentPlugin()` in `vite-plugin-content.ts`. */
+  export const now: Now;
+}
+
 declare module "virtual:vinyl" {
   import type { VinylPayload } from "@/lib/vinyl";
 

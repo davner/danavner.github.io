@@ -43,9 +43,12 @@ test.describe("navigation", () => {
   test("scroll resets between pages", async ({ page }) => {
     await page.goto("/career");
     await page.evaluate(() => window.scrollTo(0, 1500));
-    // The header drops its index numbers below `sm`, so target the link itself
-    // rather than a label that differs between viewports.
-    await page.locator('header a[href="/about"]').click();
+    // Below `sm` the sections sit behind the menu rather than in a row, so open
+    // it first. Either way the only navigation landmark the a11y tree can see
+    // is the one actually on screen.
+    const menu = page.getByRole("button", { name: "Main menu" });
+    if (await menu.isVisible()) await menu.click();
+    await page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: "About" }).click();
     await page.waitForURL("**/about");
     await page.getByRole("heading", { level: 1 }).waitFor();
     // A smooth scroll already in flight must not survive the route change.
@@ -106,9 +109,15 @@ test.describe("blog", () => {
 
     await page.getByRole("radio", { name: /^Work/i }).click();
     await page.waitForURL("**/blog?category=work");
+    /*
+     * The URL updates a tick before the list re-renders, and `count()` reads
+     * once rather than retrying the way `expect(locator)` does - so reading it
+     * straight after `waitForURL` is a race the test loses whenever the bundle
+     * is slow enough. Poll until the list has actually narrowed, then measure.
+     */
+    await expect.poll(() => posts.count()).toBeLessThan(total);
     const work = await posts.count();
     expect(work).toBeGreaterThan(0);
-    expect(work).toBeLessThan(total);
     await expect(
       posts.locator("h3").filter({ hasText: /HOW THIS SITE IS BUILT/i }),
     ).toHaveCount(1);

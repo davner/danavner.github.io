@@ -24,11 +24,24 @@ export interface ComicEntry {
   cover: string;
 }
 
+export interface Publisher {
+  name: string;
+  /** Issues owned, not runs. See `publishers` on the payload. */
+  count: number;
+}
+
 export interface ComicsPayload {
   user: string;
   url: string;
   /** ISO date of the last successful read. */
   fetched: string;
+  /**
+   * Publisher totals as League of Comic Geeks reports them, biggest first, and
+   * weighted by issues owned rather than by runs - 24 DC issues across however
+   * many DC series. Counting the series here instead would answer a different
+   * question and get "most of" wrong.
+   */
+  publishers: Publisher[];
   series: ComicEntry[];
   pullList: ComicEntry[];
   wants: ComicEntry[];
@@ -49,7 +62,15 @@ export const SHELVES = [
     /** Shown under the heading when the shelf has something on it. */
     note: "Runs I own at least one issue of.",
   },
-  { id: "pullList", label: "Pull list", note: "Reserved at the shop this week." },
+  /*
+   * "This week" rather than "Pull list", because it is the narrower of the two
+   * things that phrase means. This is the issues shipping this Wednesday that
+   * are pulled for me - not the standing list of series I am subscribed to.
+   * That second list lives behind a login and cannot be read; see the note in
+   * `scripts/update-comics.mjs`. Calling this one "Pull list" invited exactly
+   * the wrong reading.
+   */
+  { id: "pullList", label: "This week", note: "Pulled for me at the shop this Wednesday." },
   { id: "wants", label: "Wants", note: "On the list, not yet on the shelf." },
 ] as const;
 
@@ -57,24 +78,6 @@ export type ShelfId = (typeof SHELVES)[number]["id"];
 
 export function shelf(id: ShelfId): ComicEntry[] {
   return comics[id];
-}
-
-/**
- * Publishers across the collection, biggest first. Two-thirds of a comic shelf
- * is usually two publishers, which is worth saying out loud on a page that is
- * otherwise a wall of covers.
- */
-export function publisherCounts(entries: ComicEntry[]): { name: string; count: number }[] {
-  const counts = new Map<string, number>();
-
-  for (const entry of entries) {
-    if (!entry.publisher) continue;
-    counts.set(entry.publisher, (counts.get(entry.publisher) ?? 0) + 1);
-  }
-
-  return [...counts]
-    .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 }
 
 /** Total issues held, which is not the same as the number of runs. */

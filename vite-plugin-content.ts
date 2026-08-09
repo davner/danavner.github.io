@@ -551,6 +551,7 @@ function readComics(root: string, publicDir: string) {
     user: "",
     url: "",
     fetched: "",
+    publishers: [] as { name: string; count: number }[],
     series: [] as ComicEntry[],
     pullList: [] as ComicEntry[],
     wants: [] as ComicEntry[],
@@ -617,10 +618,31 @@ function readComics(root: string, publicDir: string) {
     });
   };
 
+  /*
+   * Publisher totals as the endpoint reports them, weighted by issues owned
+   * rather than by runs. Recomputing them from `series` would give a different
+   * and worse number - one per run rather than one per comic - so they are
+   * carried through and only sanity-checked.
+   */
+  const rawPublishers = Array.isArray(payload.publishers)
+    ? (payload.publishers as Record<string, unknown>[])
+    : [];
+
+  const publishers = rawPublishers.map((entry, index) => {
+    const name = asTrimmedString(entry.name);
+    const count = Number(entry.count);
+    if (!name) fail(`\`publishers[${index}]\` needs a \`name\``);
+    if (!Number.isInteger(count) || count <= 0) {
+      fail(`\`publishers[${index}]\` needs a positive whole \`count\``);
+    }
+    return { name, count };
+  });
+
   return {
     user: asTrimmedString(payload.user),
     url: asTrimmedString(payload.url),
     fetched: asTrimmedString(payload.fetched),
+    publishers,
     series: readList("series"),
     pullList: readList("pullList"),
     wants: readList("wants"),

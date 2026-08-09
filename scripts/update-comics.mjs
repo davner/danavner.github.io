@@ -85,7 +85,36 @@ const impit = new Impit({ browser: "chrome" });
 /** The list ids the endpoint uses. Not documented anywhere; read off the site. */
 const LISTS = { pulls: 1, collection: 2, wishList: 3 };
 
+/**
+ * How many entries one response can hold, from `list_mode_limit` in the
+ * endpoint's own echoed configuration.
+ *
+ * Nothing here is near it - the collection is tens of items - but a shelf that
+ * passes it would otherwise come back silently truncated, which is the failure
+ * this file cares most about avoiding. `list_mode_offset` is the only paging
+ * control that actually works: `page`, `per_page`, `limit` and `offset` are all
+ * accepted and ignored, so they are not worth reaching for.
+ */
+const PAGE_SIZE = 300;
+
+/**
+ * Long enough to be a well-behaved guest. There is no published rate limit
+ * because there is no published anything, and the whole run is a background job
+ * where a few extra seconds costs nothing.
+ */
+const REQUEST_GAP_MS = 1200;
+
+let lastRequest = 0;
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function getJson(url) {
+  const wait = REQUEST_GAP_MS - (Date.now() - lastRequest);
+  if (wait > 0) await sleep(wait);
+  lastRequest = Date.now();
+
   try {
     const response = await impit.fetch(url);
     if (!response.ok) {
@@ -142,6 +171,20 @@ function text(node) {
  * date therefore returns an empty list on six days out of seven, which looks
  * exactly like an empty pull list. Wind back to the most recent Wednesday
  * instead, so Thursday through Tuesday all report the week that is on the shelf.
+ */
+/*
+ * A note on what "pull list" means here, because it means two things.
+ *
+ * `list=1` is the weekly pull: the issues shipping in one release week that are
+ * pulled for you. It is what this reads, and it needs a date - without one it
+ * returns nothing at all rather than everything.
+ *
+ * The other sense, the standing list of series you are subscribed to, lives at
+ * `/profile/<user>/pull-list-subscriptions`. That page is not public: it comes
+ * back as a 7KB stub for an anonymous request where `/collection` and
+ * `/pull-list` both return ~100KB of real content. Reading it would mean
+ * putting League of Comic Geeks credentials in CI, which is a much larger ask
+ * than this page is worth, so the site says "This week" and means it.
  */
 function releaseWeek(today = new Date()) {
   const date = new Date(
@@ -226,26 +269,86 @@ function parseIssueRow($, el) {
 }
 
 /**
+ * Publisher totals, lifted from the filter dropdown the same response carries.
+ *
+ * Worth taking rather than counting the cards, because these are weighted by
+ * issues owned while the cards are one per run - the endpoint says DC 24,
+ * Marvel 10, IDW 7 against sixteen series. "Most of" means most comics, not
+ * most runs, and only one of those two numbers is honest about that.
+ */
+function parsePublishers(html) {
+  if (typeof html !== "string" || !html) return [];
+
+  const $ = cheerio.load(html);
+
+  return $("li.filter-options-publisher.option")
+    .map((_, el) => {
+      const element = $(el);
+      const name = text(element.find(".option-name"));
+      const count = Number(text(element.find(".badge")));
+      if (!name || !Number.isInteger(count) || count <= 0) return null;
+      return { name, count };
+    })
+    .get()
+    .filter(Boolean)
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+}
+
+/**
  * Reads one list and parses it. Returns null on a failed read so the caller can
  * tell "nothing there" apart from "could not look", which decides whether the
  * committed payload gets replaced.
+ *
+ * Two things guard the parse rather than just the fetch:
+ *
+ *   - `count` says how many entries the response holds, so comparing it to what
+ *     came out of the parser catches the markup moving under us. A request that
+ *     succeeds and yields half a shelf is the failure mode a scraper actually
+ *     has, and without this it would commit quietly.
+ *   - A full page means there may be more behind it, so it pages on
+ *     `list_mode_offset` until a short one comes back. Costs nothing until the
+ *     shelf passes 300, at which point it is the difference between the whole
+ *     collection and the first 300 of it.
  */
 async function fetchList(label, params, parse) {
-  const url = `${LIST_ENDPOINT}?${new URLSearchParams(params)}`;
-  const data = await getJson(url);
-  if (!data || typeof data.list !== "string") {
-    console.warn(`comics: no list came back for ${label}`);
-    return null;
+  const items = [];
+  let publishers = [];
+
+  for (let offset = 0; ; offset += PAGE_SIZE) {
+    const query = new URLSearchParams({ ...params, list_mode_offset: String(offset) });
+    const data = await getJson(`${LIST_ENDPOINT}?${query}`);
+
+    if (!data || typeof data.list !== "string") {
+      console.warn(`comics: no list came back for ${label}`);
+      return null;
+    }
+
+    const $ = cheerio.load(data.list);
+    const parsed = $("li")
+      .map((_, element) => parse($, element))
+      .get()
+      .filter(Boolean);
+
+    // `count` is what this response holds, not the whole list - it drops to
+    // match when an offset is in play - so it is checked per page.
+    const claimed = Number(data.count);
+    if (Number.isInteger(claimed) && parsed.length !== claimed) {
+      console.warn(
+        `comics: ${label} - parsed ${parsed.length} of the ${claimed} the response claims. ` +
+          "The markup has moved; keeping the committed payload.",
+      );
+      return null;
+    }
+
+    if (offset === 0) publishers = parsePublishers(data.filters_publishers);
+    items.push(...parsed);
+
+    if (parsed.length < PAGE_SIZE) break;
+    console.log(`comics: ${label} - full page at offset ${offset}, reading the next`);
   }
 
-  const $ = cheerio.load(data.list);
-  const items = $("li")
-    .map((_, el) => parse($, el))
-    .get()
-    .filter(Boolean);
-
   console.log(`comics: ${label} - ${items.length} items`);
-  return items;
+  return { items, publishers };
 }
 
 /**
@@ -312,21 +415,26 @@ async function main() {
 
   const base = { user_id: userId, view: "list" };
 
-  const [collection, wishList, pulls] = await Promise.all([
-    fetchList("collection", { ...base, list: LISTS.collection, list_option: "series" }, parseSeriesCard),
-    fetchList("wish list", { ...base, list: LISTS.wishList, list_option: "series" }, parseSeriesCard),
-    fetchList(
-      "pull list",
-      {
-        ...base,
-        list: LISTS.pulls,
-        list_option: "thumbs",
-        date: releaseWeek(),
-        date_type: "week",
-      },
-      parseIssueRow,
-    ),
-  ]);
+  /*
+   * Serial rather than concurrent, and paced. Three requests either way, but
+   * firing them together is how a scraper announces itself, and this job has all
+   * night to be polite.
+   */
+  const collection = await fetchList(
+    "collection",
+    { ...base, list: LISTS.collection, list_option: "series" },
+    parseSeriesCard,
+  );
+  const wishList = await fetchList(
+    "wish list",
+    { ...base, list: LISTS.wishList, list_option: "series" },
+    parseSeriesCard,
+  );
+  const pulls = await fetchList(
+    "pull list",
+    { ...base, list: LISTS.pulls, list_option: "thumbs", date: releaseWeek(), date_type: "week" },
+    parseIssueRow,
+  );
 
   /*
    * The collection is the page. Losing it means the read failed rather than the
@@ -339,9 +447,9 @@ async function main() {
     return;
   }
 
-  const series = collection.map((entry) => ({ ...entry, key: `series-${entry.id}` }));
-  const wants = (wishList ?? []).map((entry) => ({ ...entry, key: `want-${entry.id}` }));
-  const pullList = (pulls ?? []).map((entry) => ({ ...entry, key: `issue-${entry.id}` }));
+  const series = collection.items.map((entry) => ({ ...entry, key: `series-${entry.id}` }));
+  const wants = (wishList?.items ?? []).map((entry) => ({ ...entry, key: `want-${entry.id}` }));
+  const pullList = (pulls?.items ?? []).map((entry) => ({ ...entry, key: `issue-${entry.id}` }));
 
   for (const entry of [...series, ...wants, ...pullList]) {
     entry.cover = await saveCover(entry.key, entry.coverSource);
@@ -356,6 +464,8 @@ async function main() {
     url: `${BASE}/profile/${username}`,
     /** UTC, so the line reads the same for everyone who sees it. */
     fetched: new Date().toISOString().slice(0, 10),
+    /** Weighted by issues owned, straight from the collection response. */
+    publishers: collection.publishers,
     series,
     pullList,
     wants,

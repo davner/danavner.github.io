@@ -657,6 +657,29 @@ test.describe("comics", () => {
     }
   });
 
+  test("the per-run issue counts add up to the issues-held stat", async ({ page }) => {
+    // The stat is summed from the payload and the tiles print it per run, so
+    // the two disagreeing means one of them is reading the wrong field.
+    const counts = await page
+      .locator("[data-slot=comic]")
+      .evaluateAll((tiles) =>
+        tiles.map((tile) => {
+          const line = [...tile.querySelectorAll("p")].find((p) =>
+            /^\d+\s+issues?$/i.test(p.textContent?.trim() ?? ""),
+          );
+          return Number(line?.textContent?.trim().split(/\s+/)[0] ?? 0);
+        }),
+      );
+
+    const total = counts.reduce((sum, n) => sum + n, 0);
+    expect(total).toBeGreaterThan(0);
+
+    const stat = Number(
+      await page.getByRole("term").filter({ hasText: /^Issues held$/i }).locator("+ dd").innerText(),
+    );
+    expect(total).toBe(stat);
+  });
+
   test("cover art is served from this site, not League of Comic Geeks", async ({ page }) => {
     // Same reason the records are committed: leaning on their CDN would put a
     // third-party request on every page view and break links.spec.ts.

@@ -2,6 +2,20 @@
   "user": "aspacemansheavyload",
   "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload",
   "fetched": "2026-08-09",
+  "publishers": [
+    {
+      "name": "DC Comics",
+      "count": 24
+    },
+    {
+      "name": "Marvel Comics",
+      "count": 10
+    },
+    {
+      "name": "IDW Publishing",
+      "count": 7
+    }
+  ],
   "series": [
     {
       "id": 197063,

@@ -3,14 +3,7 @@ import { useSearchParams } from "react-router";
 
 import { FilterToggle } from "@/components/filter-toggle";
 import { PageHeader, PageShell } from "@/components/page";
-import {
-  comics,
-  issueCount,
-  publisherCounts,
-  SHELVES,
-  type ComicEntry,
-  type ShelfId,
-} from "@/lib/comics";
+import { comics, issueCount, SHELVES, type ComicEntry, type ShelfId } from "@/lib/comics";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
 const TITLE = "Comics";
@@ -35,6 +28,28 @@ function formatFetched(date: string): string {
 }
 
 /**
+ * League of Comic Geeks writes an open-ended run as "2026 - Present". "Now"
+ * says the same thing in four fewer characters, which is the difference between
+ * fitting a tile on a 320px phone and clipping to "2026 - PRESE…".
+ *
+ * Done here rather than in the fetch so `comics.json` keeps saying what the
+ * source said, and this stays a wording choice rather than a data edit.
+ */
+function shortenYears(years: string): string {
+  return years.replace(/\bpresent\b/i, "Now");
+}
+
+/** "Aug 5, 2026" - short enough to sit in a tile without wrapping. */
+function formatReleased(date: string): string {
+  return new Date(`${date}T12:00:00Z`).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+/**
  * One cover in the grid. The whole tile is the link and it goes to League of
  * Comic Geeks, for the same reason a record sleeve goes to Discogs - there is no
  * page of our own to send it to, and inventing one would put a click in front of
@@ -42,13 +57,25 @@ function formatFetched(date: string): string {
  */
 function ComicTile({ entry }: { entry: ComicEntry }) {
   /*
-   * A series and an issue carry different facts, and each reads off the cover in
-   * a different order. A run is "how much of it do you have"; a single issue is
-   * "what did it cost and when did it land".
+   * Three short lines rather than one joined one. "DC COMICS · 2024 - Present"
+   * did not fit a tile at any breakpoint and truncated to "DC COMICS · 2024 -
+   * PR…", which loses the half that varies. Split, each line fits whole.
+   *
+   * The publisher takes the ember the record sleeves give their wax colour, for
+   * the same reason: it is the one field you scan a shelf by.
    */
-  const spine = entry.price
-    ? [entry.publisher, entry.price].filter(Boolean).join(" · ")
-    : [entry.publisher, entry.years].filter(Boolean).join(" · ");
+  const held = entry.issues ? `${entry.issues} ${entry.issues === 1 ? "issue" : "issues"}` : "";
+
+  /*
+   * A run reads "when did it run, how deep does it go"; a single issue reads
+   * "what did it cost, when did it land". One line each, because joining even
+   * two of them re-introduced the truncation: "2024 - Present · 6 issues" clips
+   * to "2024 - PRESENT · 6 IS…" in a tile this wide, and the issue count is the
+   * half that gets eaten.
+   */
+  const lines = entry.price
+    ? [entry.price, entry.released ? formatReleased(entry.released) : ""]
+    : [shortenYears(entry.years), held];
 
   return (
     <li
@@ -89,7 +116,11 @@ function ComicTile({ entry }: { entry: ComicEntry }) {
           </div>
         )}
 
-        <div className="flex flex-1 flex-col p-4">
+        {/* Tighter padding below `sm`. The readout face carries 0.18em of
+            tracking, so a 14-character publisher like "IDW Publishing" spends
+            ~27px on letter-spacing alone and clipped inside `p-4` on a 320px
+            phone. Buying back 8px of line fits it without touching the type. */}
+        <div className="flex flex-1 flex-col p-3 sm:p-4">
           <h3 className="leading-snug font-medium text-pretty transition-colors group-hover:text-ember">
             {entry.name}
             <ArrowUpRight className="ml-1 inline size-3.5 shrink-0 opacity-0 transition-opacity group-hover:opacity-70" />
@@ -98,9 +129,16 @@ function ComicTile({ entry }: { entry: ComicEntry }) {
           {/* `mt-auto` pins this to the bottom so it lines up across a row
               whether the title above ran to one line or three. */}
           <div className="mt-auto pt-3">
-            <p className="readout-dim truncate" title={spine}>
-              {spine}
-            </p>
+            {entry.publisher ? (
+              <p className="readout-dim mb-1.5 truncate text-ember" title={entry.publisher}>
+                {entry.publisher}
+              </p>
+            ) : null}
+            {lines.filter(Boolean).map((line) => (
+              <p key={line} className="readout-dim truncate" title={line}>
+                {line}
+              </p>
+            ))}
           </div>
         </div>
       </a>
@@ -127,7 +165,7 @@ export function Comics() {
   const shown = comics[active];
   const shelf = SHELVES.find((entry) => entry.id === active)!;
 
-  const publishers = publisherCounts(comics.series);
+  const publishers = comics.publishers;
   const issues = issueCount(comics.series);
 
   if (comics.series.length === 0 && comics.pullList.length === 0 && comics.wants.length === 0) {

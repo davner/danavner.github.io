@@ -116,7 +116,11 @@ for (let row = 0; row < FIRE_ROWS; row++) {
     if (heat === 0) continue;
     const { rgb, alpha } = heatColour(heat);
 
-    for (let y = Math.floor(fireTop + row * CELL); y < Math.floor(fireTop + (row + 1) * CELL); y++) {
+    for (
+      let y = Math.floor(fireTop + row * CELL);
+      y < Math.floor(fireTop + (row + 1) * CELL);
+      y++
+    ) {
       for (let x = Math.floor(column * CELL); x < Math.floor((column + 1) * CELL); x++) {
         if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT) continue;
         const offset = (y * WIDTH + x) * 3;

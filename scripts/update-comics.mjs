@@ -187,9 +187,7 @@ function text(node) {
  * than this page is worth, so the site says "This week" and means it.
  */
 function releaseWeek(today = new Date()) {
-  const date = new Date(
-    Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()),
-  );
+  const date = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
   // 3 is Wednesday; `+ 7) % 7` keeps the step forward-only on Sun, Mon and Tue.
   date.setUTCDate(date.getUTCDate() - ((date.getUTCDay() - 3 + 7) % 7));
   return date.toISOString().slice(0, 10);

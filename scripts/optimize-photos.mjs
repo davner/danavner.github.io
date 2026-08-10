@@ -89,7 +89,8 @@ function collect(target) {
 
 const args = process.argv.slice(2);
 const renameTo = args.find((arg) => arg.startsWith("--name="))?.slice("--name=".length);
-const maxEdge = Number(args.find((arg) => arg.startsWith("--max="))?.slice("--max=".length)) || MAX_EDGE;
+const maxEdge =
+  Number(args.find((arg) => arg.startsWith("--max="))?.slice("--max=".length)) || MAX_EDGE;
 const [destination, ...targets] = args.filter((arg) => !arg.startsWith("--"));
 
 if (!destination || targets.length === 0) {
@@ -125,7 +126,9 @@ for (const source of sources) {
 
   const outPath = path.join(outDir, `${name}.jpg`);
 
-  const output = await (await uprightPipeline(source))
+  const output = await (
+    await uprightPipeline(source)
+  )
     .resize({ width: maxEdge, height: maxEdge, fit: "inside", withoutEnlargement: true })
     .jpeg({ quality: QUALITY, mozjpeg: true })
     .toFile(outPath);
@@ -140,5 +143,7 @@ for (const source of sources) {
   );
 }
 
-console.log(`\n${sources.length} photo(s), ${Math.round(savedBytes / 1024)} kB saved, EXIF stripped`);
+console.log(
+  `\n${sources.length} photo(s), ${Math.round(savedBytes / 1024)} kB saved, EXIF stripped`,
+);
 console.log(`Reference them as /img/${destination}/<name>.jpg`);

@@ -85,9 +85,7 @@ function details(stats: ModeStats, against: ModeStats | null, mode: ModeId) {
     {
       label: "Kills per match",
       value: stats.killsPerMatch.toFixed(2),
-      delta: against
-        ? delta(stats.killsPerMatch, against.killsPerMatch, 2)
-        : null,
+      delta: against ? delta(stats.killsPerMatch, against.killsPerMatch, 2) : null,
     },
     ...placements(mode).map((tier) => ({
       label: tier.label,
@@ -151,20 +149,11 @@ function Stat({
 }
 
 /** The outfit render, or the space one would take, at a given size. */
-function MainPortrait({
-  season,
-  className,
-}: {
-  season: SeasonEntry;
-  className?: string;
-}) {
+function MainPortrait({ season, className }: { season: SeasonEntry; className?: string }) {
   if (!season.main?.image) {
     return (
       <div
-        className={cn(
-          "flex items-center justify-center bg-muted/40 p-4 text-center",
-          className,
-        )}
+        className={cn("flex items-center justify-center bg-muted/40 p-4 text-center", className)}
       >
         <span className="readout-dim text-pretty">
           {season.main ? season.main.name : "No main on record"}
@@ -200,9 +189,7 @@ function SeasonBanner({ season }: { season: SeasonEntry }) {
 
       <div className="flex min-w-0 flex-1 flex-col justify-center bg-background p-5 sm:p-6">
         <p className="readout-dim">{season.label}</p>
-        <p className="display mt-1 text-2xl text-balance sm:text-3xl">
-          {season.name}
-        </p>
+        <p className="display mt-1 text-2xl text-balance sm:text-3xl">{season.name}</p>
         <p className="readout-dim mt-3">{dateRange(season)}</p>
         {season.main ? (
           <p className="readout-dim mt-1">
@@ -223,21 +210,13 @@ function SeasonBanner({ season }: { season: SeasonEntry }) {
  * This is the other half: the whole run in one view, each card a way back into
  * the board above it.
  */
-function SeasonHistory({
-  active,
-  onSelect,
-}: {
-  active: string;
-  onSelect: (key: string) => void;
-}) {
+function SeasonHistory({ active, onSelect }: { active: string; onSelect: (key: string) => void }) {
   return (
     <section aria-labelledby="mains" className="mt-16">
       <h2 id="mains" className="display text-2xl sm:text-3xl">
         Season by season
       </h2>
-      <p className="readout-dim mt-2">
-        The outfit I mained each season, oldest at the end.
-      </p>
+      <p className="readout-dim mt-2">The outfit I mained each season, oldest at the end.</p>
 
       {/*
         No `bg-border` behind this grid. Nine seasons in a four-wide grid leaves
@@ -253,10 +232,7 @@ function SeasonHistory({
           const current = season.key === active;
 
           return (
-            <li
-              key={season.key}
-              className="bg-background shadow-[0_0_0_1px_var(--color-border)]"
-            >
+            <li key={season.key} className="bg-background shadow-[0_0_0_1px_var(--color-border)]">
               <button
                 type="button"
                 onClick={() => onSelect(season.key)}
@@ -276,17 +252,11 @@ function SeasonHistory({
                 <MainPortrait season={season} className="h-40 w-full" />
 
                 <div className="flex flex-1 flex-col p-4">
-                  <p className={cn("readout-dim", current && "text-ember")}>
-                    {season.label}
-                  </p>
-                  <p className="display mt-1 text-lg text-balance">
-                    {season.name}
-                  </p>
+                  <p className={cn("readout-dim", current && "text-ember")}>{season.label}</p>
+                  <p className="display mt-1 text-lg text-balance">{season.name}</p>
                   <p className="readout-dim mt-2">{dateRange(season)}</p>
                   <p className="readout-dim mt-auto pt-3">
-                    {season.stats
-                      ? `${count(season.stats.overall.wins)} wins`
-                      : "No numbers"}
+                    {season.stats ? `${count(season.stats.overall.wins)} wins` : "No numbers"}
                   </p>
                 </div>
               </button>
@@ -310,17 +280,13 @@ export function Fortnite() {
    * tab that has not been recorded yet is a link that used to work.
    */
   const requested = params.get("season");
-  const activeKey = isWindowKey(requested)
-    ? requested!
-    : (windows[0]?.key ?? LIFETIME);
+  const activeKey = isWindowKey(requested) ? requested! : (windows[0]?.key ?? LIFETIME);
   const active = windows.find((window) => window.key === activeKey);
 
   const modes = active?.stats ? playedModes(active.stats) : [];
   const requestedMode = params.get("mode");
   const activeMode: ModeId =
-    modes.find((mode) => mode.id === requestedMode)?.id ??
-    modes[0]?.id ??
-    "overall";
+    modes.find((mode) => mode.id === requestedMode)?.id ?? modes[0]?.id ?? "overall";
 
   const stats = active?.stats?.[activeMode] ?? null;
 
@@ -332,9 +298,7 @@ export function Fortnite() {
    * `?mode=` away from being asked for.
    */
   const against =
-    active?.season && fortnite.lifetime
-      ? (fortnite.lifetime[activeMode] ?? null)
-      : null;
+    active?.season && fortnite.lifetime ? (fortnite.lifetime[activeMode] ?? null) : null;
 
   const update = (next: { season?: string; mode?: string }) => {
     const query = new URLSearchParams(params);
@@ -362,9 +326,7 @@ export function Fortnite() {
           fortnite.name ? (
             <div className="border border-border p-6">
               <p className="readout-dim">Epic name</p>
-              <p className="display mt-2 text-3xl break-all sm:text-4xl">
-                {fortnite.name}
-              </p>
+              <p className="display mt-2 text-3xl break-all sm:text-4xl">{fortnite.name}</p>
             </div>
           ) : undefined
         }
@@ -380,9 +342,7 @@ export function Fortnite() {
           onChange={selectSeason}
           options={windows.map((window) => ({
             value: window.key,
-            label: window.season
-              ? `${window.label}: ${window.season.name}`
-              : window.label,
+            label: window.season ? `${window.label}: ${window.season.name}` : window.label,
           }))}
           className="mb-8 w-full sm:w-72"
         />
@@ -404,9 +364,7 @@ export function Fortnite() {
             <FilterToggle
               label="Playlist"
               value={activeMode}
-              onChange={(value) =>
-                update({ mode: value === modes[0].id ? "" : value })
-              }
+              onChange={(value) => update({ mode: value === modes[0].id ? "" : value })}
               options={modes.map((mode) => ({
                 value: mode.id,
                 label: mode.label,
@@ -421,9 +379,7 @@ export function Fortnite() {
               formed the wrong impression of it. */}
           {note ? <p className="readout-dim mb-6 text-ember">{note}</p> : null}
 
-          <section
-            aria-label={`${MODES.find((mode) => mode.id === activeMode)?.label} stats`}
-          >
+          <section aria-label={`${MODES.find((mode) => mode.id === activeMode)?.label} stats`}>
             {/* Seams per tile rather than a `bg-border` behind the grid - a
                 row that is not full would otherwise paint the gap grey, which
                 is exactly what "All modes" does now that it shows four tiles
@@ -442,21 +398,14 @@ export function Fortnite() {
 
             <div className="mt-px grid grid-cols-2 gap-px sm:grid-cols-3">
               {details(stats, against, activeMode).map((tile) => (
-                <Stat
-                  key={tile.label}
-                  label={tile.label}
-                  value={tile.value}
-                  against={tile.delta}
-                />
+                <Stat key={tile.label} label={tile.label} value={tile.value} against={tile.delta} />
               ))}
             </div>
           </section>
         </>
       )}
 
-      {seasons.length > 0 ? (
-        <SeasonHistory active={activeKey} onSelect={selectSeason} />
-      ) : null}
+      {seasons.length > 0 ? <SeasonHistory active={activeKey} onSelect={selectSeason} /> : null}
 
       {/* Where the numbers come from, and what each half of the archive can and
           cannot say. Small print, but the page is numbers and numbers without a
@@ -471,11 +420,10 @@ export function Fortnite() {
         >
           Fortnite-API
         </a>
-        , which answers for lifetime and for the season running right now. The
-        seasons behind it were filled in once from Epic's own stats service,
-        which does take a date range, and they reconcile exactly: every one of
-        the {count(fortnite.lifetime?.overall.matches ?? 0)} lifetime matches
-        lands in one of them.
+        , which answers for lifetime and for the season running right now. The seasons behind it
+        were filled in once from Epic's own stats service, which does take a date range, and they
+        reconcile exactly: every one of the {count(fortnite.lifetime?.overall.matches ?? 0)}{" "}
+        lifetime matches lands in one of them.
         {fortnite.fetched ? ` Read ${formatFetched(fortnite.fetched)}.` : ""}
       </p>
     </PageShell>

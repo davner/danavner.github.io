@@ -13,10 +13,7 @@ import { ROUTES } from "./routes";
  * `.github/workflows/links.yml` runs those weekly instead.
  */
 test.describe("internal links", () => {
-  test("every in-site link points at a real route", async ({
-    page,
-    baseURL,
-  }) => {
+  test("every in-site link points at a real route", async ({ page, baseURL }) => {
     const seen = new Set<string>();
 
     for (const path of ROUTES) {
@@ -30,9 +27,7 @@ test.describe("internal links", () => {
     expect(seen.size).toBeGreaterThan(0);
 
     for (const href of seen) {
-      const response = await page.request.get(
-        new URL(href, baseURL).toString(),
-      );
+      const response = await page.request.get(new URL(href, baseURL).toString());
       // The SPA fallback serves index.html for unknown paths, so a 200 alone
       // proves nothing - the rendered page must not be the 404 route.
       expect(response.status(), `${href} did not respond`).toBe(200);
@@ -54,8 +49,7 @@ test.describe("internal links", () => {
       // broken asset makes this test fail on the network it happens to run on,
       // which it did.
       if (ANALYTICS_HOSTS.includes(new URL(response.url()).host)) return;
-      if (response.status() >= 400)
-        failed.push(`${response.status()} ${response.url()}`);
+      if (response.status() >= 400) failed.push(`${response.status()} ${response.url()}`);
     });
 
     for (const path of ROUTES) {
@@ -68,12 +62,7 @@ test.describe("internal links", () => {
             const el = img as HTMLImageElement;
             return el.complete && el.naturalWidth === 0;
           })
-          .map(
-            (img) =>
-              (img as HTMLImageElement).currentSrc ||
-              img.getAttribute("src") ||
-              "?",
-          ),
+          .map((img) => (img as HTMLImageElement).currentSrc || img.getAttribute("src") || "?"),
       );
       expect(broken, `broken images on ${path}`).toEqual([]);
     }

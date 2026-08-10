@@ -197,9 +197,7 @@ export function SiteHeader() {
               drawer over something. */}
           <SheetContent side="right" className="gap-0 border-border bg-background p-0">
             <SheetHeader className="border-b border-border p-4">
-              <SheetTitle className={cn(LABEL, "text-left text-muted-foreground")}>
-                Menu
-              </SheetTitle>
+              <SheetTitle className={cn(LABEL, "text-left text-muted-foreground")}>Menu</SheetTitle>
               {/* Required for the dialog to have a description; there is nothing
                   useful to say about a list of links, so it is read-only-to-AT. */}
               <SheetDescription className="sr-only">

@@ -77,9 +77,7 @@ function ShowBody({ show }: { show: (typeof shows)[number] }) {
         {/* The tour, or which day of the festival. It reads as a subtitle to
             the name above it, which is what it is - a badge made it look like
             a category someone filed the night under. */}
-        {show.subtitle ? (
-          <p className="readout-dim mt-3 text-pretty">{show.subtitle}</p>
-        ) : null}
+        {show.subtitle ? <p className="readout-dim mt-3 text-pretty">{show.subtitle}</p> : null}
 
         {/* This page is the target of every share link, so when someone opens
             it from a text message the date and the room are the first thing
@@ -123,7 +121,6 @@ function ShowBody({ show }: { show: (typeof shows)[number] }) {
             </Button>
           ) : null}
         </div>
-
       </PageHeader>
 
       {/*

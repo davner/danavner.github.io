@@ -63,10 +63,7 @@ const FILE = new URL("../src/content/fortnite.json", import.meta.url);
  * accruing into the previous entry until the line is added, because that is
  * still the newest season the calendar knows about. Fix it whenever you notice.
  */
-const SEASONS_FILE = new URL(
-  "../src/content/fortnite-seasons.json",
-  import.meta.url,
-);
+const SEASONS_FILE = new URL("../src/content/fortnite-seasons.json", import.meta.url);
 
 const key = process.env.FORTNITE_API_KEY;
 if (!key) {
@@ -97,16 +94,13 @@ async function read(timeWindow) {
     throw new Error(`404 - Fortnite-API has no account called "${ACCOUNT}"`);
   }
   if (!response.ok) {
-    throw new Error(
-      `${response.status} from Fortnite-API: ${body?.error ?? "(no message)"}`,
-    );
+    throw new Error(`${response.status} from Fortnite-API: ${body?.error ?? "(no message)"}`);
   }
 
   return body?.data ?? null;
 }
 
-const asNumber = (value) =>
-  Number.isFinite(Number(value)) ? Number(value) : 0;
+const asNumber = (value) => (Number.isFinite(Number(value)) ? Number(value) : 0);
 
 /**
  * One playlist's numbers, trimmed to what the page shows.
@@ -179,16 +173,11 @@ async function main() {
     throw new Error("src/content/fortnite-seasons.json lists no seasons");
   }
 
-  const [lifetimeData, seasonData] = await Promise.all([
-    read("lifetime"),
-    read("season"),
-  ]);
+  const [lifetimeData, seasonData] = await Promise.all([read("lifetime"), read("season")]);
 
   const lifetime = snapshot(lifetimeData);
   if (!lifetime) {
-    console.log(
-      "fortnite: no usable lifetime stats, keeping the committed value",
-    );
+    console.log("fortnite: no usable lifetime stats, keeping the committed value");
     return;
   }
 
@@ -196,9 +185,7 @@ async function main() {
   const current = seasonFor(calendar.seasons, today);
   const label = `${current.chapter} ${current.season}`;
 
-  const previous = existsSync(FILE)
-    ? JSON.parse(await readFile(FILE, "utf8"))
-    : {};
+  const previous = existsSync(FILE) ? JSON.parse(await readFile(FILE, "utf8")) : {};
   const seasons = Array.isArray(previous.seasons) ? [...previous.seasons] : [];
 
   const seasonStats = snapshot(seasonData);
@@ -210,28 +197,19 @@ async function main() {
       // this history actually covers rather than implying it saw all of it.
       first: existing >= 0 ? seasons[existing].first : today,
       fetched: today,
-      source:
-        existing >= 0
-          ? (seasons[existing].source ?? "fortnite-api")
-          : "fortnite-api",
+      source: existing >= 0 ? (seasons[existing].source ?? "fortnite-api") : "fortnite-api",
       stats: seasonStats,
     };
     if (existing >= 0) seasons[existing] = entry;
     else seasons.push(entry);
   } else {
-    console.log(
-      `fortnite: no matches yet in ${label}, leaving its entry alone`,
-    );
+    console.log(`fortnite: no matches yet in ${label}, leaving its entry alone`);
   }
 
   // Newest first, in the order the calendar declares rather than by date, so
   // the file reads the same way the page does.
-  const order = new Map(
-    calendar.seasons.map((season, index) => [season.key, index]),
-  );
-  seasons.sort(
-    (a, b) => (order.get(a.key) ?? Infinity) - (order.get(b.key) ?? Infinity),
-  );
+  const order = new Map(calendar.seasons.map((season, index) => [season.key, index]));
+  seasons.sort((a, b) => (order.get(a.key) ?? Infinity) - (order.get(b.key) ?? Infinity));
 
   const payload = {
     name: lifetimeData?.account?.name || ACCOUNT,

@@ -38,14 +38,7 @@ export interface Education {
 export interface Interest {
   name: string;
   icon:
-    | "music"
-    | "telescope"
-    | "gamepad-2"
-    | "swords"
-    | "disc"
-    | "book-open"
-    | "blocks"
-    | "dumbbell";
+    "music" | "telescope" | "gamepad-2" | "swords" | "disc" | "book-open" | "blocks" | "dumbbell";
   note: string;
   /** A handle worth sharing, e.g. a gamertag. `href` makes it a link. */
   handle?: { label: string; value: string; href?: string };

@@ -8,12 +8,7 @@ import { Section } from "@/components/page";
 import { SocialLinks } from "@/components/social-links";
 import { profile } from "@/content/profile";
 import { posts } from "@/lib/blog";
-import {
-  formatShowDate,
-  showLocation,
-  showStats,
-  supportFor,
-} from "@/lib/shows";
+import { formatShowDate, showLocation, showStats, supportFor } from "@/lib/shows";
 import { NOW_DESCRIPTION } from "@/lib/site";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
@@ -28,8 +23,7 @@ const INDEX = [
   {
     to: "/about",
     title: "About",
-    blurb:
-      "Alexis, Milly and Penny, shows, records, comics, Legos, and one bowling statistic.",
+    blurb: "Alexis, Milly and Penny, shows, records, comics, Legos, and one bowling statistic.",
   },
   {
     to: "/career",
@@ -44,20 +38,17 @@ const INDEX = [
   {
     to: "/shows",
     title: "Shows",
-    blurb:
-      "Every gig I have been to since I started keeping track, logged and rated.",
+    blurb: "Every gig I have been to since I started keeping track, logged and rated.",
   },
   {
     to: "/vinyl",
     title: "Vinyl",
-    blurb:
-      "Every record Alexis and I own, pulled straight from the Discogs shelf.",
+    blurb: "Every record Alexis and I own, pulled straight from the Discogs shelf.",
   },
   {
     to: "/comics",
     title: "Comics",
-    blurb:
-      "Every run on the shelf, what is waiting at the shop, and what I still want.",
+    blurb: "Every run on the shelf, what is waiting at the shop, and what I still want.",
   },
   {
     to: "/fortnite",
@@ -110,8 +101,7 @@ export function Home() {
             </p>
 
             <p className="mt-4 max-w-xl text-xl leading-snug text-pretty sm:text-2xl">
-              <span className="text-ember">{profile.greeting}</span>{" "}
-              {profile.blurb}
+              <span className="text-ember">{profile.greeting}</span> {profile.blurb}
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-3">

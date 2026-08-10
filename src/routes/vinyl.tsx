@@ -177,7 +177,11 @@ export function Vinyl() {
   const owned = useMemo(() => recordsFor(owner), [owner]);
   const stats = useMemo(() => statsFor(owned), [owned]);
   const visible = useMemo(
-    () => sortRecords(owned.filter((record) => matches(record, query)), sort),
+    () =>
+      sortRecords(
+        owned.filter((record) => matches(record, query)),
+        sort,
+      ),
     [owned, query, sort],
   );
 

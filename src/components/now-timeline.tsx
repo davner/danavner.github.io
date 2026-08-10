@@ -80,9 +80,12 @@ export function NowTimeline({
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     pane.scrollTo({ top, behavior: reduced ? "auto" : "smooth" });
 
-    window.setTimeout(() => {
-      jumping.current = false;
-    }, reduced ? 0 : 500);
+    window.setTimeout(
+      () => {
+        jumping.current = false;
+      },
+      reduced ? 0 : 500,
+    );
   }, []);
 
   // Whichever entry is nearest the top of the pane is the one being read.

@@ -93,15 +93,11 @@ const CLIENTS = {
 };
 
 const STATS_FILE = new URL("../src/content/fortnite.json", import.meta.url);
-const SEASONS_FILE = new URL(
-  "../src/content/fortnite-seasons.json",
-  import.meta.url,
-);
+const SEASONS_FILE = new URL("../src/content/fortnite-seasons.json", import.meta.url);
 
 const args = process.argv.slice(2);
 const clientName =
-  args.find((arg) => arg.startsWith("--client="))?.slice("--client=".length) ??
-  "pc";
+  args.find((arg) => arg.startsWith("--client="))?.slice("--client=".length) ?? "pc";
 
 const client = CLIENTS[clientName];
 if (!client) {
@@ -149,8 +145,7 @@ async function token() {
 
   const body = await response.json().catch(() => null);
   if (!response.ok) {
-    const said =
-      body?.errorMessage ?? body?.error_description ?? "(no message)";
+    const said = body?.errorMessage ?? body?.error_description ?? "(no message)";
     const advice = /disabled/i.test(said)
       ? `Epic has retired --client=${clientName}. Try ${Object.keys(CLIENTS)
           .filter((name) => name !== clientName && !CLIENTS[name].dead)
@@ -159,9 +154,7 @@ async function token() {
         `the client it was issued for.`
       : `Codes expire in minutes and work once - if this one was spent, get a fresh one.`;
 
-    throw new Error(
-      `${response.status} exchanging the authorization code: ${said}. ${advice}`,
-    );
+    throw new Error(`${response.status} exchanging the authorization code: ${said}. ${advice}`);
   }
   return body.access_token;
 }
@@ -190,9 +183,7 @@ async function read(accountId, bearer, start, end) {
     );
   }
   if (!response.ok) {
-    throw new Error(
-      `${response.status} from Epic: ${body?.errorMessage ?? "(no message)"}`,
-    );
+    throw new Error(`${response.status} from Epic: ${body?.errorMessage ?? "(no message)"}`);
   }
 
   return body?.stats ?? {};
@@ -294,8 +285,7 @@ function shape(raw) {
   const byPlaylist = new Map();
 
   for (const [key, value] of Object.entries(raw)) {
-    const match =
-      /^br_(\w+?)_(?:keyboardmouse|gamepad|touch)_m0_playlist_(\w+)$/.exec(key);
+    const match = /^br_(\w+?)_(?:keyboardmouse|gamepad|touch)_m0_playlist_(\w+)$/.exec(key);
     if (!match) continue;
 
     const field = COUNTERS[match[1]];
@@ -396,9 +386,7 @@ async function main() {
   const bearer = await token();
   const today = new Date().toISOString().slice(0, 10);
 
-  const calendar = [...table.seasons].sort((a, b) =>
-    a.start.localeCompare(b.start),
-  );
+  const calendar = [...table.seasons].sort((a, b) => a.start.localeCompare(b.start));
 
   /*
    * Read cumulatively and subtract, rather than asking for each season's own
@@ -426,10 +414,7 @@ async function main() {
   /** `later` minus `earlier`, key by key, treating a missing counter as zero. */
   const difference = (later, earlier) => {
     const out = {};
-    for (const key of new Set([
-      ...Object.keys(later),
-      ...Object.keys(earlier),
-    ])) {
+    for (const key of new Set([...Object.keys(later), ...Object.keys(earlier)])) {
       // `lastmodified` is a timestamp rather than a counter; subtracting it is
       // meaningless, and `shape` ignores it anyway.
       if (/^br_lastmodified_/.test(key)) continue;
@@ -496,12 +481,8 @@ async function main() {
     );
   }
 
-  const order = new Map(
-    table.seasons.map((season, index) => [season.key, index]),
-  );
-  seasons.sort(
-    (a, b) => (order.get(a.key) ?? Infinity) - (order.get(b.key) ?? Infinity),
-  );
+  const order = new Map(table.seasons.map((season, index) => [season.key, index]));
+  seasons.sort((a, b) => (order.get(a.key) ?? Infinity) - (order.get(b.key) ?? Infinity));
 
   /*
    * Lifetime is rewritten too, from the last cumulative read - an unbounded
@@ -514,8 +495,7 @@ async function main() {
    * time the job fires - otherwise lifetime would be the one window missing the
    * placement tiers, and the squad board would read "Top 3: 0" until morning.
    */
-  const lifetimeStats =
-    shape(cumulative[cumulative.length - 1]) ?? stats.lifetime;
+  const lifetimeStats = shape(cumulative[cumulative.length - 1]) ?? stats.lifetime;
 
   await writeFile(
     STATS_FILE,

@@ -16,13 +16,13 @@ and toward "bands seen".
 ```md
 ---
 lineup:
-  - Knocked Loose         # tops the bill, shown large
-  - Show Me the Body      # everyone below is listed as "w/ …"
+  - Knocked Loose # tops the bill, shown large
+  - Show Me the Body # everyone below is listed as "w/ …"
   - Speed
 date: 2026-06-20
 venue: Hollywood Palladium
 city: Los Angeles, CA
-rating: 4.5               # out of 5 horns, partials welcome
+rating: 4.5 # out of 5 horns, partials welcome
 with:
   - Jasmine P.
 video: https://youtu.be/xxxxx
@@ -65,8 +65,8 @@ enough; use the object form when you want alt text or a caption.
 photos:
   - /img/shows/warped-tour-long-beach-2026-day-1/pit.jpg
   - src: /img/shows/warped-tour-long-beach-2026-day-1/stage.jpg
-    alt: Underoath mid-set, lit red        # described for screen readers
-    caption: Underoath                     # overlaid on the photo
+    alt: Underoath mid-set, lit red # described for screen readers
+    caption: Underoath # overlaid on the photo
 ```
 
 They render as a swipeable strip with prev/next buttons and a counter. One photo
@@ -103,8 +103,8 @@ it for whoever you actually caught.
 ---
 title: Vans Warped Tour
 type: festival
-date: 2026                 # partial dates are fine
-endDate: 2026-06-21        # optional, for multi-day
+date: 2026 # partial dates are fine
+endDate: 2026-06-21 # optional, for multi-day
 city: Long Beach, CA
 lineup:
   - Whoever you saw
@@ -113,25 +113,25 @@ lineup:
 
 ## Fields
 
-| Field | Required | Notes |
-| --- | --- | --- |
-| `lineup` | shows | Every band, top billing first. No duplicates. |
-| `title` | festivals | The event name. On a show, an alternative to a one-item `lineup`. |
-| `type` | no | `show` (default) or `festival` |
-| `date` | yes | `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` - use what you remember |
-| `endDate` | no | Multi-day festivals. Renders as "Nov 15–16". |
-| `city` | yes | |
-| `venue` | no | Omit for festivals with no fixed venue |
-| `capacity` | no | How many the place holds for a night like this. Confirm it; never guess. |
-| `rating` | no | 0–5 horns, decimals allowed. Omit for unrated. |
-| `bestSong` | no | The one that stayed with you. Shown as "Best live". |
-| `with` | no | List of names you went with |
-| `solo` | no | `true` for a solo run. Mutually exclusive with `with`. |
-| `subtitle` | no | Qualifier under the heading, e.g. "Day 1" |
-| `video` | no | Full URL. A YouTube playlist labels itself "Playlist". |
-| `setlists` | no | `{ band, url }` pairs. Each `band` must be in `lineup`. Renders as per-band buttons. |
-| `photos` | no | Objects with `src` / `alt` / `caption`. All three required. |
-| `standout` | no | Adds a flame and pins it to the ticker |
+| Field      | Required  | Notes                                                                                |
+| ---------- | --------- | ------------------------------------------------------------------------------------ |
+| `lineup`   | shows     | Every band, top billing first. No duplicates.                                        |
+| `title`    | festivals | The event name. On a show, an alternative to a one-item `lineup`.                    |
+| `type`     | no        | `show` (default) or `festival`                                                       |
+| `date`     | yes       | `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` - use what you remember                           |
+| `endDate`  | no        | Multi-day festivals. Renders as "Nov 15–16".                                         |
+| `city`     | yes       |                                                                                      |
+| `venue`    | no        | Omit for festivals with no fixed venue                                               |
+| `capacity` | no        | How many the place holds for a night like this. Confirm it; never guess.             |
+| `rating`   | no        | 0–5 horns, decimals allowed. Omit for unrated.                                       |
+| `bestSong` | no        | The one that stayed with you. Shown as "Best live".                                  |
+| `with`     | no        | List of names you went with                                                          |
+| `solo`     | no        | `true` for a solo run. Mutually exclusive with `with`.                               |
+| `subtitle` | no        | Qualifier under the heading, e.g. "Day 1"                                            |
+| `video`    | no        | Full URL. A YouTube playlist labels itself "Playlist".                               |
+| `setlists` | no        | `{ band, url }` pairs. Each `band` must be in `lineup`. Renders as per-band buttons. |
+| `photos`   | no        | Objects with `src` / `alt` / `caption`. All three required.                          |
+| `standout` | no        | Adds a flame and pins it to the ticker                                               |
 
 Notes:
 

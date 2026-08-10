@@ -42,27 +42,31 @@ export function PhotoCarousel({ photos, label }: { photos: Photo[]; label: strin
   return (
     // Capped so a photo does not dwarf the entry it belongs to.
     <figure className="mt-5 max-w-2xl">
-      <Carousel setApi={setApi} opts={{ align: "start", loop: false }} aria-label={`Photos from ${label}`}>
+      <Carousel
+        setApi={setApi}
+        opts={{ align: "start", loop: false }}
+        aria-label={`Photos from ${label}`}
+      >
         {/* The frame wraps only the photos. Putting it on the Carousel root
             would drag the controls onto the border colour too. */}
         <div className="border border-border">
           <CarouselContent>
-          {photos.map((photo, index) => (
-            <CarouselItem key={photo.src} className="relative bg-background">
-              <img
-                src={photo.src}
-                alt={photo.alt || `${label} - photo ${index + 1} of ${photos.length}`}
-                loading="lazy"
-                decoding="async"
-                className="aspect-4/3 w-full object-cover sm:aspect-video"
-              />
-              {photo.caption ? (
-                <figcaption className="readout absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-4 pt-10 pb-3 text-white">
-                  {photo.caption}
-                </figcaption>
-              ) : null}
-            </CarouselItem>
-          ))}
+            {photos.map((photo, index) => (
+              <CarouselItem key={photo.src} className="relative bg-background">
+                <img
+                  src={photo.src}
+                  alt={photo.alt || `${label} - photo ${index + 1} of ${photos.length}`}
+                  loading="lazy"
+                  decoding="async"
+                  className="aspect-4/3 w-full object-cover sm:aspect-video"
+                />
+                {photo.caption ? (
+                  <figcaption className="readout absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-4 pt-10 pb-3 text-white">
+                    {photo.caption}
+                  </figcaption>
+                ) : null}
+              </CarouselItem>
+            ))}
           </CarouselContent>
         </div>
 

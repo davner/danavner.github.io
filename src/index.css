@@ -122,14 +122,12 @@
   --radius-xl: calc(var(--radius) + 4px);
 
   --font-sans:
-    "Inter Variable", "Inter Fallback", ui-sans-serif, system-ui, -apple-system,
-    "Segoe UI", Roboto, sans-serif;
-  --font-mono:
-    "JetBrains Mono Variable", "JetBrains Mono Fallback", ui-monospace,
-    SFMono-Regular, Menlo, Consolas, monospace;
-  --font-display:
-    "Anton", "Anton Fallback", "Arial Narrow", "Haettenschweiler", Impact,
+    "Inter Variable", "Inter Fallback", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     sans-serif;
+  --font-mono:
+    "JetBrains Mono Variable", "JetBrains Mono Fallback", ui-monospace, SFMono-Regular, Menlo,
+    Consolas, monospace;
+  --font-display: "Anton", "Anton Fallback", "Arial Narrow", "Haettenschweiler", Impact, sans-serif;
 }
 
 @layer base {
@@ -360,12 +358,7 @@
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(
-      100deg,
-      transparent 30%,
-      var(--ion) 50%,
-      transparent 70%
-    );
+    background: linear-gradient(100deg, transparent 30%, var(--ion) 50%, transparent 70%);
     opacity: 0.2;
     transform: translateX(-100%);
     animation: solo-sweep 4s ease-in-out infinite;
@@ -390,12 +383,7 @@
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(
-      100deg,
-      transparent 30%,
-      var(--ember) 50%,
-      transparent 70%
-    );
+    background: linear-gradient(100deg, transparent 30%, var(--ember) 50%, transparent 70%);
     opacity: 0.18;
     transform: translateX(-100%);
     animation: solo-sweep 4s ease-in-out infinite;

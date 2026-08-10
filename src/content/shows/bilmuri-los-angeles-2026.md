@@ -50,8 +50,8 @@ possible kickflip, break an arm, and their mom calls right in the middle of the
 set. **The Home Team** put on a good show too, and it was oddly sweet how gentle
 their pits were.
 
-Then **Bilmuri** came out to the *Halo* theme with Gabby on sax, and - wow. Just
+Then **Bilmuri** came out to the _Halo_ theme with Gabby on sax, and - wow. Just
 wow. What vibes. They put on the best show of the night, we screamed our lungs
-out, and we finally got to hear *2016 Cavaliers (Ohio)* live, all of us together.
-Caleb even snagged the limited-edition *Kinda Hard* hat, which was sick. We all
+out, and we finally got to hear _2016 Cavaliers (Ohio)_ live, all of us together.
+Caleb even snagged the limited-edition _Kinda Hard_ hat, which was sick. We all
 bought tickets for the next show this fall, because that was a heck of a night.

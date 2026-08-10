@@ -197,9 +197,9 @@ test.describe("share", () => {
           .split("\n")
           .map((line) => line.replace(/^\s*-\s*/, "").trim()) ?? [],
     );
-    const venues = SLUGS.map((slug) => /^venue:\s*(.+)$/m.exec(read(slug))?.[1].trim() ?? "").filter(
-      Boolean,
-    );
+    const venues = SLUGS.map(
+      (slug) => /^venue:\s*(.+)$/m.exec(read(slug))?.[1].trim() ?? "",
+    ).filter(Boolean);
 
     /** Top five by count, repeats only, ties alphabetical - the board's rule. */
     const ranked = (values: string[]) => {

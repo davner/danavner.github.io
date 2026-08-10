@@ -32,10 +32,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 
 import sharp from "sharp";
 
-const SEASONS = new URL(
-  "../src/content/fortnite-seasons.json",
-  import.meta.url,
-);
+const SEASONS = new URL("../src/content/fortnite-seasons.json", import.meta.url);
 const OUT_DIR = new URL("../public/img/fortnite/", import.meta.url);
 
 /**
@@ -60,9 +57,7 @@ async function get(url) {
   const response = await fetch(url);
   const body = await response.json().catch(() => null);
   if (!response.ok) {
-    throw new Error(
-      `${response.status} from ${url}: ${body?.error ?? "(no message)"}`,
-    );
+    throw new Error(`${response.status} from ${url}: ${body?.error ?? "(no message)"}`);
   }
   return body?.data ?? null;
 }
@@ -123,8 +118,7 @@ function chooseVariant(cosmetic, wanted, key) {
     }
 
     const option = (channel.options ?? []).find(
-      (candidate) =>
-        candidate.name?.toLowerCase() === want.option.toLowerCase(),
+      (candidate) => candidate.name?.toLowerCase() === want.option.toLowerCase(),
     );
     if (!option) {
       problems.push(
@@ -143,15 +137,11 @@ function chooseVariant(cosmetic, wanted, key) {
   const pick = (test) =>
     matched.find(
       (entry) =>
-        test.test(entry.type ?? "") &&
-        entry.option.image &&
-        !NOT_A_LOOK.test(entry.option.name),
+        test.test(entry.type ?? "") && entry.option.image && !NOT_A_LOOK.test(entry.option.name),
     );
 
   const chosen =
-    pick(/super\s*level/i) ??
-    pick(/style/i) ??
-    matched.find((entry) => entry.option.image);
+    pick(/super\s*level/i) ?? pick(/style/i) ?? matched.find((entry) => entry.option.image);
 
   return { chosen, matched, problems: problems.length };
 }
@@ -167,11 +157,7 @@ async function main() {
     if (!season.main?.name) continue;
 
     const cosmetic = await resolve(season.main);
-    const { chosen, problems: bad } = chooseVariant(
-      cosmetic,
-      season.main.variants,
-      season.key,
-    );
+    const { chosen, problems: bad } = chooseVariant(cosmetic, season.main.variants, season.key);
     problems += bad;
 
     /*
@@ -195,9 +181,7 @@ async function main() {
       throw new Error(`${response.status} downloading ${source}`);
     }
 
-    const { width, height } = await sharp(
-      Buffer.from(await response.arrayBuffer()),
-    )
+    const { width, height } = await sharp(Buffer.from(await response.arrayBuffer()))
       .resize({
         width: MAX_EDGE,
         height: MAX_EDGE,
@@ -221,9 +205,7 @@ async function main() {
      * repeats the outfit's own name, which is what the default style is called.
      */
     const style =
-      chosen && /style|super\s*level/i.test(chosen.type ?? "")
-        ? chosen.option.name
-        : null;
+      chosen && /style|super\s*level/i.test(chosen.type ?? "") ? chosen.option.name : null;
     if (style && style.toLowerCase() !== cosmetic.name.toLowerCase()) {
       season.main.style = style;
     } else {

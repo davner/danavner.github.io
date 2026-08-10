@@ -11,10 +11,10 @@ Files starting with `_` (like this one) are ignored.
 There is only one file you write: `src/content/now.md`. What happens to the old
 text is decided by whether you changed its `updated` date.
 
-| You did this                         | What happens on push          |
-| ------------------------------------ | ----------------------------- |
-| Changed the text **and** the date     | The old text is filed in here |
-| Changed the text, **kept** the date   | Nothing - it was a correction |
+| You did this                        | What happens on push          |
+| ----------------------------------- | ----------------------------- |
+| Changed the text **and** the date   | The old text is filed in here |
+| Changed the text, **kept** the date | Nothing - it was a correction |
 
 So a new now is: rewrite the body, set `updated` to today, push. The entry it
 replaced lands in this folder on its own a moment later, and `/now` grows a

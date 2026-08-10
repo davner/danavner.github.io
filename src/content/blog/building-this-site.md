@@ -20,13 +20,13 @@ a sky atlas, it is doing its job.
 
 ## The stack
 
-| Layer | Choice | Why |
-| --- | --- | --- |
-| Build | Vite | Fast dev server, no config sprawl |
-| UI | React + TypeScript | Familiar, and the types catch my content mistakes |
-| Styling | Tailwind CSS v4 | CSS-first config, nothing to maintain |
-| Components | shadcn/ui | The source lives in my repo, so I can rewrite it |
-| Hosting | GitHub Pages | Free, already where the repo lives |
+| Layer      | Choice             | Why                                               |
+| ---------- | ------------------ | ------------------------------------------------- |
+| Build      | Vite               | Fast dev server, no config sprawl                 |
+| UI         | React + TypeScript | Familiar, and the types catch my content mistakes |
+| Styling    | Tailwind CSS v4    | CSS-first config, nothing to maintain             |
+| Components | shadcn/ui          | The source lives in my repo, so I can rewrite it  |
+| Hosting    | GitHub Pages       | Free, already where the repo lives                |
 
 The best thing about shadcn/ui is that it is not a dependency. The CLI copies component source into my
 repo, and from there it is mine to edit or delete. This design wanted hard edges and hairline rules,
@@ -45,8 +45,7 @@ filename becomes the slug, so renaming a file changes its URL.
 
 ## Deep links on GitHub Pages
 
-Pages serves static files with no rewrite rules, so a hard refresh on `/blog/welcome` would normally
-404. The standard trick is a `404.html` that is a byte-for-byte copy of `index.html`: the app boots,
+Pages serves static files with no rewrite rules, so a hard refresh on `/blog/welcome` would normally 404. The standard trick is a `404.html` that is a byte-for-byte copy of `index.html`: the app boots,
 the router reads the URL, and the right page renders.
 
 ```ts

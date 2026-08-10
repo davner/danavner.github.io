@@ -34,7 +34,7 @@ order of how often it helps:
 4. **Openers** - the user often only remembers the headliner. Support acts
    round out `lineup` and count toward "bands seen".
 5. **City** precision - `Long Beach, CA` rather than `LA`.
-5. **Setlists** - for **every band on the bill**, search setlist.fm for that
+6. **Setlists** - for **every band on the bill**, search setlist.fm for that
    band at that venue on that date. Each page you can confirm becomes a per-band
    button on the show page, listed in `setlists` (see step 5). The headliner's
    own page is also strong confirmation the night happened (and it usually names
@@ -109,29 +109,29 @@ working from memory. The shape:
 lineup:
   - Knocked Loose
   - Show Me the Body
-subtitle: Suffocation Tour     # the tour name, if you confirmed one
+subtitle: Suffocation Tour # the tour name, if you confirmed one
 date: 2026-06-20
 venue: Hollywood Palladium
-capacity: 3700                   # only if the venue publishes one
+capacity: 3700 # only if the venue publishes one
 city: Los Angeles, CA
 rating: 4.5
 with:
   - Jasmine P.
 video: https://youtu.be/xxxxx
 standout: true
-setlists:                        # one per band you could confirm, bill order
+setlists: # one per band you could confirm, bill order
   - band: Knocked Loose
     url: https://www.setlist.fm/setlist/knocked-loose/2026/...
   - band: Show Me the Body
     url: https://www.setlist.fm/setlist/show-me-the-body/2026/...
-photos:                          # alt and caption are both required
+photos: # alt and caption are both required
   - src: /img/shows/knocked-loose-la-2026/pit.jpg
     alt: Crowd surge under red light, arms up across the front barricade
     caption: Front barricade, second song
 bestSong: Suffocate
 ---
 
-**Knocked Loose** brought the room down and *Suffocate* was the one that stuck.
+**Knocked Loose** brought the room down and _Suffocate_ was the one that stuck.
 The night in the user's voice - lightly edited, not rewritten.
 ```
 
@@ -152,7 +152,7 @@ Mark up every band and song that lands in the prose, and do it the same way
 every time:
 
 - Bands and artists in **bold**.
-- Song titles in *italics*. Album, EP, and tour names take italics too.
+- Song titles in _italics_. Album, EP, and tour names take italics too.
 
 Format every mention, not just the first, and nothing else - people, venues,
 and cities stay plain. `lineup` and `bestSong` live in frontmatter and take no
@@ -168,7 +168,7 @@ confirmed - and render as small per-band buttons under the show heading:
 
 ```yaml
 setlists:
-  - band: Bilmuri          # must match a name in `lineup`, exactly
+  - band: Bilmuri # must match a name in `lineup`, exactly
     url: https://www.setlist.fm/setlist/bilmuri/2026/...
   - band: The Home Team
     url: https://www.setlist.fm/setlist/the-home-team/2026/...

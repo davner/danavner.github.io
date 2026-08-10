@@ -165,9 +165,7 @@ export function isWindowKey(value: string | null): boolean {
  * achievements, and adding them together produces a figure that answers no
  * question anyone has.
  */
-export function placements(
-  mode: ModeId,
-): { label: string; field: keyof ModeStats }[] {
+export function placements(mode: ModeId): { label: string; field: keyof ModeStats }[] {
   switch (mode) {
     case "solo":
       return [
@@ -223,17 +221,13 @@ export function playtime(minutes: number): string {
  * number that would otherwise read as the whole season.
  */
 export function coverage(season: SeasonEntry): string | null {
-  if (!season.first || !season.start || season.first <= season.start)
-    return null;
+  if (!season.first || !season.start || season.first <= season.start) return null;
 
-  const from = new Date(`${season.first}T12:00:00Z`).toLocaleDateString(
-    "en-US",
-    {
-      month: "long",
-      day: "numeric",
-      timeZone: "UTC",
-    },
-  );
+  const from = new Date(`${season.first}T12:00:00Z`).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  });
   return `Tracked from ${from}, not the season's first day`;
 }
 
@@ -264,12 +258,7 @@ export interface Delta {
   direction: "up" | "down" | "level";
 }
 
-export function delta(
-  value: number,
-  against: number,
-  digits: number,
-  suffix = "",
-): Delta {
+export function delta(value: number, against: number, digits: number, suffix = ""): Delta {
   const difference = value - against;
 
   // Rounded before it is compared, so a difference too small to print does not

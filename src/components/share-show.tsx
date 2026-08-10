@@ -35,7 +35,12 @@ export function ShareShow({ show, className }: { show: Show; className?: string 
   const heading = showHeading(show);
 
   // Object URLs outlive the component unless they are handed back.
-  useEffect(() => () => { if (card) URL.revokeObjectURL(card.url); }, [card]);
+  useEffect(
+    () => () => {
+      if (card) URL.revokeObjectURL(card.url);
+    },
+    [card],
+  );
 
   async function build(index: number) {
     // A ref rather than the status, which is stale inside this closure. Two
@@ -88,7 +93,8 @@ export function ShareShow({ show, className }: { show: Show; className?: string 
     }
   }
 
-  const action = "readout w-full justify-start rounded-none hover:border-ember hover:bg-ember/10 hover:text-ember";
+  const action =
+    "readout w-full justify-start rounded-none hover:border-ember hover:bg-ember/10 hover:text-ember";
 
   return (
     <Popover open={open} onOpenChange={onOpenChange}>

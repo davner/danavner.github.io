@@ -81,9 +81,7 @@ function ShowRow({ show }: { show: Show }) {
         {/* The tour, or which day of the festival - a subtitle to the name
             above it rather than a badge. It also wraps, which a badge did not:
             a 42-character tour name used to push the row off a 320px screen. */}
-        {show.subtitle ? (
-          <p className="readout-dim mt-2 text-pretty">{show.subtitle}</p>
-        ) : null}
+        {show.subtitle ? <p className="readout-dim mt-2 text-pretty">{show.subtitle}</p> : null}
 
         {show.type === "festival" || show.rating != null ? (
           <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
@@ -127,9 +125,7 @@ function ShowRow({ show }: { show: Show }) {
 
         {/* Says what is behind the click, so the row is honest about having
             more rather than just ending. */}
-        {inside.length > 0 ? (
-          <p className="readout-dim mt-4">{inside.join(" · ")}</p>
-        ) : null}
+        {inside.length > 0 ? <p className="readout-dim mt-4">{inside.join(" · ")}</p> : null}
       </div>
 
       {/* One glyph, one meaning, everywhere: calendar is when, building is the

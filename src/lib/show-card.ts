@@ -75,7 +75,13 @@ function drawCover(
   context.beginPath();
   context.rect(x, y, width, height);
   context.clip();
-  context.drawImage(image, x + (width - drawWidth) / 2, y + (height - drawHeight) / 2, drawWidth, drawHeight);
+  context.drawImage(
+    image,
+    x + (width - drawWidth) / 2,
+    y + (height - drawHeight) / 2,
+    drawWidth,
+    drawHeight,
+  );
   context.restore();
 }
 

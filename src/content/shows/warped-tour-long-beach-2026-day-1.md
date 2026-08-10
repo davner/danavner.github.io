@@ -68,4 +68,3 @@ to the front.
 
 The best performance of the day though goes to South Arcade. Bopping around to their music
 and bonking people with my poster tube (by accident) had me smiling like a fool.
-

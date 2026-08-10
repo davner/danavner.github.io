@@ -58,7 +58,13 @@ function preloadFonts(): Plugin {
           html,
           tags: fonts.map((name) => ({
             tag: "link",
-            attrs: { rel: "preload", as: "font", type: "font/woff2", href: `/${name}`, crossorigin: "" },
+            attrs: {
+              rel: "preload",
+              as: "font",
+              type: "font/woff2",
+              href: `/${name}`,
+              crossorigin: "",
+            },
             injectTo: "head",
           })),
         };

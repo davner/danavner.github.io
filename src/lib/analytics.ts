@@ -21,10 +21,7 @@ export const GOATCOUNTER_CODE = "danavner";
 const ENDPOINT = `https://${GOATCOUNTER_CODE}.goatcounter.com`;
 
 /** The hosts analytics talks to, so the "nothing phones home" test can allow exactly these. */
-export const ANALYTICS_HOSTS = [
-  "gc.zgo.at",
-  `${GOATCOUNTER_CODE}.goatcounter.com`,
-];
+export const ANALYTICS_HOSTS = ["gc.zgo.at", `${GOATCOUNTER_CODE}.goatcounter.com`];
 
 declare global {
   interface Window {
@@ -47,8 +44,7 @@ declare global {
  * count.js still skips localhost on its own, so dev never records.
  */
 export function initVisitorCount() {
-  if (typeof document === "undefined" || document.getElementById("goatcounter"))
-    return;
+  if (typeof document === "undefined" || document.getElementById("goatcounter")) return;
 
   window.goatcounter = { no_onload: true };
 

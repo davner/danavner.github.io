@@ -259,7 +259,9 @@ async function main() {
       "releases",
     );
     if (!releases) {
-      console.warn(`vinyl: could not read folder "${folder.name}", keeping the committed collection`);
+      console.warn(
+        `vinyl: could not read folder "${folder.name}", keeping the committed collection`,
+      );
       return;
     }
 

@@ -141,7 +141,14 @@ export function matches(record: VinylRecord, query: string): boolean {
   const needle = query.trim().toLowerCase();
   if (!needle) return true;
 
-  return [record.artist, record.title, record.label, record.catno, ...record.genres, ...record.styles]
+  return [
+    record.artist,
+    record.title,
+    record.label,
+    record.catno,
+    ...record.genres,
+    ...record.styles,
+  ]
     .join(" ")
     .toLowerCase()
     .includes(needle);
@@ -171,13 +178,15 @@ function tally(list: VinylRecord[], pick: (record: VinylRecord) => string[], lim
     }
   }
 
-  return [...counts.entries()]
-    .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
-    .slice(0, limit)
-    // One of something is not a pattern, and a "most collected" board full of
-    // ones says nothing. Same rule the show log's repeat boards follow.
-    .filter((entry) => entry.count > 1);
+  return (
+    [...counts.entries()]
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
+      .slice(0, limit)
+      // One of something is not a pattern, and a "most collected" board full of
+      // ones says nothing. Same rule the show log's repeat boards follow.
+      .filter((entry) => entry.count > 1)
+  );
 }
 
 export interface VinylStats {

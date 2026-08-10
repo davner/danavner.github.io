@@ -46,7 +46,8 @@ function trailingSpanFor(count: number) {
   // the tail.
   const tail = count - feature;
 
-  const remainder = (columns: number) => (tail % columns === 0 ? 1 : columns - (tail % columns) + 1);
+  const remainder = (columns: number) =>
+    tail % columns === 0 ? 1 : columns - (tail % columns) + 1;
 
   return { sm: remainder(2), lg: remainder(3) };
 }
@@ -118,13 +119,12 @@ export function About() {
             the Disneyland pass anymore. So sad.
           </p>
           <p>
-            I met my wife{" "}
-            <span className="text-foreground">{profile.partnerFirstName}</span> online in Flagstaff.
-            Her profile photo had space in it, so I opened by making fun of astronomy, which I have
-            a degree in and actually love. She didn't know that yet. On our first date she was
-            thirty minutes late and ate a whole chicken, and I knew pretty much right away she was
-            the one. We've got a dog, Milly, and a cat, Penny. We call them Stinky and
-            the Brainless.
+            I met my wife <span className="text-foreground">{profile.partnerFirstName}</span> online
+            in Flagstaff. Her profile photo had space in it, so I opened by making fun of astronomy,
+            which I have a degree in and actually love. She didn't know that yet. On our first date
+            she was thirty minutes late and ate a whole chicken, and I knew pretty much right away
+            she was the one. We've got a dog, Milly, and a cat, Penny. We call them Stinky and the
+            Brainless.
           </p>
           <p>
             There's also an asteroid named after my mom, Lillian, officially{" "}
@@ -162,7 +162,9 @@ export function About() {
           <Trophy className="size-10 shrink-0 text-ember" />
           <div className="flex-1">
             <p className="display text-3xl text-balance sm:text-4xl">{funFact}</p>
-            <p className="mt-3 text-muted-foreground text-pretty">It has been downhill ever since.</p>
+            <p className="mt-3 text-muted-foreground text-pretty">
+              It has been downhill ever since.
+            </p>
           </div>
           <p className="display text-6xl text-ember sm:text-7xl">#2</p>
         </div>
@@ -229,10 +231,7 @@ function InterestCard({
       </div>
 
       <div
-        className={cn(
-          interest.feature && "gap-8 lg:flex lg:items-end lg:justify-between",
-          "mt-6",
-        )}
+        className={cn(interest.feature && "gap-8 lg:flex lg:items-end lg:justify-between", "mt-6")}
       >
         <div>
           <h3 className="display flex items-center gap-2 text-2xl transition-colors group-hover:text-ember">

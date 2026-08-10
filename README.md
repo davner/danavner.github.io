@@ -25,6 +25,9 @@ If you want to fork it and make it yours, see [Making it yours](#making-it-yours
 | Markdown     | react-markdown + remark-gfm                | GFM tables, task lists, fenced code                        |
 | Highlighting | rehype-highlight                           | lowlight's `common` set, themed to the palette             |
 | Hosting      | GitHub Pages                               | Free, already where the repo lives                         |
+| Linting      | ESLint + typescript-eslint                 | Correctness only; every stylistic rule is off              |
+| Formatting   | Prettier, `printWidth: 100`                | The width the codebase was already written at              |
+| Hooks        | husky + lint-staged                        | Formats and lints what you staged, then type-checks        |
 
 Every dependency is permissively licensed (MIT, ISC, Apache-2.0, BSD-3-Clause,
 OFL-1.1 for the fonts). The only thing that leaves the origin is a
@@ -172,35 +175,60 @@ file, down to checking that a photo path actually exists in `public/`.
 ## Structure
 
 ```
-public/                   served as-is (CNAME, favicon, photos)
+public/                   served as-is (CNAME, favicon, photos, fetched covers)
 scripts/
   optimize-photos.mjs     resizes any image and strips its EXIF
   make-share-fallback.mjs draws the social image for a show with no photos
+  make-site-card.mjs      draws the site's own link-preview card
+  gen-font-fallbacks.mjs  measures the fonts so fallbacks match their metrics
+  archive-now.mjs         files the now entry an update replaced
   update-vinyl.mjs        reads the Discogs collection nightly, saves the sleeves
+  update-comics.mjs       reads League of Comic Geeks nightly, saves the covers
   update-fortnite.mjs     reads the Fortnite stats nightly, keeps a season archive
   backfill-fortnite.mjs   fills past seasons in from Epic, run by hand not by CI
   fetch-fortnite-skins.mjs downloads the render for each season's main outfit
+eslint.config.js          the browser half, the Node half, prettier last
+.prettierrc.json          printWidth 100, and .prettierignore beside it
+.husky/pre-commit         lint-staged, then a whole-project type-check
+.git-blame-ignore-revs    formatting-only commits, skipped by git blame
 vite-plugin-content.ts    reads + validates every content collection at build time
 vite-plugin-share-pages.ts writes one HTML file per show so links preview properly
-vite.config.ts            aliases, Tailwind, the 404.html fallback
+vite.config.ts            aliases, Tailwind, and the 404.html fallback
 src/
   content/
     profile.ts            everything the Home / About / Career pages render
+    accounts.json         the handles the fetch scripts read
     blog/*.md             one markdown file per post
     shows/*.md            one markdown file per show
+    now.md + now/         the current now entry, and the ones it replaced
     vinyl.json            the record collection, written nightly from Discogs
+    comics.json           the comic shelf, written nightly
+    fortnite.json         the stats, written nightly and backfilled once
+    fortnite-seasons.json the season calendar - the one Fortnite file edited by hand
   routes/                 one file per page
   components/
-    ui/                   shadcn/ui: Button, Badge, Carousel, Toggle, ToggleGroup
+    ui/                   shadcn/ui, vendored: Badge, Button, Carousel, Checkbox,
+                          Empty, Label, NavigationMenu, Popover, ScrollArea,
+                          Select, Sheet, Skeleton, Toggle, ToggleGroup
     framed-photo.tsx      the site's photo frame, caption printed on the image
+    source-line.tsx       "N shown · Read from <source> <date>", on every fetched page
+    route-boundary.tsx    recovers a lazy route whose chunk a deploy deleted
+    scrolling-text.tsx    a tile line that slides to reveal its tail when it overflows
+    filter-toggle.tsx     the filter pills, and the one place a control's height lives
+    select-control.tsx    the single-choice control, on shadcn's Select
     fact-line.tsx         a detail page's own facts, set under its title
   lib/
     blog.ts               post helpers over the plugin's output
-    photo.ts              the Photo type, shared by the markdown collections
     shows.ts              sorting, year grouping, derived show stats
     show-summary.ts       one-line show description, shared with the Node build
     show-card.ts          draws the shareable poster on a canvas
     vinyl.ts              filtering, sorting, and derived collection stats
+    comics.ts             the shelves, and the issue counts derived from them
+    fortnite.ts           windows, playlists, placement tiers, and the deltas
+    now.ts                the current entry and its archive
+    site.ts               the nav, shared by the header, footer and tests
+    stale-chunk.ts        the once-only guard behind route-boundary.tsx
+    photo.ts              the Photo type, shared by the markdown collections
     theme.ts              light/dark store, synced with the pre-paint script
   index.css               design tokens, utilities, and the poster primitives
   fonts.css               self-hosted @font-face declarations
@@ -215,11 +243,24 @@ reimplementing them.
 
 ### How content works
 
-`vite-plugin-content.ts` reads `src/content/blog/` and `src/content/shows/` in
-Node at build time, validates the frontmatter, and exposes each collection as a
-virtual module (`virtual:blog`, `virtual:shows`). It validates
-`src/content/vinyl.json` the same way and exposes it as `virtual:vinyl`. Three
-things fall out of doing it there rather than in the browser:
+`vite-plugin-content.ts` reads every collection in Node at build time,
+validates it, and exposes it as a virtual module:
+
+| Source                                            | Module             | Written by                        |
+| ------------------------------------------------- | ------------------ | --------------------------------- |
+| `content/blog/*.md`                               | `virtual:blog`     | you                               |
+| `content/shows/*.md`                              | `virtual:shows`    | you                               |
+| `content/now.md` + `now/`                         | `virtual:now`      | you                               |
+| `content/vinyl.json`                              | `virtual:vinyl`    | `update-vinyl.mjs`, nightly       |
+| `content/comics.json`                             | `virtual:comics`   | `update-comics.mjs`, nightly      |
+| `content/fortnite.json` + `fortnite-seasons.json` | `virtual:fortnite` | the job, and you for the calendar |
+
+The generated files are validated exactly as strictly as the hand-written ones,
+which is the point: a fetch that half-worked is the likeliest way bad data gets
+in. The Fortnite reader also refuses figures that cannot be true - more wins
+than matches, a negative death count - because a stat board is only worth
+anything if it will not render nonsense. Three things fall out of doing all this
+in Node rather than in the browser:
 
 - **Bad frontmatter fails the build**, naming the offending file, instead of
   rendering a broken card on the live site.
@@ -502,6 +543,32 @@ the filter.
 
 ---
 
+## The comic shelf
+
+`/comics` is the record collection's twin: `scripts/update-comics.mjs` reads
+League of Comic Geeks nightly, writes `src/content/comics.json`, saves the covers
+into `public/img/comics/`, and commits both. Same reasoning as Discogs - the
+site's standing promise is that nothing phones home, so the fetch happens in CI
+and the result is committed.
+
+No API key, because there is no API. League of Comic Geeks has never published
+one, so the script talks to the same endpoint their own front end does and parses
+what comes back. The header of the script explains why that is not a smaller
+commitment than the npm library it replaced, which had already drifted.
+
+## The now page
+
+`/now` is one markdown file, `src/content/now.md`, and it is the only page here
+nothing generates.
+
+The archive is the part worth knowing. You only ever edit `now.md`; **bumping its
+`updated` date is what turns the previous text into an archived entry**, and
+`.github/workflows/now-archive.yml` moves it into `src/content/now/` on push.
+Editing without touching the date is a correction and archives nothing, which
+keeps a typo fix from becoming a second entry saying the same thing.
+
+`src/content/now/_README.md` has the frontmatter and the rest of the rules.
+
 ## Fortnite
 
 `/fortnite` shows wins, kills, K/D and the supporting numbers for the Epic
@@ -708,8 +775,29 @@ Things that were not obvious, in case you hit them too:
   defaults to lowlight's `common` set, roughly 37 languages. Registering only
   eight measured 189.87 kB against 189.75 kB for the default - the grammars are
   tiny and the weight is all in the markdown pipeline. The default stays.
-- **Heavy routes are lazy.** The markdown renderer only loads on `/blog/:slug`
-  and `/shows`, keeping the initial bundle near 100 kB gzipped.
+- **Heavy routes are lazy, and the small ones are not worth splitting.** The
+  markdown renderer and the syntax highlighter together outweigh the rest of the
+  site - blog posts alone are 57 kB gzipped - so those routes load on demand.
+  The entry bundle is about 131 kB gzipped. Folding the small pages back in was
+  measured and rejected: Comics is 2 kB gzipped and Fortnite 5 kB, but making
+  them eager pulls everything they _share_ into the entry too, which came to
+  +24 kB. A route chunk earns its request or it does not.
+- **A deploy can delete the chunk an open tab is about to ask for.** Chunk names
+  are content-hashed, so a deploy writes new ones and removes the old. A tab
+  opened before it still points at the old names, and clicking a lazy route used
+  to render a blank page - three nightly jobs each trigger a deploy, so this
+  happened most nights. `components/route-boundary.tsx` catches it and reloads
+  once. The guard is a timestamp rather than a flag on purpose: the obvious
+  version clears the flag when the app mounts, which happens _before_ the chunk
+  fails again, and loops forever.
+- **`404.html` is a copy of `index.html` with one line removed.** GitHub Pages
+  has no SPA rewrite, so it serves `404.html` for every path that is not `/` -
+  which makes it the one place the two entry points can differ. The home page's
+  hero photo is preloaded from the HTML, because React renders it and the URL
+  otherwise does not exist until the bundle has run (1.5s of dead time on
+  mobile). That preload is stripped from `404.html` so a deep link into
+  `/fortnite` does not pay 47 kB for a photo it never shows. The build fails if
+  the markers that make the strip possible go missing.
 - **The footer fire is a simulation, not a sprite.** `components/pixel-fire.tsx`
   runs the Doom fire routine on a low-resolution canvas scaled up with
   `image-rendering: pixelated`. It pauses via `IntersectionObserver` when it is
@@ -734,7 +822,8 @@ Fork it, then:
    `vite.config.ts` to `/<repo>/`.
 5. Retheme via the token blocks at the top of `src/index.css`. Change the fonts
    in `src/fonts.css` and the `--font-*` values in the `@theme` block.
-6. Update `.github/workflows/deploy.yml` if your default branch is not `master`.
+6. Update `.github/workflows/deploy.yml` if your default branch is not `main`,
+   and `.github/workflows/links.yml` with the hosts that wall off _your_ links.
 
 The `/shows` section is the most reusable piece if you keep any kind of log -
 it is a markdown collection, a validator, and a stats derivation, and none of it

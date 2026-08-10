@@ -33,9 +33,12 @@ export function Now() {
   if (!current.body) {
     return (
       <PageShell>
+        {/* Reader-facing, because this is a live page whenever `now.md` is
+            absent - not only a state the build passes through. Naming the file
+            here told a visitor about a path they cannot do anything with. */}
         <PageHeader
           title={TITLE}
-          lede="There is no now page yet. Once `src/content/now.md` has something in it, it lands here."
+          lede="Nothing here at the moment. I have not written one of these yet."
         />
       </PageShell>
     );

@@ -2,6 +2,7 @@
 title: 72 hours on the bourbon trail
 date: 2026-08-07
 category: personal
+draft: true
 summary: Seven of us went to Kentucky, drank our way from Louisville to Lexington, and scored every stop out of 10. Four Roses did not survive.
 tags: [travel, kentucky, bourbon, friends]
 photos:

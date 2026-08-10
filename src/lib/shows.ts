@@ -150,8 +150,6 @@ export const showStats = {
   firstYear: shows.at(-1)?.date.slice(0, 4),
 };
 
-export const standouts = shows.filter((show) => show.standout);
-
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 /**

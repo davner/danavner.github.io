@@ -131,7 +131,7 @@ lineup:
 | `video`    | no        | Full URL. A YouTube playlist labels itself "Playlist".                               |
 | `setlists` | no        | `{ band, url }` pairs. Each `band` must be in `lineup`. Renders as per-band buttons. |
 | `photos`   | no        | Objects with `src` / `alt` / `caption`. All three required.                          |
-| `standout` | no        | Adds a flame and pins it to the ticker                                               |
+| `standout` | no        | Adds a flame, in the log and on the show's own page                                  |
 
 Notes:
 

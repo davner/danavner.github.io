@@ -13,7 +13,6 @@ import type { ReactNode } from "react";
 import { Link } from "react-router";
 
 import { BandList } from "@/components/band-list";
-import { Marquee } from "@/components/marquee";
 import { PageHeader, PageShell } from "@/components/page";
 import { DuoBadge } from "@/components/duo-badge";
 import { Rating } from "@/components/rating";
@@ -24,7 +23,6 @@ import {
   isDuo,
   showsByYear,
   showStats,
-  standouts,
   supportFor,
   type Show,
   type Tally,
@@ -293,19 +291,6 @@ export function Shows() {
           ) : null}
         </div>
       </div>
-
-      {standouts.length > 0 ? (
-        <div className="mt-16">
-          <Marquee
-            items={standouts.map((show) =>
-              [show.title, show.venue || show.city].filter(Boolean).join(" - "),
-            )}
-            duration="28s"
-            separator="🔥"
-            className="text-ember"
-          />
-        </div>
-      ) : null}
 
       <PageShell className="pt-16">
         {/* Each year is a collapsible accordion. The most recent year opens by

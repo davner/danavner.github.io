@@ -1,8 +1,26 @@
 name: Deploy to GitHub Pages
 
+# The `workflow_run` trigger is not redundant with `push`, and removing it stops
+# the nightly data ever reaching the site.
+#
+# The data jobs commit to `main` with the default `GITHUB_TOKEN`, and GitHub
+# does not start a workflow from a push made with that token - a loop guard,
+# and there is no way to opt out of it. So those commits land on `main` and the
+# `push` trigger below never sees them. It was not theoretical: the vinyl
+# refresh of 2026-08-10 sat on `main` from 09:08 until 16:03, when an unrelated
+# human push finally carried it out. Every record, comic and stat update was
+# reaching the site only when something else happened to deploy.
+#
+# So the data jobs are named here directly. The cost is a deploy on nights when
+# a job found nothing to commit, which is a minute of CI for no change - cheaper
+# than either a long-lived PAT to dodge the token rule, or data that silently
+# goes stale for however long it takes to push next.
 on:
   push:
     branches: [main]
+  workflow_run:
+    workflows: [Vinyl, Comics, Fortnite, Now archive]
+    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -17,9 +35,25 @@ concurrency:
 
 jobs:
   build:
+    # A failed data job has committed nothing, so there is nothing to publish.
+    # Only `workflow_run` carries a conclusion; the other two triggers have no
+    # upstream run and must not be gated on one.
+    if: >-
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
+      # On `workflow_run`, the SHA in the event is the one the *triggering* run
+      # started from - which is the commit before the data job wrote anything.
+      # Checking that out would rebuild the tree without the refresh and publish
+      # it as though nothing had changed, which is the bug this trigger exists to
+      # fix, wearing a green tick. So take the branch tip by name instead.
+      #
+      # `push` and `workflow_dispatch` keep their own ref, so dispatching a
+      # deploy from a branch still builds that branch.
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && 'main' || github.ref }}
 
       - uses: actions/setup-node@v7
         with:

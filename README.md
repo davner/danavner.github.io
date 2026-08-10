@@ -69,13 +69,48 @@ CI do it.
 
 ## CI
 
-| Workflow       | When                              | What                                                    |
-| -------------- | --------------------------------- | ------------------------------------------------------- |
-| `ci.yml`       | every push to `main` and every PR | type-check, build, then the full Playwright suite       |
-| `deploy.yml`   | push to `main`                    | builds and publishes to GitHub Pages                    |
-| `links.yml`    | weekly, Mondays                   | external link check; opens an issue if anything is dead |
-| `vinyl.yml`    | nightly                           | reads the Discogs collection, commits it if it moved    |
-| `fortnite.yml` | nightly                           | reads the Fortnite stats, commits them if they moved    |
+| Workflow          | When                                    | What                                                    |
+| ----------------- | --------------------------------------- | ------------------------------------------------------- |
+| `ci.yml`          | every push to `main` and every PR       | type-check, build, then the full Playwright suite       |
+| `deploy.yml`      | push to `main`, or a data job finishing | builds and publishes to GitHub Pages                    |
+| `links.yml`       | weekly, Mondays                         | external link check; opens an issue if anything is dead |
+| `vinyl.yml`       | nightly                                 | reads the Discogs collection, commits it if it moved    |
+| `comics.yml`      | nightly                                 | reads the comic collection, commits it if it moved      |
+| `fortnite.yml`    | nightly                                 | reads the Fortnite stats, commits them if they moved    |
+| `now-archive.yml` | push touching `now.md`                  | files the entry the update replaced                     |
+
+### Why the data jobs are named in `deploy.yml`
+
+The nightly jobs commit their JSON to `main`, and the site is built from those
+files, so every refresh needs a rebuild to reach the page. That looks like it
+should happen on its own - `deploy.yml` runs on push to `main`, and a commit is
+a push.
+
+It does not. **GitHub will not start a workflow from a push made with the
+default `GITHUB_TOKEN`**, which is the loop guard, and there is no opting out of
+it. So the bot commits land on `main` and the `push` trigger never sees them.
+
+This was live for a while before anyone noticed, which is the point worth
+recording: the vinyl refresh of 10 August sat on `main` from 09:08 until 16:03,
+when an unrelated human push finally carried it out. Nothing was broken or red.
+The data was simply as old as the last time someone happened to push.
+
+So `deploy.yml` also triggers on `workflow_run` for Vinyl, Comics, Fortnite and
+Now archive. **A new data workflow has to be added to that list**, or its
+numbers will go stale in exactly the same silent way.
+
+Two details in there are load-bearing:
+
+- The build is gated on `conclusion == 'success'`, since a failed data job has
+  committed nothing worth publishing.
+- The checkout takes `main` by name on a `workflow_run`. The SHA in that event
+  is the one the _triggering_ run started from - the commit before the data job
+  wrote anything - so checking it out would rebuild the tree without the refresh
+  and publish it under a green tick.
+
+The cost is a deploy on nights when a job finds nothing changed: a minute of CI
+for no change. That is cheaper than a long-lived PAT to dodge the token rule,
+and much cheaper than data that quietly stops updating.
 
 The Playwright suite runs against the **production build**, on desktop and
 mobile viewports, and covers four things:

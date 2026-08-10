@@ -18,7 +18,7 @@ If you want to fork it and make it yours, see [Making it yours](#making-it-yours
 | UI           | [React](https://react.dev) 19 + TypeScript | Type errors catch content mistakes before the browser does |
 | Styling      | [Tailwind CSS](https://tailwindcss.com) v4 | CSS-first config - no `tailwind.config.js` to maintain     |
 | Components   | [shadcn/ui](https://ui.shadcn.com)         | Copied into the repo, so they are mine to edit or delete   |
-| Carousel     | [Embla](https://embla-carousel.com)        | What shadcn/ui's Carousel is built on                      |
+| Carousel     | [Embla](https://www.embla-carousel.com)    | What shadcn/ui's Carousel is built on                      |
 | Icons        | [lucide-react](https://lucide.dev)         | Consistent 24px stroke set, tree-shakeable, ISC            |
 | Type         | [Fontsource](https://fontsource.org)       | Self-hosted Anton / Inter / JetBrains Mono                 |
 | Routing      | [React Router](https://reactrouter.com) 8  | Client routes, with a 404 fallback for GitHub Pages        |

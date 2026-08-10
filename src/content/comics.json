@@ -1,22 +1,48 @@
 {
   "user": "aspacemansheavyload",
   "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload",
-  "fetched": "2026-08-09",
+  "fetched": "2026-08-10",
   "publishers": [
     {
       "name": "DC Comics",
-      "count": 24
+      "count": 25
     },
     {
       "name": "Marvel Comics",
-      "count": 10
+      "count": 12
     },
     {
       "name": "IDW Publishing",
-      "count": 7
+      "count": 8
+    },
+    {
+      "name": "BOOM! Studios",
+      "count": 1
+    },
+    {
+      "name": "Dark Horse Comics",
+      "count": 1
+    },
+    {
+      "name": "Image Comics",
+      "count": 1
+    },
+    {
+      "name": "UDON",
+      "count": 1
     }
   ],
   "series": [
+    {
+      "id": 210411,
+      "name": "2026 Street Fighter Swimsuit Special",
+      "publisher": "UDON",
+      "years": "2026",
+      "issues": 1,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/collection/210411",
+      "key": "series-210411",
+      "cover": "/img/comics/series-210411.webp"
+    },
     {
       "id": 197063,
       "name": "Absolute Batman: Ark M Special",
@@ -98,6 +124,16 @@
       "cover": "/img/comics/series-197101.webp"
     },
     {
+      "id": 210208,
+      "name": "DC's Hawk-Girl Summer",
+      "publisher": "DC Comics",
+      "years": "2026",
+      "issues": 1,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/collection/210208",
+      "key": "series-210208",
+      "cover": "/img/comics/series-210208.webp"
+    },
+    {
       "id": 189123,
       "name": "Event Horizon: Dark Descent",
       "publisher": "IDW Publishing",
@@ -116,6 +152,26 @@
       "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/collection/202482",
       "key": "series-202482",
       "cover": "/img/comics/series-202482.webp"
+    },
+    {
+      "id": 210508,
+      "name": "Godzilla Conquers the Multiverse",
+      "publisher": "Marvel Comics",
+      "years": "2026 - Present",
+      "issues": 1,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/collection/210508",
+      "key": "series-210508",
+      "cover": "/img/comics/series-210508.webp"
+    },
+    {
+      "id": 210610,
+      "name": "Godzilla vs. America: San Diego",
+      "publisher": "IDW Publishing",
+      "years": "2026",
+      "issues": 1,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/collection/210610",
+      "key": "series-210610",
+      "cover": "/img/comics/series-210610.webp"
     },
     {
       "id": 194870,
@@ -148,6 +204,26 @@
       "cover": "/img/comics/series-119108.webp"
     },
     {
+      "id": 208603,
+      "name": "Marvel Swimsuit Special: Brand New Beach Day",
+      "publisher": "Marvel Comics",
+      "years": "2026",
+      "issues": 1,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/collection/208603",
+      "key": "series-208603",
+      "cover": "/img/comics/series-208603.webp"
+    },
+    {
+      "id": 186119,
+      "name": "Mass Effect: The Complete Comics",
+      "publisher": "Dark Horse Comics",
+      "years": "2020",
+      "issues": 1,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/collection/186119",
+      "key": "series-186119",
+      "cover": "/img/comics/series-186119.webp"
+    },
+    {
       "id": 156772,
       "name": "Poison Ivy",
       "publisher": "DC Comics",
@@ -156,6 +232,26 @@
       "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/collection/156772",
       "key": "series-156772",
       "cover": "/img/comics/series-156772.webp"
+    },
+    {
+      "id": 143315,
+      "name": "Something Is Killing the Children",
+      "publisher": "BOOM! Studios",
+      "years": "2019 - Present",
+      "issues": 1,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/collection/143315",
+      "key": "series-143315",
+      "cover": "/img/comics/series-143315.webp"
+    },
+    {
+      "id": 207139,
+      "name": "Terminal",
+      "publisher": "Image Comics",
+      "years": "2026 - Present",
+      "issues": 1,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/collection/207139",
+      "key": "series-207139",
+      "cover": "/img/comics/series-207139.webp"
     },
     {
       "id": 174841,
@@ -240,16 +336,6 @@
       "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/wish-list/143260",
       "key": "want-143260",
       "cover": "/img/comics/want-143260.webp"
-    },
-    {
-      "id": 208603,
-      "name": "Marvel Swimsuit Special: Brand New Beach Day",
-      "publisher": "Marvel Comics",
-      "years": "2026",
-      "issues": 1,
-      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/wish-list/208603",
-      "key": "want-208603",
-      "cover": "/img/comics/want-208603.webp"
     },
     {
       "id": 148475,

@@ -48,11 +48,17 @@ export function Now() {
     <PageShell>
       <PageHeader
         title={TITLE}
-        /* The entry itself now explains what a now page is, and links where the
-           idea came from. Saying it again up here put the same link twice in
-           consecutive sentences, so the lede keeps only the part the entry does
-           not cover. */
-        lede="Not a blog, not an archive. It goes out of date, and then I fix it."
+        /*
+         * The same line the meta description carries, deliberately.
+         *
+         * The entry already explains what a now page is and links where the idea
+         * came from, so a lede that explains it again is the first sentence read
+         * back in a worse voice. What is left worth saying is when it changes,
+         * and that sentence had already been written for the search result.
+         * Sharing the constant also means the page and its link preview cannot
+         * drift into describing the page differently.
+         */
+        lede={DESCRIPTION}
       />
 
       <div className="max-w-2xl">

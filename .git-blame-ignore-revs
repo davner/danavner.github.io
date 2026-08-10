@@ -1,0 +1,13 @@
+# Revisions that changed formatting and nothing else. `git blame` walks through
+# these rather than stopping and attributing a whole file to a formatting pass.
+#
+# GitHub reads this file automatically. For the command line it has to be turned
+# on once, which the `prepare` script does on `npm install`:
+#
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+#
+# Only add a revision here if it is genuinely mechanical - reproducible by
+# re-running the formatter, with no hand edits mixed in.
+
+# style: format the repo with prettier
+6e8a70a8bcefb85d100ed90952f42e1529616315

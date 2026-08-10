@@ -1087,9 +1087,20 @@ test.describe("fortnite", () => {
 
     await expect(page).toHaveURL(/[?&]season=/);
     await expect(oldest).toHaveAttribute("aria-current", "true");
-    // The banner above the board names the season the history just selected,
-    // which is the assertion that the two halves of the page agree.
-    await expect(page.locator("section").first()).toContainText(label);
+    // The select names the season the history just picked, which is the
+    // assertion that the two controls agree about what is on screen.
+    await expect(page.getByRole("combobox", { name: "Season" })).toContainText(label);
+
+    // And the line above the board says what the numbers cover. A season shows
+    // its run of dates; lifetime says so in words.
+    await expect(page.locator("[data-slot=window-dates]")).toHaveText(
+      /\d{4}\s*-\s*\w+ \d{1,2}, \d{4}/,
+    );
+  });
+
+  test("the board says which window it is showing", async ({ page }) => {
+    await page.goto("/fortnite");
+    await expect(page.locator("[data-slot=window-dates]")).toHaveText("All time");
   });
 
   test("every season it offers has either numbers or a reason it has none", async ({ page }) => {

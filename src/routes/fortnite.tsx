@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router";
 import { EmptyState } from "@/components/empty-state";
 import { FilterToggle } from "@/components/filter-toggle";
 import { PageHeader, PageShell } from "@/components/page";
+import { ScrollingText } from "@/components/scrolling-text";
 import { SelectControl } from "@/components/select-control";
 import {
   count,
@@ -21,6 +22,7 @@ import {
   windows,
   type Delta,
   type ModeId,
+  type Main,
   type ModeStats,
   type SeasonEntry,
 } from "@/lib/fortnite";
@@ -148,6 +150,17 @@ function Stat({
   );
 }
 
+/**
+ * The outfit as worn: its name, plus the style when that is a different look.
+ *
+ * "Jade" and "Voidburn Jade" are the same character and not the same picture,
+ * and the render on the tile is the style rather than the default - so naming
+ * only the outfit would caption the wrong thing.
+ */
+function mainLabel(main: Main): string {
+  return main.style ? `${main.name}, ${main.style}` : main.name;
+}
+
 /** The outfit render, or the space one would take, at a given size. */
 function MainPortrait({ season, className }: { season: SeasonEntry; className?: string }) {
   if (!season.main?.image) {
@@ -170,35 +183,6 @@ function MainPortrait({ season, className }: { season: SeasonEntry; className?: 
       decoding="async"
       className={cn("bg-muted/40 object-contain", className)}
     />
-  );
-}
-
-/**
- * The banner for the season on screen: what it was called, when it ran, and who
- * it got played as.
- *
- * The outfit is hand-recorded in `src/content/fortnite-seasons.json` rather than
- * read from anywhere. Epic's stats do not carry it - there is no "most used
- * skin" in the payload - and it is a fact that stops changing the moment the
- * season ends, so writing it down once is the whole of the work.
- */
-function SeasonBanner({ season }: { season: SeasonEntry }) {
-  return (
-    <section className="mb-8 flex items-stretch gap-px border border-border bg-border">
-      <MainPortrait season={season} className="size-28 shrink-0 sm:size-36" />
-
-      <div className="flex min-w-0 flex-1 flex-col justify-center bg-background p-5 sm:p-6">
-        <p className="readout-dim">{season.label}</p>
-        <p className="display mt-1 text-2xl text-balance sm:text-3xl">{season.name}</p>
-        <p className="readout-dim mt-3">{dateRange(season)}</p>
-        {season.main ? (
-          <p className="readout-dim mt-1">
-            Mained {season.main.name}
-            {season.main.style ? `, ${season.main.style}` : ""}
-          </p>
-        ) : null}
-      </div>
-    </section>
   );
 }
 
@@ -254,10 +238,19 @@ function SeasonHistory({ active, onSelect }: { active: string; onSelect: (key: s
                 <div className="flex flex-1 flex-col p-4">
                   <p className={cn("readout-dim", current && "text-ember")}>{season.label}</p>
                   <p className="display mt-1 text-lg text-balance">{season.name}</p>
-                  <p className="readout-dim mt-2">{dateRange(season)}</p>
-                  <p className="readout-dim mt-auto pt-3">
-                    {season.stats ? `${count(season.stats.overall.wins)} wins` : "No numbers"}
-                  </p>
+
+                  {/* The outfit, in ember, pinned to the bottom so the line
+                      sits level across a row however long the season's name
+                      ran. It scrolls rather than truncating, because the half
+                      that overflows is the half that varies - "Jade, Voidburn
+                      Jade" and "Jade, Cursed Jade" are the same for sixteen
+                      characters. Same treatment the record pressings and comic
+                      publishers get. */}
+                  {season.main ? (
+                    <ScrollingText className="readout mt-auto pt-3 text-ember">
+                      {mainLabel(season.main)}
+                    </ScrollingText>
+                  ) : null}
                 </div>
               </button>
             </li>
@@ -348,7 +341,14 @@ export function Fortnite() {
         />
       ) : null}
 
-      {active?.season ? <SeasonBanner season={active.season} /> : null}
+      {/* What the numbers below cover. A line rather than the panel that used
+          to appear and disappear as seasons were picked: it is always here, it
+          always says something, and it does not move the page around. */}
+      {active ? (
+        <p data-slot="window-dates" className="readout-dim mb-6">
+          {active.season ? dateRange(active.season) : "All time"}
+        </p>
+      ) : null}
 
       {!active || !stats ? (
         <EmptyState>

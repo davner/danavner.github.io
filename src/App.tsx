@@ -2,6 +2,7 @@ import { Suspense, lazy } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useParams } from "react-router";
 
 import { Backdrop } from "@/components/backdrop";
+import { RouteBoundary } from "@/components/route-boundary";
 import { ScrollToTop } from "@/components/scroll-to-top";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -63,57 +64,71 @@ export function App() {
             <Route
               path="/blog/:slug"
               element={
-                <Suspense fallback={<PostSkeleton />}>
-                  <BlogPost />
-                </Suspense>
+                <RouteBoundary>
+                  <Suspense fallback={<PostSkeleton />}>
+                    <BlogPost />
+                  </Suspense>
+                </RouteBoundary>
               }
             />
             <Route
               path="/shows"
               element={
-                <Suspense fallback={<PostSkeleton />}>
-                  <Shows />
-                </Suspense>
+                <RouteBoundary>
+                  <Suspense fallback={<PostSkeleton />}>
+                    <Shows />
+                  </Suspense>
+                </RouteBoundary>
               }
             />
             <Route
               path="/shows/:slug"
               element={
-                <Suspense fallback={<PostSkeleton />}>
-                  <ShowDetail />
-                </Suspense>
+                <RouteBoundary>
+                  <Suspense fallback={<PostSkeleton />}>
+                    <ShowDetail />
+                  </Suspense>
+                </RouteBoundary>
               }
             />
             <Route
               path="/vinyl"
               element={
-                <Suspense fallback={<PostSkeleton />}>
-                  <Vinyl />
-                </Suspense>
+                <RouteBoundary>
+                  <Suspense fallback={<PostSkeleton />}>
+                    <Vinyl />
+                  </Suspense>
+                </RouteBoundary>
               }
             />
             <Route
               path="/now"
               element={
-                <Suspense fallback={<PostSkeleton />}>
-                  <Now />
-                </Suspense>
+                <RouteBoundary>
+                  <Suspense fallback={<PostSkeleton />}>
+                    <Now />
+                  </Suspense>
+                </RouteBoundary>
               }
             />
             <Route
               path="/comics"
               element={
-                <Suspense fallback={<PostSkeleton />}>
-                  <Comics />
-                </Suspense>
+                <RouteBoundary>
+                  <Suspense fallback={<PostSkeleton />}>
+                    <Comics />
+                  </Suspense>
+                </RouteBoundary>
               }
             />
             <Route
               path="/fortnite"
               element={
-                <Suspense fallback={<PostSkeleton />}>
-                  <Fortnite />
-                </Suspense>
+                <RouteBoundary>
+                  <Suspense fallback={<PostSkeleton />}>
+                    <Fortnite />
+                  </Suspense>
+                </RouteBoundary>
               }
             />
 

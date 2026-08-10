@@ -1034,6 +1034,64 @@ test.describe("chrome", () => {
     await expect(page.locator(".marquee-host").first()).toHaveAttribute("aria-hidden", "true");
   });
 
+  /*
+   * Route chunks are content-hashed and a deploy deletes the old ones, so a tab
+   * opened before a deploy asks for a file that is gone. Three nightly jobs
+   * each trigger a deploy here, so this is a most-nights event rather than an
+   * edge case - and before `RouteBoundary` it rendered a blank page.
+   */
+  test.describe("a lazy route whose chunk went missing", () => {
+    /** Serves the 404.html GitHub Pages returns for a file that is not there. */
+    const breakChunk = (page: import("@playwright/test").Page, lift?: () => boolean) =>
+      page.route("**/assets/fortnite-*.js", async (route) => {
+        if (lift?.()) return route.continue();
+        await route.fulfill({
+          status: 404,
+          contentType: "text/html",
+          body: "<!doctype html><html></html>",
+        });
+      });
+
+    test("reloads itself and comes back", async ({ page }) => {
+      // Gone for the first load and present after, which is what a redeploy
+      // looks like from a tab that was already open.
+      let lifted = false;
+      await breakChunk(page, () => lifted);
+
+      await page.goto("/");
+      await page.getByRole("link", { name: "Fortnite" }).first().click();
+      setTimeout(() => {
+        lifted = true;
+      }, 50);
+
+      await expect(page.getByRole("heading", { level: 1 })).toContainText(/droppin/i, {
+        timeout: 15_000,
+      });
+      await expect(page.locator("[data-slot=stat]").first()).toBeVisible();
+    });
+
+    test("gives up rather than reloading forever", async ({ page }) => {
+      // Never comes back, so the reload cannot help. The guard has to notice.
+      let navigations = 0;
+      page.on("framenavigated", (frame) => {
+        if (frame === page.mainFrame()) navigations += 1;
+      });
+      await breakChunk(page);
+
+      await page.goto("/");
+      const before = navigations;
+      await page.getByRole("link", { name: "Fortnite" }).first().click();
+
+      await expect(page.getByRole("button", { name: "Reload" })).toBeVisible({
+        timeout: 15_000,
+      });
+      // One reload spent, not a loop. This asserted 19 before the guard was
+      // written the way it is now.
+      expect(navigations - before).toBeLessThanOrEqual(3);
+      expect((await page.locator("body").textContent())?.trim()).not.toBe("");
+    });
+  });
+
   test("no page scrolls horizontally", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 800 });
     for (const path of ROUTES) {

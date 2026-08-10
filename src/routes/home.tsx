@@ -14,13 +14,16 @@ import {
   showStats,
   supportFor,
 } from "@/lib/shows";
+import { NOW_DESCRIPTION } from "@/lib/site";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
 const INDEX = [
   {
     to: "/now",
     title: "Now",
-    blurb: "What I am up to at the moment, and everything it has replaced.",
+    // The same sentence the page and its link preview use, so the three cannot
+    // describe it differently depending on where you meet it.
+    blurb: NOW_DESCRIPTION,
   },
   {
     to: "/about",

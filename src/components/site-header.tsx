@@ -119,7 +119,21 @@ export function SiteHeader() {
                       {entry.items.map((item) => (
                         <li key={item.to} className="border-b border-border last:border-b-0">
                           <NavigationMenuLink asChild>
-                            <NavLink to={item.to} className="block px-4 py-3">
+                            {/*
+                             * No fill on hover, matching the bar above it.
+                             * `NavigationMenuLink` paints `bg-accent` on hover
+                             * and on focus, and `asChild` concatenates class
+                             * strings rather than merging them - so these have
+                             * to out-rank it rather than replace it.
+                             */}
+                            <NavLink
+                              to={item.to}
+                              className={cn(
+                                "group/link block px-4 py-3 transition-colors",
+                                "bg-transparent! hover:bg-transparent! focus:bg-transparent!",
+                                "data-[active=true]:bg-transparent!",
+                              )}
+                            >
                               {({ isActive }) => <PanelLabel item={item} active={isActive} />}
                             </NavLink>
                           </NavigationMenuLink>
@@ -234,14 +248,22 @@ export function SiteHeader() {
   );
 }
 
-/** A link inside the desktop Hobbies panel. */
+/**
+ * A link inside the desktop Hobbies panel.
+ *
+ * The colour reacts to the link being hovered rather than the label itself, so
+ * the whole row is the target while only the text changes - which is how the
+ * bar above behaves.
+ */
 function PanelLabel({ item, active }: { item: Section; active: boolean }) {
   return (
     <span
       className={cn(
         LABEL,
         "transition-colors",
-        active ? "text-ember" : "text-muted-foreground hover:text-foreground",
+        // Hover brightens; ember is reserved for the page you are on. Using it
+        // for both made every row you passed over look like the current one.
+        active ? "text-ember" : "text-muted-foreground group-hover/link:text-foreground",
       )}
     >
       {item.label}
@@ -273,7 +295,9 @@ function MobileItem({
         onClick={onNavigate}
         className={({ isActive }) =>
           cn(
-            "relative flex items-center py-3 pr-4 transition-colors hover:bg-card/60",
+            // Text colour only, no fill. A full-width block of grey behind one
+            // row reads as the panel highlighting rather than the link.
+            "relative flex items-center py-3 pr-4 transition-colors",
             nested ? "pl-8" : "pl-4",
             isActive ? "text-ember" : "text-muted-foreground hover:text-foreground",
           )

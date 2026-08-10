@@ -3,10 +3,11 @@ import { NowTimeline } from "@/components/now-timeline";
 import { PageHeader, PageShell } from "@/components/page";
 import { formatDate } from "@/lib/blog";
 import { describeStaleness, now, stalenessInDays } from "@/lib/now";
+import { NOW_DESCRIPTION } from "@/lib/site";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
 const TITLE = "Now";
-const DESCRIPTION = "What I'm doing at the moment, updated whenever it stops being true.";
+const DESCRIPTION = NOW_DESCRIPTION;
 
 /*
  * Deliberately the one page on the site nothing generates.

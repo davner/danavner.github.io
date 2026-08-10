@@ -82,6 +82,20 @@ test.describe("navigation", () => {
     const drawer = page.getByRole("dialog");
     await expect(drawer).toHaveAccessibleName(/menu/i);
 
+    /*
+     * The drawer's own close button. `everything clickable shows a finger` only
+     * walks selectors on rendered pages, and this one lives in a portal that
+     * does not exist until the drawer opens - so it shipped with the arrow
+     * Tailwind's preflight gives every button.
+     */
+    await expect(drawer.getByRole("button", { name: /close/i })).toHaveCSS("cursor", "pointer");
+
+    // Nothing in here paints a block behind the row you are pointing at; the
+    // label changes colour instead, the way the bar above does.
+    const link = drawer.getByRole("link", { name: "Blog" });
+    await link.hover();
+    await expect(link).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+
     // Every section is reachable from it, grouped ones included.
     for (const path of SECTION_PATHS) {
       await expect(drawer.locator(`a[href="${path}"]`)).toHaveCount(1);

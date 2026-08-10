@@ -3,6 +3,17 @@ export const SITE_URL = "https://danavner.com";
 
 export const SITE_NAME = "Dan Avner";
 
+/**
+ * How the now page describes itself, in one place.
+ *
+ * It is the page's lede, its meta description, and its blurb in the home index.
+ * Kept here rather than in the route because the route is lazily loaded, and
+ * importing a constant out of it would pull that whole chunk into the landing
+ * page's bundle to read one sentence.
+ */
+export const NOW_DESCRIPTION =
+  "What I'm doing at the moment, updated whenever it stops being true.";
+
 export interface Section {
   to: string;
   label: string;

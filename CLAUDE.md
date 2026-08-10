@@ -24,6 +24,19 @@ when that kind of work starts.
 - Before spawning a large swarm of subagents (dynamic workflows, ultra code, or
   any similar harness feature), explain the tradeoffs and get explicit approval.
 
+### Every clickable thing needs `cursor-pointer`
+
+Tailwind v4's preflight sets `button { cursor: default }` and shadcn does not
+put it back, so **any new `<button>`, `[role=button]` or `<summary>` needs an
+explicit `cursor-pointer`**. This has been shipped three times now. It is not
+visible in a screenshot and nobody notices until they are using the page.
+
+`tests/site.spec.ts` sweeps every route in `tests/routes.ts` for interactive
+elements whose computed cursor is not `pointer`, so a miss fails the build. Add
+new pages to `ROUTES` and the check comes with them. Do not narrow that test to
+a list of selectors - it was one before, and it passed while `/fortnite` shipped
+nine buttons with an arrow cursor, because the page was not on the list.
+
 ## Git
 
 Do not commit or push unless explicitly told to. Full rules load from the

@@ -6,7 +6,20 @@ import { describeStaleness, now, stalenessInDays } from "@/lib/now";
 import { NOW_DESCRIPTION } from "@/lib/site";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
+/*
+ * The tab and the nav say "Now" - that is what `site.ts` calls it, and
+ * `tests/site.spec.ts` holds the two together. The headline is the same word
+ * given room to breathe.
+ */
 const TITLE = "Now";
+
+/** Solid, then outlined, the way every page title on the site is set. */
+const HEADING = (
+  <>
+    <span className="block">Right</span>
+    <span className="display-outline-ember block">now</span>
+  </>
+);
 const DESCRIPTION = NOW_DESCRIPTION;
 
 /*
@@ -38,7 +51,7 @@ export function Now() {
             absent - not only a state the build passes through. Naming the file
             here told a visitor about a path they cannot do anything with. */}
         <PageHeader
-          title={TITLE}
+          title={HEADING}
           lede="Nothing here at the moment. I have not written one of these yet."
         />
       </PageShell>
@@ -48,7 +61,7 @@ export function Now() {
   return (
     <PageShell>
       <PageHeader
-        title={TITLE}
+        title={HEADING}
         /*
          * The same line the meta description carries, deliberately.
          *

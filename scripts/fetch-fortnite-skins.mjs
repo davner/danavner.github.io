@@ -174,13 +174,17 @@ async function main() {
     } = chooseVariant(cosmetic, season.main.variants, season.key);
     problems += bad;
 
-    // The variant render if one was picked, then `featured` - the tall
-    // full-body shot Epic uses in the item shop - then the square icon, which
-    // is all plenty of outfits ever got.
-    const source =
-      chosen?.option.image ??
-      cosmetic.images?.featured ??
-      cosmetic.images?.icon;
+    /*
+     * The variant render if one was picked, otherwise the square icon.
+     *
+     * Never `featured`, even though it is the largest image on offer. It is the
+     * tall full-body shot Epic uses in the item shop, framed nothing like the
+     * head-and-shoulders icon, so the two cannot sit in the same grid: Guff had
+     * it and stood out as the one card that was a different picture rather than
+     * a different character. Only a couple of outfits have one at all, which
+     * makes it a rule that applies to a minority and disfigures the set.
+     */
+    const source = chosen?.option.image ?? cosmetic.images?.icon;
     if (!source) throw new Error(`"${season.main.name}" has no render`);
 
     const name = `${slug(season.main.name)}.png`;

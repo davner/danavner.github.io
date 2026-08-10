@@ -11,7 +11,17 @@ export interface ModeStats {
   /** Percent, 0-100. */
   winRate: number;
   killsPerMatch: number;
+  /*
+   * Placement tiers. A playlist only counts the two that suit its team size -
+   * 100 players solo counts top 10 and top 25, 50 duos count top 5 and top 12,
+   * 25 squads count top 3 and top 6 - and reports a flat 0 for the rest. See
+   * `placements`.
+   */
+  top3: number;
+  top5: number;
+  top6: number;
   top10: number;
+  top12: number;
   top25: number;
   minutesPlayed: number;
   score: number;
@@ -139,6 +149,45 @@ export const seasons: SeasonEntry[] = fortnite.seasons;
 
 export function isWindowKey(value: string | null): boolean {
   return value !== null && windows.some((window) => window.key === value);
+}
+
+/**
+ * The two placement tiers worth showing for a playlist, and what to call them.
+ *
+ * Every playlist ends when one team is left, so "top 10" is only a thing in a
+ * lobby of 100 individuals. Duos play 50 teams and count top 5 and top 12;
+ * squads play 25 and count top 3 and top 6. Epic tracks each playlist's own
+ * pair and returns a flat 0 for the others, so a board hardcoded to top 10 and
+ * top 25 told a squad player they had never once placed - the number was real
+ * and the question was wrong.
+ *
+ * `overall` gets none. A top 3 in squads and a top 10 in solos are different
+ * achievements, and adding them together produces a figure that answers no
+ * question anyone has.
+ */
+export function placements(
+  mode: ModeId,
+): { label: string; field: keyof ModeStats }[] {
+  switch (mode) {
+    case "solo":
+      return [
+        { label: "Top 10", field: "top10" },
+        { label: "Top 25", field: "top25" },
+      ];
+    case "duo":
+      return [
+        { label: "Top 5", field: "top5" },
+        { label: "Top 12", field: "top12" },
+      ];
+    case "trio":
+    case "squad":
+      return [
+        { label: "Top 3", field: "top3" },
+        { label: "Top 6", field: "top6" },
+      ];
+    default:
+      return [];
+  }
 }
 
 /** Only the playlists actually played in this window, so no tab leads nowhere. */

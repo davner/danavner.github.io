@@ -1,6 +1,12 @@
-import { ChevronDown } from "lucide-react";
-
 import { CONTROL_CLASS } from "@/components/filter-toggle";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 /**
@@ -12,10 +18,11 @@ import { cn } from "@/lib/utils";
  * the ones they did not pick, and as pills it took two lines on a phone to say
  * a single word.
  *
- * A real `<select>` rather than a menu built out of divs. It brings the
- * platform picker on a phone, arrow keys and type-ahead on a desktop, and the
- * whole of its accessibility, none of which we would get for free otherwise.
- * Only the closed state is ours to style; the open list belongs to the OS.
+ * Built on shadcn's Select, so the listbox matches the rest of the site rather
+ * than the operating system. Squared off and sized from `CONTROL_CLASS`, which
+ * is the one place a control's measurements are written down - the trigger sits
+ * in a row with the filter pills and the search field, and a couple of pixels
+ * out is immediately visible.
  */
 export function SelectControl<T extends string>({
   label,
@@ -32,30 +39,44 @@ export function SelectControl<T extends string>({
   className?: string;
 }) {
   return (
-    <div className={cn("relative", className)}>
-      <select
+    <Select value={value} onValueChange={(next) => onChange(next as T)}>
+      <SelectTrigger
         aria-label={label}
-        value={value}
-        onChange={(event) => onChange(event.target.value as T)}
         className={cn(
           CONTROL_CLASS,
-          // `pr-11` clears the chevron, which sits on top and is decoration -
-          // the native arrow goes with `appearance-none`.
-          "w-full cursor-pointer appearance-none border border-border bg-background pr-11 text-sm",
-          "focus-visible:border-ember focus-visible:outline-none",
+          /*
+           * The height has to be written as the same variant shadcn uses.
+           * `SelectTrigger` sets `data-[size=default]:h-9`, and an attribute
+           * variant outranks the plain `h-11` in `CONTROL_CLASS`, so the
+           * trigger came out 36px in a row of 44px controls - which is the
+           * exact drift `CONTROL_CLASS` exists to prevent.
+           */
+          "data-[size=default]:h-11",
+          // Square, hairline, and the page's own background - the shadcn
+          // defaults are rounded with a shadow, which nothing else here is.
+          "cursor-pointer rounded-none border-border bg-background text-sm shadow-none",
+          "focus-visible:border-ember focus-visible:ring-0",
+          // The trigger is `w-fit` by default and these sit in a sized row.
+          "w-full",
+          className,
         )}
       >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
+        <SelectValue />
+      </SelectTrigger>
 
-      <ChevronDown
-        className="pointer-events-none absolute top-1/2 right-4 size-4 -translate-y-1/2 text-muted-foreground"
-        aria-hidden
-      />
-    </div>
+      <SelectContent className="rounded-none border-border">
+        <SelectGroup>
+          {options.map((option) => (
+            <SelectItem
+              key={option.value}
+              value={option.value}
+              className="cursor-pointer rounded-none"
+            >
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectGroup>
+      </SelectContent>
+    </Select>
   );
 }

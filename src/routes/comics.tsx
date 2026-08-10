@@ -8,7 +8,20 @@ import { ScrollingText } from "@/components/scrolling-text";
 import { comics, issueCount, SHELVES, type ComicEntry, type ShelfId } from "@/lib/comics";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
+/*
+ * The tab and the nav say "Comics" - that is what `site.ts` calls it and what
+ * someone scans a list of links for, and `tests/site.spec.ts` holds the two
+ * together. The headline is free to be the line.
+ */
 const TITLE = "Comics";
+
+/** Solid, then outlined, the way every page title on the site is set. */
+const HEADING = (
+  <>
+    <span className="block">With great power</span>
+    <span className="display-outline-ember block">comes great responsibility</span>
+  </>
+);
 const DESCRIPTION =
   "Every run I own, what is waiting at the shop this week, and what I still want - read from League of Comic Geeks nightly.";
 
@@ -174,7 +187,7 @@ export function Comics() {
     return (
       <PageShell>
         <PageHeader
-          title={TITLE}
+          title={HEADING}
           size="long"
           lede="The shelf has not been read yet. Once the nightly League of Comic Geeks job runs, it lands here."
         />
@@ -185,7 +198,7 @@ export function Comics() {
   return (
     <PageShell>
       <PageHeader
-        title={TITLE}
+        title={HEADING}
         size="long"
         lede="New comic day is Wednesday. This is every run on the shelf, what is waiting at the shop this week, and what I have not talked myself into yet. Read from League of Comic Geeks nightly."
       >

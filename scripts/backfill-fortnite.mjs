@@ -252,7 +252,15 @@ const COUNTERS = {
   minutesplayed: "minutesPlayed",
   score: "score",
   playersoutlived: "playersOutlived",
+  // Every tier, because a playlist only counts the two that suit its team size:
+  // 100 players solo tracks top 10 and top 25, 50 duos track top 5 and top 12,
+  // 25 squads track top 3 and top 6. Keeping only the solo pair is what made
+  // squad read "Top 10: 0" - true, and true of every squad player alive.
+  placetop3: "top3",
+  placetop5: "top5",
+  placetop6: "top6",
   placetop10: "top10",
+  placetop12: "top12",
   placetop25: "top25",
 };
 
@@ -263,7 +271,11 @@ const blank = () => ({
   minutesPlayed: 0,
   score: 0,
   playersOutlived: 0,
+  top3: 0,
+  top5: 0,
+  top6: 0,
   top10: 0,
+  top12: 0,
   top25: 0,
 });
 
@@ -319,18 +331,15 @@ function shape(raw) {
   }
 
   /*
-   * Top 10 and top 25 are solo placements. Duo and squad report their own
-   * equivalents - top 5 and 12, top 3 and 6 - and Fortnite-API counts none of
-   * them, answering 0 for every mode but solo and carrying solo's figure up
-   * into overall. Summing all of them instead reads 19 and 29 against the 10
-   * and 16 the lifetime board already shows.
+   * No fixing up of the placement tiers across modes.
+   *
+   * They used to be forced so that `overall` mirrored what Fortnite-API answers
+   * - solo's top 10 and top 25 carried up, zeroes everywhere else - which was
+   * only ever there to keep two writers agreeing on a figure. The page no
+   * longer shows placements for "all modes" at all, because a top-3 in squads
+   * and a top-10 in solos are not the same achievement and summing them says
+   * nothing. Each mode now carries its own tiers, straight from Epic.
    */
-  totals.overall.top10 = totals.solo.top10;
-  totals.overall.top25 = totals.solo.top25;
-  for (const mode of ["duo", "trio", "squad"]) {
-    totals[mode].top10 = 0;
-    totals[mode].top25 = 0;
-  }
 
   const finish = (sums) => {
     if (sums.matches <= 0) return null;
@@ -346,7 +355,11 @@ function shape(raw) {
       kd: Number((deaths > 0 ? sums.kills / deaths : sums.kills).toFixed(2)),
       winRate: Number(((sums.wins / sums.matches) * 100).toFixed(1)),
       killsPerMatch: Number((sums.kills / sums.matches).toFixed(2)),
+      top3: sums.top3,
+      top5: sums.top5,
+      top6: sums.top6,
       top10: sums.top10,
+      top12: sums.top12,
       top25: sums.top25,
       minutesPlayed: sums.minutesPlayed,
       score: sums.score,
@@ -490,9 +503,23 @@ async function main() {
     (a, b) => (order.get(a.key) ?? Infinity) - (order.get(b.key) ?? Infinity),
   );
 
+  /*
+   * Lifetime is rewritten too, from the last cumulative read - an unbounded
+   * window is lifetime by definition, so it costs no extra request.
+   *
+   * The nightly job owns this figure and will overwrite it from Fortnite-API,
+   * which is fine because the two agree: Epic reproduces all 28 of the numbers
+   * Fortnite-API reports, give or take a hundredth on one K/D. It is written
+   * here so the file is consistent the moment this runs rather than the next
+   * time the job fires - otherwise lifetime would be the one window missing the
+   * placement tiers, and the squad board would read "Top 3: 0" until morning.
+   */
+  const lifetimeStats =
+    shape(cumulative[cumulative.length - 1]) ?? stats.lifetime;
+
   await writeFile(
     STATS_FILE,
-    `${JSON.stringify({ ...stats, seasons }, null, 2)}\n`,
+    `${JSON.stringify({ ...stats, lifetime: lifetimeStats, seasons }, null, 2)}\n`,
   );
   console.log(
     `\nfortnite-backfill: ${seasons.length} season(s), ${counted} of ${lifetime} ` +

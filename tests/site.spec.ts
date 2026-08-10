@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { readFileSync } from "node:fs";
+
 import { ROUTES } from "./routes";
 import { ALL_SECTIONS } from "../src/lib/site";
 
@@ -572,8 +574,15 @@ test.describe("vinyl", () => {
       page.locator("[data-slot=record] h3").first().innerText();
     const byNewest = await first();
 
+    // shadcn's Select is a listbox rather than a native `<select>`, so this is
+    // a click on the trigger and a click on the option, the way a person does
+    // it - `selectOption` only drives real `<select>` elements.
     const sort = page.getByRole("combobox", { name: /sort records/i });
-    await sort.selectOption("artist");
+    await sort.click();
+    // The label from `SORT_LABEL` in src/lib/vinyl.ts, written out rather
+    // than imported: that module pulls in the `virtual:` content plugin, which
+    // Node cannot resolve when Playwright loads this file.
+    await page.getByRole("option", { name: "By artist" }).click();
     await page.waitForURL("**/vinyl?sort=artist");
     const byArtist = await page
       .locator("[data-slot=record] p")
@@ -594,9 +603,11 @@ test.describe("vinyl", () => {
     // A sorted shelf is linkable, so the control has to come back showing the
     // order the URL asked for rather than its own default.
     await page.goto("/vinyl?sort=artist");
+    // The trigger shows the chosen option's label; there is no `value` to read
+    // off a listbox the way there was on the native `<select>`.
     await expect(
       page.getByRole("combobox", { name: /sort records/i }),
-    ).toHaveValue("artist");
+    ).toHaveText("By artist");
   });
 
   test("search narrows the shelf without moving the stats", async ({
@@ -974,7 +985,9 @@ test.describe("controls", () => {
         const nodes = [
           ...document.querySelectorAll("[data-slot=toggle-group-item]"),
           ...document.querySelectorAll("input[type=search]"),
-          ...document.querySelectorAll("select"),
+          // The sort control is shadcn's Select, so the thing on screen is its
+          // trigger button rather than a native `<select>`.
+          ...document.querySelectorAll("[data-slot=select-trigger]"),
         ];
         return nodes.map((n) => Math.round(n.getBoundingClientRect().height));
       });
@@ -1024,29 +1037,45 @@ test.describe("controls", () => {
   test("everything clickable shows a finger, not an arrow", async ({
     page,
   }) => {
-    // Tailwind v4's preflight sets `button { cursor: default }` and shadcn does
-    // not put it back, so this was every button on the site until the two cva
-    // bases in components/ui/ were fixed.
-    for (const [path, selector] of [
-      ["/vinyl", "[data-slot=toggle-group-item]"],
-      ["/vinyl", "select"],
-      ["/blog", "[data-slot=toggle-group-item]"],
-      ["/", "header button"],
-      ["/career", "button"],
-    ] as const) {
+    /*
+     * Tailwind v4's preflight sets `button { cursor: default }` and shadcn does
+     * not put it back, so anything clickable defaults to the wrong cursor until
+     * someone remembers `cursor-pointer`.
+     *
+     * This used to be a hand-written list of five page-and-selector pairs, and
+     * it passed while `/fortnite` shipped a grid of nine buttons with an arrow
+     * cursor - the page simply was not on the list. A check you have to
+     * remember to extend does not catch the thing it exists to catch, so this
+     * sweeps every route and every interactive element instead.
+     */
+    for (const path of ROUTES) {
       await page.goto(path);
       await page.getByRole("heading", { level: 1 }).waitFor();
 
-      const cursors = await page
-        .locator(selector)
-        .evaluateAll((els) => els.map((el) => getComputedStyle(el).cursor));
+      const wrong = await page
+        .locator("button, select, summary, [role=button]")
+        .evaluateAll((els) =>
+          els
+            // A disabled control is not clickable, so `default` is right there.
+            .filter(
+              (el) =>
+                !el.hasAttribute("disabled") &&
+                el.getAttribute("aria-disabled") !== "true" &&
+                // Only what is actually on screen: the mobile menu holds a copy
+                // of the nav that is display:none until it opens.
+                (el as HTMLElement).offsetParent !== null,
+            )
+            .filter((el) => getComputedStyle(el).cursor !== "pointer")
+            .map(
+              (el) =>
+                `<${el.tagName.toLowerCase()}> ${(el.textContent ?? "").trim().slice(0, 40)}` +
+                ` [cursor: ${getComputedStyle(el).cursor}]`,
+            ),
+        );
 
-      expect(
-        cursors.length,
-        `${path} ${selector} matched nothing`,
-      ).toBeGreaterThan(0);
-      for (const cursor of cursors)
-        expect(cursor, `${path} ${selector}`).toBe("pointer");
+      expect(wrong, `${path} has clickable elements without a pointer`).toEqual(
+        [],
+      );
     }
   });
 
@@ -1198,12 +1227,20 @@ test.describe("fortnite", () => {
   }) => {
     await page.goto("/fortnite");
 
-    const options = page.getByLabel("Season").locator("option");
-    await expect(options.first()).toBeAttached();
+    /*
+     * The keys come from the calendar rather than the DOM. shadcn's Select
+     * renders its options into a portal only while open, so reading them off
+     * the page would mean opening the listbox, and the calendar is the source
+     * the page builds that listbox from anyway.
+     */
+    const calendar = JSON.parse(
+      readFileSync("src/content/fortnite-seasons.json", "utf8"),
+    ) as { seasons: { key: string }[] };
 
-    for (const value of await options.evaluateAll((list) =>
-      list.map((option) => (option as HTMLOptionElement).value),
-    )) {
+    const keys = ["lifetime", ...calendar.seasons.map((season) => season.key)];
+    expect(keys.length).toBeGreaterThan(1);
+
+    for (const value of keys) {
       await page.goto(`/fortnite?season=${value}`);
 
       // One or the other has to render, and waiting for whichever arrives is

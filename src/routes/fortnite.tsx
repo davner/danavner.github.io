@@ -14,6 +14,7 @@ import {
   isWindowKey,
   LIFETIME,
   MODES,
+  placements,
   playedModes,
   playtime,
   seasons,
@@ -33,7 +34,13 @@ import { useDocumentMeta } from "@/lib/use-document-meta";
  * to be the joke.
  */
 const TITLE = "Fortnite";
-const HEADING = "Where we droppin'?";
+/** Solid, then outlined, the way every page title on the site is set. */
+const HEADING = (
+  <>
+    <span className="block">Where we</span>
+    <span className="display-outline-ember block">droppin’?</span>
+  </>
+);
 const DESCRIPTION = "Wins, kills, and how good I am. Very. 1v1 me lol jk.";
 
 /**
@@ -64,8 +71,15 @@ function headline(stats: ModeStats, against: ModeStats | null) {
   ];
 }
 
-/** The supporting numbers, which are context rather than headline. */
-function details(stats: ModeStats, against: ModeStats | null) {
+/**
+ * The supporting numbers, which are context rather than headline.
+ *
+ * The placement tiles depend on the playlist, because the tiers do - see
+ * `placements`. "All modes" gets none of them and shows four tiles instead of
+ * six, which is the honest shape: there is no placement that means the same
+ * thing across a 100-player solo and a 25-team squad lobby.
+ */
+function details(stats: ModeStats, against: ModeStats | null, mode: ModeId) {
   return [
     { label: "Matches", value: count(stats.matches), delta: null },
     {
@@ -75,8 +89,11 @@ function details(stats: ModeStats, against: ModeStats | null) {
         ? delta(stats.killsPerMatch, against.killsPerMatch, 2)
         : null,
     },
-    { label: "Top 10", value: count(stats.top10), delta: null },
-    { label: "Top 25", value: count(stats.top25), delta: null },
+    ...placements(mode).map((tier) => ({
+      label: tier.label,
+      value: count(stats[tier.field]),
+      delta: null,
+    })),
     {
       label: "Players outlived",
       value: count(stats.playersOutlived),
@@ -102,7 +119,10 @@ function Stat({
   big?: boolean;
 }) {
   return (
-    <dl data-slot="stat" className="bg-background p-5 sm:p-6">
+    <dl
+      data-slot="stat"
+      className="bg-background p-5 shadow-[0_0_0_1px_var(--color-border)] sm:p-6"
+    >
       <dt className="readout-dim">{label}</dt>
       <dd
         className={
@@ -242,15 +262,18 @@ function SeasonHistory({
                 onClick={() => onSelect(season.key)}
                 aria-current={current ? "true" : undefined}
                 className={cn(
-                  "flex h-full w-full flex-col text-left",
+                  "flex h-full w-full cursor-pointer flex-col text-left",
                   "focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ember",
                   current && "bg-ember/10",
                 )}
               >
-                <MainPortrait
-                  season={season}
-                  className="aspect-square w-full"
-                />
+                {/* A fixed height rather than a square that fills the column.
+                    Fortnite-API only publishes a style's render at 128px, so a
+                    full-width square upscaled it about two and a half times and
+                    every card looked soft. At `h-40` nothing is enlarged by
+                    more than a quarter, and the outfits with no style variant
+                    come down from 256 or 512 instead of up. */}
+                <MainPortrait season={season} className="h-40 w-full" />
 
                 <div className="flex flex-1 flex-col p-4">
                   <p className={cn("readout-dim", current && "text-ember")}>
@@ -401,7 +424,11 @@ export function Fortnite() {
           <section
             aria-label={`${MODES.find((mode) => mode.id === activeMode)?.label} stats`}
           >
-            <div className="grid grid-cols-2 gap-px border border-border bg-border sm:grid-cols-4">
+            {/* Seams per tile rather than a `bg-border` behind the grid - a
+                row that is not full would otherwise paint the gap grey, which
+                is exactly what "All modes" does now that it shows four tiles
+                instead of six. Same idiom as the season grid below. */}
+            <div className="grid grid-cols-2 gap-px sm:grid-cols-4">
               {headline(stats, against).map((tile) => (
                 <Stat
                   key={tile.label}
@@ -413,8 +440,8 @@ export function Fortnite() {
               ))}
             </div>
 
-            <div className="mt-px grid grid-cols-2 gap-px border border-border bg-border sm:grid-cols-3">
-              {details(stats, against).map((tile) => (
+            <div className="mt-px grid grid-cols-2 gap-px sm:grid-cols-3">
+              {details(stats, against, activeMode).map((tile) => (
                 <Stat
                   key={tile.label}
                   label={tile.label}

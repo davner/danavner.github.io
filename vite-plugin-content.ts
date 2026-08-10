@@ -762,7 +762,11 @@ interface FortniteModeJson {
   kd: number;
   winRate: number;
   killsPerMatch: number;
+  top3: number;
+  top5: number;
+  top6: number;
   top10: number;
+  top12: number;
   top25: number;
   minutesPlayed: number;
   score: number;
@@ -1025,7 +1029,11 @@ function readFortnite(root: string, publicDir: string) {
       kd: num("kd"),
       winRate,
       killsPerMatch: num("killsPerMatch"),
+      top3: num("top3"),
+      top5: num("top5"),
+      top6: num("top6"),
       top10: num("top10"),
+      top12: num("top12"),
       top25: num("top25"),
       minutesPlayed: num("minutesPlayed"),
       score: num("score"),

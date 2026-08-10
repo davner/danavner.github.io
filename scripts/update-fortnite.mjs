@@ -131,7 +131,18 @@ function mode(raw) {
     kd: Number(asNumber(raw.kd).toFixed(2)),
     winRate: Number(asNumber(raw.winRate).toFixed(1)),
     killsPerMatch: Number(asNumber(raw.killsPerMatch).toFixed(2)),
+    /*
+     * Every placement tier, because each playlist size only tracks its own two
+     * and the page shows whichever pair belongs to the playlist on screen.
+     * Squad is 25 teams, so it counts top 3 and top 6 and reports a flat 0 for
+     * top 10 - which read as "never once finished top ten in squads" on a page
+     * that only knew about top10 and top25.
+     */
+    top3: asNumber(raw.top3),
+    top5: asNumber(raw.top5),
+    top6: asNumber(raw.top6),
     top10: asNumber(raw.top10),
+    top12: asNumber(raw.top12),
     top25: asNumber(raw.top25),
     minutesPlayed: asNumber(raw.minutesPlayed),
     score: asNumber(raw.score),

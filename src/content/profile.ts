@@ -229,6 +229,7 @@ export const interests: Interest[] = [
     name: "Fortnite",
     icon: "swords",
     note: "The squad is good and the duo is better, because the duo is Alexis.",
+    to: "/fortnite",
     handle: {
       label: "Epic",
       value: "danwiththeyams",

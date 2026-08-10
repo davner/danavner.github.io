@@ -21,6 +21,11 @@ when that kind of work starts.
 
 - Fix lint errors, failing tests, and flaky tests when you encounter them, even
   when unrelated to the current task.
+- Formatting is Prettier's and the pre-commit hook's job. `printWidth` is 100 and
+  lives in `.prettierrc.json`. **Never run `prettier --write` over files the
+  current task did not touch** - it buries a one-line change in a hundred lines
+  of reformatting. `npm run lint` and `npm run format:check` are the checks; both
+  also run in CI.
 - Before spawning a large swarm of subagents (dynamic workflows, ultra code, or
   any similar harness feature), explain the tradeoffs and get explicit approval.
 

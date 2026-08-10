@@ -56,22 +56,58 @@ fine for a number printed on the page.
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173
-npm run build      # type-check, then build to dist/
-npm run preview    # serve the built site
-npm run typecheck  # types only, no build
-npm test           # Playwright, against the production build
-npm run test:ui    # the same suite, interactively
+npm run dev          # http://localhost:5173
+npm run build        # type-check, then build to dist/
+npm run preview      # serve the built site
+npm run typecheck    # types only, no build
+npm test             # Playwright, against the production build
+npm run test:ui      # the same suite, interactively
+npm run lint         # ESLint
+npm run lint:fix     # ESLint, fixing what it can
+npm run format       # Prettier, writing
+npm run format:check # Prettier, reporting only
 ```
 
 Node 22+. `npm test` builds nothing itself - run `npm run build` first, or let
 CI do it.
 
+### Formatting and linting
+
+Prettier formats, ESLint checks correctness, and `eslint-config-prettier`
+switches off every stylistic ESLint rule so the two cannot disagree about a line
+break. `printWidth` is 100 - the width the codebase was already written at,
+picked by measuring rather than by taste. Prettier's default of 80 would have
+reformatted 50 of 74 files; 100 reformats far fewer and leaves the long tail,
+which is mostly unbreakable strings, alone.
+
+`.prettierignore` skips the generated content JSON. Those files are written by
+the nightly jobs with their own `JSON.stringify` formatting, and a bot commit
+landing while a hook reformats them is a fight with no upside.
+`fortnite-seasons.json` is deliberately not skipped, because that one is
+hand-kept.
+
+**A pre-commit hook runs both.** `npm install` sets it up - the `prepare` script
+runs husky, which points git at `.husky/`. On commit:
+
+- `lint-staged` runs `eslint --fix` then `prettier --write` over the staged
+  files only, and restages what it rewrote, so a commit lands formatted instead
+  of failing over a line break. Anything ESLint cannot fix on its own fails the
+  commit and names the file.
+- `npm run typecheck` runs over the whole project, not just the staged files. A
+  type error is rarely in the file that caused it: change a shared type and it
+  is the callers that break, and those are exactly the files not in the commit.
+  It costs about two seconds.
+
+The Playwright suite is not in the hook. It needs a production build and takes
+the better part of a minute, which is too much per commit - CI runs it on every
+push and every PR. CI also repeats the lint and format checks, because a hook is
+a convenience rather than a gate: `--no-verify` skips it.
+
 ## CI
 
 | Workflow          | When                                    | What                                                    |
 | ----------------- | --------------------------------------- | ------------------------------------------------------- |
-| `ci.yml`          | every push to `main` and every PR       | type-check, build, then the full Playwright suite       |
+| `ci.yml`          | every push to `main` and every PR       | lint, format check, type-check, build, Playwright suite |
 | `deploy.yml`      | push to `main`, or a data job finishing | builds and publishes to GitHub Pages                    |
 | `links.yml`       | weekly, Mondays                         | external link check; opens an issue if anything is dead |
 | `vinyl.yml`       | nightly                                 | reads the Discogs collection, commits it if it moved    |

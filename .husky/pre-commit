@@ -1,0 +1,15 @@
+# Formats and lints what is staged, then type-checks the project.
+#
+# `lint-staged` runs eslint --fix and prettier --write over the staged files and
+# restages what it rewrites, so a commit lands formatted rather than failing and
+# making you do it. Anything eslint cannot fix on its own still fails the commit.
+#
+# The type-check is whole-project rather than per-file, because a type error is
+# rarely in the file that caused it - changing a shared type breaks its callers,
+# and those are exactly the files not in this commit. It costs about two seconds.
+#
+# The Playwright suite is deliberately not here. It needs a production build and
+# takes the better part of a minute, which is too much to pay per commit; CI runs
+# it on every push and every PR.
+npx lint-staged
+npm run typecheck

@@ -11,6 +11,30 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # The same two checks the pre-commit hook runs, repeated here because a hook
+  # is a convenience rather than a gate: `--no-verify` skips it, and a commit
+  # made anywhere but a machine that has run `npm install` never had it.
+  lint:
+    name: Lint and formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: ESLint
+        run: npm run lint
+
+      # `--check` rather than `--write`. CI reporting that a file is misformatted
+      # is useful; CI quietly reformatting it and carrying on is not.
+      - name: Prettier
+        run: npm run format:check
+
   build:
     name: Type-check and build
     runs-on: ubuntu-latest

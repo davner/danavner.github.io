@@ -1,23 +1,71 @@
-import { Menu, X } from "lucide-react";
+import { Menu } from "lucide-react";
 import { useState } from "react";
-import { NavLink } from "react-router";
+import { NavLink, useLocation } from "react-router";
 
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { SECTIONS as NAV } from "@/lib/site";
+import { Button } from "@/components/ui/button";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@/components/ui/navigation-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { isGroup, SECTIONS, type Section } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 /** The mono label every nav item is set in, at both sizes. */
 const LABEL = "font-mono text-[0.68rem] font-medium tracking-[0.18em] uppercase";
 
+/**
+ * A top-level bar item: mono label with the ember rule on the header's edge.
+ *
+ * The trailing `!` on the backgrounds is doing real work. `navigationMenuTriggerStyle`
+ * paints an accent behind a trigger on hover, on focus and while open, layered
+ * across several variants that each out-specify a plain `bg-transparent`. This
+ * bar is flat at every state - the ember rule is what marks the current section -
+ * so the accent has to be turned off rather than merely overridden.
+ */
+const BAR_ITEM = cn(
+  "group relative flex h-full items-center gap-1.5 rounded-none px-1.5 transition-colors sm:px-3",
+  "bg-transparent! hover:bg-transparent! focus:bg-transparent! data-[state=open]:bg-transparent!",
+);
+
+function ActiveRule({ on }: { on: boolean }) {
+  return (
+    <span
+      className={cn(
+        // Under the item, and level across all of them - which is why the bar
+        // items are full-height. Sized to their own content, the group trigger
+        // came out taller than a plain link because of the chevron, and its
+        // marker sat two pixels lower than the rest.
+        "absolute inset-x-1.5 -bottom-px h-0.5 bg-ember transition-transform duration-150",
+        on ? "scale-x-100" : "scale-x-0",
+      )}
+    />
+  );
+}
+
 export function SiteHeader() {
   /*
-   * Six sections do not fit across a 320px phone, and a seventh is coming, so
-   * below `sm` they collapse into a menu rather than being squeezed. This used
-   * to be an inline row at every width, which is also why the wordmark had to
-   * contract to "DA" - with the row gone there is room for the whole name back.
+   * Below `sm` the sections collapse into a menu rather than being squeezed:
+   * seven of them do not fit a 320px phone, and that is also why the wordmark
+   * used to contract to "DA". Above `sm` they sit in a bar, with the collections
+   * behind one trigger so the bar stops growing every time a shelf gets a page.
    */
   const [open, setOpen] = useState(false);
+  const { pathname } = useLocation();
+
+  const isOn = (to: string) => pathname === to || pathname.startsWith(`${to}/`);
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
@@ -35,88 +83,217 @@ export function SiteHeader() {
           <span className="display text-xl sm:text-2xl">Dan Avner</span>
         </NavLink>
 
-        <nav aria-label="Main" className="hidden sm:block">
-          <ul className="flex items-center">
-            {NAV.map((item) => (
-              <li key={item.to}>
-                <NavLink
-                  to={item.to}
-                  className={({ isActive }) =>
-                    cn(
-                      "group relative flex items-baseline gap-1.5 px-1.5 py-2 transition-colors sm:px-3",
-                      isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground",
-                    )
-                  }
-                >
-                  {({ isActive }) => (
-                    <>
-                      <span className={LABEL}>{item.label}</span>
-                      {/* Active marker sits on the header's bottom rule. */}
-                      <span
-                        className={cn(
-                          "absolute inset-x-1.5 -bottom-px h-0.5 bg-ember transition-transform duration-150",
-                          isActive ? "scale-x-100" : "scale-x-0",
-                        )}
-                      />
-                    </>
-                  )}
-                </NavLink>
-              </li>
-            ))}
-          </ul>
-        </nav>
-
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger
-            aria-label="Main menu"
-            className="flex cursor-pointer items-center gap-2 px-2 py-2 text-muted-foreground transition-colors hover:text-foreground sm:hidden"
-          >
-            {open ? <X className="size-4" /> : <Menu className="size-4" />}
-            <span className={LABEL}>Menu</span>
-          </PopoverTrigger>
-
-          {/* Square corners and a flat surface, like every other panel here. */}
-          <PopoverContent
-            align="end"
-            sideOffset={9}
-            className="w-56 rounded-none border-border bg-background p-0"
-          >
-            <nav aria-label="Main">
-              <ul className="flex flex-col">
-                {NAV.map((item) => (
-                  <li key={item.to} className="border-b border-border last:border-b-0">
-                    <NavLink
-                      to={item.to}
-                      onClick={() => setOpen(false)}
-                      className={({ isActive }) =>
-                        cn(
-                          "flex items-center gap-3 px-4 py-3 transition-colors hover:bg-card/60",
-                          isActive ? "text-ember" : "text-muted-foreground hover:text-foreground",
-                        )
-                      }
+        <NavigationMenu
+          // The shared animated viewport is for mega-menus that need to measure
+          // and morph between panels. One short list does not, and turning it off
+          // drops the panel straight under its trigger where it belongs.
+          viewport={false}
+          className="hidden h-full sm:flex"
+        >
+          <NavigationMenuList className="h-full items-stretch gap-0">
+            {SECTIONS.map((entry) =>
+              isGroup(entry) ? (
+                <NavigationMenuItem key={entry.label} className="flex">
+                  {/* The trigger draws its own chevron, already rotating on
+                      open, so this passes only the label. */}
+                  <NavigationMenuTrigger className={cn(BAR_ITEM, "cursor-pointer")}>
+                    <span
+                      className={cn(
+                        LABEL,
+                        "transition-colors",
+                        entry.items.some((item) => isOn(item.to))
+                          ? "text-foreground"
+                          : "text-muted-foreground group-hover:text-foreground",
+                      )}
                     >
+                      {entry.label}
+                    </span>
+                    <ActiveRule on={entry.items.some((item) => isOn(item.to))} />
+                  </NavigationMenuTrigger>
+
+                  {/* `rounded-none!` for the same reason: the panel's radius
+                      arrives through a `group-data-[viewport=false]` variant
+                      that out-specifies a plain utility. Nothing here is round. */}
+                  <NavigationMenuContent className="rounded-none! border-border bg-background p-0 shadow-none">
+                    <ul className="w-44">
+                      {entry.items.map((item) => (
+                        <li key={item.to} className="border-b border-border last:border-b-0">
+                          <NavigationMenuLink asChild>
+                            <NavLink to={item.to} className="block px-4 py-3">
+                              {({ isActive }) => <PanelLabel item={item} active={isActive} />}
+                            </NavLink>
+                          </NavigationMenuLink>
+                        </li>
+                      ))}
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              ) : (
+                <NavigationMenuItem key={entry.to} className="flex">
+                  <NavigationMenuLink asChild>
+                    <NavLink to={entry.to} className={BAR_ITEM}>
                       {({ isActive }) => (
                         <>
-                          {/* Holds its width whether or not it is showing, so
-                              the labels do not shift between items. */}
                           <span
-                            className={cn("h-3 w-0.5 shrink-0", isActive ? "bg-ember" : "bg-transparent")}
-                          />
-                          <span className={LABEL}>{item.label}</span>
+                            className={cn(
+                              LABEL,
+                              "transition-colors",
+                              isActive
+                                ? "text-foreground"
+                                : "text-muted-foreground group-hover:text-foreground",
+                            )}
+                          >
+                            {entry.label}
+                          </span>
+                          <ActiveRule on={isActive} />
                         </>
                       )}
                     </NavLink>
-                  </li>
-                ))}
-              </ul>
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+              ),
+            )}
+          </NavigationMenuList>
+        </NavigationMenu>
+
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger asChild>
+            {/* `Button` rather than a bare trigger: the focus ring, the hover
+                state and the pointer cursor all come from the shared base, which
+                is what `everything clickable shows a finger` polices. */}
+            <Button
+              variant="ghost"
+              aria-label="Main menu"
+              /* Square and unfilled, like the bar it stands in for. `ghost`
+                 still earns its place: the focus ring, the disabled handling and
+                 the pointer cursor come from the shared base rather than being
+                 spelled out here and forgotten next time. */
+              className="gap-2 rounded-none bg-transparent! px-2 text-muted-foreground hover:bg-transparent! hover:text-foreground sm:hidden"
+            >
+              <Menu />
+              <span className={LABEL}>Menu</span>
+            </Button>
+          </SheetTrigger>
+
+          {/* Square and flat, like every other panel here. The drawer slides
+              from the right, which is the side the button it came from sits on. */}
+          {/* Width left to the component's own `w-3/4 sm:max-w-sm`. Pinning it
+              to `w-72` took 288px of a 320px phone and left the page showing as
+              a 32px sliver, which reads as a broken overlay rather than a
+              drawer over something. */}
+          <SheetContent side="right" className="gap-0 border-border bg-background p-0">
+            <SheetHeader className="border-b border-border p-4">
+              <SheetTitle className={cn(LABEL, "text-left text-muted-foreground")}>
+                Menu
+              </SheetTitle>
+              {/* Required for the dialog to have a description; there is nothing
+                  useful to say about a list of links, so it is read-only-to-AT. */}
+              <SheetDescription className="sr-only">
+                Links to every section of the site.
+              </SheetDescription>
+            </SheetHeader>
+
+            {/*
+             * Flattened into headed groups rather than nested menus. A dropdown
+             * inside a drawer on a phone is two taps to reach a link that fits on
+             * the screen either way.
+             */}
+            <nav aria-label="Main" className="overflow-y-auto">
+              {SECTIONS.map((entry) =>
+                isGroup(entry) ? (
+                  <div key={entry.label} className="border-b border-border last:border-b-0">
+                    <p className="readout-dim px-4 pt-3 pb-1 text-muted-foreground/70">
+                      {entry.label}
+                    </p>
+                    <ul>
+                      {entry.items.map((item) => (
+                        <MobileItem
+                          key={item.to}
+                          item={item}
+                          nested
+                          onNavigate={() => setOpen(false)}
+                        />
+                      ))}
+                    </ul>
+                  </div>
+                ) : (
+                  <ul key={entry.to} className="border-b border-border last:border-b-0">
+                    <MobileItem item={entry} onNavigate={() => setOpen(false)} />
+                  </ul>
+                ),
+              )}
             </nav>
-          </PopoverContent>
-        </Popover>
+          </SheetContent>
+        </Sheet>
 
         <div className="border-border sm:ml-2 sm:border-l sm:pl-2">
           <ThemeToggle />
         </div>
       </div>
     </header>
+  );
+}
+
+/** A link inside the desktop Hobbies panel. */
+function PanelLabel({ item, active }: { item: Section; active: boolean }) {
+  return (
+    <span
+      className={cn(
+        LABEL,
+        "transition-colors",
+        active ? "text-ember" : "text-muted-foreground hover:text-foreground",
+      )}
+    >
+      {item.label}
+    </span>
+  );
+}
+
+/**
+ * A link inside the phone menu.
+ *
+ * `nested` indents the ones that sit under a group heading. The panel's title,
+ * its top-level links and its group headings all share a left edge; the links
+ * belonging to a heading step in from it, so the list reads as a hierarchy
+ * rather than as nine equal things with a stray word in the middle.
+ */
+function MobileItem({
+  item,
+  nested,
+  onNavigate,
+}: {
+  item: Section;
+  nested?: boolean;
+  onNavigate: () => void;
+}) {
+  return (
+    <li>
+      <NavLink
+        to={item.to}
+        onClick={onNavigate}
+        className={({ isActive }) =>
+          cn(
+            "relative flex items-center py-3 pr-4 transition-colors hover:bg-card/60",
+            nested ? "pl-8" : "pl-4",
+            isActive ? "text-ember" : "text-muted-foreground hover:text-foreground",
+          )
+        }
+      >
+        {({ isActive }) => (
+          <>
+            {/*
+             * The marker sits in the gutter rather than in the flow. Holding a
+             * slot for it inside the padding pushed every label 14px right of
+             * the panel's title and its group headings, so three things that
+             * should share a left edge had three.
+             */}
+            {isActive ? (
+              <span className="absolute top-1/2 left-0 h-4 w-0.5 -translate-y-1/2 bg-ember" />
+            ) : null}
+            <span className={LABEL}>{item.label}</span>
+          </>
+        )}
+      </NavLink>
+    </li>
   );
 }

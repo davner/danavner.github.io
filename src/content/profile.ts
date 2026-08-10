@@ -238,6 +238,7 @@ export const interests: Interest[] = [
   {
     name: "Vinyl",
     icon: "disc",
+    to: "/vinyl",
     note: "My favorite record is the Record Store Day 2026 pressing of All We Know Is Falling with the Summer Tic EP. Alexis tracked one down after what turned into a nationwide scavenger hunt.",
     handle: {
       label: "Discogs",
@@ -248,6 +249,7 @@ export const interests: Interest[] = [
   {
     name: "Comic books",
     icon: "book-open",
+    to: "/comics",
     note: "New comic day is Wednesday. I am usually at the shop with Mikey and Kiwi, my comic book cuties, discussing what to pull next.",
     handle: {
       label: "League of Comic Geeks",

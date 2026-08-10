@@ -3,9 +3,9 @@ import { Link } from "react-router";
 import { PixelFire } from "@/components/pixel-fire";
 import { SocialLinks } from "@/components/social-links";
 import { profile } from "@/content/profile";
-import { SECTIONS } from "@/lib/site";
+import { ALL_SECTIONS } from "@/lib/site";
 
-const LINKS = SECTIONS;
+const LINKS = ALL_SECTIONS;
 
 /** Last-commit date (UTC), already formatted like "Aug 4, 2026" in `vite.config.ts`. */
 const LAST_UPDATED = __LAST_UPDATED__;

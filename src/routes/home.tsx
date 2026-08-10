@@ -18,6 +18,11 @@ import { useDocumentMeta } from "@/lib/use-document-meta";
 
 const INDEX = [
   {
+    to: "/now",
+    title: "Now",
+    blurb: "What I am up to at the moment, and everything it has replaced.",
+  },
+  {
     to: "/about",
     title: "About",
     blurb:
@@ -44,6 +49,11 @@ const INDEX = [
     title: "Vinyl",
     blurb:
       "Every record Alexis and I own, pulled straight from the Discogs shelf.",
+  },
+  {
+    to: "/comics",
+    title: "Comics",
+    blurb: "Every run on the shelf, what is waiting at the shop, and what I still want.",
   },
 ];
 

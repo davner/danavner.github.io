@@ -3,22 +3,56 @@ export const SITE_URL = "https://danavner.com";
 
 export const SITE_NAME = "Dan Avner";
 
+export interface Section {
+  to: string;
+  label: string;
+}
+
+export interface SectionGroup {
+  label: string;
+  items: Section[];
+}
+
 /**
  * The site's sections, in nav order.
  *
  * One list because the header and the footer both render it, and they drifted
  * when they each kept their own - a section added to one is a section half the
  * site cannot reach.
+ *
+ * The collections are grouped rather than sitting alongside About and Career,
+ * because they are not the same kind of thing: Shows, Vinyl and Comics are all
+ * "what I am into", and listing them flat made a seven-item bar where four of
+ * the entries answered the same question. Grouping also stops the bar growing
+ * every time another shelf gets a page.
  */
-export const SECTIONS = [
+export const SECTIONS: (Section | SectionGroup)[] = [
   { to: "/now", label: "Now" },
   { to: "/about", label: "About" },
   { to: "/career", label: "Career" },
   { to: "/blog", label: "Blog" },
-  { to: "/shows", label: "Shows" },
-  { to: "/vinyl", label: "Vinyl" },
-  { to: "/comics", label: "Comics" },
-] as const;
+  {
+    label: "Hobbies",
+    items: [
+      { to: "/shows", label: "Shows" },
+      { to: "/vinyl", label: "Vinyl" },
+      { to: "/comics", label: "Comics" },
+    ],
+  },
+];
+
+export function isGroup(entry: Section | SectionGroup): entry is SectionGroup {
+  return "items" in entry;
+}
+
+/**
+ * Every page, flattened. The footer lists them all rather than reproducing the
+ * grouping - a footer is an index, and hiding three pages behind a heading there
+ * would only make them harder to find.
+ */
+export const ALL_SECTIONS: Section[] = SECTIONS.flatMap((entry) =>
+  isGroup(entry) ? entry.items : [entry],
+);
 
 /**
  * The site's own link-preview card: the wordmark and a line advertising the site

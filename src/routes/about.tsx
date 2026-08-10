@@ -211,6 +211,17 @@ function InterestCard({
 }) {
   const Icon = INTEREST_ICONS[interest.icon];
 
+  /*
+   * The whole tile is clickable when the interest has a page, but the link is on
+   * the heading and stretched over the card with `after:inset-0` rather than
+   * wrapped around it.
+   *
+   * Wrapping is what this used to do, and it only worked while no interest had
+   * both a page and an account. Vinyl and Comics now have both, and an anchor
+   * inside an anchor is invalid HTML that browsers repair by closing the outer
+   * one early - which quietly drops half the card out of the link. Stretching
+   * keeps one tab stop for the page, one for the account, and no nesting.
+   */
   const body = (
     <>
       <div className="flex items-start justify-between">
@@ -225,7 +236,16 @@ function InterestCard({
       >
         <div>
           <h3 className="display flex items-center gap-2 text-2xl transition-colors group-hover:text-ember">
-            {interest.name}
+            {interest.to ? (
+              <Link
+                to={interest.to}
+                className="after:absolute after:inset-0 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
+              >
+                {interest.name}
+              </Link>
+            ) : (
+              interest.name
+            )}
             {interest.to ? (
               <ArrowUpRight className="size-4 shrink-0 opacity-0 transition-opacity group-hover:opacity-70" />
             ) : null}
@@ -254,21 +274,12 @@ function InterestCard({
   );
 
   const shell = cn(
-    "cut-corners group bg-background p-6 transition-colors hover:bg-card/60 sm:p-8",
+    // `relative` is what the stretched heading link measures itself against.
+    "cut-corners group relative bg-background p-6 transition-colors hover:bg-card/60 sm:p-8",
     // The feature card runs the width of the grid.
     interest.feature && "sm:col-span-2 lg:col-span-3",
     fill && !interest.feature && [SM_SPAN[fill.sm], LG_SPAN[fill.lg]],
   );
-
-  if (interest.to) {
-    return (
-      <li className={cn(shell, "p-0 sm:p-0")}>
-        <Link to={interest.to} className="block h-full p-6 sm:p-8">
-          {body}
-        </Link>
-      </li>
-    );
-  }
 
   return <li className={shell}>{body}</li>;
 }

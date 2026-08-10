@@ -1,6 +1,13 @@
 import { expect, test } from "@playwright/test";
 
 import { ROUTES } from "./routes";
+import { ALL_SECTIONS } from "../src/lib/site";
+
+/** Every section page, from the same list the header and footer render. */
+const SECTION_PATHS = ALL_SECTIONS.map((section) => section.to);
+const SECTION_LABELS = Object.fromEntries(
+  ALL_SECTIONS.map((section) => [section.to, section.label]),
+);
 
 test.describe("navigation", () => {
   test("home renders the hero in the display face", async ({ page }) => {
@@ -18,25 +25,28 @@ test.describe("navigation", () => {
     ).toBe(true);
   });
 
-  test("home links to every section", async ({ page }) => {
+  test("home links to every section it advertises", async ({ page }) => {
+    /*
+     * Driven by the shared list rather than a copy of it. This test carried its
+     * own five paths and so had nothing to say when Now and Comics were added -
+     * the omission on the home page was found by eye, which is what a hardcoded
+     * list buys you.
+     */
     await page.goto("/");
-    for (const path of ["/about", "/career", "/blog", "/shows", "/vinyl"]) {
-      await expect(page.locator(`a[href="${path}"]`).first()).toBeAttached();
+    const linked = await page
+      .locator("main a[href^='/']")
+      .evaluateAll((links) => links.map((a) => a.getAttribute("href")));
+
+    for (const path of SECTION_PATHS) {
+      expect(linked, `home does not link to ${path}`).toContain(path);
     }
   });
 
   test("each route sets its own title", async ({ page }) => {
-    const titles: Record<string, string> = {
-      "/about": "About · Dan Avner",
-      "/career": "Career · Dan Avner",
-      "/blog": "Blog · Dan Avner",
-      "/shows": "Shows · Dan Avner",
-      "/vinyl": "Vinyl · Dan Avner",
-    };
-
-    for (const [path, title] of Object.entries(titles)) {
+    for (const path of SECTION_PATHS) {
       await page.goto(path);
-      await expect(page).toHaveTitle(title);
+      const label = SECTION_LABELS[path];
+      await expect(page).toHaveTitle(`${label} · Dan Avner`);
     }
   });
 
@@ -53,6 +63,34 @@ test.describe("navigation", () => {
     await page.getByRole("heading", { level: 1 }).waitFor();
     // A smooth scroll already in flight must not survive the route change.
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+  });
+
+  test("the phone drawer names itself and closes on navigating", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 800 });
+    await page.goto("/");
+    await page.getByRole("heading", { level: 1 }).waitFor();
+
+    const menu = page.getByRole("button", { name: "Main menu" });
+    await expect(menu).toBeVisible();
+    await menu.click();
+
+    /*
+     * A drawer is a dialog, and a dialog with no accessible name is announced as
+     * just "dialog". The title is visible here; the description is for screen
+     * readers only. Neither is decoration - Radix warns without them.
+     */
+    const drawer = page.getByRole("dialog");
+    await expect(drawer).toHaveAccessibleName(/menu/i);
+
+    // Every section is reachable from it, grouped ones included.
+    for (const path of SECTION_PATHS) {
+      await expect(drawer.locator(`a[href="${path}"]`)).toHaveCount(1);
+    }
+
+    await drawer.getByRole("link", { name: "Shows" }).click();
+    await page.waitForURL("**/shows");
+    // A drawer left open over the page you just moved to is a trap.
+    await expect(drawer).toHaveCount(0);
   });
 
   test("unknown paths render the 404", async ({ page }) => {
@@ -618,9 +656,22 @@ test.describe("now", () => {
   });
 
   test("says when it was written and how stale that makes it", async ({ page }) => {
+    /*
+     * An empty now page is a real state, not just one the build passes through:
+     * `src/content/now.md` may not exist. So this asserts whichever of the two
+     * is on screen rather than assuming an entry is there - what it will not
+     * accept is a dated entry with no staleness, or a blank page with neither.
+     */
+    const stamp = page.locator("main time").first();
+
+    if ((await stamp.count()) === 0) {
+      await expect(page.getByRole("heading", { level: 1 })).toContainText(/now/i);
+      await expect(page.locator("main")).toContainText(/nothing here at the moment/i);
+      return;
+    }
+
     // The date is the whole point of a now page - without it the reader cannot
     // tell whether "at the moment" means this week or two years ago.
-    const stamp = page.locator("main time").first();
     await expect(stamp).toHaveAttribute("datetime", /^\d{4}-\d{2}-\d{2}$/);
     // Scoped to `main`: the footer carries its own "last updated", which is the
     // site's last commit rather than this page's entry.

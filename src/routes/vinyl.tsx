@@ -5,6 +5,7 @@ import { useSearchParams } from "react-router";
 import { EmptyState } from "@/components/empty-state";
 import { CONTROL_CLASS, FilterToggle } from "@/components/filter-toggle";
 import { PageHeader, PageShell } from "@/components/page";
+import { ScrollingText } from "@/components/scrolling-text";
 import { SelectControl } from "@/components/select-control";
 import {
   ALL,
@@ -88,9 +89,7 @@ function RecordTile({ record }: { record: VinylRecord }) {
         )}
 
         <div className="flex flex-1 flex-col p-4">
-          <p className="readout-dim truncate" title={record.artist}>
-            {record.artist}
-          </p>
+          <ScrollingText className="readout-dim">{record.artist}</ScrollingText>
           <h3 className="mt-1.5 leading-snug font-medium text-pretty transition-colors group-hover:text-ember">
             {record.title}
             <ArrowUpRight className="ml-1 inline size-3.5 shrink-0 opacity-0 transition-opacity group-hover:opacity-70" />
@@ -100,13 +99,11 @@ function RecordTile({ record }: { record: VinylRecord }) {
               row whether the title above it ran to one line or three. */}
           <div className="mt-auto pt-3">
             {record.variant ? (
-              <p className="readout-dim mb-1.5 truncate text-ember" title={record.variant}>
+              <ScrollingText className="readout-dim mb-1.5 text-ember">
                 {record.variant}
-              </p>
+              </ScrollingText>
             ) : null}
-            <p className="readout-dim truncate" title={spine}>
-              {spine}
-            </p>
+            <ScrollingText className="readout-dim">{spine}</ScrollingText>
           </div>
         </div>
       </a>

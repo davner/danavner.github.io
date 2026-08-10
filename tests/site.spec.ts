@@ -648,6 +648,50 @@ test.describe("vinyl", () => {
     }
   });
 
+  test("only overflowing lines scroll, and only while pointed at", async ({ page }) => {
+    const scrolling = () =>
+      page.evaluate(
+        () =>
+          document
+            .getAnimations()
+            .filter((a) => a.playState === "running" && (a as CSSAnimation).animationName === "scroll-on-hover")
+            .length,
+      );
+
+    /*
+     * Nothing moves on its own. Fifty tiles of self-scrolling text would be
+     * unreadable, and WCAG 2.2.2 wants a way to stop motion that starts by
+     * itself and runs alongside other content - here that mechanism is the
+     * pointer, which only works while nothing moves unprompted.
+     */
+    await expect.poll(scrolling).toBe(0);
+
+    const lines = page.locator("[data-slot=record] .scroll-on-hover");
+    expect(await lines.count()).toBeGreaterThan(0);
+
+    // A line only claims to overflow if it was measured as overflowing.
+    const measured = await lines.evaluateAll((els) =>
+      els
+        .filter((el) => (el as HTMLElement).dataset.overflow === "true")
+        .map((el) => (el as HTMLElement).style.getPropertyValue("--scroll-shift")),
+    );
+    for (const shift of measured) expect(shift).toMatch(/^\d+(\.\d+)?px$/);
+
+    // Hovering a tile that has one starts it, and leaving stops it again.
+    const index = await page.evaluate(() =>
+      [...document.querySelectorAll("[data-slot=record]")].findIndex((tile) =>
+        tile.querySelector('.scroll-on-hover[data-overflow="true"]'),
+      ),
+    );
+    if (index < 0) return; // No line is long enough today; nothing to prove.
+
+    await page.locator("[data-slot=record]").nth(index).hover();
+    await expect.poll(scrolling).toBeGreaterThan(0);
+
+    await page.mouse.move(0, 0);
+    await expect.poll(scrolling).toBe(0);
+  });
+
   test("cover art is served from this site, not Discogs", async ({ page }) => {
     // The whole reason the collection is committed rather than fetched: leaning
     // on Discogs' CDN would put a third-party request on every page view and

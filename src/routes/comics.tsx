@@ -4,6 +4,7 @@ import { useSearchParams } from "react-router";
 import { EmptyState } from "@/components/empty-state";
 import { FilterToggle } from "@/components/filter-toggle";
 import { PageHeader, PageShell } from "@/components/page";
+import { ScrollingText } from "@/components/scrolling-text";
 import { comics, issueCount, SHELVES, type ComicEntry, type ShelfId } from "@/lib/comics";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
@@ -131,14 +132,14 @@ function ComicTile({ entry }: { entry: ComicEntry }) {
               whether the title above ran to one line or three. */}
           <div className="mt-auto pt-3">
             {entry.publisher ? (
-              <p className="readout-dim mb-1.5 truncate text-ember" title={entry.publisher}>
+              <ScrollingText className="readout-dim mb-1.5 text-ember">
                 {entry.publisher}
-              </p>
+              </ScrollingText>
             ) : null}
             {lines.filter(Boolean).map((line) => (
-              <p key={line} className="readout-dim truncate" title={line}>
+              <ScrollingText key={line} className="readout-dim">
                 {line}
-              </p>
+              </ScrollingText>
             ))}
           </div>
         </div>

@@ -262,6 +262,53 @@
     }
   }
 
+  /* ---- Overflowing tile text ----------------------------------------- */
+
+  /*
+   * A line too long for its tile slides to show the rest, then slides back.
+   *
+   * It runs while the tile is hovered or holds focus rather than forever. A
+   * shelf is fifty-odd tiles with three lines each: set all of them moving at
+   * once and the page is unreadable, and it would also land squarely on WCAG
+   * 2.2.2, which asks for a way to stop motion that starts on its own, lasts
+   * over five seconds and sits alongside other content. Tying it to the pointer
+   * makes the reader the mechanism.
+   *
+   * `--scroll-shift` and `--scroll-duration` are measured per line and set
+   * inline; the shift is exactly how much is hidden, so it stops at the last
+   * character rather than scrolling into empty space.
+   */
+  .scroll-on-hover {
+    overflow: hidden;
+  }
+
+  .scroll-on-hover > span {
+    display: inline-block;
+    white-space: nowrap;
+  }
+
+  .group:hover .scroll-on-hover[data-overflow="true"] > span,
+  .group:focus-within .scroll-on-hover[data-overflow="true"] > span {
+    animation: scroll-on-hover var(--scroll-duration, 3s) ease-in-out 0.2s infinite alternate;
+  }
+
+  @keyframes scroll-on-hover {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+    to {
+      transform: translate3d(calc(-1 * var(--scroll-shift, 0px)), 0, 0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .group:hover .scroll-on-hover[data-overflow="true"] > span,
+    .group:focus-within .scroll-on-hover[data-overflow="true"] > span {
+      animation: none;
+      transform: none;
+    }
+  }
+
   /* ---- Panels -------------------------------------------------------- */
 
   /* Corner ticks, like registration marks on a printed flyer. */

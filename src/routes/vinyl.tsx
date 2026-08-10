@@ -244,7 +244,7 @@ export function Vinyl() {
       <PageHeader
         title={TITLE}
         size="long"
-        lede="Alexis and I share one Discogs account and separate opinions on what music is good. Collecting vinyl is an expensive hobby, but nothing beats the warm sound of a record player, not to mention the vibes. This list updates daily. Filter it down to just hers or mine."
+        lede="Alexis and I share one Discogs account and separate opinions on what music is good. Collecting vinyl is an expensive hobby, but nothing beats the warm sound of a record player, not to mention the vibes. Filter it down to just hers or mine."
       >
         {owners.length > 1 ? (
           <FilterToggle

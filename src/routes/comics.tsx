@@ -190,7 +190,7 @@ export function Comics() {
       <PageHeader
         title={HEADING}
         size="long"
-        lede="New comic day is Wednesday. This is every run on the shelf, what is waiting at the shop this week, and what I have not talked myself into yet. Read from League of Comic Geeks nightly."
+        lede="New comic day is Wednesday. This is every run on the shelf, what is waiting at the shop this week, and what I have not talked myself into yet."
       >
         <FilterToggle
           label="Which comics to show"

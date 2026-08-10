@@ -10,6 +10,8 @@ import { cn } from "@/lib/utils";
  */
 export function FramedPhoto({
   src,
+  srcSet,
+  sizes,
   alt,
   caption,
   className,
@@ -19,23 +21,35 @@ export function FramedPhoto({
   eager,
 }: {
   src: string;
+  /** Widths to choose between, when more than one size of the photo exists. */
+  srcSet?: string;
+  /** How wide the photo renders, so the browser can pick from `srcSet`. */
+  sizes?: string;
   alt: string;
   caption: string;
   className?: string;
   imageClassName?: string;
   width?: number;
   height?: number;
-  /** The hero photo is above the fold and should not wait for lazy loading. */
+  /**
+   * Above the fold: skip lazy loading, and ask the browser to fetch it ahead of
+   * everything else. On the home page this photo is the largest contentful
+   * paint, and it is rendered by React rather than sitting in the HTML - so
+   * without the hint nothing starts fetching it until the bundle has run.
+   */
   eager?: boolean;
 }) {
   return (
     <figure className={cn("relative overflow-hidden border border-border", className)}>
       <img
         src={src}
+        srcSet={srcSet}
+        sizes={sizes}
         alt={alt}
         width={width}
         height={height}
         loading={eager ? "eager" : "lazy"}
+        fetchPriority={eager ? "high" : undefined}
         decoding="async"
         className={cn("w-full object-cover", imageClassName)}
       />

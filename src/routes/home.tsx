@@ -146,8 +146,15 @@ export function Home() {
           {/* Full colour and full width, tops out level with the wordmark the
               way the about and career hero photos do. */}
           <div>
+            {/* WebP, and two widths. The JPEG is half the size again as WebP
+                at the same quality, and the small screens that need the least
+                of it were being sent all 1067px of it. `sizes` describes what
+                the layout actually does: a fixed column beside the wordmark on
+                a wide screen, full width below that. */}
             <FramedPhoto
-              src="/img/me1.jpg"
+              src="/img/me1.webp"
+              srcSet="/img/me1-768.webp 768w, /img/me1.webp 1067w"
+              sizes="(min-width: 1024px) 400px, 100vw"
               alt={`${profile.name}, smiling, in a patterned shirt`}
               caption="Subject, smiling"
               width={1067}

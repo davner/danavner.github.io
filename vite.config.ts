@@ -1,5 +1,5 @@
 import { execSync } from "node:child_process";
-import { copyFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 import tailwindcss from "@tailwindcss/vite";
@@ -77,14 +77,33 @@ function preloadFonts(): Plugin {
  * GitHub Pages has no SPA rewrite rule, so a deep link like /blog/some-post
  * 404s on a hard refresh. Pages serves 404.html for unknown paths, so shipping
  * a copy of index.html under that name lets the client router take over.
+ *
+ * Not quite a copy: the home page's hero preload is stripped out. Pages serves
+ * index.html only for "/" and 404.html for every other path, which makes this
+ * the one place the two entry points can differ - and preloading a 47 kB photo
+ * that only the home page shows would otherwise be dead weight on every deep
+ * link into the site.
  */
+const HOME_PRELOAD = /[ \t]*<!-- home-preload:start -->[\s\S]*?<!-- home-preload:end -->\n?/;
+
 function githubPagesSpaFallback(): Plugin {
   return {
     name: "github-pages-spa-fallback",
     apply: "build",
     closeBundle() {
       const outDir = path.resolve(import.meta.dirname, "dist");
-      copyFileSync(path.join(outDir, "index.html"), path.join(outDir, "404.html"));
+      const html = readFileSync(path.join(outDir, "index.html"), "utf8");
+
+      if (!HOME_PRELOAD.test(html)) {
+        // The markers are how the two entry points are allowed to differ. If
+        // they are gone the fallback silently becomes an exact copy again and
+        // every deep link starts paying for the home page's photo.
+        throw new Error(
+          "github-pages-spa-fallback: the home-preload markers are missing from index.html",
+        );
+      }
+
+      writeFileSync(path.join(outDir, "404.html"), html.replace(HOME_PRELOAD, ""));
     },
   };
 }

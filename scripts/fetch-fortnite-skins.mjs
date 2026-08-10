@@ -94,6 +94,19 @@ async function resolve(main) {
  * choice not to have one, so it never wins: Lady Windfrost with super level
  * off falls through to her Dark style, which is the point of picking her.
  *
+ * ## This names the tile, it does not pick the picture
+ *
+ * Fortnite-API publishes a style's render at 128px where the plain icon is 256
+ * or 512, so drawing the style costs half the resolution or more. Sharpness
+ * won: every tile takes the outfit's icon, and the style only supplies the
+ * words underneath it. The caption still says what was worn even though the
+ * picture is the outfit's stock art.
+ *
+ * Not `featured` either, for a different reason. It is larger again where it
+ * exists - 1024px for Guff - but it is the tall full-body item-shop shot,
+ * framed nothing like the head-and-shoulders icon, and barely any outfit has
+ * one. Using it would make the two that do the odd cards in the grid.
+ *
  * A selection that matches nothing is reported rather than skipped. It means
  * the name is wrong, or Epic renamed the option, and quietly falling back to
  * the default render is how a page ends up showing an outfit nobody wore.
@@ -137,11 +150,17 @@ function chooseVariant(cosmetic, wanted, key) {
   const pick = (test) =>
     matched.find(
       (entry) =>
-        test.test(entry.type ?? "") && entry.option.image && !NOT_A_LOOK.test(entry.option.name),
+        test.test(entry.type ?? "") &&
+        entry.option.image &&
+        !NOT_A_LOOK.test(entry.option.name) &&
+        // A style named after the outfit is the outfit's default look.
+        entry.option.name.toLowerCase() !== cosmetic.name.toLowerCase(),
     );
 
-  const chosen =
-    pick(/super\s*level/i) ?? pick(/style/i) ?? matched.find((entry) => entry.option.image);
+  // No fallback to "any matched variant". A glow or a reactivity toggle is not
+  // a different picture, and taking its 128px render over the 256px icon is a
+  // straight loss.
+  const chosen = pick(/super\s*level/i) ?? pick(/style/i);
 
   return { chosen, matched, problems: problems.length };
 }
@@ -160,17 +179,9 @@ async function main() {
     const { chosen, problems: bad } = chooseVariant(cosmetic, season.main.variants, season.key);
     problems += bad;
 
-    /*
-     * The variant render if one was picked, otherwise the square icon.
-     *
-     * Never `featured`, even though it is the largest image on offer. It is the
-     * tall full-body shot Epic uses in the item shop, framed nothing like the
-     * head-and-shoulders icon, so the two cannot sit in the same grid: Guff had
-     * it and stood out as the one card that was a different picture rather than
-     * a different character. Only a couple of outfits have one at all, which
-     * makes it a rule that applies to a minority and disfigures the set.
-     */
-    const source = chosen?.option.image ?? cosmetic.images?.icon;
+    // Always the icon - see the header. The largest square portrait Epic
+    // publishes, and the same framing for every outfit.
+    const source = cosmetic.images?.icon ?? cosmetic.images?.smallIcon;
     if (!source) throw new Error(`"${season.main.name}" has no render`);
 
     const name = `${slug(season.main.name)}.png`;
@@ -215,7 +226,7 @@ async function main() {
     written += 1;
     console.log(
       `${season.key}: ${cosmetic.name}` +
-        (chosen ? ` [${chosen.option.name}]` : " [default render]") +
+        (chosen ? ` [worn as ${chosen.option.name}]` : "") +
         ` -> ${season.main.image}  ${width}x${height}`,
     );
   }

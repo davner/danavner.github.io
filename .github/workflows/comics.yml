@@ -10,32 +10,37 @@ name: Comics
 # parses the same HTML the site's own front end asks for, which is not something
 # to do from a visitor's browser even if the promise allowed it.
 #
-# So this job is the only thing that talks to League of Comic Geeks: nightly, it
-# reads the collection, the pull list, and the wish list, writes
-# `src/content/comics.json`, and commits the covers it had to download. A failed
-# read commits nothing, so the last good payload stays and keeps showing. The
-# push triggers the normal deploy; this runs on a schedule, not on push, so its
-# own commit never re-triggers it.
+# So `scripts/update-comics.mjs` is the only thing that talks to League of Comic
+# Geeks: it reads the collection, the pull list, and the wish list, writes
+# `src/content/comics.json`, and saves the covers it had to download. A failed
+# read writes nothing, so the last good payload stays and keeps showing.
 #
-# ## When this goes red with a 403
+# ## Why there is no nightly schedule
 #
-# League of Comic Geeks is behind Cloudflare, which answers on how the client
-# looks and where it is calling from. `impit` handles the first half - a plain
-# `curl` gets 403 from anywhere and impit's browser fingerprint gets 200 - but
-# nothing can be done here about the second, and a GitHub runner's datacenter
-# address is exactly what Cloudflare distrusts.
+# There was one, and it never once worked. League of Comic Geeks is behind
+# Cloudflare, which answers on how the client looks and where it is calling
+# from. `impit` handles the first half - a plain `curl` gets 403 from anywhere
+# and impit's browser fingerprint gets 200 - but a GitHub runner's datacenter
+# address is exactly what Cloudflare distrusts, and nothing in the script can
+# change that. Discogs has a real API and does not care, which is why that shelf
+# updates from CI and this one cannot.
 #
-# The script retries a few times before believing it, and then exits non-zero
-# rather than passing quietly, because a run that read nothing used to look
-# exactly like a run where nothing had changed.
+# It was tried properly before being given up on: the script retries a 403 three
+# times with a widening gap, and a dispatched run failed all three. The refusal
+# is about the address.
 #
-# If this fails night after night, the block is about the address and no amount
-# of retrying will help. Run `node scripts/update-comics.mjs` from a normal
-# connection and commit the result, the way `backfill-fortnite.mjs` is run.
+# So the shelf is refreshed by hand, the way `backfill-fortnite.mjs` is:
+#
+#   node scripts/update-comics.mjs
+#
+# then commit `src/content/comics.json` and `public/img/comics/`. This workflow
+# stays dispatchable in case the block ever lifts, and would work unchanged if it
+# did. What it will not do is run every night and go red every morning - a check
+# nobody can act on is one everybody learns to scroll past.
 
+# Dispatch only. There is no schedule, because a scheduled run here cannot work
+# - see below.
 on:
-  schedule:
-    - cron: "42 9 * * *" # 09:42 UTC nightly, an hour after the vinyl job.
   workflow_dispatch:
 
 permissions:

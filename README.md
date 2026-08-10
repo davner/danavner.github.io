@@ -114,7 +114,7 @@ a convenience rather than a gate: `--no-verify` skips it.
 | `deploy.yml`      | push to `main`, or a data job finishing | builds and publishes to GitHub Pages                    |
 | `links.yml`       | weekly, Mondays                         | external link check; opens an issue if anything is dead |
 | `vinyl.yml`       | nightly                                 | reads the Discogs collection, commits it if it moved    |
-| `comics.yml`      | nightly                                 | reads the comic collection, commits it if it moved      |
+| `comics.yml`      | manual dispatch only                    | see below - a scheduled run cannot reach the source     |
 | `fortnite.yml`    | nightly                                 | reads the Fortnite stats, commits them if they moved    |
 | `now-archive.yml` | push touching `now.md`                  | files the entry the update replaced                     |
 
@@ -183,7 +183,7 @@ scripts/
   gen-font-fallbacks.mjs  measures the fonts so fallbacks match their metrics
   archive-now.mjs         files the now entry an update replaced
   update-vinyl.mjs        reads the Discogs collection nightly, saves the sleeves
-  update-comics.mjs       reads League of Comic Geeks nightly, saves the covers
+  update-comics.mjs       reads League of Comic Geeks, run by hand not by CI
   update-fortnite.mjs     reads the Fortnite stats nightly, keeps a season archive
   backfill-fortnite.mjs   fills past seasons in from Epic, run by hand not by CI
   fetch-fortnite-skins.mjs downloads the render for each season's main outfit
@@ -202,7 +202,7 @@ src/
     shows/*.md            one markdown file per show
     now.md + now/         the current now entry, and the ones it replaced
     vinyl.json            the record collection, written nightly from Discogs
-    comics.json           the comic shelf, written nightly
+    comics.json           the comic shelf, written by a hand-run of the script
     fortnite.json         the stats, written nightly and backfilled once
     fortnite-seasons.json the season calendar - the one Fortnite file edited by hand
   routes/                 one file per page
@@ -252,7 +252,7 @@ validates it, and exposes it as a virtual module:
 | `content/shows/*.md`                              | `virtual:shows`    | you                               |
 | `content/now.md` + `now/`                         | `virtual:now`      | you                               |
 | `content/vinyl.json`                              | `virtual:vinyl`    | `update-vinyl.mjs`, nightly       |
-| `content/comics.json`                             | `virtual:comics`   | `update-comics.mjs`, nightly      |
+| `content/comics.json`                             | `virtual:comics`   | `update-comics.mjs`, by hand      |
 | `content/fortnite.json` + `fortnite-seasons.json` | `virtual:fortnite` | the job, and you for the calendar |
 
 The generated files are validated exactly as strictly as the hand-written ones,
@@ -545,34 +545,52 @@ the filter.
 
 ## The comic shelf
 
-`/comics` is the record collection's twin: `scripts/update-comics.mjs` reads
-League of Comic Geeks nightly, writes `src/content/comics.json`, saves the covers
-into `public/img/comics/`, and commits both. Same reasoning as Discogs - the
-site's standing promise is that nothing phones home, so the fetch happens in CI
-and the result is committed.
+`/comics` is the record collection's twin in shape: `scripts/update-comics.mjs`
+reads League of Comic Geeks, writes `src/content/comics.json`, and saves the
+covers into `public/img/comics/`. Same reasoning as Discogs - the site's standing
+promise is that nothing phones home, so the fetch happens ahead of time and the
+result is committed.
+
+**Unlike Discogs, this one is run by hand:**
+
+```sh
+node scripts/update-comics.mjs
+```
+
+then commit `src/content/comics.json` and `public/img/comics/`.
 
 No API key, because there is no API. League of Comic Geeks has never published
 one, so the script talks to the same endpoint their own front end does and parses
 what comes back. The header of the script explains why that is not a smaller
 commitment than the npm library it replaced, which had already drifted.
 
-**The nightly run can come back 403, and that is about the address it calls
-from.** The site is behind Cloudflare, which answers on how the client looks and
-where it is calling from. `impit` handles the first - a plain `curl` gets 403
-from anywhere and impit's browser fingerprint gets 200 - but a GitHub runner's
-datacenter address is exactly the kind Cloudflare distrusts, and nothing in the
-script can change that. It retries, then exits non-zero rather than passing
-quietly, so a stale shelf shows up as a red run instead of a green one that
-committed nothing.
+### Why it is not on a schedule
 
-If it fails repeatedly, run it from a normal connection and commit the result:
+It was, and it never once worked. The site is behind Cloudflare, which answers on
+how the client looks and where it is calling from. `impit` handles the first - a
+plain `curl` gets 403 from anywhere and impit's browser fingerprint gets 200 -
+but a GitHub runner's datacenter address is exactly the kind Cloudflare
+distrusts, and nothing in the script can change that.
 
-```sh
-node scripts/update-comics.mjs
-```
+It was given a fair go before being given up on. The script retries a 403 three
+times with a widening gap; a dispatched run failed all three. The refusal is
+about the address, so no amount of retrying will help.
 
-Discogs has a real API and does not care where you call from, which is why the
-record shelf updates from CI every night and this one sometimes will not.
+The failure was invisible for a while, which is the part worth remembering. The
+script used to warn and exit 0, so the workflow went green, committed nothing,
+and looked exactly like a night where the shelf had not changed. `comics.json`
+had only ever been committed by hand while `vinyl.json` was committed by the bot
+every night - from the same CI, by the same shape of job. That is what a silent
+failure looks like from the outside, and it is why both scripts now exit
+non-zero when they read nothing.
+
+`.github/workflows/comics.yml` is still dispatchable and would work unchanged if
+the block ever lifted. What it no longer does is run every night and go red every
+morning, because a check nobody can act on is one everybody learns to scroll
+past.
+
+Discogs has a real API and does not care where you call from, which is why that
+shelf still updates from CI every night.
 
 ## The now page
 

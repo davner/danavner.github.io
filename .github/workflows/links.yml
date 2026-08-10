@@ -40,6 +40,13 @@ jobs:
           #
           #   linkedin, instagram, discogs,
           #   leagueofcomicgeeks, epicgames   403 outright
+          #   scholar.google.com              403 to a datacenter IP, whatever
+          #                                   the user agent says. The profile
+          #                                   answers 200 from a normal
+          #                                   connection - checked by hand when
+          #                                   this job first reported it - so a
+          #                                   403 here is a statement about the
+          #                                   runner, not about the link
           #   setlist.fm                      serves a captcha page - and which
           #                                   status it uses depends on the
           #                                   user agent (202 for a browser
@@ -63,6 +70,7 @@ jobs:
             --exclude 'discogs\.com'
             --exclude 'leagueofcomicgeeks\.com'
             --exclude 'store\.epicgames\.com'
+            --exclude 'scholar\.google\.com'
             --exclude 'setlist\.fm'
             --exclude 'localhost'
             --exclude '127\.0\.0\.1'

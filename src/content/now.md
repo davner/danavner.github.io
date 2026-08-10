@@ -1,0 +1,18 @@
+---
+updated: 2026-08-10
+---
+
+I love the idea of a now page. Originally coined
+[here](https://nownownow.com/about), it is a great way to keep people up to date
+with what you are doing, working on, and finding fun.
+
+Right now I am working on getting this site finished. I am also about to start
+playing Magic because of the latest Miku drop that I HAVE TO GET
+([Secret Lair Commander Deck: Hatsune Miku](https://magic.wizards.com/en/news/announcements/secret-lair-commander-deck-hatsune-miku-decklist)).
+
+It has been brutally hot out here in Los Angeles, so we are looking to install
+solar screens to block the sun from heating up our outdated windows. I can feel
+the heat coming off the glass.
+
+Playing a lot of Fortnite, trying to get these dang sprites leveled up. It has
+been fun, but I am also getting burned out on how many there are!

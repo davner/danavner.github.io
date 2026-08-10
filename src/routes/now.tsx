@@ -48,20 +48,11 @@ export function Now() {
     <PageShell>
       <PageHeader
         title={TITLE}
-        lede={
-          <>
-            What I'm up to at the moment, in the sense meant by{" "}
-            <a
-              href="https://nownownow.com/about"
-              target="_blank"
-              rel="noreferrer noopener"
-              className="text-ember underline underline-offset-4"
-            >
-              nownownow.com
-            </a>
-            . Not a blog, not an archive. It goes out of date, and then I fix it.
-          </>
-        }
+        /* The entry itself now explains what a now page is, and links where the
+           idea came from. Saying it again up here put the same link twice in
+           consecutive sentences, so the lede keeps only the part the entry does
+           not cover. */
+        lede="Not a blog, not an archive. It goes out of date, and then I fix it."
       />
 
       <div className="max-w-2xl">

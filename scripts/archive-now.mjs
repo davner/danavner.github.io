@@ -51,6 +51,30 @@ function git(...args) {
 }
 
 /**
+ * `git` where failing is an answer rather than a crash.
+ *
+ * Used for reading a past version of the page, which is not always there: the
+ * commit before this one may be the one that *deleted* `now.md`, and `git show`
+ * exits non-zero on a path that does not exist at that revision. That is a real
+ * state - the page was empty, so there is nothing behind this entry to file -
+ * and it should not take the job down.
+ */
+function gitOrNull(...args) {
+  try {
+    // stderr is discarded rather than inherited: git writes "fatal: path does
+    // not exist" here for what is an ordinary outcome, and a `fatal:` in the log
+    // of a job that succeeded reads like something went wrong.
+    return execFileSync("git", args, {
+      cwd: ROOT,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+  } catch {
+    return null;
+  }
+}
+
+/**
  * The `updated` date out of a raw entry.
  *
  * Read with a regex rather than a YAML parser because this script is the one
@@ -84,7 +108,13 @@ async function main() {
     return;
   }
 
-  const previousRaw = git("show", `${commits[1]}:${NOW_FILE}`);
+  const previousRaw = gitOrNull("show", `${commits[1]}:${NOW_FILE}`);
+
+  if (previousRaw === null) {
+    console.log("now-archive: the page did not exist before this, nothing to file");
+    return;
+  }
+
   const previous = updatedDate(previousRaw);
 
   if (!previous) {

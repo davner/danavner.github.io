@@ -35,7 +35,6 @@ const photo = `data:image/jpeg;base64,${b64("public/img/me1.jpg")}`;
 
 // Straight from src/index.css.
 const INK = "#f4f1ea";
-const DIM = "#8b8b93";
 const EMBER = "#e6431a";
 const VOID = "#08090d";
 

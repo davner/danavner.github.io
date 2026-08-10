@@ -167,11 +167,11 @@ async function main() {
     if (!season.main?.name) continue;
 
     const cosmetic = await resolve(season.main);
-    const {
-      chosen,
-      matched,
-      problems: bad,
-    } = chooseVariant(cosmetic, season.main.variants, season.key);
+    const { chosen, problems: bad } = chooseVariant(
+      cosmetic,
+      season.main.variants,
+      season.key,
+    );
     problems += bad;
 
     /*

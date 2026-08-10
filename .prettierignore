@@ -1,0 +1,18 @@
+# Build output and dependencies.
+dist
+node_modules
+coverage
+playwright-report
+test-results
+
+# Generated content. These are written by the nightly jobs with their own
+# JSON.stringify formatting, and a bot commit landing while the hook reformats
+# them is a fight nobody needs. `fortnite-seasons.json` is deliberately absent:
+# it is hand-kept, so it should be formatted like anything else.
+src/content/vinyl.json
+src/content/comics.json
+src/content/fortnite.json
+
+# Auto-generated, and the repo's own rule is never to hand-edit it.
+CHANGELOG.md
+package-lock.json

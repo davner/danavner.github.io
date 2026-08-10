@@ -8,6 +8,7 @@ export const ROUTES = [
   "/vinyl",
   "/now",
   "/comics",
+  "/fortnite",
   "/blog/welcome",
   "/blog/building-this-site",
   "/shows/bruno-mars-madrid-2026",

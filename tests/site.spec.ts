@@ -58,14 +58,19 @@ test.describe("navigation", () => {
     // is the one actually on screen.
     const menu = page.getByRole("button", { name: "Main menu" });
     if (await menu.isVisible()) await menu.click();
-    await page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: "About" }).click();
+    await page
+      .getByRole("navigation", { name: "Main" })
+      .getByRole("link", { name: "About" })
+      .click();
     await page.waitForURL("**/about");
     await page.getByRole("heading", { level: 1 }).waitFor();
     // A smooth scroll already in flight must not survive the route change.
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
   });
 
-  test("the phone drawer names itself and closes on navigating", async ({ page }) => {
+  test("the phone drawer names itself and closes on navigating", async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 320, height: 800 });
     await page.goto("/");
     await page.getByRole("heading", { level: 1 }).waitFor();
@@ -88,7 +93,10 @@ test.describe("navigation", () => {
      * does not exist until the drawer opens - so it shipped with the arrow
      * Tailwind's preflight gives every button.
      */
-    await expect(drawer.getByRole("button", { name: /close/i })).toHaveCSS("cursor", "pointer");
+    await expect(drawer.getByRole("button", { name: /close/i })).toHaveCSS(
+      "cursor",
+      "pointer",
+    );
 
     // Nothing in here paints a block behind the row you are pointing at; the
     // label changes colour instead, the way the bar above does.
@@ -648,14 +656,19 @@ test.describe("vinyl", () => {
     }
   });
 
-  test("only overflowing lines scroll, and only while pointed at", async ({ page }) => {
+  test("only overflowing lines scroll, and only while pointed at", async ({
+    page,
+  }) => {
     const scrolling = () =>
       page.evaluate(
         () =>
           document
             .getAnimations()
-            .filter((a) => a.playState === "running" && (a as CSSAnimation).animationName === "scroll-on-hover")
-            .length,
+            .filter(
+              (a) =>
+                a.playState === "running" &&
+                (a as CSSAnimation).animationName === "scroll-on-hover",
+            ).length,
       );
 
     /*
@@ -673,7 +686,9 @@ test.describe("vinyl", () => {
     const measured = await lines.evaluateAll((els) =>
       els
         .filter((el) => (el as HTMLElement).dataset.overflow === "true")
-        .map((el) => (el as HTMLElement).style.getPropertyValue("--scroll-shift")),
+        .map((el) =>
+          (el as HTMLElement).style.getPropertyValue("--scroll-shift"),
+        ),
     );
     for (const shift of measured) expect(shift).toMatch(/^\d+(\.\d+)?px$/);
 
@@ -713,7 +728,9 @@ test.describe("now", () => {
     await page.getByRole("heading", { level: 1 }).waitFor();
   });
 
-  test("says when it was written and how stale that makes it", async ({ page }) => {
+  test("says when it was written and how stale that makes it", async ({
+    page,
+  }) => {
     /*
      * An empty now page is a real state, not just one the build passes through:
      * `src/content/now.md` may not exist. So this asserts whichever of the two
@@ -723,8 +740,12 @@ test.describe("now", () => {
     const stamp = page.locator("main time").first();
 
     if ((await stamp.count()) === 0) {
-      await expect(page.getByRole("heading", { level: 1 })).toContainText(/now/i);
-      await expect(page.locator("main")).toContainText(/nothing here at the moment/i);
+      await expect(page.getByRole("heading", { level: 1 })).toContainText(
+        /now/i,
+      );
+      await expect(page.locator("main")).toContainText(
+        /nothing here at the moment/i,
+      );
       return;
     }
 
@@ -738,7 +759,9 @@ test.describe("now", () => {
     );
   });
 
-  test("the archive appears only once an entry has been filed", async ({ page }) => {
+  test("the archive appears only once an entry has been filed", async ({
+    page,
+  }) => {
     /*
      * The folder starts empty and fills on its own as `now.md` is rewritten, so
      * this asserts the rule rather than a count: entries present means a
@@ -767,7 +790,9 @@ test.describe("now", () => {
     expect(new Set(dates).size).toBe(dates.length);
   });
 
-  test("the rail reaches the oldest entry without scrolling through the rest", async ({ page }) => {
+  test("the rail reaches the oldest entry without scrolling through the rest", async ({
+    page,
+  }) => {
     /*
      * The reason the rail exists. A scroll pane on its own only gives sequential
      * access, so the oldest entry costs a trip through everything newer - and
@@ -791,12 +816,17 @@ test.describe("now", () => {
     await rail.getByRole("radio").last().click();
 
     const oldest = await archived.last().getAttribute("data-date");
-    await expect(rail.locator("[aria-checked=true]")).toHaveAttribute("data-rail-date", oldest!);
+    await expect(rail.locator("[aria-checked=true]")).toHaveAttribute(
+      "data-rail-date",
+      oldest!,
+    );
 
     // Nothing to travel to when only one entry is filed.
     if (filed === 1) return;
 
-    await expect.poll(() => pane.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
+    await expect
+      .poll(() => pane.evaluate((el) => el.scrollTop))
+      .toBeGreaterThan(0);
 
     /*
      * The outcome that matters: the oldest entry ends up inside the pane's
@@ -820,7 +850,9 @@ test.describe("comics", () => {
     await page.getByRole("heading", { level: 1 }).waitFor();
   });
 
-  test("the shelf filter swaps the list and syncs the URL", async ({ page }) => {
+  test("the shelf filter swaps the list and syncs the URL", async ({
+    page,
+  }) => {
     const tiles = page.locator("[data-slot=comic]");
     const filter = page.getByRole("radiogroup", { name: /which comics/i });
     await expect(filter).toBeVisible();
@@ -843,7 +875,9 @@ test.describe("comics", () => {
     expect(await tiles.count()).toBeGreaterThan(0);
   });
 
-  test("every shelf the filter offers can actually be shown", async ({ page }) => {
+  test("every shelf the filter offers can actually be shown", async ({
+    page,
+  }) => {
     const filter = page.getByRole("radiogroup", { name: /which comics/i });
     const options = filter.getByRole("radio");
     const count = await options.count();
@@ -855,12 +889,16 @@ test.describe("comics", () => {
       // list is genuinely empty most of the week, so both are correct.
       const tiles = await page.locator("[data-slot=comic]").count();
       if (tiles === 0) {
-        await expect(page.getByText(/Nothing (pulled|on this list)/i)).toBeVisible();
+        await expect(
+          page.getByText(/Nothing (pulled|on this list)/i),
+        ).toBeVisible();
       }
     }
   });
 
-  test("the per-run issue counts add up to the issues-held stat", async ({ page }) => {
+  test("the per-run issue counts add up to the issues-held stat", async ({
+    page,
+  }) => {
     // The stat is summed from the payload and the tiles print it per run, so
     // the two disagreeing means one of them is reading the wrong field.
     const counts = await page
@@ -878,30 +916,43 @@ test.describe("comics", () => {
     expect(total).toBeGreaterThan(0);
 
     const stat = Number(
-      await page.getByRole("term").filter({ hasText: /^Issues held$/i }).locator("+ dd").innerText(),
+      await page
+        .getByRole("term")
+        .filter({ hasText: /^Issues held$/i })
+        .locator("+ dd")
+        .innerText(),
     );
     expect(total).toBe(stat);
   });
 
-  test("cover art is served from this site, not League of Comic Geeks", async ({ page }) => {
+  test("cover art is served from this site, not League of Comic Geeks", async ({
+    page,
+  }) => {
     // Same reason the records are committed: leaning on their CDN would put a
     // third-party request on every page view and break links.spec.ts.
     const sources = await page
       .locator("[data-slot=comic] img")
-      .evaluateAll((images) => images.map((img) => img.getAttribute("src") ?? ""));
+      .evaluateAll((images) =>
+        images.map((img) => img.getAttribute("src") ?? ""),
+      );
 
     expect(sources.length).toBeGreaterThan(0);
     for (const src of sources) expect(src).toMatch(/^\/img\/comics\//);
   });
 
-  test("every tile opens its League of Comic Geeks page safely", async ({ page }) => {
+  test("every tile opens its League of Comic Geeks page safely", async ({
+    page,
+  }) => {
     const links = page.locator("[data-slot=comic] a");
     const count = await links.count();
     expect(count).toBeGreaterThan(0);
 
     for (let i = 0; i < count; i++) {
       const link = links.nth(i);
-      await expect(link).toHaveAttribute("href", /^https:\/\/leagueofcomicgeeks\.com\//);
+      await expect(link).toHaveAttribute(
+        "href",
+        /^https:\/\/leagueofcomicgeeks\.com\//,
+      );
       await expect(link).toHaveAttribute("rel", /noopener/);
     }
   });
@@ -1099,5 +1150,46 @@ test.describe("chrome", () => {
         )
         .toBeLessThanOrEqual(1);
     }
+  });
+});
+
+/**
+ * The Fortnite page has no committed stats until the nightly job has run once
+ * with an API key, so what ships today is its empty state. These pin the parts
+ * that are true either way - the page exists, it is reachable from the nav, and
+ * it explains itself rather than rendering a blank board.
+ *
+ * The populated view is not asserted here because the data is baked at build
+ * time from `src/content/fortnite.json`, so there is nothing a browser test can
+ * stub. Once the first fetch lands, the season and playlist controls are worth
+ * the same URL-syncing tests the blog and comics filters have.
+ */
+test.describe("fortnite", () => {
+  test("says why it is empty rather than showing a blank board", async ({
+    page,
+  }) => {
+    await page.goto("/fortnite");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(
+      /fortnite/i,
+    );
+
+    const board = page.locator("[data-slot=stat]");
+    if ((await board.count()) > 0) {
+      // Stats have landed: every tile must carry a figure, since an empty tile
+      // is the shape a half-successful fetch takes.
+      for (const text of await board.locator("dd").allInnerTexts()) {
+        expect(text.trim()).not.toBe("");
+      }
+      return;
+    }
+
+    await expect(page.getByText(/no stats yet/i)).toBeVisible();
+  });
+
+  test("is reachable from the hobbies group and the footer", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await expect(page.locator('a[href="/fortnite"]').first()).toBeAttached();
   });
 });

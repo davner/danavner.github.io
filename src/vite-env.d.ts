@@ -27,6 +27,16 @@ declare module "virtual:comics" {
   export const comics: ComicsPayload;
 }
 
+declare module "virtual:fortnite" {
+  import type { FortnitePayload } from "@/lib/fortnite";
+
+  /**
+   * The Fortnite stats, read from Fortnite-API nightly and validated at build
+   * time. Supplied by `contentPlugin()` in `vite-plugin-content.ts`.
+   */
+  export const fortnite: FortnitePayload;
+}
+
 declare module "virtual:now" {
   import type { Now } from "@/lib/now";
 

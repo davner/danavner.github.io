@@ -1,5 +1,11 @@
 import { Suspense, lazy } from "react";
-import { BrowserRouter, Navigate, Route, Routes, useParams } from "react-router";
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useParams,
+} from "react-router";
 
 import { Backdrop } from "@/components/backdrop";
 import { ScrollToTop } from "@/components/scroll-to-top";
@@ -19,20 +25,32 @@ const BlogPost = lazy(() =>
 );
 
 // Shows render markdown notes, so these routes pull in the renderer too.
-const Shows = lazy(() => import("@/routes/shows").then((module) => ({ default: module.Shows })));
+const Shows = lazy(() =>
+  import("@/routes/shows").then((module) => ({ default: module.Shows })),
+);
 const ShowDetail = lazy(() =>
   import("@/routes/show").then((module) => ({ default: module.ShowDetail })),
 );
 
 // The record collection is a page of its own with a cover grid and a stat
 // board, and nothing else needs it, so it loads on demand too.
-const Vinyl = lazy(() => import("@/routes/vinyl").then((module) => ({ default: module.Vinyl })));
+const Vinyl = lazy(() =>
+  import("@/routes/vinyl").then((module) => ({ default: module.Vinyl })),
+);
 
 // The now page renders markdown, so it pulls in the renderer as well.
-const Now = lazy(() => import("@/routes/now").then((module) => ({ default: module.Now })));
+const Now = lazy(() =>
+  import("@/routes/now").then((module) => ({ default: module.Now })),
+);
 
 // The comics page is a cover grid of its own, loaded on demand like the records.
-const Comics = lazy(() => import("@/routes/comics").then((module) => ({ default: module.Comics })));
+const Comics = lazy(() =>
+  import("@/routes/comics").then((module) => ({ default: module.Comics })),
+);
+
+const Fortnite = lazy(() =>
+  import("@/routes/fortnite").then((module) => ({ default: module.Fortnite })),
+);
 
 export function App() {
   return (
@@ -104,6 +122,14 @@ export function App() {
                 </Suspense>
               }
             />
+            <Route
+              path="/fortnite"
+              element={
+                <Suspense fallback={<PostSkeleton />}>
+                  <Fortnite />
+                </Suspense>
+              }
+            />
 
             {/* The sections were called Work and Writing before; keep both
                 resolving so nothing already linked breaks. Trips was a section
@@ -113,7 +139,10 @@ export function App() {
             <Route path="/writing" element={<Navigate to="/blog" replace />} />
             <Route path="/writing/:slug" element={<LegacyPostRedirect />} />
             <Route path="/trips" element={<Navigate to="/blog" replace />} />
-            <Route path="/trips/:slug" element={<Navigate to="/blog" replace />} />
+            <Route
+              path="/trips/:slug"
+              element={<Navigate to="/blog" replace />}
+            />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
@@ -145,7 +174,11 @@ function PostSkeleton() {
           child happens to be first. */}
       <div className="mt-10 flex flex-col gap-3">
         {Array.from({ length: 8 }, (_, index) => (
-          <Skeleton key={index} className="h-4" style={{ width: `${95 - index * 4}%` }} />
+          <Skeleton
+            key={index}
+            className="h-4"
+            style={{ width: `${95 - index * 4}%` }}
+          />
         ))}
       </div>
     </div>

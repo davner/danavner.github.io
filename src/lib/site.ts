@@ -48,6 +48,7 @@ export const SECTIONS: (Section | SectionGroup)[] = [
       { to: "/shows", label: "Shows" },
       { to: "/vinyl", label: "Vinyl" },
       { to: "/comics", label: "Comics" },
+      { to: "/fortnite", label: "Fortnite" },
     ],
   },
 ];

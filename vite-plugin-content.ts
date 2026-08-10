@@ -56,15 +56,30 @@ function asDate(value: unknown): string {
   return asTrimmedString(value);
 }
 
-function splitFrontmatter(collection: string, file: string, raw: string, where?: string): Frontmatter {
+function splitFrontmatter(
+  collection: string,
+  file: string,
+  raw: string,
+  where?: string,
+): Frontmatter {
   const match = FRONTMATTER.exec(raw);
   if (!match) {
-    fail(collection, file, "missing a `---` frontmatter block at the top of the file", where);
+    fail(
+      collection,
+      file,
+      "missing a `---` frontmatter block at the top of the file",
+      where,
+    );
   }
 
   const data = parseYaml(match[1]);
   if (data === null || typeof data !== "object" || Array.isArray(data)) {
-    fail(collection, file, "frontmatter must be a YAML mapping of keys to values", where);
+    fail(
+      collection,
+      file,
+      "frontmatter must be a YAML mapping of keys to values",
+      where,
+    );
   }
 
   return {
@@ -86,7 +101,11 @@ function parsePost({ file, meta, body, slug }: Frontmatter, publicDir: string) {
 
   const category = asTrimmedString(meta.category);
   if (!POST_CATEGORIES.includes(category)) {
-    fail("blog", file, `frontmatter \`category\` must be one of: ${POST_CATEGORIES.join(", ")}`);
+    fail(
+      "blog",
+      file,
+      `frontmatter \`category\` must be one of: ${POST_CATEGORIES.join(", ")}`,
+    );
   }
 
   if (!body) fail("blog", file, "the post has no body");
@@ -123,7 +142,12 @@ function parsePost({ file, meta, body, slug }: Frontmatter, publicDir: string) {
  *
  * `alt` and `caption` are both required; a bare path is rejected.
  */
-function asPhotos(collection: string, value: unknown, file: string, publicDir: string) {
+function asPhotos(
+  collection: string,
+  value: unknown,
+  file: string,
+  publicDir: string,
+) {
   if (value == null) return [];
 
   return (Array.isArray(value) ? value : [value]).map((entry, index) => {
@@ -132,7 +156,11 @@ function asPhotos(collection: string, value: unknown, file: string, publicDir: s
         ? { src: entry }
         : entry && typeof entry === "object" && !Array.isArray(entry)
           ? (entry as Record<string, unknown>)
-          : fail(collection, file, `\`photos[${index}]\` must be a path or a mapping with \`src\``);
+          : fail(
+              collection,
+              file,
+              `\`photos[${index}]\` must be a path or a mapping with \`src\``,
+            );
 
     const src = asTrimmedString(raw.src);
     if (!src) fail(collection, file, `\`photos[${index}]\` needs a \`src\``);
@@ -147,17 +175,27 @@ function asPhotos(collection: string, value: unknown, file: string, publicDir: s
     // A typo in a photo path would otherwise ship as a broken image; local
     // files are cheap to confirm, remote ones are not this build's problem.
     if (src.startsWith("/") && !existsSync(path.join(publicDir, src))) {
-      fail(collection, file, `\`photos[${index}].src\` does not exist: public${src}`);
+      fail(
+        collection,
+        file,
+        `\`photos[${index}].src\` does not exist: public${src}`,
+      );
     }
 
     // Alt text and a caption are both required. A photo without alt text is
     // invisible to anyone using a screen reader, and one without a caption
     // gives no context to anyone else - neither should reach the site.
     const alt = asTrimmedString(raw.alt);
-    if (!alt) fail(collection, file, `\`photos[${index}]\` needs \`alt\` describing what is in the frame`);
+    if (!alt)
+      fail(
+        collection,
+        file,
+        `\`photos[${index}]\` needs \`alt\` describing what is in the frame`,
+      );
 
     const caption = asTrimmedString(raw.caption);
-    if (!caption) fail(collection, file, `\`photos[${index}]\` needs a \`caption\``);
+    if (!caption)
+      fail(collection, file, `\`photos[${index}]\` needs a \`caption\``);
 
     return { src, alt, caption };
   });
@@ -179,38 +217,55 @@ function asPhotos(collection: string, value: unknown, file: string, publicDir: s
 function asSetlists(value: unknown, file: string, lineup: string[]) {
   if (value == null) return [];
 
-  const entries = (Array.isArray(value) ? value : [value]).map((entry, index) => {
-    if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
-      fail("shows", file, `\`setlists[${index}]\` must be a mapping with \`band\` and \`url\``);
-    }
-    const raw = entry as Record<string, unknown>;
+  const entries = (Array.isArray(value) ? value : [value]).map(
+    (entry, index) => {
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+        fail(
+          "shows",
+          file,
+          `\`setlists[${index}]\` must be a mapping with \`band\` and \`url\``,
+        );
+      }
+      const raw = entry as Record<string, unknown>;
 
-    const band = asTrimmedString(raw.band);
-    if (!band) fail("shows", file, `\`setlists[${index}]\` needs a \`band\``);
-    if (!lineup.includes(band)) {
-      fail(
-        "shows",
-        file,
-        `\`setlists[${index}].band\` "${band}" is not in the lineup - a setlist button can only point at a band that played`,
-      );
-    }
+      const band = asTrimmedString(raw.band);
+      if (!band) fail("shows", file, `\`setlists[${index}]\` needs a \`band\``);
+      if (!lineup.includes(band)) {
+        fail(
+          "shows",
+          file,
+          `\`setlists[${index}].band\` "${band}" is not in the lineup - a setlist button can only point at a band that played`,
+        );
+      }
 
-    const url = asTrimmedString(raw.url);
-    if (!/^https?:\/\//.test(url)) {
-      fail("shows", file, `\`setlists[${index}].url\` must be a full http(s) URL`);
-    }
+      const url = asTrimmedString(raw.url);
+      if (!/^https?:\/\//.test(url)) {
+        fail(
+          "shows",
+          file,
+          `\`setlists[${index}].url\` must be a full http(s) URL`,
+        );
+      }
 
-    return { band, url };
-  });
+      return { band, url };
+    },
+  );
 
   const duplicates = entries.filter(
-    (entry, index) => entries.findIndex((other) => other.band === entry.band) !== index,
+    (entry, index) =>
+      entries.findIndex((other) => other.band === entry.band) !== index,
   );
   if (duplicates.length > 0) {
-    fail("shows", file, `\`setlists\` names the same band twice: ${duplicates.map((d) => d.band).join(", ")}`);
+    fail(
+      "shows",
+      file,
+      `\`setlists\` names the same band twice: ${duplicates.map((d) => d.band).join(", ")}`,
+    );
   }
 
-  return entries.sort((a, b) => lineup.indexOf(a.band) - lineup.indexOf(b.band));
+  return entries.sort(
+    (a, b) => lineup.indexOf(a.band) - lineup.indexOf(b.band),
+  );
 }
 
 function parseShow({ file, meta, body, slug }: Frontmatter, publicDir: string) {
@@ -220,7 +275,9 @@ function parseShow({ file, meta, body, slug }: Frontmatter, publicDir: string) {
   }
 
   const givenTitle = asTrimmedString(meta.title);
-  const givenLineup = asStringArray(meta.lineup).map((band) => band.trim()).filter(Boolean);
+  const givenLineup = asStringArray(meta.lineup)
+    .map((band) => band.trim())
+    .filter(Boolean);
 
   /*
    * `lineup` is the whole bill, top billing first - a show is rarely one band,
@@ -230,7 +287,12 @@ function parseShow({ file, meta, body, slug }: Frontmatter, publicDir: string) {
    * A festival's `title` is the event, not a band, so it stays out of `lineup`
    * and therefore out of every band count downstream.
    */
-  const lineup = type === "festival" ? givenLineup : givenLineup.length ? givenLineup : [givenTitle].filter(Boolean);
+  const lineup =
+    type === "festival"
+      ? givenLineup
+      : givenLineup.length
+        ? givenLineup
+        : [givenTitle].filter(Boolean);
 
   if (type === "festival" && !givenTitle) {
     fail("shows", file, "a festival needs a `title` - the name of the event");
@@ -243,9 +305,15 @@ function parseShow({ file, meta, body, slug }: Frontmatter, publicDir: string) {
     );
   }
 
-  const duplicates = lineup.filter((band, index) => lineup.indexOf(band) !== index);
+  const duplicates = lineup.filter(
+    (band, index) => lineup.indexOf(band) !== index,
+  );
   if (duplicates.length > 0) {
-    fail("shows", file, `\`lineup\` lists the same band twice: ${duplicates.join(", ")}`);
+    fail(
+      "shows",
+      file,
+      `\`lineup\` lists the same band twice: ${duplicates.join(", ")}`,
+    );
   }
 
   // For a show the heading is whoever is top of the bill.
@@ -253,7 +321,11 @@ function parseShow({ file, meta, body, slug }: Frontmatter, publicDir: string) {
 
   const date = asDate(meta.date);
   if (!DATE.test(date)) {
-    fail("shows", file, "frontmatter needs a `date` as `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`");
+    fail(
+      "shows",
+      file,
+      "frontmatter needs a `date` as `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`",
+    );
   }
 
   const endDate = asDate(meta.endDate);
@@ -273,7 +345,8 @@ function parseShow({ file, meta, body, slug }: Frontmatter, publicDir: string) {
   // publish one and a guessed capacity is worse than no capacity.
   let capacity: number | null = null;
   if (meta.capacity != null && meta.capacity !== "") {
-    const parsed = typeof meta.capacity === "number" ? meta.capacity : Number(meta.capacity);
+    const parsed =
+      typeof meta.capacity === "number" ? meta.capacity : Number(meta.capacity);
     if (!Number.isInteger(parsed) || parsed <= 0) {
       fail("shows", file, "`capacity` must be a whole number of people");
     }
@@ -289,8 +362,10 @@ function parseShow({ file, meta, body, slug }: Frontmatter, publicDir: string) {
   // same as zero and must not render as an empty rating.
   let rating: number | null = null;
   if (meta.rating != null && meta.rating !== "") {
-    const parsed = typeof meta.rating === "number" ? meta.rating : Number(meta.rating);
-    if (!Number.isFinite(parsed)) fail("shows", file, "`rating` must be a number");
+    const parsed =
+      typeof meta.rating === "number" ? meta.rating : Number(meta.rating);
+    if (!Number.isFinite(parsed))
+      fail("shows", file, "`rating` must be a number");
     if (parsed < 0 || parsed > MAX_RATING) {
       fail("shows", file, `\`rating\` must be between 0 and ${MAX_RATING}`);
     }
@@ -338,7 +413,10 @@ interface Collection {
   /** Directory under `src/content/`, and the export name on the virtual module. */
   name: string;
   exportName: string;
-  parse: (entry: Frontmatter, publicDir: string) => { date: string; title: string; draft?: boolean };
+  parse: (
+    entry: Frontmatter,
+    publicDir: string,
+  ) => { date: string; title: string; draft?: boolean };
 }
 
 const COLLECTIONS: Collection[] = [
@@ -346,24 +424,37 @@ const COLLECTIONS: Collection[] = [
   { name: "shows", exportName: "shows", parse: parseShow },
 ];
 
-function readCollection(collection: Collection, dir: string, publicDir: string) {
+function readCollection(
+  collection: Collection,
+  dir: string,
+  publicDir: string,
+) {
   // A leading underscore marks a file as notes-to-self rather than an entry,
   // which is how each collection keeps its own README next to its content.
   const files = existsSync(dir)
-    ? readdirSync(dir).filter((file) => file.endsWith(".md") && !file.startsWith("_"))
+    ? readdirSync(dir).filter(
+        (file) => file.endsWith(".md") && !file.startsWith("_"),
+      )
     : [];
 
   return (
     files
       .map((file) =>
         collection.parse(
-          splitFrontmatter(collection.name, file, readFileSync(path.join(dir, file), "utf8")),
+          splitFrontmatter(
+            collection.name,
+            file,
+            readFileSync(path.join(dir, file), "utf8"),
+          ),
           publicDir,
         ),
       )
       // Newest first; a partial date sorts below a full one in the same year,
       // which is the right place for "sometime in 2026".
-      .sort((a, b) => b.date.localeCompare(a.date) || a.title.localeCompare(b.title))
+      .sort(
+        (a, b) =>
+          b.date.localeCompare(a.date) || a.title.localeCompare(b.title),
+      )
   );
 }
 
@@ -429,7 +520,9 @@ function readVinyl(root: string, publicDir: string) {
   if (!existsSync(file)) return empty;
 
   const fail = (message: string): never => {
-    throw new Error(`Invalid vinyl payload - src/content/vinyl.json: ${message}`);
+    throw new Error(
+      `Invalid vinyl payload - src/content/vinyl.json: ${message}`,
+    );
   };
 
   let payload: Record<string, unknown>;
@@ -443,7 +536,9 @@ function readVinyl(root: string, publicDir: string) {
     fail("must be a JSON object");
   }
 
-  const owners = Array.isArray(payload.owners) ? (payload.owners as Record<string, unknown>[]) : [];
+  const owners = Array.isArray(payload.owners)
+    ? (payload.owners as Record<string, unknown>[])
+    : [];
   for (const [index, owner] of owners.entries()) {
     if (!asTrimmedString(owner.id) || !asTrimmedString(owner.name)) {
       fail(`\`owners[${index}]\` needs an \`id\` and a \`name\``);
@@ -461,10 +556,12 @@ function readVinyl(root: string, publicDir: string) {
     const where = `\`records[${index}]\``;
 
     const instanceId = Number(record.instanceId);
-    if (!Number.isInteger(instanceId)) fail(`${where} needs a numeric \`instanceId\``);
+    if (!Number.isInteger(instanceId))
+      fail(`${where} needs a numeric \`instanceId\``);
     // The instance id keys the list in React, so a duplicate would silently
     // drop a record from the page rather than render two.
-    if (seen.has(instanceId)) fail(`${where} repeats \`instanceId\` ${instanceId}`);
+    if (seen.has(instanceId))
+      fail(`${where} repeats \`instanceId\` ${instanceId}`);
     seen.add(instanceId);
 
     const artist = asTrimmedString(record.artist);
@@ -525,7 +622,9 @@ function readVinyl(root: string, publicDir: string) {
     owners: owners.map((owner) => ({
       id: asTrimmedString(owner.id),
       name: asTrimmedString(owner.name),
-      count: records.filter((record) => record.owner === asTrimmedString(owner.id)).length,
+      count: records.filter(
+        (record) => record.owner === asTrimmedString(owner.id),
+      ).length,
     })),
     records,
   };
@@ -560,7 +659,9 @@ function readComics(root: string, publicDir: string) {
   if (!existsSync(file)) return empty;
 
   const fail = (message: string): never => {
-    throw new Error(`Invalid comics payload - src/content/comics.json: ${message}`);
+    throw new Error(
+      `Invalid comics payload - src/content/comics.json: ${message}`,
+    );
   };
 
   let payload: Record<string, unknown>;
@@ -592,7 +693,10 @@ function readComics(root: string, publicDir: string) {
       seen.add(key);
 
       const title = asTrimmedString(entry.name);
-      if (!title) fail(`${where} has no \`name\` - the parse found the row but not its title`);
+      if (!title)
+        fail(
+          `${where} has no \`name\` - the parse found the row but not its title`,
+        );
 
       // A cover path pointing at nothing would ship as a broken tile, exactly
       // like a mistyped photo path in a show.
@@ -649,6 +753,175 @@ function readComics(root: string, publicDir: string) {
   };
 }
 
+/** One playlist's numbers. Mirrors `ModeStats` in `src/lib/fortnite.ts`. */
+interface FortniteModeJson {
+  matches: number;
+  wins: number;
+  kills: number;
+  deaths: number;
+  kd: number;
+  winRate: number;
+  killsPerMatch: number;
+  top10: number;
+  top25: number;
+  minutesPlayed: number;
+  score: number;
+  playersOutlived: number;
+}
+
+type FortniteSnapshotJson = Record<string, FortniteModeJson | null> & {
+  overall: FortniteModeJson;
+};
+
+/**
+ * The Fortnite stats, read from `src/content/fortnite.json` - written nightly
+ * from Fortnite-API by `scripts/update-fortnite.mjs` rather than typed by hand.
+ *
+ * Generated, so this guards the failure that payload actually has: a window the
+ * API answered with a body but no usable numbers, which would render a page of
+ * zeroes that reads as "played 0 matches" rather than as "the fetch broke". A
+ * snapshot with no `overall`, or an `overall` with no matches, is that failure.
+ *
+ * The season list is the part worth being strict about, because it accumulates:
+ * every night rewrites one entry and carries the rest through, so a duplicate or
+ * an unlabelled key is a bug that would compound for months before anyone
+ * noticed the page had two "Chapter 7 Season 2" tabs.
+ *
+ * A missing file is not an error. The repo builds before the first fetch has
+ * ever run, and the page renders its empty state.
+ */
+function readFortnite(root: string) {
+  const file = path.resolve(root, "src/content/fortnite.json");
+  const empty = {
+    name: "",
+    accountId: "",
+    fetched: "",
+    lifetime: null as FortniteSnapshotJson | null,
+    seasons: [] as {
+      key: string;
+      label: string;
+      start: string;
+      first: string;
+      fetched: string;
+      stats: FortniteSnapshotJson;
+    }[],
+  };
+
+  if (!existsSync(file)) return empty;
+
+  const fail = (message: string): never => {
+    throw new Error(
+      `Invalid Fortnite payload - src/content/fortnite.json: ${message}`,
+    );
+  };
+
+  let payload: Record<string, unknown>;
+  try {
+    payload = JSON.parse(readFileSync(file, "utf8"));
+  } catch (error) {
+    return fail(`could not be parsed as JSON (${(error as Error).message})`);
+  }
+
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    fail("must be a JSON object");
+  }
+
+  const MODES = ["overall", "solo", "duo", "trio", "squad"] as const;
+
+  const readMode = (raw: unknown, where: string): FortniteModeJson | null => {
+    if (raw == null) return null;
+    if (typeof raw !== "object" || Array.isArray(raw))
+      fail(`${where} must be an object or null`);
+
+    const entry = raw as Record<string, unknown>;
+    const matches = Number(entry.matches);
+    if (!Number.isFinite(matches) || matches <= 0) {
+      fail(
+        `${where} needs a positive \`matches\` - a mode with none should be null`,
+      );
+    }
+
+    const num = (field: keyof FortniteModeJson) => {
+      const value = Number(entry[field]);
+      if (!Number.isFinite(value)) fail(`${where}.${field} is not a number`);
+      return value;
+    };
+
+    return {
+      matches,
+      wins: num("wins"),
+      kills: num("kills"),
+      deaths: num("deaths"),
+      kd: num("kd"),
+      winRate: num("winRate"),
+      killsPerMatch: num("killsPerMatch"),
+      top10: num("top10"),
+      top25: num("top25"),
+      minutesPlayed: num("minutesPlayed"),
+      score: num("score"),
+      playersOutlived: num("playersOutlived"),
+    };
+  };
+
+  const readSnapshot = (raw: unknown, where: string): FortniteSnapshotJson => {
+    if (!raw || typeof raw !== "object") fail(`${where} must be an object`);
+    const entry = raw as Record<string, unknown>;
+
+    const overall = readMode(entry.overall, `${where}.overall`);
+    if (!overall)
+      fail(
+        `${where} needs an \`overall\` - a window with no matches is not worth a tab`,
+      );
+
+    const snapshot = { overall } as FortniteSnapshotJson;
+    for (const name of MODES) {
+      if (name === "overall") continue;
+      snapshot[name] = readMode(entry[name] ?? null, `${where}.${name}`);
+    }
+    return snapshot;
+  };
+
+  const rawSeasons = Array.isArray(payload.seasons)
+    ? (payload.seasons as Record<string, unknown>[])
+    : fail("`seasons` must be an array");
+
+  const seen = new Set<string>();
+
+  const seasons = rawSeasons.map((season, index) => {
+    const where = `\`seasons[${index}]\``;
+
+    const key = asTrimmedString(season.key);
+    if (!key) fail(`${where} needs a \`key\``);
+    // The key tabs the page and keys the list in React, so a duplicate would
+    // render two tabs that look identical and show one of them.
+    if (seen.has(key)) fail(`${where} repeats \`key\` "${key}"`);
+    seen.add(key);
+
+    const label = asTrimmedString(season.label);
+    if (!label)
+      fail(`${where} needs a \`label\` - the tab has nothing to say otherwise`);
+
+    return {
+      key,
+      label,
+      start: asTrimmedString(season.start),
+      first: asTrimmedString(season.first),
+      fetched: asTrimmedString(season.fetched),
+      stats: readSnapshot(season.stats, `${where}.stats`),
+    };
+  });
+
+  return {
+    name: asTrimmedString(payload.name),
+    accountId: asTrimmedString(payload.accountId),
+    fetched: asTrimmedString(payload.fetched),
+    lifetime: payload.lifetime
+      ? readSnapshot(payload.lifetime, "`lifetime`")
+      : null,
+    seasons,
+  };
+}
+
 /** One now entry, current or archived. Mirrors `NowEntry` in `src/lib/now.ts`. */
 interface NowEntry {
   updated: string;
@@ -661,7 +934,12 @@ function parseNowEntry(raw: string, file: string, where: string): NowEntry {
 
   const updated = asDate(meta.updated);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(updated)) {
-    fail("now", file, "frontmatter needs an `updated` date in `YYYY-MM-DD` form", where);
+    fail(
+      "now",
+      file,
+      "frontmatter needs an `updated` date in `YYYY-MM-DD` form",
+      where,
+    );
   }
 
   if (!body) fail("now", file, "the entry has no body", where);
@@ -696,12 +974,18 @@ function readNow(root: string) {
 
   const dir = path.resolve(root, "src/content/now");
   const files = existsSync(dir)
-    ? readdirSync(dir).filter((name) => name.endsWith(".md") && !name.startsWith("_"))
+    ? readdirSync(dir).filter(
+        (name) => name.endsWith(".md") && !name.startsWith("_"),
+      )
     : [];
 
   const archive = files
     .map((name) =>
-      parseNowEntry(readFileSync(path.join(dir, name), "utf8"), name, `src/content/now/${name}`),
+      parseNowEntry(
+        readFileSync(path.join(dir, name), "utf8"),
+        name,
+        `src/content/now/${name}`,
+      ),
     )
     // Newest first, the way every other collection here sorts.
     .sort((a, b) => b.updated.localeCompare(a.updated));
@@ -711,7 +995,9 @@ function readNow(root: string) {
    * the current one means the archive job ran twice on one date, or a hand-made
    * file collided with it. Either way the page would print the same day twice.
    */
-  const clash = current ? archive.find((entry) => entry.updated === current.updated) : undefined;
+  const clash = current
+    ? archive.find((entry) => entry.updated === current.updated)
+    : undefined;
   if (clash) {
     fail(
       "now",
@@ -731,9 +1017,11 @@ function readNow(root: string) {
  */
 export function readShows(root: string, publicDir: string) {
   const collection = COLLECTIONS.find((entry) => entry.name === "shows")!;
-  return readCollection(collection, path.resolve(root, "src/content/shows"), publicDir) as ReturnType<
-    typeof parseShow
-  >[];
+  return readCollection(
+    collection,
+    path.resolve(root, "src/content/shows"),
+    publicDir,
+  ) as ReturnType<typeof parseShow>[];
 }
 
 /**
@@ -761,6 +1049,7 @@ export function contentPlugin(): Plugin {
   const VINYL = "vinyl";
   const NOW = "now";
   const COMICS = "comics";
+  const FORTNITE = "fortnite";
 
   function virtualId(name: string) {
     return `virtual:${name}`;
@@ -771,9 +1060,11 @@ export function contentPlugin(): Plugin {
   }
 
   function load(collection: Collection): string {
-    const entries = readCollection(collection, dirs.get(collection.name)!, publicDir).filter(
-      (entry) => includeDrafts || !entry.draft,
-    );
+    const entries = readCollection(
+      collection,
+      dirs.get(collection.name)!,
+      publicDir,
+    ).filter((entry) => includeDrafts || !entry.draft);
 
     return `export const ${collection.exportName} = ${JSON.stringify(entries)};`;
   }
@@ -784,7 +1075,10 @@ export function contentPlugin(): Plugin {
 
     configResolved(config) {
       for (const collection of COLLECTIONS) {
-        dirs.set(collection.name, path.resolve(config.root, "src/content", collection.name));
+        dirs.set(
+          collection.name,
+          path.resolve(config.root, "src/content", collection.name),
+        );
       }
       root = config.root;
       publicDir = config.publicDir;
@@ -792,10 +1086,12 @@ export function contentPlugin(): Plugin {
     },
 
     resolveId(id) {
-      for (const single of [VINYL, NOW, COMICS]) {
+      for (const single of [VINYL, NOW, COMICS, FORTNITE]) {
         if (id === virtualId(single)) return resolvedId(single);
       }
-      const collection = COLLECTIONS.find((entry) => id === virtualId(entry.name));
+      const collection = COLLECTIONS.find(
+        (entry) => id === virtualId(entry.name),
+      );
       return collection ? resolvedId(collection.name) : null;
     },
 
@@ -809,8 +1105,13 @@ export function contentPlugin(): Plugin {
       if (id === resolvedId(COMICS)) {
         return `export const comics = ${JSON.stringify(readComics(root, publicDir))};`;
       }
+      if (id === resolvedId(FORTNITE)) {
+        return `export const fortnite = ${JSON.stringify(readFortnite(root))};`;
+      }
 
-      const collection = COLLECTIONS.find((entry) => id === resolvedId(entry.name));
+      const collection = COLLECTIONS.find(
+        (entry) => id === resolvedId(entry.name),
+      );
       return collection ? load(collection) : null;
     },
 
@@ -824,14 +1125,22 @@ export function contentPlugin(): Plugin {
         };
 
         // A local run of the Discogs fetch should show up without a restart.
-        if (file === path.resolve(root, "src/content/vinyl.json")) return reload(VINYL);
-        if (file === path.resolve(root, "src/content/now.md")) return reload(NOW);
+        if (file === path.resolve(root, "src/content/vinyl.json"))
+          return reload(VINYL);
+        if (file === path.resolve(root, "src/content/now.md"))
+          return reload(NOW);
         // A local run of the comics fetch should show up without a restart too.
-        if (file === path.resolve(root, "src/content/comics.json")) return reload(COMICS);
+        if (file === path.resolve(root, "src/content/comics.json"))
+          return reload(COMICS);
+        // Same for a local run of the Fortnite fetch.
+        if (file === path.resolve(root, "src/content/fortnite.json"))
+          return reload(FORTNITE);
 
         if (!file.endsWith(".md")) return;
 
-        const collection = COLLECTIONS.find((entry) => file.startsWith(dirs.get(entry.name)!));
+        const collection = COLLECTIONS.find((entry) =>
+          file.startsWith(dirs.get(entry.name)!),
+        );
         if (!collection) return;
 
         return reload(collection.name);

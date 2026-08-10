@@ -56,7 +56,13 @@ const INDEX = [
   {
     to: "/comics",
     title: "Comics",
-    blurb: "Every run on the shelf, what is waiting at the shop, and what I still want.",
+    blurb:
+      "Every run on the shelf, what is waiting at the shop, and what I still want.",
+  },
+  {
+    to: "/fortnite",
+    title: "Fortnite",
+    blurb: "Wins, kills and K/D, read nightly and kept season by season.",
   },
 ];
 

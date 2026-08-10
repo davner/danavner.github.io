@@ -1,0 +1,168 @@
+import { fortnite as rawFortnite } from "virtual:fortnite";
+
+/** One playlist's numbers, for one time window. */
+export interface ModeStats {
+  matches: number;
+  wins: number;
+  kills: number;
+  deaths: number;
+  /** Kills per death, as the API computes it. */
+  kd: number;
+  /** Percent, 0-100. */
+  winRate: number;
+  killsPerMatch: number;
+  top10: number;
+  top25: number;
+  minutesPlayed: number;
+  score: number;
+  playersOutlived: number;
+}
+
+/**
+ * Every playlist for one time window. `overall` is always there; the rest are
+ * null when that playlist has no matches, which the page draws as "not played"
+ * rather than as a row of zeroes.
+ */
+export interface Snapshot {
+  overall: ModeStats;
+  solo: ModeStats | null;
+  duo: ModeStats | null;
+  trio: ModeStats | null;
+  squad: ModeStats | null;
+}
+
+export interface SeasonEntry {
+  key: string;
+  label: string;
+  /** ISO date the season began. */
+  start: string;
+  /** ISO date this season was first recorded - see `coverage`. */
+  first: string;
+  /** ISO date of the last successful read. */
+  fetched: string;
+  stats: Snapshot;
+}
+
+export interface FortnitePayload {
+  name: string;
+  accountId: string;
+  fetched: string;
+  lifetime: Snapshot | null;
+  seasons: SeasonEntry[];
+}
+
+/**
+ * Read from `src/content/fortnite.json` and validated at build time by
+ * `vite-plugin-content.ts`. A null `lifetime` means the fetch has never run,
+ * and the page says so rather than rendering an empty board.
+ */
+export const fortnite: FortnitePayload = rawFortnite;
+
+export const MODES = [
+  { id: "overall", label: "All modes" },
+  { id: "solo", label: "Solo" },
+  { id: "duo", label: "Duo" },
+  { id: "trio", label: "Trio" },
+  { id: "squad", label: "Squad" },
+] as const;
+
+export type ModeId = (typeof MODES)[number]["id"];
+
+/** The window keys the page tabs by: lifetime, then each season, newest first. */
+export const LIFETIME = "lifetime";
+
+export interface Window {
+  key: string;
+  label: string;
+  stats: Snapshot;
+  /** Null for lifetime, which needs no caveat. */
+  season: SeasonEntry | null;
+}
+
+/**
+ * Every window worth a tab, in the order they are shown.
+ *
+ * Lifetime leads because it is the only one that is complete - it is the number
+ * the API keeps whatever happens to a season. The seasons follow newest first,
+ * as far back as the nightly job has been running.
+ */
+export const windows: Window[] = [
+  ...(fortnite.lifetime
+    ? [
+        {
+          key: LIFETIME,
+          label: "Lifetime",
+          stats: fortnite.lifetime,
+          season: null,
+        },
+      ]
+    : []),
+  ...fortnite.seasons.map((season) => ({
+    key: season.key,
+    label: season.label,
+    stats: season.stats,
+    season,
+  })),
+];
+
+export function isWindowKey(value: string | null): boolean {
+  return value !== null && windows.some((window) => window.key === value);
+}
+
+/** Only the playlists actually played in this window, so no tab leads nowhere. */
+export function playedModes(stats: Snapshot) {
+  return MODES.filter((mode) => stats[mode.id] !== null);
+}
+
+/** `1,234`. Every counter on the page is a whole number of something. */
+export function count(value: number): string {
+  return Math.round(value).toLocaleString("en-US");
+}
+
+/**
+ * Minutes as the longest unit that still reads as a quantity. Past a few days
+ * "14,integer minutes" stops meaning anything, and past a couple of weeks so
+ * does the hours figure.
+ */
+export function playtime(minutes: number): string {
+  if (minutes < 60) return `${Math.round(minutes)}m`;
+
+  const hours = minutes / 60;
+  if (hours < 48) return `${hours.toFixed(1)}h`;
+
+  return `${Math.round(hours).toLocaleString("en-US")}h`;
+}
+
+/**
+ * How much of a season these numbers actually cover.
+ *
+ * The stats endpoint only answers for the season running right now, so a season
+ * this site started watching late is missing its opening weeks and there is no
+ * way to go back for them. Saying "from 12 August" is the honest version of a
+ * number that would otherwise read as the whole season.
+ */
+export function coverage(season: SeasonEntry): string | null {
+  if (!season.first || !season.start || season.first <= season.start)
+    return null;
+
+  const from = new Date(`${season.first}T12:00:00Z`).toLocaleDateString(
+    "en-US",
+    {
+      month: "long",
+      day: "numeric",
+      timeZone: "UTC",
+    },
+  );
+  return `Tracked from ${from}, not the season's first day`;
+}
+
+/** "August 10, 2026" - the same sign-off the record and comic pages use. */
+export function formatFetched(date: string): string {
+  if (!date) return "";
+  return new Date(`${date}T12:00:00Z`).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}

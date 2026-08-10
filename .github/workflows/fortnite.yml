@@ -1,0 +1,70 @@
+name: Fortnite
+
+# The Fortnite stats are committed rather than fetched in the browser, for the
+# same two reasons the record collection is. The stats endpoint needs an API
+# key, and a key cannot ship in a client bundle. And the site's standing promise
+# is that nothing phones home except the GoatCounter beacon, which
+# `tests/links.spec.ts` asserts on every run.
+#
+# There is a third reason this one could not be a client fetch even with a
+# public endpoint: the API only answers for the season running right now, so
+# season history has to be accumulated by something that remembers. This job is
+# that memory. Nightly it reads the current season, writes it into
+# `src/content/fortnite.json` alongside every season already recorded, and
+# commits if anything moved. See the header of `scripts/update-fortnite.mjs`.
+#
+# A failed read commits nothing, so the last good numbers stay and keep showing.
+# The push triggers the normal deploy; this runs on a schedule, not on push, so
+# its own commit never re-triggers it.
+
+on:
+  schedule:
+    - cron: "17 9 * * *" # 09:17 UTC nightly, well clear of the vinyl job.
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fortnite
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    env:
+      FORTNITE_API_KEY: ${{ secrets.FORTNITE_API_KEY }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      # No `npm ci`. The script is plain Node with `fetch` and needs nothing
+      # from the lockfile, and installing the site's dev dependencies to make one
+      # HTTP call is a minute of CI for nothing.
+
+      # Without the key every request comes back 403, so the run would fail on
+      # every scheduled night rather than telling anyone anything. Skipping is
+      # the safe read of a missing secret - see the README for setting it up.
+      - name: Read the stats from Fortnite-API
+        if: ${{ env.FORTNITE_API_KEY != '' }}
+        run: node scripts/update-fortnite.mjs
+
+      - name: Commit if the numbers moved
+        run: |
+          if [ -z "$(git status --porcelain -- src/content/fortnite.json)" ]; then
+            echo "fortnite: unchanged, nothing to commit"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/content/fortnite.json
+          git commit -m "chore(fortnite): refresh the stats"
+
+          # `main` moves under this job whenever another scheduled run lands
+          # first, so rebase rather than fail the night's update.
+          git pull --rebase origin main
+          git push

@@ -69,11 +69,13 @@ CI do it.
 
 ## CI
 
-| Workflow     | When                              | What                                                    |
-| ------------ | --------------------------------- | ------------------------------------------------------- |
-| `ci.yml`     | every push to `main` and every PR | type-check, build, then the full Playwright suite       |
-| `deploy.yml` | push to `main`                    | builds and publishes to GitHub Pages                    |
-| `links.yml`  | weekly, Mondays                   | external link check; opens an issue if anything is dead |
+| Workflow       | When                              | What                                                    |
+| -------------- | --------------------------------- | ------------------------------------------------------- |
+| `ci.yml`       | every push to `main` and every PR | type-check, build, then the full Playwright suite       |
+| `deploy.yml`   | push to `main`                    | builds and publishes to GitHub Pages                    |
+| `links.yml`    | weekly, Mondays                   | external link check; opens an issue if anything is dead |
+| `vinyl.yml`    | nightly                           | reads the Discogs collection, commits it if it moved    |
+| `fortnite.yml` | nightly                           | reads the Fortnite stats, commits them if they moved    |
 
 The Playwright suite runs against the **production build**, on desktop and
 mobile viewports, and covers four things:
@@ -104,6 +106,7 @@ scripts/
   optimize-photos.mjs     resizes any image and strips its EXIF
   make-share-fallback.mjs draws the social image for a show with no photos
   update-vinyl.mjs        reads the Discogs collection nightly, saves the sleeves
+  update-fortnite.mjs     reads the Fortnite stats nightly, keeps a season archive
 vite-plugin-content.ts    reads + validates every content collection at build time
 vite-plugin-share-pages.ts writes one HTML file per show so links preview properly
 vite.config.ts            aliases, Tailwind, the 404.html fallback
@@ -425,6 +428,54 @@ wax - is computed in the browser from the filtered list, so those all do follow
 the filter.
 
 ---
+
+## Fortnite
+
+`/fortnite` shows wins, kills, K/D and the supporting numbers for the Epic
+account `danwiththeyams`, browseable by season and by playlist. The numbers are
+read nightly by `scripts/update-fortnite.mjs` from
+[Fortnite-API](https://fortnite-api.com) into `src/content/fortnite.json`, and
+validated at build time like every other collection.
+
+### Setting it up
+
+The stats endpoint is the one part of Fortnite-API behind a key.
+
+1. Get a free key at [dash.fortnite-api.com](https://dash.fortnite-api.com).
+2. Add it as the `FORTNITE_API_KEY` repository secret.
+3. In Fortnite, turn on **Settings > Account and Privacy > Show on Career
+   Leaderboard**. Epic defaults this off, and with it off the API answers 403 to
+   everyone including you.
+4. Run the `Fortnite` workflow by hand once, rather than waiting for the night.
+
+Until that first run there is no `fortnite.json`, and the page renders an empty
+state saying so. That is the same way the record shelf behaves before its first
+fetch - a missing file is not a build error.
+
+Locally:
+
+```sh
+FORTNITE_API_KEY=... node scripts/update-fortnite.mjs
+```
+
+### Why the season history starts when the tracking did
+
+The endpoint answers for two time windows: `lifetime`, and `season` meaning the
+season running **right now**. A season that has already ended cannot be asked
+for at all - its numbers are gone from the API the moment it rolls over.
+
+So the season archive is accumulated rather than fetched. Each night the current
+season is written into `seasons` and every season already recorded is carried
+through untouched. The history is the record of what the job has seen, it only
+goes back as far as the first run, and the page says so under the board rather
+than implying a completeness it does not have. A season first seen mid-way
+through also carries a `Tracked from ...` line, because partial numbers that
+look whole are worse than no numbers.
+
+Seasons are named by a table at the top of `scripts/update-fortnite.mjs`, because
+the stats endpoint returns numbers and no label. **Add a line when a new season
+starts.** Missing one is not damaging: the new season's matches accrue into the
+previous entry until the line is added.
 
 ## Editing the résumé side
 

@@ -48,7 +48,14 @@ export interface Main {
   id: string;
   /** Path under `public/`, or "" when the render has not been fetched yet. */
   image: string;
-  /** The style worn, e.g. "Voidburn Jade". "" when it is the default look. */
+  /**
+   * The style worn, e.g. "Voidburn Jade". "" when it is the default look.
+   *
+   * Recorded rather than rendered. The tile draws the outfit's icon, which is
+   * its default look, so captioning it with the style would name something the
+   * picture is not showing. Kept because it is a fact about the season and
+   * because `fetch-fortnite-skins.mjs` reports it when resolving an outfit.
+   */
   style: string;
 }
 

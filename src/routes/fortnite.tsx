@@ -22,7 +22,6 @@ import {
   windows,
   type Delta,
   type ModeId,
-  type Main,
   type ModeStats,
   type SeasonEntry,
 } from "@/lib/fortnite";
@@ -150,17 +149,6 @@ function Stat({
   );
 }
 
-/**
- * The outfit as worn: its name, plus the style when that is a different look.
- *
- * "Jade" and "Voidburn Jade" are the same character and not the same picture,
- * and the render on the tile is the style rather than the default - so naming
- * only the outfit would caption the wrong thing.
- */
-function mainLabel(main: Main): string {
-  return main.style ? `${main.name}, ${main.style}` : main.name;
-}
-
 /** The outfit render, or the space one would take, at a given size. */
 function MainPortrait({ season, className }: { season: SeasonEntry; className?: string }) {
   if (!season.main?.image) {
@@ -241,14 +229,17 @@ function SeasonHistory({ active, onSelect }: { active: string; onSelect: (key: s
 
                   {/* The outfit, in ember, pinned to the bottom so the line
                       sits level across a row however long the season's name
-                      ran. It scrolls rather than truncating, because the half
-                      that overflows is the half that varies - "Jade, Voidburn
-                      Jade" and "Jade, Cursed Jade" are the same for sixteen
-                      characters. Same treatment the record pressings and comic
-                      publishers get. */}
+                      ran. Just the outfit - the picture is its default look,
+                      so naming the style it was worn in would caption
+                      something the tile is not showing.
+
+                      Scrolls rather than truncating when it does not fit,
+                      which on a two-column phone is most of the longer names.
+                      Same treatment the record pressings and comic publishers
+                      get. */}
                   {season.main ? (
                     <ScrollingText className="readout mt-auto pt-3 text-ember">
-                      {mainLabel(season.main)}
+                      {season.main.name}
                     </ScrollingText>
                   ) : null}
                 </div>

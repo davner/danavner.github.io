@@ -5,12 +5,12 @@ import { FilterToggle } from "@/components/filter-toggle";
 import { PageHeader, PageShell } from "@/components/page";
 import { ScrollingText } from "@/components/scrolling-text";
 import { SelectControl } from "@/components/select-control";
+import { SourceLine } from "@/components/source-line";
 import {
   count,
   coverage,
   dateRange,
   delta,
-  formatFetched,
   fortnite,
   isWindowKey,
   LIFETIME,
@@ -398,25 +398,12 @@ export function Fortnite() {
 
       {seasons.length > 0 ? <SeasonHistory active={activeKey} onSelect={selectSeason} /> : null}
 
-      {/* Where the numbers come from, and what each half of the archive can and
-          cannot say. Small print, but the page is numbers and numbers without a
-          provenance line invite more trust than they have earned. */}
-      <p className="mt-16 max-w-2xl text-sm leading-relaxed text-muted-foreground text-pretty">
-        Read nightly from{" "}
-        <a
-          href="https://fortnite-api.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-ember underline decoration-ember/40 underline-offset-4 hover:decoration-ember"
-        >
-          Fortnite-API
-        </a>
-        , which answers for lifetime and for the season running right now. The seasons behind it
-        were filled in once from Epic's own stats service, which does take a date range, and they
-        reconcile exactly: every one of the {count(fortnite.lifetime?.overall.matches ?? 0)}{" "}
-        lifetime matches lands in one of them.
-        {fortnite.fetched ? ` Read ${formatFetched(fortnite.fetched)}.` : ""}
-      </p>
+      <SourceLine
+        count={`${count(fortnite.lifetime?.overall.matches ?? 0)} matches, ${seasons.length} seasons`}
+        href="https://fortnite-api.com"
+        source="Fortnite-API"
+        fetched={fortnite.fetched}
+      />
     </PageShell>
   );
 }

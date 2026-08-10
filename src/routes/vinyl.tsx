@@ -7,12 +7,12 @@ import { CONTROL_CLASS, FilterToggle } from "@/components/filter-toggle";
 import { PageHeader, PageShell } from "@/components/page";
 import { ScrollingText } from "@/components/scrolling-text";
 import { SelectControl } from "@/components/select-control";
+import { SourceLine } from "@/components/source-line";
 import {
   ALL,
   SORTS,
   SORT_LABEL,
   collection,
-  formatFetched,
   isOwner,
   isSort,
   matches,
@@ -337,20 +337,12 @@ export function Vinyl() {
         <EmptyState className="mt-8">Nothing on the shelf matches “{query}”.</EmptyState>
       )}
 
-      {/* Says where the numbers came from and when, so a stale figure is
-          visibly stale rather than quietly wrong. */}
-      <p className="readout-dim mt-8">
-        {visible.length} of {records.length} shown ·{" "}
-        <a
-          href={collection.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="transition-colors hover:text-ember"
-        >
-          Read from Discogs
-        </a>{" "}
-        {formatFetched(collection.fetched)}
-      </p>
+      <SourceLine
+        count={`${visible.length} of ${records.length} shown`}
+        href={collection.url}
+        source="Discogs"
+        fetched={collection.fetched}
+      />
     </PageShell>
   );
 }

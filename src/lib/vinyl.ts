@@ -233,16 +233,3 @@ export function statsFor(list: VinylRecord[]): VinylStats {
     topStyles: tally(list, (record) => record.styles),
   };
 }
-
-/** "Aug 6, 2026" from the payload's `YYYY-MM-DD`, formatted in UTC like the footer. */
-export function formatFetched(date: string): string {
-  const parsed = Date.parse(`${date}T00:00:00Z`);
-  if (Number.isNaN(parsed)) return "";
-
-  return new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    timeZone: "UTC",
-  }).format(new Date(parsed));
-}

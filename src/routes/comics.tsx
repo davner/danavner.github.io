@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/empty-state";
 import { FilterToggle } from "@/components/filter-toggle";
 import { PageHeader, PageShell } from "@/components/page";
 import { ScrollingText } from "@/components/scrolling-text";
+import { SourceLine } from "@/components/source-line";
 import { comics, issueCount, SHELVES, type ComicEntry, type ShelfId } from "@/lib/comics";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
@@ -29,17 +30,6 @@ const SHELF_IDS = SHELVES.map((entry) => entry.id);
 
 function isShelf(value: string | null): value is ShelfId {
   return value !== null && (SHELF_IDS as readonly string[]).includes(value);
-}
-
-/** "read 4 days ago", the same line the record collection signs off with. */
-function formatFetched(date: string): string {
-  if (!date) return "";
-  return new Date(`${date}T12:00:00Z`).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    timeZone: "UTC",
-  });
 }
 
 /**
@@ -241,20 +231,12 @@ export function Comics() {
         </EmptyState>
       )}
 
-      {/* Says where the numbers came from and when, so a stale figure is
-          visibly stale rather than quietly wrong. */}
-      <p className="readout-dim mt-8">
-        {shown.length} shown ·{" "}
-        <a
-          href={comics.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="transition-colors hover:text-ember"
-        >
-          Read from League of Comic Geeks
-        </a>{" "}
-        {formatFetched(comics.fetched)}
-      </p>
+      <SourceLine
+        count={`${shown.length} shown`}
+        href={comics.url}
+        source="League of Comic Geeks"
+        fetched={comics.fetched}
+      />
     </PageShell>
   );
 }

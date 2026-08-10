@@ -279,14 +279,3 @@ export function delta(value: number, against: number, digits: number, suffix = "
     direction: shown > 0 ? "up" : "down",
   };
 }
-
-/** "August 10, 2026" - the same sign-off the record and comic pages use. */
-export function formatFetched(date: string): string {
-  if (!date) return "";
-  return new Date(`${date}T12:00:00Z`).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    timeZone: "UTC",
-  });
-}

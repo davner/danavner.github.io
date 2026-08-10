@@ -4,6 +4,8 @@ import { Link } from "react-router";
 import { BandList } from "@/components/band-list";
 import { FramedPhoto } from "@/components/framed-photo";
 import { Marquee } from "@/components/marquee";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { Section } from "@/components/page";
 import { SocialLinks } from "@/components/social-links";
 import { profile } from "@/content/profile";
@@ -98,6 +100,25 @@ export function Home() {
             <p className="readout-dim mt-6 flex flex-wrap items-baseline gap-x-2 gap-y-1">
               <span>{profile.quest.label}:</span>
               <span>{profile.quest.main}</span>
+            </p>
+
+            {/* The side quests, as a box that was ticked a long time ago and is
+                not getting unticked. `disabled` rather than wired to state -
+                there is nothing to toggle, and a checkbox that moves invites
+                someone to find out what it does. `readOnly`-style intent, kept
+                legible: the label still reads at full contrast rather than the
+                50% a disabled control usually drops to. */}
+            <p className="readout-dim mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span>{profile.quest.sideQuests}:</span>
+              <Label className="flex items-center gap-2 font-normal opacity-100">
+                <Checkbox
+                  checked
+                  disabled
+                  aria-label={`${profile.quest.sideQuestsLabel} ${profile.quest.sideQuests.toLowerCase()}`}
+                  className="opacity-100 data-[state=checked]:border-ember data-[state=checked]:bg-ember"
+                />
+                <span className="readout-dim">{profile.quest.sideQuestsLabel}</span>
+              </Label>
             </p>
 
             <p className="mt-4 max-w-xl text-xl leading-snug text-pretty sm:text-2xl">

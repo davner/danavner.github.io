@@ -42,7 +42,7 @@ const HEADING = (
     <span className="display-outline-ember block">droppin’?</span>
   </>
 );
-const DESCRIPTION = "Wins, kills, and how good I am. Very. 1v1 me lol jk.";
+const DESCRIPTION = "Wins, kills, and how good I am. 1v1 me.";
 
 /**
  * The four numbers worth reading first, in the order they answer "how is he

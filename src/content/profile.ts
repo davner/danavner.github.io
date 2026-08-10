@@ -73,7 +73,11 @@ export const profile = {
    */
   quest: {
     label: "Main quest",
-    main: "Live a life worth remembering and accept all side quests.",
+    main: "Livin' ✨ Laughin' ✨ Lovin'",
+    /* The line under it is a checkbox, ticked and going nowhere - see
+       `<Quest />` in src/routes/home.tsx. */
+    sideQuests: "Side quests",
+    sideQuestsLabel: "Accept all",
   },
   /** The homepage voice. Kept apart from the blurb so it can be accented. */
   greeting: "Hi, I'm Dan.",

@@ -1,0 +1,132 @@
+{
+  "name": "danwiththeyams",
+  "accountId": "c8d91b5d775c424faaca60ccb06765b6",
+  "fetched": "2026-08-10",
+  "lifetime": {
+    "overall": {
+      "matches": 3765,
+      "wins": 1029,
+      "kills": 18373,
+      "deaths": 2736,
+      "kd": 6.71,
+      "winRate": 27.3,
+      "killsPerMatch": 4.88,
+      "top10": 10,
+      "top25": 16,
+      "minutesPlayed": 48180,
+      "score": 1486076,
+      "playersOutlived": 229624
+    },
+    "solo": {
+      "matches": 36,
+      "wins": 3,
+      "kills": 90,
+      "deaths": 33,
+      "kd": 2.73,
+      "winRate": 8.3,
+      "killsPerMatch": 2.5,
+      "top10": 10,
+      "top25": 16,
+      "minutesPlayed": 292,
+      "score": 8399,
+      "playersOutlived": 1724
+    },
+    "duo": {
+      "matches": 595,
+      "wins": 99,
+      "kills": 2471,
+      "deaths": 496,
+      "kd": 4.98,
+      "winRate": 16.6,
+      "killsPerMatch": 4.15,
+      "top10": 0,
+      "top25": 0,
+      "minutesPlayed": 7834,
+      "score": 215271,
+      "playersOutlived": 40571
+    },
+    "trio": null,
+    "squad": {
+      "matches": 2443,
+      "wins": 648,
+      "kills": 12916,
+      "deaths": 1795,
+      "kd": 7.2,
+      "winRate": 26.5,
+      "killsPerMatch": 5.29,
+      "top10": 0,
+      "top25": 0,
+      "minutesPlayed": 36479,
+      "score": 1018966,
+      "playersOutlived": 170896
+    }
+  },
+  "seasons": [
+    {
+      "key": "2026-08",
+      "label": "Chapter 7 Season 2",
+      "start": "2026-08-07",
+      "first": "2026-08-10",
+      "fetched": "2026-08-10",
+      "stats": {
+        "overall": {
+          "matches": 207,
+          "wins": 88,
+          "kills": 1031,
+          "deaths": 119,
+          "kd": 8.66,
+          "winRate": 42.5,
+          "killsPerMatch": 4.98,
+          "top10": 3,
+          "top25": 5,
+          "minutesPlayed": 3240,
+          "score": 101909,
+          "playersOutlived": 17579
+        },
+        "solo": {
+          "matches": 8,
+          "wins": 1,
+          "kills": 20,
+          "deaths": 7,
+          "kd": 2.86,
+          "winRate": 12.5,
+          "killsPerMatch": 2.5,
+          "top10": 3,
+          "top25": 5,
+          "minutesPlayed": 77,
+          "score": 2294,
+          "playersOutlived": 586
+        },
+        "duo": {
+          "matches": 34,
+          "wins": 13,
+          "kills": 99,
+          "deaths": 21,
+          "kd": 4.71,
+          "winRate": 38.2,
+          "killsPerMatch": 2.91,
+          "top10": 0,
+          "top25": 0,
+          "minutesPlayed": 514,
+          "score": 15759,
+          "playersOutlived": 2950
+        },
+        "trio": null,
+        "squad": {
+          "matches": 155,
+          "wins": 72,
+          "kills": 858,
+          "deaths": 83,
+          "kd": 10.34,
+          "winRate": 46.5,
+          "killsPerMatch": 5.54,
+          "top10": 0,
+          "top25": 0,
+          "minutesPlayed": 2561,
+          "score": 79955,
+          "playersOutlived": 13693
+        }
+      }
+    }
+  ]
+}

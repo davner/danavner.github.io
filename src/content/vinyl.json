@@ -3,15 +3,15 @@
   "url": "https://www.discogs.com/user/dnafam/collection",
   "fetched": "2026-08-10",
   "value": {
-    "minimum": "$1,132.87",
-    "median": "$1,764.33",
-    "maximum": "$2,788.79"
+    "minimum": "$1,167.87",
+    "median": "$1,814.33",
+    "maximum": "$2,837.58"
   },
   "owners": [
     {
       "id": "dan",
       "name": "Dan",
-      "count": 42
+      "count": 43
     },
     {
       "id": "alexis",
@@ -20,6 +20,29 @@
     }
   ],
   "records": [
+    {
+      "id": 29637394,
+      "instanceId": 2172623964,
+      "owner": "dan",
+      "artist": "Dance Gavin Dance",
+      "title": "Dance Gavin Dance",
+      "year": 2024,
+      "label": "Rise Records",
+      "catno": "RISE 067-1",
+      "format": "LP",
+      "variant": "Blood Red",
+      "genres": [
+        "Rock"
+      ],
+      "styles": [
+        "Post-Hardcore",
+        "Experimental"
+      ],
+      "added": "2026-08-10",
+      "rating": 5,
+      "url": "https://www.discogs.com/release/29637394",
+      "cover": "/img/vinyl/29637394.webp"
+    },
     {
       "id": 37738842,
       "instanceId": 2159963127,

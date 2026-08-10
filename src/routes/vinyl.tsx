@@ -2,6 +2,7 @@ import { ArrowUpRight, Disc3, Search } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import { useSearchParams } from "react-router";
 
+import { EmptyState } from "@/components/empty-state";
 import { CONTROL_CLASS, FilterToggle } from "@/components/filter-toggle";
 import { PageHeader, PageShell } from "@/components/page";
 import { SelectControl } from "@/components/select-control";
@@ -332,9 +333,7 @@ export function Vinyl() {
           ))}
         </ul>
       ) : (
-        <p className="mt-8 border border-dashed border-border p-16 text-center text-muted-foreground">
-          Nothing on the shelf matches “{query}”.
-        </p>
+        <EmptyState className="mt-8">Nothing on the shelf matches “{query}”.</EmptyState>
       )}
 
       {/* Says where the numbers came from and when, so a stale figure is

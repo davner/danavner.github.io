@@ -1,6 +1,7 @@
 import { ArrowUpRight, BookOpen } from "lucide-react";
 import { useSearchParams } from "react-router";
 
+import { EmptyState } from "@/components/empty-state";
 import { FilterToggle } from "@/components/filter-toggle";
 import { PageHeader, PageShell } from "@/components/page";
 import { comics, issueCount, SHELVES, type ComicEntry, type ShelfId } from "@/lib/comics";
@@ -221,11 +222,9 @@ export function Comics() {
           ))}
         </ul>
       ) : (
-        <p className="mt-4 border border-dashed border-border p-16 text-center text-muted-foreground">
-          {active === "pullList"
-            ? "Nothing pulled this week."
-            : "Nothing on this list right now."}
-        </p>
+        <EmptyState className="mt-4">
+          {active === "pullList" ? "Nothing pulled this week." : "Nothing on this list right now."}
+        </EmptyState>
       )}
 
       {/* Says where the numbers came from and when, so a stale figure is

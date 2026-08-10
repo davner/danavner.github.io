@@ -1,5 +1,6 @@
 import { useSearchParams } from "react-router";
 
+import { EmptyState } from "@/components/empty-state";
 import { FilterToggle } from "@/components/filter-toggle";
 import { PageHeader, PageShell } from "@/components/page";
 import { PostCard } from "@/components/post-card";
@@ -64,9 +65,7 @@ export function Blog() {
           ))}
         </div>
       ) : (
-        <p className="border border-dashed border-border p-16 text-center text-muted-foreground">
-          Nothing here yet. Check back soon.
-        </p>
+        <EmptyState>Nothing here yet. Check back soon.</EmptyState>
       )}
     </PageShell>
   );

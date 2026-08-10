@@ -5,6 +5,7 @@ import { Backdrop } from "@/components/backdrop";
 import { ScrollToTop } from "@/components/scroll-to-top";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { Skeleton } from "@/components/ui/skeleton";
 import { About } from "@/routes/about";
 import { Blog } from "@/routes/blog";
 import { Career } from "@/routes/career";
@@ -129,16 +130,22 @@ function LegacyPostRedirect() {
   return <Navigate to={slug ? `/blog/${slug}` : "/blog"} replace />;
 }
 
+/**
+ * Stands in for a lazily-loaded route while its chunk arrives. Roughly the shape
+ * of a page: a kicker, a title over two lines, then a column of prose.
+ */
 function PostSkeleton() {
   return (
-    <div className="mx-auto max-w-3xl animate-pulse px-4 py-16 sm:px-6 sm:py-20" aria-hidden>
-      <div className="h-4 w-32 rounded bg-muted" />
-      <div className="mt-8 h-5 w-56 rounded bg-muted" />
-      <div className="mt-5 h-11 w-full rounded bg-muted" />
-      <div className="mt-3 h-11 w-2/3 rounded bg-muted" />
-      <div className="mt-10 space-y-3">
+    <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-20" aria-hidden>
+      <Skeleton className="h-4 w-32" />
+      <Skeleton className="mt-8 h-5 w-56" />
+      <Skeleton className="mt-5 h-11 w-full" />
+      <Skeleton className="mt-3 h-11 w-2/3" />
+      {/* `gap` rather than `space-y`, so the stack does not depend on which
+          child happens to be first. */}
+      <div className="mt-10 flex flex-col gap-3">
         {Array.from({ length: 8 }, (_, index) => (
-          <div key={index} className="h-4 rounded bg-muted" style={{ width: `${95 - index * 4}%` }} />
+          <Skeleton key={index} className="h-4" style={{ width: `${95 - index * 4}%` }} />
         ))}
       </div>
     </div>

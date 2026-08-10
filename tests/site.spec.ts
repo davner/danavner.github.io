@@ -611,6 +611,100 @@ test.describe("vinyl", () => {
   });
 });
 
+test.describe("now", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/now");
+    await page.getByRole("heading", { level: 1 }).waitFor();
+  });
+
+  test("says when it was written and how stale that makes it", async ({ page }) => {
+    // The date is the whole point of a now page - without it the reader cannot
+    // tell whether "at the moment" means this week or two years ago.
+    const stamp = page.locator("main time").first();
+    await expect(stamp).toHaveAttribute("datetime", /^\d{4}-\d{2}-\d{2}$/);
+    // Scoped to `main`: the footer carries its own "last updated", which is the
+    // site's last commit rather than this page's entry.
+    await expect(page.locator("main").getByText(/last updated/i)).toContainText(
+      /(today|yesterday|days ago|months? ago|years? ago|a month ago|a year ago)/i,
+    );
+  });
+
+  test("the archive appears only once an entry has been filed", async ({ page }) => {
+    /*
+     * The folder starts empty and fills on its own as `now.md` is rewritten, so
+     * this asserts the rule rather than a count: entries present means a
+     * timeline with a machine-readable date on each, none means no empty
+     * heading sitting there promising something that is not below it.
+     */
+    const archived = page.locator("[data-slot=now-archived]");
+    const count = await archived.count();
+    const heading = page.getByRole("heading", { name: /before this/i });
+
+    if (count === 0) {
+      await expect(heading).toHaveCount(0);
+      return;
+    }
+
+    await expect(heading).toBeVisible();
+
+    const dates = await archived
+      .locator("time")
+      .evaluateAll((els) => els.map((el) => el.getAttribute("datetime") ?? ""));
+
+    for (const date of dates) expect(date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    // Newest first, and never the same day twice - the build rejects a filed
+    // entry dated the same day as the current one.
+    expect([...dates].sort().reverse()).toEqual(dates);
+    expect(new Set(dates).size).toBe(dates.length);
+  });
+
+  test("the rail reaches the oldest entry without scrolling through the rest", async ({ page }) => {
+    /*
+     * The reason the rail exists. A scroll pane on its own only gives sequential
+     * access, so the oldest entry costs a trip through everything newer - and
+     * that cost grows with every update. This asserts the shortcut works and
+     * that taking it does not drag the page along with it.
+     */
+    const rail = page.getByRole("radiogroup", { name: "Jump to a date" });
+    const archived = page.locator("[data-slot=now-archived]");
+    const filed = await archived.count();
+
+    if (filed === 0) {
+      await expect(rail).toHaveCount(0);
+      return;
+    }
+
+    // One date offered per entry filed.
+    await expect(rail.getByRole("radio")).toHaveCount(filed);
+
+    // The pane is the second scroll region on the page; the rail is the first.
+    const pane = page.locator("[data-slot=scroll-area-viewport]").nth(1);
+    await rail.getByRole("radio").last().click();
+
+    const oldest = await archived.last().getAttribute("data-date");
+    await expect(rail.locator("[aria-checked=true]")).toHaveAttribute("data-rail-date", oldest!);
+
+    // Nothing to travel to when only one entry is filed.
+    if (filed === 1) return;
+
+    await expect.poll(() => pane.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
+
+    /*
+     * The outcome that matters: the oldest entry ends up inside the pane's
+     * visible band. Asserting the page did not scroll instead would be measuring
+     * Playwright, which scrolls a target into view before clicking it.
+     */
+    await expect
+      .poll(async () => {
+        const box = await archived.last().boundingBox();
+        const view = await pane.boundingBox();
+        if (!box || !view) return false;
+        return box.y >= view.y - 2 && box.y < view.y + view.height;
+      })
+      .toBe(true);
+  });
+});
+
 test.describe("comics", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/comics");

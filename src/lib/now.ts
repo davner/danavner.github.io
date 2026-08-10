@@ -1,16 +1,23 @@
 import { now as rawNow } from "virtual:now";
 
-export interface Now {
-  /** ISO date, `YYYY-MM-DD`. Empty when the file has not been written yet. */
+export interface NowEntry {
+  /** ISO date, `YYYY-MM-DD`. Empty on `current` when nothing is written yet. */
   updated: string;
   /** Markdown body with the frontmatter block removed. */
   body: string;
 }
 
+export interface Now {
+  /** What `src/content/now.md` says today. */
+  current: NowEntry;
+  /** What it used to say, newest first. Written by the archive job, not by hand. */
+  archive: NowEntry[];
+}
+
 /**
  * Parsed and validated by the content plugin in `vite-plugin-content.ts`. An
- * empty `body` means there is no `src/content/now.md` yet, and the page says so
- * rather than rendering a blank.
+ * empty `current.body` means there is no `src/content/now.md` yet, and the page
+ * says so rather than rendering a blank.
  */
 export const now: Now = rawNow;
 
@@ -43,4 +50,19 @@ export function describeStaleness(days: number): string {
 
   const years = Math.round(days / 365);
   return years === 1 ? "a year ago" : `${years} years ago`;
+}
+
+/**
+ * How long the entry stood before the next one replaced it. Reads better on an
+ * archived entry than a bare date does: "held for 3 weeks" says something about
+ * the period, where "August 9" only says when it started.
+ */
+export function heldForDays(entry: NowEntry, replacedBy: NowEntry | undefined): number | null {
+  if (!replacedBy?.updated || !entry.updated) return null;
+
+  const from = new Date(`${entry.updated}T12:00:00Z`).getTime();
+  const to = new Date(`${replacedBy.updated}T12:00:00Z`).getTime();
+  if (Number.isNaN(from) || Number.isNaN(to) || to <= from) return null;
+
+  return Math.round((to - from) / 86_400_000);
 }

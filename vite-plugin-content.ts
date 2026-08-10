@@ -649,13 +649,35 @@ function readComics(root: string, publicDir: string) {
   };
 }
 
+/** One now entry, current or archived. Mirrors `NowEntry` in `src/lib/now.ts`. */
+interface NowEntry {
+  updated: string;
+  body: string;
+}
+
+/** Parses and validates one now entry, wherever it lives. */
+function parseNowEntry(raw: string, file: string, where: string): NowEntry {
+  const { meta, body } = splitFrontmatter("now", file, raw, where);
+
+  const updated = asDate(meta.updated);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(updated)) {
+    fail("now", file, "frontmatter needs an `updated` date in `YYYY-MM-DD` form", where);
+  }
+
+  if (!body) fail("now", file, "the entry has no body", where);
+
+  return { updated, body };
+}
+
 /**
- * The now page, read from `src/content/now.md`.
+ * The now page: the current entry from `src/content/now.md`, and everything it
+ * has replaced from `src/content/now/`.
  *
- * One file rather than a directory, because there is only ever one now - saying
- * what you are up to at the moment is the whole premise, and a second entry
- * would be a blog post. So it sits outside `COLLECTIONS`, which exists to walk a
- * folder and sort what it finds.
+ * You only ever edit `now.md`. Bumping its `updated` date is what makes the
+ * previous text an entry rather than a revision, and
+ * `.github/workflows/now-archive.yml` moves it into the folder on push. Editing
+ * without touching the date is a correction and archives nothing, which keeps a
+ * typo fix from becoming a second entry saying the same thing.
  *
  * `updated` is required and load-bearing. A now page with no date on it is just
  * an about page, and the reader has no way to tell whether "at the moment" means
@@ -667,18 +689,39 @@ function readComics(root: string, publicDir: string) {
 function readNow(root: string) {
   const where = "src/content/now.md";
   const file = path.resolve(root, where);
-  if (!existsSync(file)) return { updated: "", body: "" };
 
-  const { meta, body } = splitFrontmatter("now", "now.md", readFileSync(file, "utf8"), where);
+  const current: NowEntry | null = existsSync(file)
+    ? parseNowEntry(readFileSync(file, "utf8"), "now.md", where)
+    : null;
 
-  const updated = asDate(meta.updated);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(updated)) {
-    fail("now", "now.md", "frontmatter needs an `updated` date in `YYYY-MM-DD` form", where);
+  const dir = path.resolve(root, "src/content/now");
+  const files = existsSync(dir)
+    ? readdirSync(dir).filter((name) => name.endsWith(".md") && !name.startsWith("_"))
+    : [];
+
+  const archive = files
+    .map((name) =>
+      parseNowEntry(readFileSync(path.join(dir, name), "utf8"), name, `src/content/now/${name}`),
+    )
+    // Newest first, the way every other collection here sorts.
+    .sort((a, b) => b.updated.localeCompare(a.updated));
+
+  /*
+   * The archive is what `now.md` used to say, so an entry dated the same day as
+   * the current one means the archive job ran twice on one date, or a hand-made
+   * file collided with it. Either way the page would print the same day twice.
+   */
+  const clash = current ? archive.find((entry) => entry.updated === current.updated) : undefined;
+  if (clash) {
+    fail(
+      "now",
+      `${clash.updated}.md`,
+      "is dated the same day as the current entry in src/content/now.md - one of them is a duplicate",
+      `src/content/now/${clash.updated}.md`,
+    );
   }
 
-  if (!body) fail("now", "now.md", "the page has no body", where);
-
-  return { updated, body };
+  return { current: current ?? { updated: "", body: "" }, archive };
 }
 
 /**

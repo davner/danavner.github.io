@@ -19,15 +19,19 @@
  *
  * The endpoint answers for two time windows: `lifetime`, and `season` meaning
  * *the season running right now*. There is no way to ask it for a season that
- * has already ended, so there is no backfill to do - a season's numbers are
- * gone from the API the moment it rolls over.
+ * has already ended, so this job cannot reach into the past - a season's
+ * numbers are gone from this API the moment it rolls over.
  *
  * So the archive is built rather than fetched. Every night this reads the
  * current season, and writes it into `seasons` under the key for whichever
  * season covers today. Seasons already in the file are carried through
- * untouched, which is what makes the page browseable by season at all: the
- * history is the record of what this job saw, and it only goes back as far as
- * the first run. That is a real limitation and the page says so.
+ * untouched.
+ *
+ * Seasons that ended before this job existed came from Epic's own service,
+ * which does take an arbitrary window, via `scripts/backfill-fortnite.mjs`.
+ * That one is run by hand and never by CI - see its header for why, and for the
+ * bucket alignment that makes it much less obvious than passing two dates.
+ * `source` on each entry records which of the two produced it.
  *
  * A failed or empty read writes NOTHING. The committed file is the durable
  * last-known-good value, so a bad night leaves yesterday's numbers showing
@@ -40,27 +44,29 @@ import { readFile, writeFile } from "node:fs/promises";
 /** The Epic display name to read. */
 const ACCOUNT = "danwiththeyams";
 
+const ENDPOINT = "https://fortnite-api.com/v2/stats/br/v2";
+const FILE = new URL("../src/content/fortnite.json", import.meta.url);
+
 /**
- * Which season a given date belongs to, newest first. `start` is the date the
- * season began, in UTC.
+ * The season calendar, hand-kept in `src/content/fortnite-seasons.json`.
  *
- * This table exists because the stats endpoint does not tell you what season it
- * just answered for - it returns numbers and no label. Rather than guess, the
- * season is declared here and the snapshot is filed under whichever entry covers
+ * It lives there rather than here because the page needs it too - the names,
+ * date ranges and main outfits are what the season browser is built out of, and
+ * two copies of a calendar is one copy too many. This job needs it because the
+ * stats endpoint does not say what season it just answered for: it returns
+ * numbers and no label, so the snapshot is filed under whichever entry covers
  * the day it was taken.
  *
- * ## Add a line here when a new season starts
+ * ## Add an entry there when a new season starts
  *
  * Miss one and nothing breaks or corrupts: the new season's matches keep
  * accruing into the previous entry until the line is added, because that is
- * still the newest season this file knows about. Fix it whenever you notice.
+ * still the newest season the calendar knows about. Fix it whenever you notice.
  */
-const SEASONS = [
-  { key: "2026-08", label: "Chapter 7 Season 2", start: "2026-08-07" },
-];
-
-const ENDPOINT = "https://fortnite-api.com/v2/stats/br/v2";
-const FILE = new URL("../src/content/fortnite.json", import.meta.url);
+const SEASONS_FILE = new URL(
+  "../src/content/fortnite-seasons.json",
+  import.meta.url,
+);
 
 const key = process.env.FORTNITE_API_KEY;
 if (!key) {
@@ -150,16 +156,18 @@ function snapshot(data) {
   };
 }
 
-/** The season covering `today`, or the newest declared one if today is behind it. */
-function seasonFor(today) {
-  const ordered = [...SEASONS].sort((a, b) => b.start.localeCompare(a.start));
-  return (
-    ordered.find((season) => today >= season.start) ??
-    ordered[ordered.length - 1]
-  );
+/** The season covering `today`, or the newest declared one if today is past it. */
+function seasonFor(seasons, today) {
+  const ordered = [...seasons].sort((a, b) => b.start.localeCompare(a.start));
+  return ordered.find((season) => today >= season.start) ?? ordered[0];
 }
 
 async function main() {
+  const calendar = JSON.parse(await readFile(SEASONS_FILE, "utf8"));
+  if (!Array.isArray(calendar.seasons) || calendar.seasons.length === 0) {
+    throw new Error("src/content/fortnite-seasons.json lists no seasons");
+  }
+
   const [lifetimeData, seasonData] = await Promise.all([
     read("lifetime"),
     read("season"),
@@ -174,7 +182,8 @@ async function main() {
   }
 
   const today = new Date().toISOString().slice(0, 10);
-  const current = seasonFor(today);
+  const current = seasonFor(calendar.seasons, today);
+  const label = `${current.chapter} ${current.season}`;
 
   const previous = existsSync(FILE)
     ? JSON.parse(await readFile(FILE, "utf8"))
@@ -186,23 +195,32 @@ async function main() {
     const existing = seasons.findIndex((entry) => entry.key === current.key);
     const entry = {
       key: current.key,
-      label: current.label,
-      start: current.start,
       // Kept from the first sighting, so the page can say how much of a season
       // this history actually covers rather than implying it saw all of it.
       first: existing >= 0 ? seasons[existing].first : today,
       fetched: today,
+      source:
+        existing >= 0
+          ? (seasons[existing].source ?? "fortnite-api")
+          : "fortnite-api",
       stats: seasonStats,
     };
     if (existing >= 0) seasons[existing] = entry;
     else seasons.push(entry);
   } else {
     console.log(
-      `fortnite: no matches yet in ${current.label}, leaving its entry alone`,
+      `fortnite: no matches yet in ${label}, leaving its entry alone`,
     );
   }
 
-  seasons.sort((a, b) => b.start.localeCompare(a.start));
+  // Newest first, in the order the calendar declares rather than by date, so
+  // the file reads the same way the page does.
+  const order = new Map(
+    calendar.seasons.map((season, index) => [season.key, index]),
+  );
+  seasons.sort(
+    (a, b) => (order.get(a.key) ?? Infinity) - (order.get(b.key) ?? Infinity),
+  );
 
   const payload = {
     name: lifetimeData?.account?.name || ACCOUNT,

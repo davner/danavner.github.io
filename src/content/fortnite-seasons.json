@@ -1,0 +1,214 @@
+{
+  "seasons": [
+    {
+      "key": "ch7-s3",
+      "chapter": "Chapter 7",
+      "season": "Season 3",
+      "name": "Runners",
+      "start": "2026-06-06",
+      "end": "2026-08-20",
+      "main": {
+        "name": "Chlorophyll Ivy",
+        "id": "Character_CrimpPerfume",
+        "variants": [
+          {
+            "type": "Style",
+            "option": "Sunflower Ivy"
+          },
+          {
+            "type": "Glasses",
+            "option": "off"
+          }
+        ],
+        "image": "/img/fortnite/chlorophyll-ivy.png",
+        "worn": ["Sunflower Ivy", "off"],
+        "style": "Sunflower Ivy"
+      }
+    },
+    {
+      "key": "ch7-s2",
+      "chapter": "Chapter 7",
+      "season": "Season 2",
+      "name": "Showdown",
+      "start": "2026-03-19",
+      "end": "2026-06-06",
+      "rollover": "2026-06-06T00:00:00Z",
+      "main": {
+        "name": "Lady Windfrost",
+        "id": "Character_IcicleCane_Bright",
+        "variants": [
+          {
+            "type": "Style",
+            "option": "Dark Lady Windfrost"
+          },
+          {
+            "type": "Headpiece",
+            "option": "Off"
+          },
+          {
+            "type": "Super Level",
+            "option": "Off"
+          }
+        ],
+        "image": "/img/fortnite/lady-windfrost.png",
+        "worn": ["Dark Lady Windfrost", "Off", "Off"],
+        "style": "Dark Lady Windfrost"
+      }
+    },
+    {
+      "key": "ch7-s1",
+      "chapter": "Chapter 7",
+      "season": "Season 1",
+      "name": "Pacific Break",
+      "start": "2025-11-29",
+      "end": "2026-03-19",
+      "rollover": "2026-03-19T06:00:00Z",
+      "main": {
+        "name": "LISA",
+        "id": "Character_ChimeCurlCorn",
+        "variants": [
+          {
+            "type": "reactivity",
+            "option": "on"
+          }
+        ],
+        "image": "/img/fortnite/lisa.png",
+        "worn": ["on"]
+      }
+    },
+    {
+      "key": "ch6-m2",
+      "chapter": "Chapter 6",
+      "season": "Mini Season 2",
+      "name": "Fortnite x The Simpsons",
+      "start": "2025-11-01",
+      "end": "2025-11-29",
+      "rollover": "2025-11-29T20:00:00Z",
+      "main": {
+        "name": "Terrible Tornado",
+        "id": "Character_IvyStub",
+        "variants": [],
+        "image": "/img/fortnite/terrible-tornado.png",
+        "worn": []
+      }
+    },
+    {
+      "key": "ch6-s4",
+      "chapter": "Chapter 6",
+      "season": "Season 4",
+      "name": "Shock 'N Awesome",
+      "start": "2025-08-07",
+      "end": "2025-11-01",
+      "rollover": "2025-11-02T05:00:00Z",
+      "main": {
+        "name": "Poison Ivy",
+        "id": "CID_921_Athena_Commando_F_ParcelPetal",
+        "variants": [
+          {
+            "type": "STYLE",
+            "option": "HUMAN"
+          }
+        ],
+        "image": "/img/fortnite/poison-ivy.png",
+        "worn": ["HUMAN"],
+        "style": "HUMAN"
+      }
+    },
+    {
+      "key": "ch6-s3",
+      "chapter": "Chapter 6",
+      "season": "Season 3",
+      "name": "Super",
+      "start": "2025-06-07",
+      "end": "2025-08-07",
+      "rollover": "2025-08-07T07:00:00Z",
+      "main": {
+        "name": "Haylee Skye",
+        "id": "Character_BentBaton",
+        "variants": [
+          {
+            "type": "style",
+            "option": "Haylee Skye"
+          },
+          {
+            "type": "color",
+            "option": "Haylee Skye"
+          }
+        ],
+        "image": "/img/fortnite/haylee-skye.png",
+        "worn": ["Haylee Skye", "Haylee Skye"]
+      }
+    },
+    {
+      "key": "ch6-m1",
+      "chapter": "Chapter 6",
+      "season": "Mini Season 1",
+      "name": "Galactic Battle",
+      "start": "2025-05-02",
+      "end": "2025-06-07",
+      "rollover": "2025-06-07T20:00:00Z",
+      "main": {
+        "name": "Guff",
+        "id": "CID_752_Athena_Commando_M_Comet",
+        "variants": [],
+        "image": "/img/fortnite/guff.png",
+        "worn": []
+      }
+    },
+    {
+      "key": "ch6-s2",
+      "chapter": "Chapter 6",
+      "season": "Season 2",
+      "name": "Lawless",
+      "start": "2025-02-21",
+      "end": "2025-05-02",
+      "rollover": "2025-05-02T06:00:00Z",
+      "main": {
+        "name": "Hatsune Miku",
+        "id": "Character_JadeTowelGloss",
+        "variants": [
+          {
+            "type": "reactivity",
+            "option": "On"
+          }
+        ],
+        "image": "/img/fortnite/hatsune-miku.png",
+        "worn": ["On"]
+      }
+    },
+    {
+      "key": "ch6-s1",
+      "chapter": "Chapter 6",
+      "season": "Season 1",
+      "name": "Hunters",
+      "start": "2024-12-01",
+      "end": "2025-02-21",
+      "rollover": "2025-02-21T07:00:00Z",
+      "main": {
+        "name": "Jade",
+        "id": "Character_PolishedJade_Mind",
+        "variants": [
+          {
+            "type": "style",
+            "option": "Jade"
+          },
+          {
+            "type": "accessory",
+            "option": "mask on"
+          },
+          {
+            "type": "glow",
+            "option": "on"
+          },
+          {
+            "type": "super levels",
+            "option": "Voidburn Jade"
+          }
+        ],
+        "image": "/img/fortnite/jade.png",
+        "worn": ["Jade", "mask on", "on", "Voidburn Jade"],
+        "style": "Voidburn Jade"
+      }
+    }
+  ]
+}

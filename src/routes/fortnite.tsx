@@ -5,8 +5,10 @@ import { FilterToggle } from "@/components/filter-toggle";
 import { PageHeader, PageShell } from "@/components/page";
 import { SelectControl } from "@/components/select-control";
 import {
-  coverage,
   count,
+  coverage,
+  dateRange,
+  delta,
   formatFetched,
   fortnite,
   isWindowKey,
@@ -14,39 +16,73 @@ import {
   MODES,
   playedModes,
   playtime,
+  seasons,
   windows,
+  type Delta,
   type ModeId,
   type ModeStats,
+  type SeasonEntry,
 } from "@/lib/fortnite";
+import { cn } from "@/lib/utils";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
+/*
+ * Two names, deliberately. The tab and the nav say "Fortnite", because that is
+ * what someone is looking for in a list of links and what `site.ts` calls it -
+ * `tests/site.spec.ts` holds the two together. The headline on the page is free
+ * to be the joke.
+ */
 const TITLE = "Fortnite";
-const DESCRIPTION =
-  "Wins, kills and the rate I actually land them, read from Fortnite-API nightly and kept season by season.";
+const HEADING = "Where we droppin'?";
+const DESCRIPTION = "Wins, kills, and how good I am. Very. 1v1 me lol jk.";
 
 /**
  * The four numbers worth reading first, in the order they answer "how is he
  * doing": did you win, how often, how many did you take, and how hard did you
  * have to work for it.
+ *
+ * `against` is the lifetime snapshot when a season is on screen, and the point
+ * of the page: 42% is a number, and 42% against a lifetime 27% is a season.
+ * Only the rates carry it. A season's win *count* is smaller than the lifetime
+ * count by arithmetic rather than by form, and printing "-941 vs lifetime"
+ * under it would be true and say nothing.
  */
-function headline(stats: ModeStats) {
+function headline(stats: ModeStats, against: ModeStats | null) {
   return [
-    { label: "Wins", value: count(stats.wins) },
-    { label: "Win rate", value: `${stats.winRate.toFixed(1)}%` },
-    { label: "Kills", value: count(stats.kills) },
-    { label: "K/D", value: stats.kd.toFixed(2) },
+    { label: "Wins", value: count(stats.wins), delta: null },
+    {
+      label: "Win rate",
+      value: `${stats.winRate.toFixed(1)}%`,
+      delta: against ? delta(stats.winRate, against.winRate, 1, "pt") : null,
+    },
+    { label: "Kills", value: count(stats.kills), delta: null },
+    {
+      label: "K/D",
+      value: stats.kd.toFixed(2),
+      delta: against ? delta(stats.kd, against.kd, 2) : null,
+    },
   ];
 }
 
 /** The supporting numbers, which are context rather than headline. */
-function details(stats: ModeStats) {
+function details(stats: ModeStats, against: ModeStats | null) {
   return [
-    { label: "Matches", value: count(stats.matches) },
-    { label: "Kills per match", value: stats.killsPerMatch.toFixed(2) },
-    { label: "Top 10", value: count(stats.top10) },
-    { label: "Top 25", value: count(stats.top25) },
-    { label: "Players outlived", value: count(stats.playersOutlived) },
-    { label: "Time played", value: playtime(stats.minutesPlayed) },
+    { label: "Matches", value: count(stats.matches), delta: null },
+    {
+      label: "Kills per match",
+      value: stats.killsPerMatch.toFixed(2),
+      delta: against
+        ? delta(stats.killsPerMatch, against.killsPerMatch, 2)
+        : null,
+    },
+    { label: "Top 10", value: count(stats.top10), delta: null },
+    { label: "Top 25", value: count(stats.top25), delta: null },
+    {
+      label: "Players outlived",
+      value: count(stats.playersOutlived),
+      delta: null,
+    },
+    { label: "Time played", value: playtime(stats.minutesPlayed), delta: null },
   ];
 }
 
@@ -57,10 +93,12 @@ function details(stats: ModeStats) {
 function Stat({
   label,
   value,
+  against,
   big = false,
 }: {
   label: string;
   value: string;
+  against?: Delta | null;
   big?: boolean;
 }) {
   return (
@@ -75,7 +113,165 @@ function Stat({
       >
         {value}
       </dd>
+      {against ? (
+        <dd
+          className={cn(
+            "readout-dim mt-2",
+            // Ember for better than lifetime, plain muted for worse. Colour is
+            // not the only carrier - the sign is right there in the text - so
+            // this stays readable with no colour vision at all.
+            against.direction === "up" && "text-ember",
+          )}
+        >
+          {against.text}
+        </dd>
+      ) : null}
     </dl>
+  );
+}
+
+/** The outfit render, or the space one would take, at a given size. */
+function MainPortrait({
+  season,
+  className,
+}: {
+  season: SeasonEntry;
+  className?: string;
+}) {
+  if (!season.main?.image) {
+    return (
+      <div
+        className={cn(
+          "flex items-center justify-center bg-muted/40 p-4 text-center",
+          className,
+        )}
+      >
+        <span className="readout-dim text-pretty">
+          {season.main ? season.main.name : "No main on record"}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={season.main.image}
+      alt={`${season.main.name}, the outfit worn through ${season.label}`}
+      loading="lazy"
+      decoding="async"
+      className={cn("bg-muted/40 object-contain", className)}
+    />
+  );
+}
+
+/**
+ * The banner for the season on screen: what it was called, when it ran, and who
+ * it got played as.
+ *
+ * The outfit is hand-recorded in `src/content/fortnite-seasons.json` rather than
+ * read from anywhere. Epic's stats do not carry it - there is no "most used
+ * skin" in the payload - and it is a fact that stops changing the moment the
+ * season ends, so writing it down once is the whole of the work.
+ */
+function SeasonBanner({ season }: { season: SeasonEntry }) {
+  return (
+    <section className="mb-8 flex items-stretch gap-px border border-border bg-border">
+      <MainPortrait season={season} className="size-28 shrink-0 sm:size-36" />
+
+      <div className="flex min-w-0 flex-1 flex-col justify-center bg-background p-5 sm:p-6">
+        <p className="readout-dim">{season.label}</p>
+        <p className="display mt-1 text-2xl text-balance sm:text-3xl">
+          {season.name}
+        </p>
+        <p className="readout-dim mt-3">{dateRange(season)}</p>
+        {season.main ? (
+          <p className="readout-dim mt-1">
+            Mained {season.main.name}
+            {season.main.style ? `, ${season.main.style}` : ""}
+          </p>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Every season at once, as the outfit it got played in.
+ *
+ * The select above switches one season at a time, which is the right control
+ * for reading a stat board and the wrong one for seeing the shape of two years.
+ * This is the other half: the whole run in one view, each card a way back into
+ * the board above it.
+ */
+function SeasonHistory({
+  active,
+  onSelect,
+}: {
+  active: string;
+  onSelect: (key: string) => void;
+}) {
+  return (
+    <section aria-labelledby="mains" className="mt-16">
+      <h2 id="mains" className="display text-2xl sm:text-3xl">
+        Season by season
+      </h2>
+      <p className="readout-dim mt-2">
+        The outfit I mained each season, oldest at the end.
+      </p>
+
+      {/*
+        No `bg-border` behind this grid. Nine seasons in a four-wide grid leaves
+        three empty cells on the last row, and a grid container is as tall and
+        wide as its rows whether or not anything is in them - so the seam colour
+        showing through `gap-px` painted a grey rectangle over the gap where the
+        tenth, eleventh and twelfth cards would have been. The seams are drawn
+        per card instead, by a 1px spread shadow that takes no layout space and
+        lands on the same pixel its neighbour's does.
+      */}
+      <ul className="mt-6 grid grid-cols-2 gap-px sm:grid-cols-3 lg:grid-cols-4">
+        {seasons.map((season) => {
+          const current = season.key === active;
+
+          return (
+            <li
+              key={season.key}
+              className="bg-background shadow-[0_0_0_1px_var(--color-border)]"
+            >
+              <button
+                type="button"
+                onClick={() => onSelect(season.key)}
+                aria-current={current ? "true" : undefined}
+                className={cn(
+                  "flex h-full w-full flex-col text-left",
+                  "focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ember",
+                  current && "bg-ember/10",
+                )}
+              >
+                <MainPortrait
+                  season={season}
+                  className="aspect-square w-full"
+                />
+
+                <div className="flex flex-1 flex-col p-4">
+                  <p className={cn("readout-dim", current && "text-ember")}>
+                    {season.label}
+                  </p>
+                  <p className="display mt-1 text-lg text-balance">
+                    {season.name}
+                  </p>
+                  <p className="readout-dim mt-2">{dateRange(season)}</p>
+                  <p className="readout-dim mt-auto pt-3">
+                    {season.stats
+                      ? `${count(season.stats.overall.wins)} wins`
+                      : "No numbers"}
+                  </p>
+                </div>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
 
@@ -96,14 +292,26 @@ export function Fortnite() {
     : (windows[0]?.key ?? LIFETIME);
   const active = windows.find((window) => window.key === activeKey);
 
-  const modes = active ? playedModes(active.stats) : [];
+  const modes = active?.stats ? playedModes(active.stats) : [];
   const requestedMode = params.get("mode");
   const activeMode: ModeId =
     modes.find((mode) => mode.id === requestedMode)?.id ??
     modes[0]?.id ??
     "overall";
 
-  const stats = active?.stats[activeMode] ?? null;
+  const stats = active?.stats?.[activeMode] ?? null;
+
+  /*
+   * The lifetime figure for the same playlist, which is what a season's rates
+   * are read against. Null on the lifetime tab itself, where the comparison
+   * would be with itself, and null for a playlist lifetime has never seen -
+   * that cannot happen while a season is a subset of lifetime, but it is one
+   * `?mode=` away from being asked for.
+   */
+  const against =
+    active?.season && fortnite.lifetime
+      ? (fortnite.lifetime[activeMode] ?? null)
+      : null;
 
   const update = (next: { season?: string; mode?: string }) => {
     const query = new URLSearchParams(params);
@@ -114,12 +322,18 @@ export function Fortnite() {
     setParams(query, { replace: false });
   };
 
+  const selectSeason = (key: string) =>
+    // The playlist is dropped on the way, because it belongs to the season it
+    // was chosen in. Landing on a season that never played duos with `?mode=duo`
+    // still in the URL would show the empty board rather than the season.
+    update({ season: key === windows[0]?.key ? "" : key, mode: "" });
+
   const note = active?.season ? coverage(active.season) : null;
 
   return (
     <PageShell>
       <PageHeader
-        title={TITLE}
+        title={HEADING}
         lede={DESCRIPTION}
         aside={
           fortnite.name ? (
@@ -128,38 +342,38 @@ export function Fortnite() {
               <p className="display mt-2 text-3xl break-all sm:text-4xl">
                 {fortnite.name}
               </p>
-              {fortnite.fetched ? (
-                <p className="readout-dim mt-4">
-                  Read {formatFetched(fortnite.fetched)}
-                </p>
-              ) : null}
             </div>
           ) : undefined
         }
-      >
-        {windows.length > 1 ? (
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <SelectControl
-              label="Season"
-              value={activeKey}
-              onChange={(value) =>
-                update({ season: value === windows[0].key ? "" : value })
-              }
-              options={windows.map((window) => ({
-                value: window.key,
-                label: window.label,
-              }))}
-              className="w-full sm:w-64"
-            />
-          </div>
-        ) : null}
-      </PageHeader>
+      />
+
+      {/* Season first, then playlist. They are one control stack rather than
+          two, and the season is the outer choice - it decides which playlists
+          there are anything to show for. */}
+      {windows.length > 1 ? (
+        <SelectControl
+          label="Season"
+          value={activeKey}
+          onChange={selectSeason}
+          options={windows.map((window) => ({
+            value: window.key,
+            label: window.season
+              ? `${window.label}: ${window.season.name}`
+              : window.label,
+          }))}
+          className="mb-8 w-full sm:w-72"
+        />
+      ) : null}
+
+      {active?.season ? <SeasonBanner season={active.season} /> : null}
 
       {!active || !stats ? (
         <EmptyState>
-          No stats yet. They arrive the first time the nightly job runs with an
-          API key, and the account's career stats have to be public for Epic to
-          hand them over at all.
+          {active?.season
+            ? `No numbers on file for ${active.season.label} - nothing played, or nothing Epic ` +
+              `still has. It is here for the run of dates and the outfit.`
+            : `No stats yet. They arrive the first time the nightly job runs with an API key, and ` +
+              `the account's career stats have to be public for Epic to hand them over at all.`}
         </EmptyState>
       ) : (
         <>
@@ -188,43 +402,55 @@ export function Fortnite() {
             aria-label={`${MODES.find((mode) => mode.id === activeMode)?.label} stats`}
           >
             <div className="grid grid-cols-2 gap-px border border-border bg-border sm:grid-cols-4">
-              {headline(stats).map((tile) => (
+              {headline(stats, against).map((tile) => (
                 <Stat
                   key={tile.label}
                   label={tile.label}
                   value={tile.value}
+                  against={tile.delta}
                   big
                 />
               ))}
             </div>
 
             <div className="mt-px grid grid-cols-2 gap-px border border-border bg-border sm:grid-cols-3">
-              {details(stats).map((tile) => (
-                <Stat key={tile.label} label={tile.label} value={tile.value} />
+              {details(stats, against).map((tile) => (
+                <Stat
+                  key={tile.label}
+                  label={tile.label}
+                  value={tile.value}
+                  against={tile.delta}
+                />
               ))}
             </div>
           </section>
-
-          {/* Where the numbers come from, and what the season list can and
-              cannot say. Small print, but the page is numbers and numbers
-              without a provenance line invite more trust than they have earned. */}
-          <p className="mt-10 max-w-2xl text-sm leading-relaxed text-muted-foreground text-pretty">
-            Read nightly from{" "}
-            <a
-              href="https://fortnite-api.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-ember underline decoration-ember/40 underline-offset-4 hover:decoration-ember"
-            >
-              Fortnite-API
-            </a>
-            . Its stats endpoint answers for lifetime and for the season running
-            right now, and a season's numbers are gone from it once that season
-            ends - so the seasons listed here go back as far as this site has
-            been watching, and no further.
-          </p>
         </>
       )}
+
+      {seasons.length > 0 ? (
+        <SeasonHistory active={activeKey} onSelect={selectSeason} />
+      ) : null}
+
+      {/* Where the numbers come from, and what each half of the archive can and
+          cannot say. Small print, but the page is numbers and numbers without a
+          provenance line invite more trust than they have earned. */}
+      <p className="mt-16 max-w-2xl text-sm leading-relaxed text-muted-foreground text-pretty">
+        Read nightly from{" "}
+        <a
+          href="https://fortnite-api.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-ember underline decoration-ember/40 underline-offset-4 hover:decoration-ember"
+        >
+          Fortnite-API
+        </a>
+        , which answers for lifetime and for the season running right now. The
+        seasons behind it were filled in once from Epic's own stats service,
+        which does take a date range, and they reconcile exactly: every one of
+        the {count(fortnite.lifetime?.overall.matches ?? 0)} lifetime matches
+        lands in one of them.
+        {fortnite.fetched ? ` Read ${formatFetched(fortnite.fetched)}.` : ""}
+      </p>
     </PageShell>
   );
 }

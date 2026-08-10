@@ -1154,23 +1154,89 @@ test.describe("chrome", () => {
 });
 
 /**
- * The Fortnite page has no committed stats until the nightly job has run once
- * with an API key, so what ships today is its empty state. These pin the parts
- * that are true either way - the page exists, it is reachable from the nav, and
- * it explains itself rather than rendering a blank board.
+ * The Fortnite page draws two things that can disagree: a stat board for one
+ * window, and a season history that switches which window that is.
  *
- * The populated view is not asserted here because the data is baked at build
- * time from `src/content/fortnite.json`, so there is nothing a browser test can
- * stub. Once the first fetch lands, the season and playlist controls are worth
- * the same URL-syncing tests the blog and comics filters have.
+ * The numbers themselves are baked in at build time from
+ * `src/content/fortnite.json`, so there is nothing here worth asserting a value
+ * against - it would only restate the file. What these pin is the wiring: that
+ * every season the history offers can actually be shown, that picking one moves
+ * the URL, and that a board with no numbers behind it says so rather than
+ * rendering empty tiles.
  */
 test.describe("fortnite", () => {
+  test("the season history switches the board and syncs the URL", async ({
+    page,
+  }) => {
+    await page.goto("/fortnite");
+
+    const cards = page.locator("section[aria-labelledby=mains] li button");
+    // `count()` does not wait for anything, and this page is rendered by React
+    // after load, so the count has to be taken after something has appeared.
+    await expect(cards.first()).toBeVisible();
+    const total = await cards.count();
+
+    // The oldest season, which is never the default, so a change is a real one.
+    const oldest = cards.nth(total - 1);
+    // `textContent` rather than `innerText`, because the label is uppercased in
+    // CSS and `toContainText` below compares against the un-transformed text.
+    const label = (
+      (await oldest.locator("p").first().textContent()) ?? ""
+    ).trim();
+    expect(label).not.toBe("");
+    await oldest.click();
+
+    await expect(page).toHaveURL(/[?&]season=/);
+    await expect(oldest).toHaveAttribute("aria-current", "true");
+    // The banner above the board names the season the history just selected,
+    // which is the assertion that the two halves of the page agree.
+    await expect(page.locator("section").first()).toContainText(label);
+  });
+
+  test("every season it offers has either numbers or a reason it has none", async ({
+    page,
+  }) => {
+    await page.goto("/fortnite");
+
+    const options = page.getByLabel("Season").locator("option");
+    await expect(options.first()).toBeAttached();
+
+    for (const value of await options.evaluateAll((list) =>
+      list.map((option) => (option as HTMLOptionElement).value),
+    )) {
+      await page.goto(`/fortnite?season=${value}`);
+
+      // One or the other has to render, and waiting for whichever arrives is
+      // what stops an unrendered page from reading as an empty board.
+      await expect(
+        page.locator("[data-slot=stat], [data-slot=empty]").first(),
+      ).toBeVisible();
+
+      const tiles = page.locator("[data-slot=stat]");
+      if ((await tiles.count()) > 0) {
+        // A half-successful fetch shows as a tile with a term and no figure.
+        for (const text of await tiles.locator("dd").allInnerTexts()) {
+          expect(text.trim(), `empty stat tile on ?season=${value}`).not.toBe(
+            "",
+          );
+        }
+        continue;
+      }
+
+      // Scoped to the panel rather than the page: the season history below it
+      // also prints "No numbers" on every card without a stat board.
+      await expect(page.locator("[data-slot=empty]")).toContainText(
+        /no numbers|no stats yet/i,
+      );
+    }
+  });
+
   test("says why it is empty rather than showing a blank board", async ({
     page,
   }) => {
     await page.goto("/fortnite");
     await expect(page.getByRole("heading", { level: 1 })).toContainText(
-      /fortnite/i,
+      /droppin/i,
     );
 
     const board = page.locator("[data-slot=stat]");

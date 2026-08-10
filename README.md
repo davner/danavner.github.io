@@ -142,6 +142,8 @@ scripts/
   make-share-fallback.mjs draws the social image for a show with no photos
   update-vinyl.mjs        reads the Discogs collection nightly, saves the sleeves
   update-fortnite.mjs     reads the Fortnite stats nightly, keeps a season archive
+  backfill-fortnite.mjs   fills past seasons in from Epic, run by hand not by CI
+  fetch-fortnite-skins.mjs downloads the render for each season's main outfit
 vite-plugin-content.ts    reads + validates every content collection at build time
 vite-plugin-share-pages.ts writes one HTML file per show so links preview properly
 vite.config.ts            aliases, Tailwind, the 404.html fallback
@@ -467,10 +469,19 @@ the filter.
 ## Fortnite
 
 `/fortnite` shows wins, kills, K/D and the supporting numbers for the Epic
-account `danwiththeyams`, browseable by season and by playlist. The numbers are
-read nightly by `scripts/update-fortnite.mjs` from
-[Fortnite-API](https://fortnite-api.com) into `src/content/fortnite.json`, and
-validated at build time like every other collection.
+account `danwiththeyams`, browseable by season and by playlist, with each
+season's rates set against the lifetime figure underneath them.
+
+Two files behind it, and only one of them is written by hand:
+
+| File                                | Written by                     | Holds                                          |
+| ----------------------------------- | ------------------------------ | ---------------------------------------------- |
+| `src/content/fortnite.json`         | `update-fortnite.mjs`, nightly | the numbers                                    |
+| `src/content/fortnite-seasons.json` | you                            | the season calendar: names, dates, main outfit |
+
+Both are validated at build time like every other collection. A recorded season
+whose key is not in the calendar fails the build, because the calendar is where
+everything except the numbers comes from.
 
 ### Setting it up
 
@@ -493,24 +504,103 @@ Locally:
 FORTNITE_API_KEY=... node scripts/update-fortnite.mjs
 ```
 
-### Why the season history starts when the tracking did
+### The season calendar
 
-The endpoint answers for two time windows: `lifetime`, and `season` meaning the
-season running **right now**. A season that has already ended cannot be asked
-for at all - its numbers are gone from the API the moment it rolls over.
+`src/content/fortnite-seasons.json` is the hand-kept half, and the only Fortnite
+file anyone edits. One entry per season, newest first:
 
-So the season archive is accumulated rather than fetched. Each night the current
-season is written into `seasons` and every season already recorded is carried
-through untouched. The history is the record of what the job has seen, it only
-goes back as far as the first run, and the page says so under the board rather
-than implying a completeness it does not have. A season first seen mid-way
-through also carries a `Tracked from ...` line, because partial numbers that
-look whole are worse than no numbers.
+```json
+{
+  "key": "ch6-s1",
+  "chapter": "Chapter 6",
+  "season": "Season 1",
+  "name": "Hunters",
+  "start": "2024-12-01",
+  "end": "2025-02-21",
+  "main": { "name": "Jade", "id": "...", "image": "/img/fortnite/jade.png" }
+}
+```
 
-Seasons are named by a table at the top of `scripts/update-fortnite.mjs`, because
-the stats endpoint returns numbers and no label. **Add a line when a new season
-starts.** Missing one is not damaging: the new season's matches accrue into the
-previous entry until the line is added.
+`end` is **exclusive** - the day the next season began - so consecutive ranges
+meet exactly rather than leaving a day in neither. These dates decide which
+entry the nightly job files today's numbers under, so a typo does not fail the
+build, it quietly attributes a month of matches to the wrong season.
+
+`main` is the outfit worn all season. Epic's stats do not carry it, so it is
+written down rather than read. Add the name and run
+
+```sh
+node scripts/fetch-fortnite-skins.mjs
+```
+
+which resolves it against Fortnite-API's cosmetics catalogue, downloads the
+render into `public/img/fortnite/`, and writes the resolved id and image path
+back into the calendar. No key needed - the cosmetics routes are the free half.
+
+**Add an entry when a new season starts.** Missing one is not damaging: the new
+season's matches accrue into the previous entry until it is added.
+
+### Backfilling a season that already ended
+
+Fortnite-API answers for two windows and no others: `lifetime`, and the season
+running **right now**. Epic's own service, which it wraps, takes an arbitrary
+window, and that is where the season history came from:
+
+```sh
+node scripts/backfill-fortnite.mjs --url   # prints where to get a code
+EPIC_AUTHORIZATION_CODE=... node scripts/backfill-fortnite.mjs
+```
+
+**This is run by hand and never in CI.** The credential that would let a
+scheduled job mint its own token is a device auth, which can log in as you - a
+real key to the account rather than a scoped read-only one. A finished season is
+a fixed set of numbers, so there is nothing for a nightly job to notice. Run it,
+commit the JSON, let the short-lived token expire.
+
+Epic retires its game clients without notice - `fortniteIOSGameClient` went dead
+after Fortnite left the App Store - so the client is a flag: `--client=android`
+or `--client=launcher`. A code only works for the client it was issued for, so
+switching means getting a new one.
+
+#### Why it is not as simple as passing the season's dates
+
+Epic does not aggregate over the window you ask for. It compacts stats into
+buckets and returns the buckets falling **wholly inside** the window, and the
+big ones are per season - a whole season collapses into one bucket whose far
+edge is the instant that season rolled over.
+
+A window ending at midnight on the day the next season began does not contain
+that bucket. It does not error; it answers a smaller number that looks like a
+season:
+
+| Window                                        | Matches |
+| --------------------------------------------- | ------- |
+| Ch6 S1, midnight boundaries                   | 42      |
+| Ch6 S1, ending after the real rollover        | 443     |
+| All nine seasons, midnight boundaries, summed | 846     |
+| Lifetime                                      | 3765    |
+
+Two things make it come out right:
+
+- **`rollover` in the season calendar** - the measured instant each bucket
+  closes, found by sweeping `endTime` a week at a time and binary searching each
+  jump. They land on the published rollover times (Ch6 S1 at 07:00 UTC on 21
+  February 2025), which is the cross-check that they are real.
+- **Cumulative windows, subtracted** - every window runs from the beginning of
+  time to one rollover, so only its right edge can be wrong, and a season is the
+  difference between two of them. Asking for each season's own window instead
+  means _both_ edges have to clear a bucket, and an hour's error on the left
+  silently drops the whole season: that returned 6 matches for Ch6 S3 against
+  its real 461.
+
+The script refuses to write unless the seasons reconstruct the lifetime match
+count. Every failure this went through would have been caught by that check, and
+the numbers on the page now reconcile exactly: 3765 of 3765.
+
+The `first` field on each season entry is the date its numbers start from. A
+backfilled season starts from its own first day; one the nightly job saw
+part-way through carries a `Tracked from ...` line on the page, because partial
+numbers that look whole are worse than none.
 
 ## Editing the résumé side
 

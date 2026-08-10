@@ -13,6 +13,12 @@ name: Fortnite
 # `src/content/fortnite.json` alongside every season already recorded, and
 # commits if anything moved. See the header of `scripts/update-fortnite.mjs`.
 #
+# Seasons that ended before this job existed came from Epic's own service, via
+# `scripts/backfill-fortnite.mjs`. That one is run by hand and deliberately has
+# no workflow: it needs a credential that can log in as the account, and a
+# finished season is a fixed set of numbers with nothing for a nightly job to
+# notice. See its header.
+#
 # A failed read commits nothing, so the last good numbers stay and keep showing.
 # The push triggers the normal deploy; this runs on a schedule, not on push, so
 # its own commit never re-triggers it.

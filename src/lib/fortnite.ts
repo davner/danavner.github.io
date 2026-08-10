@@ -31,16 +31,40 @@ export interface Snapshot {
   squad: ModeStats | null;
 }
 
+/** The outfit worn all season, and the render downloaded for it. */
+export interface Main {
+  name: string;
+  /** Fortnite's cosmetic id, e.g. `Character_PolishedJade_Mind`. */
+  id: string;
+  /** Path under `public/`, or "" when the render has not been fetched yet. */
+  image: string;
+  /** The style worn, e.g. "Voidburn Jade". "" when it is the default look. */
+  style: string;
+}
+
 export interface SeasonEntry {
   key: string;
+  /** "Chapter 6". */
+  chapter: string;
+  /** "Season 1", or "Mini Season 1". */
+  season: string;
+  /** The season's own name, e.g. "Hunters". */
+  name: string;
+  /** "Chapter 6 Season 1". */
   label: string;
   /** ISO date the season began. */
   start: string;
-  /** ISO date this season was first recorded - see `coverage`. */
+  /** ISO date the *next* season began, so ranges meet rather than overlap. */
+  end: string;
+  main: Main | null;
+  /** ISO date these numbers start from - see `coverage`. "" when unplayed. */
   first: string;
   /** ISO date of the last successful read. */
   fetched: string;
-  stats: Snapshot;
+  /** `epic` for a backfilled season, `fortnite-api` for a recorded one. */
+  source: string;
+  /** Null for a season with no numbers on file. */
+  stats: Snapshot | null;
 }
 
 export interface FortnitePayload {
@@ -74,17 +98,22 @@ export const LIFETIME = "lifetime";
 export interface Window {
   key: string;
   label: string;
-  stats: Snapshot;
-  /** Null for lifetime, which needs no caveat. */
+  /** Null for a season with no numbers on file. */
+  stats: Snapshot | null;
+  /** Null for lifetime, which is not a season and needs no caveat. */
   season: SeasonEntry | null;
 }
 
 /**
  * Every window worth a tab, in the order they are shown.
  *
- * Lifetime leads because it is the only one that is complete - it is the number
- * the API keeps whatever happens to a season. The seasons follow newest first,
- * as far back as the nightly job has been running.
+ * Lifetime leads because it is the only one that is complete by definition - it
+ * is the number the API keeps whatever happens to a season. The seasons follow
+ * newest first, straight from the calendar.
+ *
+ * Seasons with no numbers get a tab too. One with only a name, a run of dates
+ * and the outfit worn through it is still a season that was played, and hiding
+ * it would make the history look shorter than it was.
  */
 export const windows: Window[] = [
   ...(fortnite.lifetime
@@ -104,6 +133,9 @@ export const windows: Window[] = [
     season,
   })),
 ];
+
+/** The calendar, newest first. */
+export const seasons: SeasonEntry[] = fortnite.seasons;
 
 export function isWindowKey(value: string | null): boolean {
   return value !== null && windows.some((window) => window.key === value);
@@ -154,6 +186,53 @@ export function coverage(season: SeasonEntry): string | null {
     },
   );
   return `Tracked from ${from}, not the season's first day`;
+}
+
+/** "Dec 1, 2024 - Feb 21, 2025". A season's run, as every season table writes it. */
+export function dateRange(season: SeasonEntry): string {
+  const day = (date: string) =>
+    new Date(`${date}T12:00:00Z`).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      timeZone: "UTC",
+    });
+
+  return `${day(season.start)} - ${day(season.end)}`;
+}
+
+/**
+ * How a season's figure sits against the lifetime one.
+ *
+ * The point of the season tabs is the comparison - a 42% win rate means nothing
+ * on its own and a great deal next to a lifetime 27%. `direction` is which way
+ * the difference goes and not whether it is good news; every figure this is
+ * used on happens to be one where up is better, but that is the caller's fact
+ * to know rather than this function's to assume.
+ */
+export interface Delta {
+  text: string;
+  direction: "up" | "down" | "level";
+}
+
+export function delta(
+  value: number,
+  against: number,
+  digits: number,
+  suffix = "",
+): Delta {
+  const difference = value - against;
+
+  // Rounded before it is compared, so a difference too small to print does not
+  // render as "+0.00" with an arrow claiming it moved.
+  const shown = Number(difference.toFixed(digits));
+  if (shown === 0) return { text: `level with lifetime`, direction: "level" };
+
+  const sign = shown > 0 ? "+" : "-";
+  return {
+    text: `${sign}${Math.abs(shown).toFixed(digits)}${suffix} vs lifetime`,
+    direction: shown > 0 ? "up" : "down",
+  };
 }
 
 /** "August 10, 2026" - the same sign-off the record and comic pages use. */

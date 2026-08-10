@@ -773,6 +773,136 @@ type FortniteSnapshotJson = Record<string, FortniteModeJson | null> & {
   overall: FortniteModeJson;
 };
 
+/** One season of the calendar. Mirrors `Season` in `src/lib/fortnite.ts`. */
+interface FortniteSeasonJson {
+  key: string;
+  chapter: string;
+  season: string;
+  name: string;
+  label: string;
+  start: string;
+  /** Exclusive - the day the next season began. */
+  end: string;
+  main: { name: string; id: string; image: string; style: string } | null;
+}
+
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * The season calendar, from `src/content/fortnite-seasons.json`.
+ *
+ * Hand-kept, unlike the stats beside it, and the only file in the pair anyone
+ * edits. It carries what Epic's stats endpoint will never tell you: what the
+ * season was called, when it ran, and which outfit got worn all season.
+ *
+ * Strict about dates because the page prints the range and because a season's
+ * boundaries are what decide which entry the nightly job files today's numbers
+ * under - a typo does not fail, it quietly attributes a month of matches to the
+ * wrong season.
+ *
+ * `end` is exclusive: it is the day the *next* season started, which is how
+ * every public season table writes them and what makes consecutive ranges meet
+ * exactly rather than leaving a day in neither.
+ */
+function readFortniteSeasons(
+  root: string,
+  publicDir: string,
+): FortniteSeasonJson[] {
+  const where = "src/content/fortnite-seasons.json";
+  const file = path.resolve(root, where);
+  if (!existsSync(file)) return [];
+
+  const fail = (message: string): never => {
+    throw new Error(`Invalid Fortnite season calendar - ${where}: ${message}`);
+  };
+
+  let payload: Record<string, unknown>;
+  try {
+    payload = JSON.parse(readFileSync(file, "utf8"));
+  } catch (error) {
+    return fail(`could not be parsed as JSON (${(error as Error).message})`);
+  }
+
+  const raw = Array.isArray(payload?.seasons)
+    ? (payload.seasons as Record<string, unknown>[])
+    : fail("`seasons` must be an array");
+
+  const seen = new Set<string>();
+
+  const seasons = raw.map((season, index) => {
+    const at = `\`seasons[${index}]\``;
+
+    const key = asTrimmedString(season.key);
+    if (!key) fail(`${at} needs a \`key\``);
+    if (seen.has(key)) fail(`${at} repeats \`key\` "${key}"`);
+    seen.add(key);
+
+    const required = (field: "chapter" | "season" | "name") => {
+      const value = asTrimmedString(season[field]);
+      if (!value) fail(`${at} needs a \`${field}\``);
+      return value;
+    };
+
+    const date = (field: "start" | "end") => {
+      const value = asTrimmedString(season[field]);
+      if (!ISO_DATE.test(value))
+        fail(`${at}.${field} must be a \`YYYY-MM-DD\` date`);
+      return value;
+    };
+
+    const start = date("start");
+    const end = date("end");
+    if (end <= start) fail(`${at} ends on or before it starts`);
+
+    let main: FortniteSeasonJson["main"] = null;
+    if (season.main != null) {
+      const entry = season.main as Record<string, unknown>;
+      const name = asTrimmedString(entry.name);
+      if (!name) fail(`${at}.main needs a \`name\``);
+
+      const image = asTrimmedString(entry.image);
+      // An outfit with no render yet is fine - the name is the fact, and
+      // `scripts/fetch-fortnite-skins.mjs` fills the rest in. A path that
+      // points at nothing is not fine, and is the failure this catches: the
+      // page would render a broken image and the build would say nothing.
+      if (image && !existsSync(path.join(publicDir, image))) {
+        fail(`${at}.main.image "${image}" is not in the public directory`);
+      }
+
+      main = {
+        name,
+        id: asTrimmedString(entry.id),
+        image,
+        // The style on screen, e.g. "Voidburn Jade". Written by
+        // `fetch-fortnite-skins.mjs` and absent when the render is the outfit's
+        // default, since repeating the name says nothing.
+        style: asTrimmedString(entry.style),
+      };
+    }
+
+    const chapter = required("chapter");
+    const number = required("season");
+
+    return {
+      key,
+      chapter,
+      season: number,
+      name: required("name"),
+      // Derived rather than stored, so the calendar cannot end up with a label
+      // that disagrees with the chapter and season sitting next to it.
+      label: `${chapter} ${number}`,
+      start,
+      end,
+      main,
+    };
+  });
+
+  // Newest first, which is the order the file is written in and the order the
+  // page shows. Sorted rather than trusted, so a season inserted in the wrong
+  // place in the file still lands in the right place on the page.
+  return seasons.sort((a, b) => b.start.localeCompare(a.start));
+}
+
 /**
  * The Fortnite stats, read from `src/content/fortnite.json` - written nightly
  * from Fortnite-API by `scripts/update-fortnite.mjs` rather than typed by hand.
@@ -790,24 +920,29 @@ type FortniteSnapshotJson = Record<string, FortniteModeJson | null> & {
  * A missing file is not an error. The repo builds before the first fetch has
  * ever run, and the page renders its empty state.
  */
-function readFortnite(root: string) {
-  const file = path.resolve(root, "src/content/fortnite.json");
-  const empty = {
-    name: "",
-    accountId: "",
-    fetched: "",
-    lifetime: null as FortniteSnapshotJson | null,
-    seasons: [] as {
-      key: string;
-      label: string;
-      start: string;
-      first: string;
-      fetched: string;
-      stats: FortniteSnapshotJson;
-    }[],
-  };
+function readFortnite(root: string, publicDir: string) {
+  const calendar = readFortniteSeasons(root, publicDir);
 
-  if (!existsSync(file)) return empty;
+  /** The calendar with no numbers against it, which is what a season nobody
+   * has played, or a repo that has never fetched, both look like. */
+  const unplayed = calendar.map((season) => ({
+    ...season,
+    first: "",
+    fetched: "",
+    source: "",
+    stats: null as FortniteSnapshotJson | null,
+  }));
+
+  const file = path.resolve(root, "src/content/fortnite.json");
+  if (!existsSync(file)) {
+    return {
+      name: "",
+      accountId: "",
+      fetched: "",
+      lifetime: null as FortniteSnapshotJson | null,
+      seasons: unplayed,
+    };
+  }
 
   const fail = (message: string): never => {
     throw new Error(
@@ -847,13 +982,48 @@ function readFortnite(root: string) {
       return value;
     };
 
+    /*
+     * Numbers that cannot happen, whatever produced them.
+     *
+     * "Is it a number" turned out to be too weak a question. An attempt to
+     * backfill past seasons out of Epic's stats service wrote a season with 64
+     * matches and 113 wins - a -49 death count and a 176.6% win rate - and
+     * every one of those was a finite number, so this reader passed it straight
+     * through and the page rendered it. A stat board is only worth anything if
+     * it refuses to show figures that are arithmetically impossible.
+     */
+    const wins = num("wins");
+    if (wins > matches) {
+      fail(
+        `${where} has ${wins} wins in ${matches} matches, which cannot happen - ` +
+          `the numbers that produced it are wrong, not just surprising`,
+      );
+    }
+
+    const deaths = num("deaths");
+    if (deaths < 0) fail(`${where} has ${deaths} deaths`);
+
+    const winRate = num("winRate");
+    if (winRate < 0 || winRate > 100) {
+      fail(`${where} has a win rate of ${winRate}%`);
+    }
+
+    for (const field of [
+      "kills",
+      "kd",
+      "killsPerMatch",
+      "minutesPlayed",
+    ] as const) {
+      if (num(field) < 0) fail(`${where}.${field} is negative`);
+    }
+
     return {
       matches,
-      wins: num("wins"),
+      wins,
       kills: num("kills"),
-      deaths: num("deaths"),
+      deaths,
       kd: num("kd"),
-      winRate: num("winRate"),
+      winRate,
       killsPerMatch: num("killsPerMatch"),
       top10: num("top10"),
       top25: num("top25"),
@@ -886,30 +1056,40 @@ function readFortnite(root: string) {
     : fail("`seasons` must be an array");
 
   const seen = new Set<string>();
+  const known = new Set(calendar.map((season) => season.key));
 
-  const seasons = rawSeasons.map((season, index) => {
-    const where = `\`seasons[${index}]\``;
+  const recorded = new Map(
+    rawSeasons.map((season, index) => {
+      const where = `\`seasons[${index}]\``;
 
-    const key = asTrimmedString(season.key);
-    if (!key) fail(`${where} needs a \`key\``);
-    // The key tabs the page and keys the list in React, so a duplicate would
-    // render two tabs that look identical and show one of them.
-    if (seen.has(key)) fail(`${where} repeats \`key\` "${key}"`);
-    seen.add(key);
+      const key = asTrimmedString(season.key);
+      if (!key) fail(`${where} needs a \`key\``);
+      // The key tabs the page and keys the list in React, so a duplicate would
+      // render two tabs that look identical and show one of them.
+      if (seen.has(key)) fail(`${where} repeats \`key\` "${key}"`);
+      seen.add(key);
 
-    const label = asTrimmedString(season.label);
-    if (!label)
-      fail(`${where} needs a \`label\` - the tab has nothing to say otherwise`);
+      // Everything the page prints about a season other than its numbers - the
+      // name, the dates, the outfit - comes from the calendar. A recorded key
+      // with no calendar entry has nowhere to get any of it, and would drop off
+      // the page silently rather than loudly.
+      if (!known.has(key)) {
+        fail(
+          `${where} has key "${key}", which src/content/fortnite-seasons.json does not list`,
+        );
+      }
 
-    return {
-      key,
-      label,
-      start: asTrimmedString(season.start),
-      first: asTrimmedString(season.first),
-      fetched: asTrimmedString(season.fetched),
-      stats: readSnapshot(season.stats, `${where}.stats`),
-    };
-  });
+      return [
+        key,
+        {
+          first: asTrimmedString(season.first),
+          fetched: asTrimmedString(season.fetched),
+          source: asTrimmedString(season.source),
+          stats: readSnapshot(season.stats, `${where}.stats`),
+        },
+      ] as const;
+    }),
+  );
 
   return {
     name: asTrimmedString(payload.name),
@@ -918,7 +1098,13 @@ function readFortnite(root: string) {
     lifetime: payload.lifetime
       ? readSnapshot(payload.lifetime, "`lifetime`")
       : null,
-    seasons,
+    // The calendar drives the order and the membership. A season with no
+    // numbers still gets an entry, because it is still a season that was played
+    // in an outfit worth showing - the page draws it without a stat board.
+    seasons: unplayed.map((season) => ({
+      ...season,
+      ...(recorded.get(season.key) ?? {}),
+    })),
   };
 }
 
@@ -1106,7 +1292,7 @@ export function contentPlugin(): Plugin {
         return `export const comics = ${JSON.stringify(readComics(root, publicDir))};`;
       }
       if (id === resolvedId(FORTNITE)) {
-        return `export const fortnite = ${JSON.stringify(readFortnite(root))};`;
+        return `export const fortnite = ${JSON.stringify(readFortnite(root, publicDir))};`;
       }
 
       const collection = COLLECTIONS.find(
@@ -1132,8 +1318,12 @@ export function contentPlugin(): Plugin {
         // A local run of the comics fetch should show up without a restart too.
         if (file === path.resolve(root, "src/content/comics.json"))
           return reload(COMICS);
-        // Same for a local run of the Fortnite fetch.
-        if (file === path.resolve(root, "src/content/fortnite.json"))
+        // Same for a local run of the Fortnite fetch, and for hand-edits to the
+        // season calendar beside it.
+        if (
+          file === path.resolve(root, "src/content/fortnite.json") ||
+          file === path.resolve(root, "src/content/fortnite-seasons.json")
+        )
           return reload(FORTNITE);
 
         if (!file.endsWith(".md")) return;

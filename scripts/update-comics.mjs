@@ -110,13 +110,44 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function getJson(url) {
-  const wait = REQUEST_GAP_MS - (Date.now() - lastRequest);
-  if (wait > 0) await sleep(wait);
-  lastRequest = Date.now();
+/**
+ * League of Comic Geeks sits behind Cloudflare, which decides what to answer
+ * partly on how the client looks and partly on where it is calling from. `impit`
+ * handles the first half - a plain `fetch` or `curl` gets a 403 from anywhere,
+ * and impit's browser fingerprint gets a 200 - but nothing here can do anything
+ * about the second, and a datacenter address is exactly the kind Cloudflare is
+ * suspicious of.
+ *
+ * So a 403 gets a few goes with a widening gap before it is believed. It costs a
+ * background job nothing to wait, and if the refusal is about the address rather
+ * than the request then no amount of retrying will fix it - which is a useful
+ * thing to have established before failing.
+ */
+const RETRY_STATUSES = new Set([403, 429, 500, 502, 503, 504]);
+const ATTEMPTS = 3;
 
-  try {
+async function request(url) {
+  for (let attempt = 1; ; attempt++) {
+    const wait = REQUEST_GAP_MS - (Date.now() - lastRequest);
+    if (wait > 0) await sleep(wait);
+    lastRequest = Date.now();
+
     const response = await impit.fetch(url);
+    if (response.ok || !RETRY_STATUSES.has(response.status) || attempt === ATTEMPTS) {
+      return response;
+    }
+
+    const backoff = REQUEST_GAP_MS * 2 ** attempt;
+    console.warn(
+      `comics: ${response.status} on ${url} (attempt ${attempt}/${ATTEMPTS}), retrying in ${backoff}ms`,
+    );
+    await sleep(backoff);
+  }
+}
+
+async function getJson(url) {
+  try {
+    const response = await request(url);
     if (!response.ok) {
       console.warn(`comics: ${response.status} on ${url}`);
       return null;
@@ -137,7 +168,7 @@ async function getJson(url) {
  */
 async function resolveUserId(username) {
   try {
-    const response = await impit.fetch(`${BASE}/profile/${username.toLowerCase()}/pull-list`);
+    const response = await request(`${BASE}/profile/${username.toLowerCase()}/pull-list`);
     if (!response.ok) {
       console.warn(`comics: ${response.status} looking up "${username}"`);
       return null;
@@ -399,14 +430,16 @@ async function main() {
   const username = accounts.leagueOfComicGeeks?.trim();
 
   if (!username) {
-    console.warn("comics: no `leagueOfComicGeeks` in accounts.json. Writing nothing.");
-    return;
+    throw new Error("no `leagueOfComicGeeks` in src/content/accounts.json");
   }
 
   const userId = await resolveUserId(username);
   if (!userId) {
-    console.warn("comics: could not resolve the user, keeping the committed payload");
-    return;
+    throw new Error(
+      `could not resolve "${username}". The committed payload stands, so the page is ` +
+        `showing whatever it last read - see the note at the top of this file about ` +
+        `Cloudflare and where the request is coming from.`,
+    );
   }
 
   await mkdir(COVER_DIR, { recursive: true });
@@ -441,8 +474,10 @@ async function main() {
    * state most weeks, and so is an empty wish list.
    */
   if (!collection) {
-    console.warn("comics: could not read the collection, keeping the committed payload");
-    return;
+    throw new Error(
+      "could not read the collection. The committed payload stands, so the page is showing " +
+        "whatever it last read.",
+    );
   }
 
   const series = collection.items.map((entry) => ({ ...entry, key: `series-${entry.id}` }));
@@ -476,4 +511,18 @@ async function main() {
   );
 }
 
-await main();
+try {
+  await main();
+} catch (error) {
+  /*
+   * Loud, and a non-zero exit, the same way `update-fortnite.mjs` fails.
+   *
+   * This used to warn and return 0, which meant a run that read nothing looked
+   * exactly like a run where nothing had changed: a green tick, no commit, and a
+   * page quietly getting older. The whole point of committing the data is that
+   * staleness is visible, and it is not visible if the job that produces it
+   * reports success either way.
+   */
+  console.error(`comics: ${error.message}`);
+  process.exit(1);
+}

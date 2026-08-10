@@ -16,6 +16,22 @@ name: Comics
 # read commits nothing, so the last good payload stays and keeps showing. The
 # push triggers the normal deploy; this runs on a schedule, not on push, so its
 # own commit never re-triggers it.
+#
+# ## When this goes red with a 403
+#
+# League of Comic Geeks is behind Cloudflare, which answers on how the client
+# looks and where it is calling from. `impit` handles the first half - a plain
+# `curl` gets 403 from anywhere and impit's browser fingerprint gets 200 - but
+# nothing can be done here about the second, and a GitHub runner's datacenter
+# address is exactly what Cloudflare distrusts.
+#
+# The script retries a few times before believing it, and then exits non-zero
+# rather than passing quietly, because a run that read nothing used to look
+# exactly like a run where nothing had changed.
+#
+# If this fails night after night, the block is about the address and no amount
+# of retrying will help. Run `node scripts/update-comics.mjs` from a normal
+# connection and commit the result, the way `backfill-fortnite.mjs` is run.
 
 on:
   schedule:

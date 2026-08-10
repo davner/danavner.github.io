@@ -556,6 +556,24 @@ one, so the script talks to the same endpoint their own front end does and parse
 what comes back. The header of the script explains why that is not a smaller
 commitment than the npm library it replaced, which had already drifted.
 
+**The nightly run can come back 403, and that is about the address it calls
+from.** The site is behind Cloudflare, which answers on how the client looks and
+where it is calling from. `impit` handles the first - a plain `curl` gets 403
+from anywhere and impit's browser fingerprint gets 200 - but a GitHub runner's
+datacenter address is exactly the kind Cloudflare distrusts, and nothing in the
+script can change that. It retries, then exits non-zero rather than passing
+quietly, so a stale shelf shows up as a red run instead of a green one that
+committed nothing.
+
+If it fails repeatedly, run it from a normal connection and commit the result:
+
+```sh
+node scripts/update-comics.mjs
+```
+
+Discogs has a real API and does not care where you call from, which is why the
+record shelf updates from CI every night and this one sometimes will not.
+
 ## The now page
 
 `/now` is one markdown file, `src/content/now.md`, and it is the only page here

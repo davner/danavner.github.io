@@ -91,9 +91,13 @@ async function main() {
   const currentRaw = await readFile(new URL(`../${NOW_FILE}`, import.meta.url), "utf8");
   const current = updatedDate(currentRaw);
 
+  /*
+   * A malformed page rather than nothing to do. Every other early return here is
+   * a legitimate no-op - a revision, an entry already filed - and logs as one;
+   * this one means the file is wrong and the build will reject it too.
+   */
   if (!current) {
-    console.warn(`now-archive: ${NOW_FILE} has no \`updated\` date. Writing nothing.`);
-    return;
+    throw new Error(`${NOW_FILE} has no \`updated\` date, so nothing can be filed`);
   }
 
   /*
@@ -117,6 +121,13 @@ async function main() {
 
   const previous = updatedDate(previousRaw);
 
+  /*
+   * A warning rather than a failure, unlike the missing date on the current
+   * page. This one is about a commit that already happened: the text cannot be
+   * filed and nobody can go back and fix it, so failing every push from here on
+   * would be a red run with no action behind it. The entry is lost either way;
+   * saying so once is the most this can usefully do.
+   */
   if (!previous) {
     console.warn("now-archive: the previous version had no `updated` date, so it cannot be filed");
     return;
@@ -142,4 +153,9 @@ async function main() {
   console.log(`now-archive: filed the ${previous} entry, replaced by ${current}`);
 }
 
-await main();
+try {
+  await main();
+} catch (error) {
+  console.error(`now-archive: ${error.message}`);
+  process.exit(1);
+}

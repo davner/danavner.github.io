@@ -240,8 +240,10 @@ async function main() {
 
   const folders = await discogs(`/users/${USER}/collection/folders`);
   if (!folders?.folders?.length) {
-    console.warn("vinyl: could not read the folder list, keeping the committed collection");
-    return;
+    throw new Error(
+      "could not read the folder list. The committed collection stands, so the page is " +
+        "showing whatever it last read.",
+    );
   }
 
   // A collection instance lives in exactly one folder, so walking every folder
@@ -299,9 +301,16 @@ async function main() {
     }
   }
 
+  /*
+   * An empty read is a failed read, not an empty shelf. Discogs answering with
+   * nothing for an account that has records means the request did not work, and
+   * writing that out would replace the collection with an empty one.
+   */
   if (records.length === 0) {
-    console.warn("vinyl: the collection came back empty, keeping the committed one");
-    return;
+    throw new Error(
+      "the collection came back empty. The committed collection stands, so the page is " +
+        "showing whatever it last read.",
+    );
   }
 
   console.log(`vinyl: ${records.length} records across ${owned.length} folders`);
@@ -356,4 +365,18 @@ async function main() {
   console.log(`vinyl: wrote ${records.length} records to src/content/vinyl.json`);
 }
 
-await main();
+try {
+  await main();
+} catch (error) {
+  /*
+   * Loud, and a non-zero exit, the same way the comics and Fortnite jobs fail.
+   *
+   * These used to warn and return 0, which made a run that read nothing look
+   * exactly like a run where the shelf had not changed: a green tick, no commit,
+   * and a page quietly getting older. Committing the data is what makes
+   * staleness visible, and it is not visible if the job reports success either
+   * way. The comics job was found doing precisely this.
+   */
+  console.error(`vinyl: ${error.message}`);
+  process.exit(1);
+}

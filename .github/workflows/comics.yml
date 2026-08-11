@@ -10,37 +10,39 @@ name: Comics
 # parses the same HTML the site's own front end asks for, which is not something
 # to do from a visitor's browser even if the promise allowed it.
 #
-# So `scripts/update-comics.mjs` is the only thing that talks to League of Comic
-# Geeks: it reads the collection, the pull list, and the wish list, writes
-# `src/content/comics.json`, and saves the covers it had to download. A failed
-# read writes nothing, so the last good payload stays and keeps showing.
+# So this job is the only thing that talks to League of Comic Geeks: nightly, it
+# reads the collection, the pull list, and the wish list, writes
+# `src/content/comics.json`, and commits the covers it had to download. A failed
+# read commits nothing, so the last good payload stays and keeps showing. The
+# push triggers the normal deploy; this runs on a schedule, not on push, so its
+# own commit never re-triggers it.
 #
-# ## Why there is no nightly schedule
+# ## The 403s, and what actually fixed them
 #
-# There was one, and it never once worked. League of Comic Geeks is behind
-# Cloudflare, which answers on how the client looks and where it is calling
-# from. `impit` handles the first half - a plain `curl` gets 403 from anywhere
-# and impit's browser fingerprint gets 200 - but a GitHub runner's datacenter
-# address is exactly what Cloudflare distrusts, and nothing in the script can
-# change that. Discogs has a real API and does not care, which is why that shelf
-# updates from CI and this one cannot.
+# This ran for a while getting nothing but 403s. League of Comic Geeks is behind
+# Cloudflare, which scores how the client looks and where it is calling from, and
+# a runner's datacenter address is a poor start on the second. The obvious
+# conclusion - that the address was the whole story and no client change could
+# help - was wrong.
 #
-# It was tried properly before being given up on: the script retries a 403 three
-# times with a widening gap, and a dispatched run failed all three. The refusal
-# is about the address.
+# `impit`'s `browser: "chrome"` alias resolves to Chrome 124, from early 2024,
+# and sends a matching two-year-old user agent. From a home connection that is
+# fine; every profile impit offers is answered 200 there. From a datacenter
+# address, where the score is already marginal, it was the signal that tipped it.
+# Pinning a current profile was enough, and the job has worked since.
 #
-# So the shelf is refreshed by hand, the way `backfill-fortnite.mjs` is:
+# So: **keep the pinned profile current**. It is load-bearing, not cosmetic.
+# Bump `browser:` in `scripts/update-comics.mjs` when impit ships a newer one -
+# the whole reason this broke is that a pinned-by-default profile aged out.
 #
-#   node scripts/update-comics.mjs
-#
-# then commit `src/content/comics.json` and `public/img/comics/`. This workflow
-# stays dispatchable in case the block ever lifts, and would work unchanged if it
-# did. What it will not do is run every night and go red every morning - a check
-# nobody can act on is one everybody learns to scroll past.
+# If it does start failing again, the script retries a 403 three times and then
+# exits non-zero, so it fails visibly rather than committing nothing and going
+# green. Running `node scripts/update-comics.mjs` from a home connection still
+# works and is the fallback.
 
-# Dispatch only. There is no schedule, because a scheduled run here cannot work
-# - see below.
 on:
+  schedule:
+    - cron: "42 9 * * *" # 09:42 UTC nightly, an hour after the vinyl job.
   workflow_dispatch:
 
 permissions:

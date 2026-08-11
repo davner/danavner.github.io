@@ -1,7 +1,7 @@
 {
   "user": "dnafam",
   "url": "https://www.discogs.com/user/dnafam/collection",
-  "fetched": "2026-08-10",
+  "fetched": "2026-08-11",
   "value": {
     "minimum": "$1,167.87",
     "median": "$1,814.33",
@@ -16,10 +16,33 @@
     {
       "id": "alexis",
       "name": "Alexis",
-      "count": 9
+      "count": 10
     }
   ],
   "records": [
+    {
+      "id": 38005623,
+      "instanceId": 2172626628,
+      "owner": "alexis",
+      "artist": "Bruno Mars",
+      "title": "Lo Arriesgo Todo",
+      "year": 2026,
+      "label": "Atlantic",
+      "catno": "075678588273",
+      "format": "7\"",
+      "variant": "",
+      "genres": [
+        "Latin",
+        "Pop"
+      ],
+      "styles": [
+        "Ballad"
+      ],
+      "added": "2026-08-10",
+      "rating": 5,
+      "url": "https://www.discogs.com/release/38005623",
+      "cover": "/img/vinyl/38005623.webp"
+    },
     {
       "id": 29637394,
       "instanceId": 2172623964,

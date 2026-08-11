@@ -80,7 +80,22 @@ const COVER_PATH = "/img/comics";
  * mechanism the `comicgeeks` package adopted in its 2026 release, and without it
  * every request here comes back as an interstitial rather than data.
  */
-const impit = new Impit({ browser: "chrome" });
+/*
+ * Pinned to a current Chrome rather than the `"chrome"` alias, which resolves to
+ * Chrome 124 - a build from early 2024, and a user agent two years out of date.
+ *
+ * It makes no difference from a normal connection: every profile impit offers,
+ * from Chrome 124 to 142 and both Firefoxes, is answered 200 there. It is worth
+ * pinning anyway because Cloudflare scores rather than gates, and on an address
+ * it already distrusts an obsolete Chrome is one more reason to say no. Free to
+ * fix, so fixed.
+ *
+ * Bump it when impit ships a newer profile. `impit` keeps the TLS fingerprint,
+ * the user agent and the `Sec-Ch-Ua` header consistent with each other per
+ * profile, which is the part that actually has to hold together - a real
+ * handshake with a mismatched user agent is a worse signal than either alone.
+ */
+const impit = new Impit({ browser: "chrome142" });
 
 /** The list ids the endpoint uses. Not documented anywhere; read off the site. */
 const LISTS = { pulls: 1, collection: 2, wishList: 3 };

@@ -1,7 +1,7 @@
 {
   "user": "aspacemansheavyload",
   "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload",
-  "fetched": "2026-08-11",
+  "fetched": "2026-08-12",
   "publishers": [
     {
       "name": "DC Comics",
@@ -274,18 +274,7 @@
       "cover": "/img/comics/series-198524.webp"
     }
   ],
-  "pullList": [
-    {
-      "id": 5628938,
-      "name": "Event Horizon: Inferno #4",
-      "publisher": "IDW Publishing",
-      "price": "$4.99",
-      "released": "2026-08-05",
-      "url": "https://leagueofcomicgeeks.com/comic/5628938/event-horizon-inferno-4",
-      "key": "issue-5628938",
-      "cover": "/img/comics/issue-5628938.webp"
-    }
-  ],
+  "pullList": [],
   "wants": [
     {
       "id": 214135,

@@ -1,17 +1,17 @@
 {
   "user": "dnafam",
   "url": "https://www.discogs.com/user/dnafam/collection",
-  "fetched": "2026-08-13",
+  "fetched": "2026-08-14",
   "value": {
-    "minimum": "$1,167.87",
-    "median": "$1,828.40",
-    "maximum": "$2,863.00"
+    "minimum": "$1,182.87",
+    "median": "$1,881.68",
+    "maximum": "$2,920.22"
   },
   "owners": [
     {
       "id": "dan",
       "name": "Dan",
-      "count": 43
+      "count": 44
     },
     {
       "id": "alexis",
@@ -20,6 +20,29 @@
     }
   ],
   "records": [
+    {
+      "id": 18730927,
+      "instanceId": 2173563387,
+      "owner": "dan",
+      "artist": "Paramore",
+      "title": "Riot!",
+      "year": 2021,
+      "label": "Fueled By Ramen",
+      "catno": "7567-89957-9",
+      "format": "LP",
+      "variant": "Silver",
+      "genres": [
+        "Rock"
+      ],
+      "styles": [
+        "Emo",
+        "Pop Rock"
+      ],
+      "added": "2026-08-13",
+      "rating": 5,
+      "url": "https://www.discogs.com/release/18730927",
+      "cover": "/img/vinyl/18730927.webp"
+    },
     {
       "id": 38005623,
       "instanceId": 2172626628,

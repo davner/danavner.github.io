@@ -1,7 +1,7 @@
 {
   "user": "aspacemansheavyload",
   "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload",
-  "fetched": "2026-08-18",
+  "fetched": "2026-08-19",
   "publishers": [
     {
       "name": "DC Comics",
@@ -274,7 +274,18 @@
       "cover": "/img/comics/series-198524.webp"
     }
   ],
-  "pullList": [],
+  "pullList": [
+    {
+      "id": 1644798,
+      "name": "Alien: King Killer #5",
+      "publisher": "Marvel Comics",
+      "price": "$4.99",
+      "released": "2026-08-19",
+      "url": "https://leagueofcomicgeeks.com/comic/1644798/alien-king-killer-5",
+      "key": "issue-1644798",
+      "cover": "/img/comics/issue-1644798.webp"
+    }
+  ],
   "wants": [
     {
       "id": 214135,

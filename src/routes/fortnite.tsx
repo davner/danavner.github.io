@@ -1,3 +1,4 @@
+import { UserRound } from "lucide-react";
 import { useSearchParams } from "react-router";
 
 import { EmptyState } from "@/components/empty-state";
@@ -154,8 +155,12 @@ function MainPortrait({ season, className }: { season: SeasonEntry; className?: 
   if (!season.main?.image) {
     return (
       <div
-        className={cn("flex items-center justify-center bg-muted/40 p-4 text-center", className)}
+        className={cn(
+          "flex flex-col items-center justify-center gap-2 bg-muted/40 p-4 text-center",
+          className,
+        )}
       >
+        <UserRound className="size-10 text-muted-foreground/40" aria-hidden />
         <span className="readout-dim text-pretty">
           {season.main ? season.main.name : "No main on record"}
         </span>

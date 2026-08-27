@@ -53,9 +53,20 @@ collections:
     label_singular: Show
     icon: music_note
     folder: /src/content/shows
-    # The filename is the URL. Convention: <headliner-or-festival>-<city>-<year>,
-    # with -day-1 / -day-2 for multi-day festivals. Typed by hand at creation.
-    slug: "{{fields._slug}}"
+    description: >-
+      Slug: type just the band or festival (e.g. knocked-loose,
+      warped-tour-day-1) - city and year are added on save. Lowercase and
+      hyphens; no spaces.
+    # The filename is the URL. The Slug field takes just the headliner or
+    # festival name (with -day-1 style suffixes for multi-day festivals); city
+    # and year are appended automatically. Values in slug templates are
+    # auto-slugified, so the appended city keeps its state/country part
+    # (los-angeles-ca) - a deliberate deviation from the older hand-written
+    # filenames, which drop it. Array indexing like {{lineup.0}} does not work
+    # in slug templates (it falls back to a UUID fragment), which is why the
+    # identity part stays a typed field. date('YYYY') extracts the year from
+    # the string date field.
+    slug: "{{fields._slug}}-{{city}}-{{date | date('YYYY')}}"
     preview_path: "/shows/{{slug}}"
     aliases_field: false
     media_folder: "/public/img/shows/{{slug}}"
@@ -80,7 +91,7 @@ collections:
         pattern:
           - '^\d{4}(-\d{2}(-\d{2})?)?$'
           - Use YYYY, YYYY-MM, or YYYY-MM-DD - as much as you remember.
-        hint: Partial dates are fine.
+        hint: "Partial dates are fine. 2026-06-20, 2026-06, or just 2026 - as much as you remember."
       - name: endDate
         label: End date
         widget: string
@@ -136,6 +147,7 @@ collections:
           - name: src
             label: Photo
             widget: image
+            hint: Resized to 1600px and stripped of location data on upload.
           - name: alt
             label: Alt text
             widget: string
@@ -170,6 +182,7 @@ collections:
             pattern:
               - "^https?://"
               - Must be a full http(s) URL.
+            hint: The setlist.fm page for this band's set that night.
       - name: standout
         label: Standout
         widget: boolean
@@ -228,6 +241,7 @@ collections:
         widget: datetime
         type: date
         default: "{{now}}"
+        hint: Publication date - defaults to today.
       - name: category
         label: Category
         widget: select
@@ -243,6 +257,7 @@ collections:
         label_singular: Tag
         widget: list
         required: false
+        hint: Free-form labels, shown on the post page.
       - name: draft
         label: Draft
         widget: boolean
@@ -259,6 +274,7 @@ collections:
           - name: src
             label: Photo
             widget: image
+            hint: Resized to 1600px and stripped of location data on upload.
           - name: alt
             label: Alt text
             widget: string
@@ -270,6 +286,7 @@ collections:
       - name: body
         label: Body
         widget: markdown
+        hint: The post itself. Headings, tables, and code blocks all work.
 
   - name: now
     label: Now
@@ -296,3 +313,4 @@ collections:
       - name: body
         label: Body
         widget: markdown
+        hint: What you're up to right now. The newest entry is the one /now shows.

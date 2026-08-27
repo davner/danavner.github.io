@@ -311,9 +311,14 @@ Details that took deliberate decisions, so they do not get undone casually:
   resized to the same 1600px long edge `scripts/optimize-photos.mjs` uses,
   re-encoded to WebP, and stripped of EXIF (phone photos carry GPS) as a side
   effect of the re-encode. Hand-added photos still go through the script.
-- **A show's filename is typed at creation** (the Slug field): the
-  `<headliner-or-festival>-<city>-<year>` convention is a judgment call the CMS
-  cannot derive, and the filename is the URL.
+- **A show's filename is built at creation** from the Slug field plus the City
+  and Date fields: type just the headliner or festival (`knocked-loose`,
+  `warped-tour-day-1`) and the CMS appends the city and year on save, e.g.
+  `knocked-loose-los-angeles-ca-2026`. That is the
+  `<headliner-or-festival>-<city>-<year>` convention hand-written files follow,
+  except the city keeps its state suffix because Sveltia slugifies the whole
+  City field. Older files drop the state part and that is fine - filenames are
+  per-entry stable, and the filename is the URL.
 - **Optional patterns admit the empty string** (`endDate`, `video`). Sveltia
   validates patterns even on empty optional fields, so a strict pattern would
   block every save that leaves the field blank.
@@ -379,6 +384,12 @@ Create `src/content/shows/<slug>.md` - by hand, with the form at `/admin/`, or
 with the `add-show` skill. Everything on `/shows` - the totals, year
 groups, most-seen act, average rating, standouts ticker - is derived from these
 files, so adding a show is dropping in a file and nothing else.
+
+The slug convention for hand-written files is
+`<headliner-or-festival>-<city>-<year>`, with `-day-1` / `-day-2` for
+multi-day festivals. The admin's New Show form builds it automatically: type
+just the identity part in the Slug field and the city and year are appended on
+save (see "Editing from the browser" above).
 
 `lineup` is the whole bill, **top billing first**. Openers count, toward the
 display and toward "bands seen".

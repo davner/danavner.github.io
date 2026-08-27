@@ -165,9 +165,14 @@ one that is missing either.
 
 ## Slug and sharing
 
-The filename is the slug and the URL: `/shows/<slug>`. Use
-`<headliner-or-festival>-<city>-<year>`, with `-day-1` / `-day-2` for a
-multi-day festival logged as separate nights.
+The filename is the slug and the URL: `/shows/<slug>`. For hand-written files
+the convention is `<headliner-or-festival>-<city>-<year>`, with `-day-1` /
+`-day-2` for a multi-day festival logged as separate nights. The admin's New
+Show form builds the same shape automatically: type just the identity part
+(`knocked-loose`, `warped-tour-day-1`) and it appends the city and year on
+save, keeping the city's state suffix - e.g. `knocked-loose-los-angeles-ca-2026`.
+Older files drop the state part, and that is fine: filenames are per-entry
+stable, not retrofitted.
 
 Each entry gets its own page, a **Share** button that renders a poster of the
 night, and its own link preview - the build writes a real

@@ -1,0 +1,275 @@
+# yaml-language-server: $schema=https://unpkg.com/@sveltia/cms/schema/sveltia-cms.json
+#
+# Sveltia CMS configuration - the admin UI at /admin/.
+#
+# Every collection here mirrors the schema enforced by vite-plugin-content.ts.
+# The form-level rules (required fields, patterns, options) are a convenience;
+# the build-time validator remains the backstop, so a rule missed here fails
+# the build rather than the live site.
+
+backend:
+  name: github
+  repo: davner/danavner.github.io
+  branch: main
+  commit_messages:
+    create: 'content({{collection}}): create "{{slug}}"'
+    update: 'content({{collection}}): update "{{slug}}"'
+    delete: 'content({{collection}}): delete "{{slug}}"'
+    uploadMedia: "content(media): upload {{path}}"
+    deleteMedia: "content(media): delete {{path}}"
+
+site_url: https://danavner.com
+
+# Fallback for uploads outside a collection. Collections below override this
+# with their own per-slug folders.
+media_folder: /public/img
+public_folder: /img
+
+# Uploads are optimized in the browser before they are committed: resized to
+# the same 1600px long edge scripts/optimize-photos.mjs uses, re-encoded to
+# WebP, and stripped of EXIF (phone photos carry GPS) as a side effect of the
+# re-encode.
+media_libraries:
+  default:
+    config:
+      slugify_filename: true
+      transformations:
+        raster_image:
+          format: webp
+          quality: 85
+          width: 1600
+          height: 1600
+
+output:
+  omit_empty_optional_fields: true
+
+collections:
+  - name: shows
+    label: Shows
+    label_singular: Show
+    folder: /src/content/shows
+    # The filename is the URL. Convention: <headliner-or-festival>-<city>-<year>,
+    # with -day-1 / -day-2 for multi-day festivals. Typed by hand at creation.
+    slug: "{{fields._slug}}"
+    preview_path: "/shows/{{slug}}"
+    aliases_field: false
+    media_folder: "/public/img/shows/{{slug}}"
+    public_folder: "/img/shows/{{slug}}"
+    fields:
+      - name: type
+        label: Type
+        widget: select
+        options: [show, festival]
+        default: show
+        required: false
+        hint: A festival's title names the event and stays out of the band counts.
+      - name: title
+        label: Title
+        widget: string
+        required: false
+        hint: Required for festivals. On a show, shorthand for a one-band night instead of a lineup.
+      - name: subtitle
+        label: Subtitle
+        widget: string
+        required: false
+        hint: Qualifier under the heading, e.g. "Day 1".
+      - name: lineup
+        label: Lineup
+        label_singular: Band
+        widget: list
+        required: false
+        field: { name: band, label: Band, widget: string }
+        hint: The whole bill, top billing first. Openers count.
+      - name: date
+        label: Date
+        widget: string
+        pattern:
+          - '^\d{4}(-\d{2}(-\d{2})?)?$'
+          - Use YYYY, YYYY-MM, or YYYY-MM-DD - as much as you remember.
+        hint: Partial dates are fine.
+      - name: endDate
+        label: End date
+        widget: string
+        required: false
+        # The pattern admits the empty string: Sveltia validates patterns even
+        # on empty optional fields, so a strict one would block every save.
+        pattern:
+          - '^(\d{4}(-\d{2}(-\d{2})?)?)?$'
+          - Use YYYY, YYYY-MM, or YYYY-MM-DD.
+        hint: Multi-day festivals only.
+      - name: venue
+        label: Venue
+        widget: string
+        required: false
+        hint: Omit for festivals with no fixed venue.
+      - name: city
+        label: City
+        widget: string
+        hint: e.g. "Los Angeles, CA"
+      - name: capacity
+        label: Capacity
+        widget: number
+        value_type: int
+        min: 1
+        required: false
+        hint: How many the place holds for a night like this. Confirm it; never guess.
+      - name: rating
+        label: Rating
+        widget: number
+        value_type: float
+        min: 0
+        max: 5
+        step: 0.1
+        required: false
+        hint: Out of 5 horns, decimals allowed. Leave empty for unrated - unrated is not zero.
+      - name: bestSong
+        label: Best song
+        widget: string
+        required: false
+        hint: The one that stayed with you. Shown as "Best live".
+      - name: with
+        label: Went with
+        label_singular: Name
+        widget: list
+        required: false
+        field: { name: name, label: Name, widget: string }
+        hint: Leave empty and set Solo instead if you went alone. Never both.
+      - name: solo
+        label: Solo
+        widget: boolean
+        required: false
+        hint: Renders the SOLO RUN badge. Mutually exclusive with "Went with".
+      - name: video
+        label: Video
+        widget: string
+        required: false
+        # Empty-permissive for the same reason as endDate above.
+        pattern:
+          - "^(https?://.+)?$"
+          - Must be a full http(s) URL.
+        hint: A YouTube playlist link labels itself "Playlist".
+      - name: setlists
+        label: Setlists
+        label_singular: Setlist
+        widget: list
+        required: false
+        summary: "{{band}}"
+        fields:
+          - name: band
+            label: Band
+            widget: string
+            hint: Must match a name in the lineup exactly.
+          - name: url
+            label: URL
+            widget: string
+            pattern:
+              - "^https?://"
+              - Must be a full http(s) URL.
+      - name: photos
+        label: Photos
+        label_singular: Photo
+        widget: list
+        required: false
+        summary: "{{caption}}"
+        thumbnail: src
+        fields:
+          - name: src
+            label: Photo
+            widget: image
+          - name: alt
+            label: Alt text
+            widget: string
+            hint: Describe what is in the frame, for screen readers.
+          - name: caption
+            label: Caption
+            widget: string
+            hint: Printed over the bottom of the photo.
+      - name: standout
+        label: Standout
+        widget: boolean
+        required: false
+        hint: Adds a flame and pins it to the ticker.
+      - name: body
+        label: Notes
+        widget: markdown
+        required: false
+        hint: Free-form markdown about the night. Optional.
+
+  - name: blog
+    label: Blog posts
+    label_singular: Blog post
+    folder: /src/content/blog
+    preview_path: "/blog/{{slug}}"
+    aliases_field: false
+    media_folder: "/public/img/blog/{{slug}}"
+    public_folder: "/img/blog/{{slug}}"
+    fields:
+      - name: title
+        label: Title
+        widget: string
+        hint: The filename (and URL) is generated from this.
+      - name: date
+        label: Date
+        widget: datetime
+        type: date
+        default: "{{now}}"
+      - name: category
+        label: Category
+        widget: select
+        options: [work, personal]
+        hint: Drives the filter on /blog.
+      - name: summary
+        label: Summary
+        widget: text
+        required: false
+        hint: One or two sentences, shown on the card and used as the meta description.
+      - name: tags
+        label: Tags
+        label_singular: Tag
+        widget: list
+        required: false
+        field: { name: tag, label: Tag, widget: string }
+      - name: draft
+        label: Draft
+        widget: boolean
+        required: false
+        hint: Drafts show in npm run dev and stay out of the production build.
+      - name: photos
+        label: Photos
+        label_singular: Photo
+        widget: list
+        required: false
+        summary: "{{caption}}"
+        thumbnail: src
+        fields:
+          - name: src
+            label: Photo
+            widget: image
+          - name: alt
+            label: Alt text
+            widget: string
+            hint: Describe what is in the frame, for screen readers.
+          - name: caption
+            label: Caption
+            widget: string
+            hint: Printed over the bottom of the photo.
+      - name: body
+        label: Body
+        widget: markdown
+
+singletons:
+  - name: now
+    label: Now
+    file: /src/content/now.md
+    icon: schedule
+    fields:
+      - name: updated
+        label: Updated
+        widget: datetime
+        type: date
+        hint: >-
+          Setting this to today files the previous text into the archive on
+          save. Fixing a typo? Leave the date alone and nothing is archived.
+      - name: body
+        label: Body
+        widget: markdown

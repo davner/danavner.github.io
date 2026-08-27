@@ -4,8 +4,11 @@ My personal site - work, writing, a log of every show I have been to, and
 where I have travelled.
 Live at **[danavner.com](https://danavner.com)**.
 
-It is a static React site with no backend and no CMS. All the content is
-markdown files and one TypeScript file, read and validated at build time.
+It is a static React site with no backend. All the content is markdown files
+and one TypeScript file, read and validated at build time. The markdown can be
+edited by hand or through [the admin page](#editing-from-the-browser) at
+`/admin/`, which commits to this repo on your behalf - there is still no
+server and no database behind any of it.
 If you want to fork it and make it yours, see [Making it yours](#making-it-yours).
 
 ---
@@ -22,6 +25,7 @@ If you want to fork it and make it yours, see [Making it yours](#making-it-yours
 | Icons        | [lucide-react](https://lucide.dev)         | Consistent 24px stroke set, tree-shakeable, ISC            |
 | Type         | [Fontsource](https://fontsource.org)       | Self-hosted Anton / Inter / JetBrains Mono                 |
 | Routing      | [React Router](https://reactrouter.com) 8  | Client routes, with a 404 fallback for GitHub Pages        |
+| CMS          | [Sveltia CMS](https://sveltiacms.app)      | Git-based admin at `/admin/` - forms that commit           |
 | Markdown     | react-markdown + remark-gfm                | GFM tables, task lists, fenced code                        |
 | Highlighting | rehype-highlight                           | lowlight's `common` set, themed to the palette             |
 | Hosting      | GitHub Pages                               | Free, already where the repo lives                         |
@@ -176,6 +180,7 @@ file, down to checking that a photo path actually exists in `public/`.
 
 ```
 public/                   served as-is (CNAME, favicon, photos, fetched covers)
+  admin/                  Sveltia CMS: index.html and config.yml, see "Editing from the browser"
 scripts/
   optimize-photos.mjs     resizes any image and strips its EXIF
   make-share-fallback.mjs draws the social image for a show with no photos
@@ -273,10 +278,52 @@ its own reference next to its content.
 
 ---
 
+## Editing from the browser
+
+`/admin/` is [Sveltia CMS](https://sveltiacms.app): a login and three forms -
+blog posts, shows, and the now page - that commit to this repo through the
+GitHub API when you hit Save. The site stays static; the CMS is a single script
+on one page, and everything downstream (the build-time validation, the deploy
+workflow, the now-archive job) runs off the commit exactly as if it were pushed
+by hand.
+
+The two files behind it are `public/admin/index.html` and
+`public/admin/config.yml`. The config mirrors the frontmatter schemas below;
+the build-time validator stays the backstop for anything a form rule misses.
+
+Details that took deliberate decisions, so they do not get undone casually:
+
+- **Sign in with a fine-grained personal access token** scoped to this one
+  repository with read/write on Contents. Sveltia stores it in the browser's
+  local storage and talks to `api.github.com` directly - there is no OAuth
+  server to run. Generate one at
+  [github.com/settings/personal-access-tokens](https://github.com/settings/personal-access-tokens).
+- **Photo uploads are optimized in the browser** before they are committed:
+  resized to the same 1600px long edge `scripts/optimize-photos.mjs` uses,
+  re-encoded to WebP, and stripped of EXIF (phone photos carry GPS) as a side
+  effect of the re-encode. Hand-added photos still go through the script.
+- **A show's filename is typed at creation** (the Slug field): the
+  `<headliner-or-festival>-<city>-<year>` convention is a judgment call the CMS
+  cannot derive, and the filename is the URL.
+- **Optional patterns admit the empty string** (`endDate`, `video`). Sveltia
+  validates patterns even on empty optional fields, so a strict pattern would
+  block every save that leaves the field blank.
+- **CMS commits trigger the deploy.** They are made with your token, not the
+  bot's `GITHUB_TOKEN`, so the push trigger in `deploy.yml` fires normally -
+  none of the `workflow_run` plumbing below applies to them.
+- The admin page loads the CMS bundle from unpkg, **pinned to an exact version
+  with an SRI hash** - a modified or newer file refuses to run until the pin
+  and hash are bumped together (the update commands are in
+  `public/admin/index.html`). That is the one third-party script anywhere on
+  this site, confined to `/admin/` - the promise that visitor-facing pages
+  phone home to nobody still holds, and `tests/links.spec.ts` still enforces
+  it on every route it sweeps.
+
 ## Adding a blog post
 
-Create `src/content/blog/<slug>.md`. The filename becomes the URL, so
-`hello-world.md` publishes at `/blog/hello-world`.
+Create `src/content/blog/<slug>.md` - by hand, or with the form at `/admin/`.
+The filename becomes the URL, so `hello-world.md` publishes at
+`/blog/hello-world`.
 
 ```md
 ---
@@ -319,7 +366,8 @@ demand, so a post without photos never fetches it.
 
 ## Adding a show
 
-Create `src/content/shows/<slug>.md`. Everything on `/shows` - the totals, year
+Create `src/content/shows/<slug>.md` - by hand, with the form at `/admin/`, or
+with the `add-show` skill. Everything on `/shows` - the totals, year
 groups, most-seen act, average rating, standouts ticker - is derived from these
 files, so adding a show is dropping in a file and nothing else.
 

@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex" />
+    <title>Sveltia CMS</title>
+  </head>
+  <body>
+    <!-- Pinned + SRI on purpose: this page handles a GitHub token, so the
+         script that runs here is fixed by commit, not by whatever unpkg
+         serves today. To update: bump the version, recompute the hash with
+         `curl -sL <url> | openssl dgst -sha384 -binary | openssl base64 -A`. -->
+    <script
+      src="https://unpkg.com/@sveltia/cms@0.201.1/dist/sveltia-cms.js"
+      integrity="sha384-OBaErrwck4LTTx2vmomLgDEpnagmkAX724yJgj/Yxcw7Og1pZZPVMWE5UEr/KKdO"
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>

@@ -9,9 +9,11 @@ name: Fortnite
 # There is a third reason this one could not be a client fetch even with a
 # public endpoint: the API only answers for the season running right now, so
 # season history has to be accumulated by something that remembers. This job is
-# that memory. Nightly it reads the current season, writes it into
-# `src/content/fortnite.json` alongside every season already recorded, and
-# commits if anything moved. See the header of `scripts/update-fortnite.mjs`.
+# that memory. Nightly it detects which season is live, files the current
+# numbers into `src/content/fortnite.json` under that season's calendar entry,
+# and at a rollover appends the new season to `src/content/fortnite-seasons.json`
+# itself - the calendar is partly bot-written now, so both files are in the
+# commit below. See the header of `scripts/update-fortnite.mjs`.
 #
 # Seasons that ended before this job existed came from Epic's own service, via
 # `scripts/backfill-fortnite.mjs`. That one is run by hand and deliberately has
@@ -60,14 +62,14 @@ jobs:
 
       - name: Commit if the numbers moved
         run: |
-          if [ -z "$(git status --porcelain -- src/content/fortnite.json)" ]; then
+          if [ -z "$(git status --porcelain -- src/content/fortnite.json src/content/fortnite-seasons.json)" ]; then
             echo "fortnite: unchanged, nothing to commit"
             exit 0
           fi
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/content/fortnite.json
+          git add src/content/fortnite.json src/content/fortnite-seasons.json
           git commit -m "chore(fortnite): refresh the stats"
 
           # `main` moves under this job whenever another scheduled run lands

@@ -17,15 +17,21 @@
  *
  * ## Why this accumulates rather than backfills
  *
- * The endpoint answers for two time windows: `lifetime`, and `season` meaning
- * *the season running right now*. There is no way to ask it for a season that
- * has already ended, so this job cannot reach into the past - a season's
- * numbers are gone from this API the moment it rolls over.
+ * The stats endpoint answers for two time windows: `lifetime`, and `season`
+ * meaning *the season running right now*. There is no way to ask it for a
+ * season that has already ended, so this job cannot reach into the past - a
+ * season's numbers are gone from this API the moment it rolls over.
  *
  * So the archive is built rather than fetched. Every night this reads the
- * current season, and writes it into `seasons` under the key for whichever
- * season covers today. Seasons already in the file are carried through
- * untouched.
+ * current season and writes it into `seasons` - and it files by identity, not
+ * by date. A second, keyless endpoint says which season is live right now,
+ * down to Epic's own sequential season number (`detectSeason` below), and that
+ * number picks the calendar entry the snapshot is written under. Dates used to
+ * decide, and the 2026-08 rollover showed why they cannot: the calendar had
+ * not heard of the new season yet, so a night of Season 4 numbers was filed
+ * over the finished Season 3 archive. When detection cannot say what season it
+ * is, the job writes the lifetime numbers only and leaves every season bucket
+ * alone - "not sure" never files.
  *
  * Seasons that ended before this job existed came from Epic's own service,
  * which does take an arbitrary window, via `scripts/backfill-fortnite.mjs`.
@@ -40,36 +46,40 @@
  */
 import { existsSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
+import { pathToFileURL } from "node:url";
 
 /** The Epic display name to read. */
 const ACCOUNT = "danwiththeyams";
 
 const ENDPOINT = "https://fortnite-api.com/v2/stats/br/v2";
+const NEW_COSMETICS = "https://fortnite-api.com/v2/cosmetics/new";
 const FILE = new URL("../src/content/fortnite.json", import.meta.url);
 
 /**
- * The season calendar, hand-kept in `src/content/fortnite-seasons.json`.
+ * The season calendar, in `src/content/fortnite-seasons.json`.
  *
  * It lives there rather than here because the page needs it too - the names,
- * date ranges and main outfits are what the season browser is built out of, and
- * two copies of a calendar is one copy too many. This job needs it because the
- * stats endpoint does not say what season it just answered for: it returns
- * numbers and no label, so the snapshot is filed under whichever entry covers
- * the day it was taken.
+ * date ranges and main outfits are what the season browser is built out of,
+ * and two copies of a calendar is one copy too many. This job matches
+ * tonight's detected season against it by `backendValue` (Epic's sequential
+ * season number), falling back to the `ch<chapter>-s<season>` key for entries
+ * that predate the stamp.
  *
- * ## Add an entry there when a new season starts
+ * ## Rollovers append their own entry
  *
- * Miss one and nothing breaks or corrupts: the new season's matches keep
- * accruing into the previous entry until the line is added, because that is
- * still the newest season the calendar knows about. Fix it whenever you notice.
+ * When detection reports a season the calendar has never heard of, this job
+ * prepends a bare entry - key, chapter, season, start, backendValue, no name
+ * and no end - and closes the previous newest entry's `end`. A human fills in
+ * the name and the main outfit later; `key` and `backendValue` are the
+ * identity the stats are filed under and never change. For the first two days
+ * of a new season the job also holds off writing season stats at all, because
+ * the stats vendor was observed still serving the OLD season's window 25+
+ * hours after the 2026-08 rollover - exactly the mix-up that corrupted the
+ * ch7-s3 archive.
  */
 const SEASONS_FILE = new URL("../src/content/fortnite-seasons.json", import.meta.url);
 
 const key = process.env.FORTNITE_API_KEY;
-if (!key) {
-  console.error("fortnite: FORTNITE_API_KEY is not set");
-  process.exit(1);
-}
 
 /**
  * One time window from the API.
@@ -98,6 +108,174 @@ async function read(timeWindow) {
   }
 
   return body?.data ?? null;
+}
+
+/**
+ * Which season is live right now, from Epic's own metadata rather than a
+ * calendar.
+ *
+ * `/v2/cosmetics/new` is keyless and carries two independent statements of the
+ * current season. Each new item's `introduction` names the chapter, the
+ * season, and Epic's sequential season number (`backendValue`); the game build
+ * the drop shipped in (`"++Fortnite+Release-42.00-CL-..."`) carries that same
+ * sequential number as its major. The newest introduction is the season; the
+ * build major is only corroboration, and the one thing it corroborates is
+ * `date` - the drop's timestamp is the season's first day only while the drop
+ * IS the season's opening drop, which is what major === backendValue attests.
+ *
+ * Returns `{ chapter, season, backendValue, buildDate }` - `chapter` and
+ * `season` as digit strings, `buildDate` an ISO timestamp or null when the
+ * build could not corroborate it. Returns null on ANY anomaly: a failed or
+ * non-200 fetch, unparsable JSON, no `items.br` array, no usable
+ * introductions, non-digit chapter or season strings, or a parsed build major
+ * that CONTRADICTS the introductions - two signals disagreeing means neither
+ * is trusted. This feeds a nightly job, so "not sure" is a value here, never a
+ * throw.
+ */
+export async function detectSeason() {
+  let payload;
+  try {
+    const response = await fetch(NEW_COSMETICS);
+    if (!response.ok) return null;
+    payload = await response.json();
+  } catch {
+    return null;
+  }
+
+  const items = payload?.data?.items?.br;
+  if (!Array.isArray(items) || items.length === 0) return null;
+
+  let top = null;
+  for (const item of items) {
+    const intro = item?.introduction;
+    const value = Number(intro?.backendValue);
+    if (!Number.isInteger(value) || value <= 0) continue;
+    if (!top || value > Number(top.backendValue)) top = intro;
+  }
+  if (!top) return null;
+
+  const chapter = String(top.chapter ?? "");
+  const season = String(top.season ?? "");
+  if (!/^\d+$/.test(chapter) || !/^\d+$/.test(season)) return null;
+  const backendValue = Number(top.backendValue);
+
+  let buildDate = null;
+  const major = /Release-(\d+)/.exec(String(payload?.data?.build ?? ""))?.[1];
+  if (major != null) {
+    if (Number(major) !== backendValue) return null;
+    const date = payload?.data?.date;
+    if (typeof date === "string" && /^\d{4}-\d{2}-\d{2}/.test(date)) buildDate = date;
+  }
+
+  return { chapter, season, backendValue, buildDate };
+}
+
+/** `isoDate` plus `days`, as a plain `YYYY-MM-DD` string. */
+function addDays(isoDate, days) {
+  return new Date(Date.parse(`${isoDate}T00:00:00Z`) + days * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+}
+
+/**
+ * Which calendar entry tonight's season numbers belong to - matching the
+ * detected season by identity, appending a calendar entry at a rollover, and
+ * deciding whether the write is inside the rollover cool-down.
+ *
+ * Pure calendar logic, factored out of `main` so it can be exercised without
+ * the stats API. Mutates `seasons` in place when it appends an entry or closes
+ * the previous newest entry's `end`; `calendarChanged` on the result says the
+ * file needs writing. `detection` must be non-null; `today` is `YYYY-MM-DD`.
+ */
+export function fileSeason(seasons, detection, today) {
+  // A detection BEHIND the calendar is an API glitch, not a rollover - Epic's
+  // season numbers only count up. Refuse to file rather than resurrect a
+  // finished season's bucket.
+  const maxStamp = seasons.reduce(
+    (max, entry) =>
+      Number.isInteger(entry.backendValue) ? Math.max(max, entry.backendValue) : max,
+    0,
+  );
+  if (maxStamp > 0 && detection.backendValue < maxStamp) {
+    return { outcome: "regressed", maxStamp };
+  }
+
+  let outcome = "matched";
+  let stampHint = false;
+  let entry = seasons.find((season) => season.backendValue === detection.backendValue);
+  if (!entry) {
+    entry = seasons.find((season) => season.key === `ch${detection.chapter}-s${detection.season}`);
+    if (entry) stampHint = true;
+  }
+
+  let calendarChanged = false;
+  let prevEndReplaced = null;
+  let prevEndConflict = null;
+  if (!entry) {
+    // A season the calendar has never heard of: a rollover. Append the bare
+    // facts and leave the name and outfit for a human - the page renders an
+    // unnamed season fine, and mis-guessing a name would stick.
+    const start = detection.buildDate ? detection.buildDate.slice(0, 10) : today;
+    const previous = seasons.reduce(
+      (newest, season) => (!newest || season.start > newest.start ? season : newest),
+      null,
+    );
+
+    entry = {
+      key: `ch${detection.chapter}-s${detection.season}`,
+      chapter: `Chapter ${detection.chapter}`,
+      season: `Season ${detection.season}`,
+      start,
+      backendValue: detection.backendValue,
+      main: null,
+    };
+    seasons.unshift(entry);
+    calendarChanged = true;
+    outcome = "created";
+
+    if (previous) {
+      if (detection.buildDate) {
+        // The build date is Epic's own statement of when the season began, so
+        // it outranks a hand-scheduled `end` - this is the auto-correction.
+        if (previous.end !== start) {
+          if (previous.end != null) {
+            prevEndReplaced = { key: previous.key, from: previous.end, to: start };
+          }
+          previous.end = start;
+        }
+      } else if (previous.end == null) {
+        previous.end = start;
+      } else if (previous.end !== start) {
+        // Today is a guess and the hand-set end is a decision; a guess does
+        // not overwrite a decision, it asks.
+        prevEndConflict = { key: previous.key, end: previous.end, start };
+      }
+    }
+  }
+
+  /*
+   * Rollover cool-down: for the first two days of a season, do not write
+   * season stats at all. The window covers the observed +25h lag from the
+   * 2026-08 incident, when the stats vendor kept serving the OLD season's
+   * window after detection already said the new one. It is anchored to the
+   * season's start, not the build date, because build dates move with every
+   * mid-season patch. A hand-mistyped EARLY start can let one night of lagged
+   * old-season numbers land in the new bucket; that self-heals the next night,
+   * because every write replaces the whole cumulative bucket.
+   */
+  const cooldown = entry.start <= today && today < addDays(entry.start, 2);
+  const futureStart = today < entry.start;
+
+  return {
+    outcome,
+    entry,
+    stampHint,
+    calendarChanged,
+    prevEndReplaced,
+    prevEndConflict,
+    cooldown,
+    futureStart,
+  };
 }
 
 const asNumber = (value) => (Number.isFinite(Number(value)) ? Number(value) : 0);
@@ -161,19 +339,22 @@ function snapshot(data) {
   };
 }
 
-/** The season covering `today`, or the newest declared one if today is past it. */
-function seasonFor(seasons, today) {
-  const ordered = [...seasons].sort((a, b) => b.start.localeCompare(a.start));
-  return ordered.find((season) => today >= season.start) ?? ordered[0];
-}
-
 async function main() {
+  if (!key) {
+    console.error("fortnite: FORTNITE_API_KEY is not set");
+    process.exit(1);
+  }
+
   const calendar = JSON.parse(await readFile(SEASONS_FILE, "utf8"));
   if (!Array.isArray(calendar.seasons) || calendar.seasons.length === 0) {
     throw new Error("src/content/fortnite-seasons.json lists no seasons");
   }
 
-  const [lifetimeData, seasonData] = await Promise.all([read("lifetime"), read("season")]);
+  const [lifetimeData, seasonData, detection] = await Promise.all([
+    read("lifetime"),
+    read("season"),
+    detectSeason(),
+  ]);
 
   const lifetime = snapshot(lifetimeData);
   if (!lifetime) {
@@ -182,28 +363,85 @@ async function main() {
   }
 
   const today = new Date().toISOString().slice(0, 10);
-  const current = seasonFor(calendar.seasons, today);
-  const label = `${current.chapter} ${current.season}`;
-
   const previous = existsSync(FILE) ? JSON.parse(await readFile(FILE, "utf8")) : {};
   const seasons = Array.isArray(previous.seasons) ? [...previous.seasons] : [];
 
-  const seasonStats = snapshot(seasonData);
-  if (seasonStats) {
-    const existing = seasons.findIndex((entry) => entry.key === current.key);
-    const entry = {
-      key: current.key,
-      // Kept from the first sighting, so the page can say how much of a season
-      // this history actually covers rather than implying it saw all of it.
-      first: existing >= 0 ? seasons[existing].first : today,
-      fetched: today,
-      source: existing >= 0 ? (seasons[existing].source ?? "fortnite-api") : "fortnite-api",
-      stats: seasonStats,
-    };
-    if (existing >= 0) seasons[existing] = entry;
-    else seasons.push(entry);
+  // Where tonight's season numbers go - or that they go nowhere. Both refusals
+  // still fall through to the lifetime write below, because stale season
+  // buckets with fresh lifetime numbers beats a night with nothing.
+  let filed = null;
+  if (!detection) {
+    console.log("fortnite: season detection unavailable, wrote lifetime stats only");
   } else {
-    console.log(`fortnite: no matches yet in ${label}, leaving its entry alone`);
+    filed = fileSeason(calendar.seasons, detection, today);
+    if (filed.outcome === "regressed") {
+      console.error(
+        `fortnite: detection reports season ${detection.backendValue} but the calendar has already ` +
+          `seen ${filed.maxStamp} - an API glitch, not a rollover. Wrote lifetime stats only.`,
+      );
+      filed = null;
+    }
+  }
+
+  if (filed) {
+    const { entry } = filed;
+    const label = `${entry.chapter} ${entry.season}`;
+
+    if (filed.stampHint) {
+      console.log(
+        `fortnite: matched ${entry.key} by key - add "backendValue": ${detection.backendValue} ` +
+          `to its calendar entry so the match is by identity`,
+      );
+    }
+    if (filed.calendarChanged) {
+      if (filed.prevEndReplaced) {
+        const { key: prevKey, from, to } = filed.prevEndReplaced;
+        console.log(`fortnite: corrected ${prevKey}'s scheduled end ${from} to ${to}`);
+      }
+      if (filed.prevEndConflict) {
+        const { key: prevKey, end } = filed.prevEndConflict;
+        console.warn(
+          `fortnite: ${prevKey} has end ${end} but ${entry.key} started without a build date to ` +
+            `confirm it - reconcile the two by hand`,
+        );
+      }
+      await writeFile(SEASONS_FILE, `${JSON.stringify(calendar, null, 2)}\n`);
+      console.log(
+        `fortnite: new season - appended ${entry.key} (${label}, from ${entry.start}) to the calendar`,
+      );
+    }
+
+    if (filed.futureStart) {
+      console.warn(
+        `fortnite: ${entry.key} starts ${entry.start}, which is after today - check the calendar`,
+      );
+    }
+    if (filed.cooldown) {
+      console.log(
+        `fortnite: ${label} started ${entry.start} - holding its stats back until the vendor's ` +
+          `season window has definitely rolled over`,
+      );
+    } else {
+      const seasonStats = snapshot(seasonData);
+      if (seasonStats) {
+        const existing = seasons.findIndex((season) => season.key === entry.key);
+        const record = {
+          key: entry.key,
+          // The season window is cumulative from the season's first day, so a
+          // new bucket covers the season from its start - `first: today` would
+          // print a false "Tracked from" caveat on the page. Existing buckets
+          // keep the `first` they were created with.
+          first: existing >= 0 ? seasons[existing].first : entry.start,
+          fetched: today,
+          source: existing >= 0 ? (seasons[existing].source ?? "fortnite-api") : "fortnite-api",
+          stats: seasonStats,
+        };
+        if (existing >= 0) seasons[existing] = record;
+        else seasons.push(record);
+      } else {
+        console.log(`fortnite: no matches yet in ${label}, leaving its entry alone`);
+      }
+    }
   }
 
   // Newest first, in the order the calendar declares rather than by date, so
@@ -226,11 +464,16 @@ async function main() {
   );
 }
 
-try {
-  await main();
-} catch (error) {
-  // Loud, and a non-zero exit, so a broken key or a flipped privacy setting
-  // shows up as a red workflow run rather than a page quietly going stale.
-  console.error(`fortnite: ${error.message}`);
-  process.exit(1);
+// Guarded so `fileSeason` and `detectSeason` can be imported without a run -
+// which is also how the rollover logic gets exercised, since it only fires on
+// the one night a season actually turns over.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  try {
+    await main();
+  } catch (error) {
+    // Loud, and a non-zero exit, so a broken key or a flipped privacy setting
+    // shows up as a red workflow run rather than a page quietly going stale.
+    console.error(`fortnite: ${error.message}`);
+    process.exit(1);
+  }
 }

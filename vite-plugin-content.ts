@@ -698,11 +698,20 @@ interface FortniteSeasonJson {
   key: string;
   chapter: string;
   season: string;
+  /** "" until a human names it - auto-appended entries arrive without one. */
   name: string;
   label: string;
   start: string;
-  /** Exclusive - the day the next season began. */
-  end: string;
+  /**
+   * Exclusive - the day the next season began. Null while the season is still
+   * running, which only the newest entry is allowed to be.
+   */
+  end: string | null;
+  /**
+   * Epic's sequential season number, the identity the nightly job files stats
+   * under. Null on entries that predate the stamp.
+   */
+  backendValue: number | null;
   main: { name: string; id: string; image: string; style: string } | null;
 }
 
@@ -711,14 +720,18 @@ const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 /**
  * The season calendar, from `src/content/fortnite-seasons.json`.
  *
- * Hand-kept, unlike the stats beside it, and the only file in the pair anyone
- * edits. It carries what Epic's stats endpoint will never tell you: what the
- * season was called, when it ran, and which outfit got worn all season.
+ * Written by two hands: the nightly job appends a bare entry at each season
+ * rollover - key, chapter, season, start, `backendValue`, no name and no end -
+ * and a human fills in the name and the outfit afterwards. It carries what
+ * Epic's stats endpoint will never tell you: what the season was called, when
+ * it ran, and which outfit got worn all season.
  *
- * Strict about dates because the page prints the range and because a season's
- * boundaries are what decide which entry the nightly job files today's numbers
- * under - a typo does not fail, it quietly attributes a month of matches to the
- * wrong season.
+ * Filing is by `backendValue` now, not by date, so the dates here are
+ * presentation rather than routing - still strict, because the page prints
+ * the range, but a typo mislabels a tab instead of mis-filing a month of
+ * matches. What stays load-bearing is the shape: at most one entry may leave
+ * `end` open and it must be the newest, because "still running" is a claim
+ * only one season can make.
  *
  * `end` is exclusive: it is the day the *next* season started, which is how
  * every public season table writes them and what makes consecutive ranges meet
@@ -745,6 +758,7 @@ function readFortniteSeasons(root: string, publicDir: string): FortniteSeasonJso
     : fail("`seasons` must be an array");
 
   const seen = new Set<string>();
+  const stamps = new Map<number, string>();
 
   const seasons = raw.map((season, index) => {
     const at = `\`seasons[${index}]\``;
@@ -754,7 +768,7 @@ function readFortniteSeasons(root: string, publicDir: string): FortniteSeasonJso
     if (seen.has(key)) fail(`${at} repeats \`key\` "${key}"`);
     seen.add(key);
 
-    const required = (field: "chapter" | "season" | "name") => {
+    const required = (field: "chapter" | "season") => {
       const value = asTrimmedString(season[field]);
       if (!value) fail(`${at} needs a \`${field}\``);
       return value;
@@ -767,8 +781,27 @@ function readFortniteSeasons(root: string, publicDir: string): FortniteSeasonJso
     };
 
     const start = date("start");
-    const end = date("end");
-    if (end <= start) fail(`${at} ends on or before it starts`);
+
+    // Absent while the season is still running - the nightly job appends new
+    // entries open-ended and closes them at the next rollover. Whether an open
+    // end is legitimate is a cross-entry question, answered after the map.
+    const end = season.end == null ? null : date("end");
+    if (end !== null && end <= start) fail(`${at} ends on or before it starts`);
+
+    // Epic's sequential season number, stamped by the nightly job when it
+    // appends an entry and worth adding to hand-written ones - it is the
+    // identity stats are filed under, so a duplicate would merge two seasons.
+    let backendValue: number | null = null;
+    if (season.backendValue != null) {
+      const value = Number(season.backendValue);
+      if (!Number.isInteger(value) || value <= 0) {
+        fail(`${at}.backendValue must be a positive integer`);
+      }
+      const holder = stamps.get(value);
+      if (holder) fail(`${at} repeats \`backendValue\` ${value}, which "${holder}" already has`);
+      stamps.set(value, key);
+      backendValue = value;
+    }
 
     let main: FortniteSeasonJson["main"] = null;
     if (season.main != null) {
@@ -803,15 +836,31 @@ function readFortniteSeasons(root: string, publicDir: string): FortniteSeasonJso
       key,
       chapter,
       season: number,
-      name: required("name"),
+      // "" is legitimate: Epic names a season after the job has already
+      // appended its entry, so the name arrives when a human notices.
+      name: asTrimmedString(season.name),
       // Derived rather than stored, so the calendar cannot end up with a label
       // that disagrees with the chapter and season sitting next to it.
       label: `${chapter} ${number}`,
       start,
       end,
+      backendValue,
       main,
     };
   });
+
+  // At most one season may be open-ended, and it must be the newest - "still
+  // running" is a claim only one season can make, and never about the past.
+  const open = seasons.filter((season) => season.end === null);
+  if (open.length > 1) {
+    fail(
+      `only the newest season may omit \`end\`, but ${open.map((s) => `"${s.key}"`).join(", ")} all do`,
+    );
+  }
+  const newestStart = seasons.reduce((max, s) => (s.start > max ? s.start : max), "");
+  if (open.length === 1 && open[0].start < newestStart) {
+    fail(`"${open[0].key}" omits \`end\` but is not the newest season - close it`);
+  }
 
   // Newest first, which is the order the file is written in and the order the
   // page shows. Sorted rather than trusted, so a season inserted in the wrong

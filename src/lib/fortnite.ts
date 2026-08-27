@@ -65,14 +65,26 @@ export interface SeasonEntry {
   chapter: string;
   /** "Season 1", or "Mini Season 1". */
   season: string;
-  /** The season's own name, e.g. "Hunters". */
+  /**
+   * The season's own name, e.g. "Hunters". "" until a human fills it in - the
+   * nightly job appends new seasons without one, and the page draws the label
+   * alone in the meantime.
+   */
   name: string;
   /** "Chapter 6 Season 1". */
   label: string;
   /** ISO date the season began. */
   start: string;
-  /** ISO date the *next* season began, so ranges meet rather than overlap. */
-  end: string;
+  /**
+   * ISO date the *next* season began, so ranges meet rather than overlap.
+   * Null while the season is still running.
+   */
+  end: string | null;
+  /**
+   * Epic's sequential season number - the identity the nightly job files
+   * stats under. Null on calendar entries that predate the stamp.
+   */
+  backendValue: number | null;
   main: Main | null;
   /** ISO date these numbers start from - see `coverage`. "" when unplayed. */
   first: string;
@@ -238,7 +250,10 @@ export function coverage(season: SeasonEntry): string | null {
   return `Tracked from ${from}, not the season's first day`;
 }
 
-/** "Dec 1, 2024 - Feb 21, 2025". A season's run, as every season table writes it. */
+/**
+ * "Dec 1, 2024 - Feb 21, 2025". A season's run, as every season table writes
+ * it - or "Aug 20, 2026 - present" for a season with no end on record yet.
+ */
 export function dateRange(season: SeasonEntry): string {
   const day = (date: string) =>
     new Date(`${date}T12:00:00Z`).toLocaleDateString("en-US", {
@@ -248,7 +263,7 @@ export function dateRange(season: SeasonEntry): string {
       timeZone: "UTC",
     });
 
-  return `${day(season.start)} - ${day(season.end)}`;
+  return `${day(season.start)} - ${season.end ? day(season.end) : "present"}`;
 }
 
 /**

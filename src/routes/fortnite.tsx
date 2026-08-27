@@ -225,7 +225,11 @@ function SeasonHistory({ active, onSelect }: { active: string; onSelect: (key: s
 
                 <div className="flex flex-1 flex-col p-4">
                   <p className={cn("readout-dim", current && "text-ember")}>{season.label}</p>
-                  <p className="display mt-1 text-lg text-balance">{season.name}</p>
+                  {/* A just-rolled-over season has no name until a human adds
+                      one - the label above still identifies the card. */}
+                  {season.name ? (
+                    <p className="display mt-1 text-lg text-balance">{season.name}</p>
+                  ) : null}
 
                   {/* The outfit, in ember, pinned to the bottom so the line
                       sits level across a row however long the season's name
@@ -326,7 +330,9 @@ export function Fortnite() {
           onChange={selectSeason}
           options={windows.map((window) => ({
             value: window.key,
-            label: window.season ? `${window.label}: ${window.season.name}` : window.label,
+            // A season the human has not named yet gets the label alone
+            // rather than a dangling "Chapter 7 Season 4:".
+            label: window.season?.name ? `${window.label}: ${window.season.name}` : window.label,
           }))}
           className="mb-8 w-full sm:w-72"
         />

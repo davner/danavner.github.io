@@ -90,8 +90,8 @@ which is mostly unbreakable strings, alone.
 `.prettierignore` skips the generated content JSON. Those files are written by
 the nightly jobs with their own `JSON.stringify` formatting, and a bot commit
 landing while a hook reformats them is a fight with no upside.
-`fortnite-seasons.json` is deliberately not skipped, because that one is
-hand-kept.
+`fortnite-seasons.json` is among them: hand-edited between seasons, but the
+nightly job writes it at every rollover, and a bot write is a bot write.
 
 The content markdown (`blog/`, `shows/`, `now/`) is skipped for the same
 reason: the CMS writes those collections through the GitHub API, where no
@@ -214,7 +214,7 @@ src/
     vinyl.json            the record collection, written nightly from Discogs
     comics.json           the comic shelf, written nightly
     fortnite.json         the stats, written nightly and backfilled once
-    fortnite-seasons.json the season calendar - the one Fortnite file edited by hand
+    fortnite-seasons.json the season calendar - rollovers by the job, names by hand
   routes/                 one file per page
   components/
     ui/                   shadcn/ui, vendored: Badge, Button, Carousel, Checkbox,
@@ -256,14 +256,14 @@ reimplementing them.
 `vite-plugin-content.ts` reads every collection in Node at build time,
 validates it, and exposes it as a virtual module:
 
-| Source                                            | Module             | Written by                        |
-| ------------------------------------------------- | ------------------ | --------------------------------- |
-| `content/blog/*.md`                               | `virtual:blog`     | you                               |
-| `content/shows/*.md`                              | `virtual:shows`    | you                               |
-| `content/now/*.md`                                | `virtual:now`      | you                               |
-| `content/vinyl.json`                              | `virtual:vinyl`    | `update-vinyl.mjs`, nightly       |
-| `content/comics.json`                             | `virtual:comics`   | `update-comics.mjs`, nightly      |
-| `content/fortnite.json` + `fortnite-seasons.json` | `virtual:fortnite` | the job, and you for the calendar |
+| Source                                            | Module             | Written by                    |
+| ------------------------------------------------- | ------------------ | ----------------------------- |
+| `content/blog/*.md`                               | `virtual:blog`     | you                           |
+| `content/shows/*.md`                              | `virtual:shows`    | you                           |
+| `content/now/*.md`                                | `virtual:now`      | you                           |
+| `content/vinyl.json`                              | `virtual:vinyl`    | `update-vinyl.mjs`, nightly   |
+| `content/comics.json`                             | `virtual:comics`   | `update-comics.mjs`, nightly  |
+| `content/fortnite.json` + `fortnite-seasons.json` | `virtual:fortnite` | the job; you name the seasons |
 
 The generated files are validated exactly as strictly as the hand-written ones,
 which is the point: a fetch that half-worked is the likeliest way bad data gets
@@ -690,12 +690,12 @@ file removes it from the page - git history keeps the text.
 account `danwiththeyams`, browseable by season and by playlist, with each
 season's rates set against the lifetime figure underneath them.
 
-Two files behind it, and only one of them is written by hand:
+Two files behind it:
 
-| File                                | Written by                     | Holds                                          |
-| ----------------------------------- | ------------------------------ | ---------------------------------------------- |
-| `src/content/fortnite.json`         | `update-fortnite.mjs`, nightly | the numbers                                    |
-| `src/content/fortnite-seasons.json` | you                            | the season calendar: names, dates, main outfit |
+| File                                | Written by              | Holds                                          |
+| ----------------------------------- | ----------------------- | ---------------------------------------------- |
+| `src/content/fortnite.json`         | the nightly job         | the numbers                                    |
+| `src/content/fortnite-seasons.json` | you and the nightly job | the season calendar: names, dates, main outfit |
 
 Both are validated at build time like every other collection. A recorded season
 whose key is not in the calendar fails the build, because the calendar is where
@@ -724,8 +724,9 @@ FORTNITE_API_KEY=... node scripts/update-fortnite.mjs
 
 ### The season calendar
 
-`src/content/fortnite-seasons.json` is the hand-kept half, and the only Fortnite
-file anyone edits. One entry per season, newest first:
+`src/content/fortnite-seasons.json` is the calendar: what each season was
+called, when it ran, and the outfit worn through it. The nightly job starts
+each entry and you finish it. One entry per season, newest first:
 
 ```json
 {
@@ -740,9 +741,14 @@ file anyone edits. One entry per season, newest first:
 ```
 
 `end` is **exclusive** - the day the next season began - so consecutive ranges
-meet exactly rather than leaving a day in neither. These dates decide which
-entry the nightly job files today's numbers under, so a typo does not fail the
-build, it quietly attributes a month of matches to the wrong season.
+meet exactly rather than leaving a day in neither. The dates are presentation:
+the nightly job files numbers by `backendValue` (Epic's own sequential season
+number, which the job stamps on the entries it creates), so a typo'd date
+mislabels a tab rather than mis-filing a month of matches. `end` is optional
+on the newest entry - the season still running has not ended - and gets filled
+in automatically at the next rollover. A hand-scheduled end on the newest
+entry, like ch7-s4's `2026-11-01`, is a schedule, and the rollover corrects it
+to the day Epic actually shipped the next season.
 
 `main` is the outfit worn all season. Epic's stats do not carry it, so it is
 written down rather than read. Add the name and run
@@ -755,8 +761,13 @@ which resolves it against Fortnite-API's cosmetics catalogue, downloads the
 render into `public/img/fortnite/`, and writes the resolved id and image path
 back into the calendar. No key needed - the cosmetics routes are the free half.
 
-**Add an entry when a new season starts.** Missing one is not damaging: the new
-season's matches accrue into the previous entry until it is added.
+**Entries add themselves.** At a rollover the nightly job detects the new
+season from Epic's backend numbering and prepends an entry with no `name` and
+an open `end`; until then the previous newest entry stays open-ended. Fill in
+`name` and `main` when you notice, and feel free to rewrite `chapter` and
+`season` for a mini season ("Mini Season 2" rather than the "Season 2" the job
+guessed) - but keep `key` and `backendValue`, which are the filing identity,
+and never rename a `key` once stats are filed under it.
 
 ### Backfilling a season that already ended
 

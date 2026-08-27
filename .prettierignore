@@ -7,11 +7,13 @@ test-results
 
 # Generated content. These are written by the nightly jobs with their own
 # JSON.stringify formatting, and a bot commit landing while the hook reformats
-# them is a fight nobody needs. `fortnite-seasons.json` is deliberately absent:
-# it is hand-kept, so it should be formatted like anything else.
+# them is a fight nobody needs. The season calendar is hand-edited between
+# seasons, but the nightly job writes it at every rollover - same fight, same
+# rule.
 src/content/vinyl.json
 src/content/comics.json
 src/content/fortnite.json
+src/content/fortnite-seasons.json
 
 # CMS-authored content. Sveltia writes these collections through the GitHub
 # API, where no pre-commit hook runs, and it preserves exactly what was typed

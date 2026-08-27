@@ -93,6 +93,13 @@ landing while a hook reformats them is a fight with no upside.
 `fortnite-seasons.json` is deliberately not skipped, because that one is
 hand-kept.
 
+The content markdown (`blog/`, `shows/`, `now/`) is skipped for the same
+reason: the CMS writes those collections through the GitHub API, where no
+pre-commit hook runs, and it preserves exactly what was typed - the first
+phone-written now entry turned CI red over a trailing space. Content is data:
+the build validates what matters (structure, dates, photos), and Prettier adds
+nothing there but red builds.
+
 **A pre-commit hook runs both.** `npm install` sets it up - the `prepare` script
 runs husky, which points git at `.husky/`. On commit:
 

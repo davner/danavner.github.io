@@ -13,6 +13,15 @@ src/content/vinyl.json
 src/content/comics.json
 src/content/fortnite.json
 
+# CMS-authored content. Sveltia writes these collections through the GitHub
+# API, where no pre-commit hook runs, and it preserves exactly what was typed
+# (a trailing space on a phone once turned CI red). Same reasoning as the JSON
+# above: content is data, the build validates it, and a format check adds no
+# safety - only red builds.
+src/content/blog/*.md
+src/content/shows/*.md
+src/content/now/*.md
+
 # Auto-generated, and the repo's own rule is never to hand-edit it.
 CHANGELOG.md
 package-lock.json

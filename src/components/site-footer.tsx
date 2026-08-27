@@ -38,7 +38,14 @@ export function SiteFooter() {
             <p className="readout-dim">
               © {new Date().getFullYear()} {profile.name} · Built in the dark with good music on
             </p>
-            <p className="readout-dim">Last updated {LAST_UPDATED}</p>
+            <p className="readout-dim">
+              Last updated {LAST_UPDATED} ·{" "}
+              {/* A plain anchor on purpose: /admin/ is a static page outside
+                  the SPA, and a router Link would land on the 404 route. */}
+              <a href="/admin/" className="transition-colors hover:text-ember">
+                Admin
+              </a>
+            </p>
           </div>
           {/* The last thing anyone reads should be a wave, not a job title. */}
           <p className="readout">

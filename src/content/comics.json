@@ -1,7 +1,7 @@
 {
   "user": "aspacemansheavyload",
   "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload",
-  "fetched": "2026-08-19",
+  "fetched": "2026-08-27",
   "publishers": [
     {
       "name": "DC Comics",
@@ -17,7 +17,7 @@
     },
     {
       "name": "BOOM! Studios",
-      "count": 1
+      "count": 2
     },
     {
       "name": "Dark Horse Comics",
@@ -77,7 +77,7 @@
       "id": 205080,
       "name": "Alien: King Killer",
       "publisher": "Marvel Comics",
-      "years": "2026 - Present",
+      "years": "2026",
       "issues": 3,
       "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/collection/205080",
       "key": "series-205080",
@@ -244,6 +244,16 @@
       "cover": "/img/comics/series-143315.webp"
     },
     {
+      "id": 212298,
+      "name": "Stuff of Nightmares: The Cat in the Coffin",
+      "publisher": "BOOM! Studios",
+      "years": "2026 - Present",
+      "issues": 1,
+      "url": "https://leagueofcomicgeeks.com/profile/aspacemansheavyload/collection/212298",
+      "key": "series-212298",
+      "cover": "/img/comics/series-212298.webp"
+    },
+    {
       "id": 207139,
       "name": "Terminal",
       "publisher": "Image Comics",
@@ -276,14 +286,34 @@
   ],
   "pullList": [
     {
-      "id": 1644798,
-      "name": "Alien: King Killer #5",
-      "publisher": "Marvel Comics",
+      "id": 4814073,
+      "name": "Absolute Catwoman #3 Cover B KyuYong Eom Variant",
+      "publisher": "DC Comics",
+      "price": "$5.99",
+      "released": "2026-08-26",
+      "url": "https://leagueofcomicgeeks.com/comic/3606895/absolute-catwoman-3?variant=4814073",
+      "key": "issue-4814073",
+      "cover": "/img/comics/issue-4814073.webp"
+    },
+    {
+      "id": 9104231,
+      "name": "Stuff of Nightmares: The Cat in the Coffin #1",
+      "publisher": "BOOM! Studios",
+      "price": "$6.99",
+      "released": "2026-08-26",
+      "url": "https://leagueofcomicgeeks.com/comic/9104231/stuff-of-nightmares-the-cat-in-the-coffin-1",
+      "key": "issue-9104231",
+      "cover": "/img/comics/issue-9104231.webp"
+    },
+    {
+      "id": 2189629,
+      "name": "Zatanna #5 Cover D Nimit Malavia Variant",
+      "publisher": "DC Comics",
       "price": "$4.99",
-      "released": "2026-08-19",
-      "url": "https://leagueofcomicgeeks.com/comic/1644798/alien-king-killer-5",
-      "key": "issue-1644798",
-      "cover": "/img/comics/issue-1644798.webp"
+      "released": "2026-08-26",
+      "url": "https://leagueofcomicgeeks.com/comic/9620463/zatanna-5?variant=2189629",
+      "key": "issue-2189629",
+      "cover": "/img/comics/issue-2189629.webp"
     }
   ],
   "wants": [

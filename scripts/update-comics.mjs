@@ -95,7 +95,7 @@ const COVER_PATH = "/img/comics";
  * profile, which is the part that actually has to hold together - a real
  * handshake with a mismatched user agent is a worse signal than either alone.
  */
-const impit = new Impit({ browser: "chrome142" });
+const impit = new Impit({ browser: "chrome151" });
 
 /** The list ids the endpoint uses. Not documented anywhere; read off the site. */
 const LISTS = { pulls: 1, collection: 2, wishList: 3 };

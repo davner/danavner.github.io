@@ -39,6 +39,38 @@ name: Comics
 # exits non-zero, so it fails visibly rather than committing nothing and going
 # green. Running `node scripts/update-comics.mjs` from a home connection still
 # works and is the fallback.
+#
+# ## The 403s came back (2026-08-24), and this time no client change helps
+#
+# After months of green, every run since 2026-08-24 has been 403 again - and
+# this time the profile story does not apply. The responses from the runner
+# carry no `cf-mitigated: challenge` header and no challenge script; they are
+# the site's own branded "Restricted" block page, served straight from the
+# Cloudflare edge (`server-timing: cfOrigin;dur=0` - the origin is never
+# asked), with no cookie issued. The homepage is refused the same way as the
+# data endpoints. That is a hard block rule - by the look of it on the
+# runners' cloud address range - not a score that a better fingerprint can
+# nudge.
+#
+# Established from CI on 2026-08-27, one dispatch per variation, all refused
+# identically: chrome151 on impit 0.14.4, firefox144 (a different TLS stack),
+# a cookie jar with a homepage warm-up plus realistic Referer and
+# Accept-Language (no cookie is ever handed out to carry), forced HTTP/3
+# (QUIC never connects from a runner; the request times out), an XHR-shaped
+# request straight at the get_comics endpoint the way the site's own front
+# end calls it (X-Requested-With, Sec-Fetch-* cors/empty, JSON Accept),
+# X-Forwarded-For/X-Real-IP set to a residential address, and an honest
+# self-identifying User-Agent - the bare site URL and a polite-crawler form
+# with contact details - over the chrome151 handshake. impit's remaining
+# profile families rule themselves out from home: ios18 fails the site's TLS
+# handshake from anywhere and okhttp is 403 even from a home address, and
+# impit exposes no HTTP/1.1 pin to test that transport alone. The same script
+# read the full shelf from a home connection the same day, old profile and
+# new. A rule that never issues a challenge offers nothing to pass, so the
+# only lever left is where the request comes from: a non-datacenter egress
+# (a self-hosted runner or tailnet exit at home), running the script locally,
+# or waiting out what may be a site-side setting change - the abrupt start
+# after months of green looks like one.
 
 on:
   schedule:

@@ -652,7 +652,26 @@ Pinning a current profile fixed it. So **bump `browser:` in
 this broke is that a profile pinned by default aged out, and it will age out
 again.
 
-Two things worth keeping from working that out:
+That fix has a ceiling, and 2026-08-24 found it. After months of green the job
+went back to 403 on every request, and this time it is not a score any client
+change can nudge: from a runner, every URL on the site - the homepage included -
+comes back as the site's own branded "Restricted" block page, served at the
+Cloudflare edge without ever asking the origin, with no challenge issued and no
+cookie handed out. A current Chrome profile, Firefox's TLS stack, a cookie jar
+warmed on the homepage, realistic headers, HTTP/3 (which never even connects
+from a runner), an XHR-shaped request aimed straight at the data endpoint the
+way the site's own front end calls it, spoofed X-Forwarded-For/X-Real-IP, and
+an honest self-identifying User-Agent naming this site and a contact address
+were each tried from CI on 2026-08-27 and refused identically, while the same
+script read the whole shelf from a home connection the same day - and impit's
+remaining profile families rule themselves out from home, where ios18 fails
+the TLS handshake and okhttp is 403 before any datacenter enters the picture. That is a hard block on the runners' address range, and a rule
+that never challenges offers nothing to pass. If the nightly job stays red, the
+options are an egress that is not a datacenter (a self-hosted runner or a
+tailnet exit at home), running the script locally now and then, or waiting to
+see whether the site-side setting that flipped abruptly flips back.
+
+Two things worth keeping from working the first incident out:
 
 - **A real browser is not the answer.** Headless Chrome is refused instantly on
   its default user agent - `HeadlessChrome` is a 403 every time - and with a

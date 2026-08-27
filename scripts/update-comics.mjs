@@ -94,6 +94,27 @@ const COVER_PATH = "/img/comics";
  * the user agent and the `Sec-Ch-Ua` header consistent with each other per
  * profile, which is the part that actually has to hold together - a real
  * handshake with a mismatched user agent is a worse signal than either alone.
+ *
+ * Know the limit of what the profile buys, though. Since 2026-08-24 the site
+ * hard-blocks GitHub's runner addresses outright: every request - the homepage
+ * included - is answered 403 at the Cloudflare edge (`cfOrigin;dur=0`, the
+ * origin is never asked) with the site's own branded "Restricted" page. There
+ * is no `cf-mitigated: challenge` header, no challenge script in the body, and
+ * no cookie is ever issued, so there is nothing a client could pass or clear.
+ * chrome151, firefox144, a cookie jar with a homepage warm-up, realistic
+ * Referer/Accept-Language, forced HTTP/3 (which times out - QUIC never
+ * connects from a runner), an XHR-shaped request straight at get_comics
+ * (X-Requested-With, Sec-Fetch-* cors/empty, JSON Accept, same-origin
+ * Referer), X-Forwarded-For/X-Real-IP spoofing, and an honest
+ * self-identifying User-Agent (both a bare site URL and a polite-crawler form
+ * with contact details, over the chrome151 TLS handshake) were all tried from
+ * CI on 2026-08-27 and all failed identically, while the same script read the
+ * full shelf from a home connection the same day. impit's remaining profile
+ * families are dead ends from anywhere: ios18 fails the TLS handshake against
+ * this site even from home, and okhttp gets 403 even from home. impit exposes
+ * no HTTP/1.1 pin, so that combination is untestable without also changing
+ * the TLS fingerprint. A block rule that never challenges cannot be satisfied
+ * by any fingerprint; only the egress address can change the answer.
  */
 const impit = new Impit({ browser: "chrome151" });
 

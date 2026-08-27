@@ -664,8 +664,8 @@ test.describe("now", () => {
   test("says when it was written and how stale that makes it", async ({ page }) => {
     /*
      * An empty now page is a real state, not just one the build passes through:
-     * `src/content/now.md` may not exist. So this asserts whichever of the two
-     * is on screen rather than assuming an entry is there - what it will not
+     * `src/content/now/` may hold no entries. So this asserts whichever of the
+     * two is on screen rather than assuming an entry is there - what it will not
      * accept is a dated entry with no staleness, or a blank page with neither.
      */
     const stamp = page.locator("main time").first();
@@ -688,9 +688,9 @@ test.describe("now", () => {
 
   test("the archive appears only once an entry has been filed", async ({ page }) => {
     /*
-     * The folder starts empty and fills on its own as `now.md` is rewritten, so
-     * this asserts the rule rather than a count: entries present means a
-     * timeline with a machine-readable date on each, none means no empty
+     * The timeline grows one entry at a time as new files land in the folder,
+     * so this asserts the rule rather than a count: older entries present means
+     * a timeline with a machine-readable date on each, none means no empty
      * heading sitting there promising something that is not below it.
      */
     const archived = page.locator("[data-slot=now-archived]");
@@ -709,8 +709,8 @@ test.describe("now", () => {
       .evaluateAll((els) => els.map((el) => el.getAttribute("datetime") ?? ""));
 
     for (const date of dates) expect(date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    // Newest first, and never the same day twice - the build rejects a filed
-    // entry dated the same day as the current one.
+    // Newest first, and never the same day twice - the build rejects two
+    // entries sharing an `updated` date.
     expect([...dates].sort().reverse()).toEqual(dates);
     expect(new Set(dates).size).toBe(dates.length);
   });
@@ -759,6 +759,18 @@ test.describe("now", () => {
         return box.y >= view.y - 2 && box.y < view.y + view.height;
       })
       .toBe(true);
+  });
+
+  test("the collection reference file is not parsed as an entry", async ({ page }) => {
+    /*
+     * `src/content/now/_index.md` documents how the collection works; the
+     * build skips files starting with `_`. If that filter ever broke, the
+     * reference doc would surface here - as the current entry or somewhere in
+     * the timeline - so this greps the whole page for a phrase only that file
+     * contains. Holds at any entry count, including zero.
+     */
+    const text = await page.locator("main").evaluate((el) => el.textContent ?? "");
+    expect(text).not.toMatch(/one markdown file per entry/i);
   });
 });
 

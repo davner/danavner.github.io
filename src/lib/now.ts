@@ -8,16 +8,16 @@ export interface NowEntry {
 }
 
 export interface Now {
-  /** What `src/content/now.md` says today. */
+  /** The newest entry in `src/content/now/`. */
   current: NowEntry;
-  /** What it used to say, newest first. Written by the archive job, not by hand. */
+  /** Every older entry, newest first. */
   archive: NowEntry[];
 }
 
 /**
  * Parsed and validated by the content plugin in `vite-plugin-content.ts`. An
- * empty `current.body` means there is no `src/content/now.md` yet, and the page
- * says so rather than rendering a blank.
+ * empty `current.body` means `src/content/now/` has no entries yet, and the
+ * page says so rather than rendering a blank.
  */
 export const now: Now = rawNow;
 

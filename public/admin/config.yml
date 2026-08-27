@@ -271,20 +271,28 @@ collections:
         label: Body
         widget: markdown
 
-singletons:
   - name: now
     label: Now
-    file: /src/content/now.md
+    label_singular: Now entry
+    folder: /src/content/now
+    # Entries are named for their date - matches the files already in the folder.
+    slug: "{{fields.updated}}"
+    preview_path: "/now"
+    aliases_field: false
     icon: schedule
     editor: { preview: false }
+    summary: "{{updated}}"
+    sortable_fields: [updated]
     fields:
       - name: updated
         label: Updated
         widget: datetime
         type: date
+        default: "{{now}}"
         hint: >-
-          Setting this to today files the previous text into the archive on
-          save. Fixing a typo? Leave the date alone and nothing is archived.
+          A new entry replaces the current one on /now the moment its date is
+          newest. Fixing something you already published? Edit that entry
+          instead of creating a new one.
       - name: body
         label: Body
         widget: markdown

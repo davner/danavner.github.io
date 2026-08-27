@@ -1018,71 +1018,66 @@ interface NowEntry {
   body: string;
 }
 
-/** Parses and validates one now entry, wherever it lives. */
-function parseNowEntry(raw: string, file: string, where: string): NowEntry {
-  const { meta, body } = splitFrontmatter("now", file, raw, where);
+/** Parses and validates one now entry. */
+function parseNowEntry(raw: string, file: string): NowEntry {
+  const { meta, body } = splitFrontmatter("now", file, raw);
 
   const updated = asDate(meta.updated);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(updated)) {
-    fail("now", file, "frontmatter needs an `updated` date in `YYYY-MM-DD` form", where);
+    fail("now", file, "frontmatter needs an `updated` date in `YYYY-MM-DD` form");
   }
 
-  if (!body) fail("now", file, "the entry has no body", where);
+  if (!body) fail("now", file, "the entry has no body");
 
   return { updated, body };
 }
 
 /**
- * The now page: the current entry from `src/content/now.md`, and everything it
- * has replaced from `src/content/now/`.
- *
- * You only ever edit `now.md`. Bumping its `updated` date is what makes the
- * previous text an entry rather than a revision, and
- * `.github/workflows/now-archive.yml` moves it into the folder on push. Editing
- * without touching the date is a correction and archives nothing, which keeps a
- * typo fix from becoming a second entry saying the same thing.
+ * The now page: every entry in `src/content/now/`, one file per entry named
+ * for its `updated` date. The newest is what `/now` shows; the rest are the
+ * timeline under it. A new entry is a new file, and a correction is an edit to
+ * an existing one - nothing moves files around, because the folder is the
+ * whole record.
  *
  * `updated` is required and load-bearing. A now page with no date on it is just
  * an about page, and the reader has no way to tell whether "at the moment" means
- * this week or two years ago.
+ * this week or two years ago. It is also each entry's identity, so two entries
+ * sharing a date fail the build rather than printing the same day twice.
  *
- * A missing file is not an error, the same way an empty content directory is a
- * log with nothing in it. The page renders its empty state instead.
+ * A missing folder is not an error, the same way an empty content directory is
+ * a log with nothing in it. The page renders its empty state instead.
  */
 function readNow(root: string) {
-  const where = "src/content/now.md";
-  const file = path.resolve(root, where);
-
-  const current: NowEntry | null = existsSync(file)
-    ? parseNowEntry(readFileSync(file, "utf8"), "now.md", where)
-    : null;
-
   const dir = path.resolve(root, "src/content/now");
   const files = existsSync(dir)
     ? readdirSync(dir).filter((name) => name.endsWith(".md") && !name.startsWith("_"))
     : [];
 
-  const archive = files
-    .map((name) =>
-      parseNowEntry(readFileSync(path.join(dir, name), "utf8"), name, `src/content/now/${name}`),
-    )
+  const entries = files
+    .map((name) => ({
+      file: name,
+      entry: parseNowEntry(readFileSync(path.join(dir, name), "utf8"), name),
+    }))
     // Newest first, the way every other collection here sorts.
-    .sort((a, b) => b.updated.localeCompare(a.updated));
+    .sort((a, b) => b.entry.updated.localeCompare(a.entry.updated));
 
   /*
-   * The archive is what `now.md` used to say, so an entry dated the same day as
-   * the current one means the archive job ran twice on one date, or a hand-made
-   * file collided with it. Either way the page would print the same day twice.
+   * The date is the entry's identity - the sort key and the label on the page -
+   * so two entries sharing one would be the same day printed twice. The
+   * likeliest way it happens is a second file saved on a day that already has
+   * one instead of editing it, and the fix is deciding which file is the entry.
    */
-  const clash = current ? archive.find((entry) => entry.updated === current.updated) : undefined;
-  if (clash) {
-    fail(
-      "now",
-      `${clash.updated}.md`,
-      "is dated the same day as the current entry in src/content/now.md - one of them is a duplicate",
-      `src/content/now/${clash.updated}.md`,
-    );
+  for (let i = 1; i < entries.length; i++) {
+    if (entries[i].entry.updated === entries[i - 1].entry.updated) {
+      fail(
+        "now",
+        entries[i].file,
+        `is dated the same day as ${entries[i - 1].file} - one of them is a duplicate`,
+      );
+    }
   }
+
+  const [current, ...archive] = entries.map(({ entry }) => entry);
 
   return { current: current ?? { updated: "", body: "" }, archive };
 }
@@ -1119,9 +1114,10 @@ export function contentPlugin(): Plugin {
   let includeDrafts = false;
 
   /**
-   * Two single-file pages, each its own virtual module rather than bent into
-   * the `Collection` shape for one member. The record collection is generated
-   * JSON rather than hand-written markdown, and there is only ever one now page.
+   * Pages with their own virtual module rather than the `Collection` shape.
+   * The record collection is generated JSON rather than hand-written markdown,
+   * and the now folder splits into `{ current, archive }` rather than a flat
+   * list, because the page treats the newest entry differently from the rest.
    */
   const VINYL = "vinyl";
   const NOW = "now";
@@ -1194,7 +1190,6 @@ export function contentPlugin(): Plugin {
 
         // A local run of the Discogs fetch should show up without a restart.
         if (file === path.resolve(root, "src/content/vinyl.json")) return reload(VINYL);
-        if (file === path.resolve(root, "src/content/now.md")) return reload(NOW);
         // A local run of the comics fetch should show up without a restart too.
         if (file === path.resolve(root, "src/content/comics.json")) return reload(COMICS);
         // Same for a local run of the Fortnite fetch, and for hand-edits to the
@@ -1206,6 +1201,10 @@ export function contentPlugin(): Plugin {
           return reload(FORTNITE);
 
         if (!file.endsWith(".md")) return;
+
+        // The trailing separator keeps a future `src/content/now-*` sibling
+        // from matching the prefix.
+        if (file.startsWith(path.resolve(root, "src/content/now") + path.sep)) return reload(NOW);
 
         const collection = COLLECTIONS.find((entry) => file.startsWith(dirs.get(entry.name)!));
         if (!collection) return;

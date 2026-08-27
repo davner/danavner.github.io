@@ -112,15 +112,14 @@ a convenience rather than a gate: `--no-verify` skips it.
 
 ## CI
 
-| Workflow          | When                                    | What                                                    |
-| ----------------- | --------------------------------------- | ------------------------------------------------------- |
-| `ci.yml`          | every push to `main` and every PR       | lint, format check, type-check, build, Playwright suite |
-| `deploy.yml`      | push to `main`, or a data job finishing | builds and publishes to GitHub Pages                    |
-| `links.yml`       | weekly, Mondays                         | external link check; opens an issue if anything is dead |
-| `vinyl.yml`       | nightly                                 | reads the Discogs collection, commits it if it moved    |
-| `comics.yml`      | nightly                                 | reads the comic collection, commits it if it moved      |
-| `fortnite.yml`    | nightly                                 | reads the Fortnite stats, commits them if they moved    |
-| `now-archive.yml` | push touching `now.md`                  | files the entry the update replaced                     |
+| Workflow       | When                                    | What                                                    |
+| -------------- | --------------------------------------- | ------------------------------------------------------- |
+| `ci.yml`       | every push to `main` and every PR       | lint, format check, type-check, build, Playwright suite |
+| `deploy.yml`   | push to `main`, or a data job finishing | builds and publishes to GitHub Pages                    |
+| `links.yml`    | weekly, Mondays                         | external link check; opens an issue if anything is dead |
+| `vinyl.yml`    | nightly                                 | reads the Discogs collection, commits it if it moved    |
+| `comics.yml`   | nightly                                 | reads the comic collection, commits it if it moved      |
+| `fortnite.yml` | nightly                                 | reads the Fortnite stats, commits them if they moved    |
 
 ### Why the data jobs are named in `deploy.yml`
 
@@ -138,8 +137,8 @@ recording: the vinyl refresh of 10 August sat on `main` from 09:08 until 16:03,
 when an unrelated human push finally carried it out. Nothing was broken or red.
 The data was simply as old as the last time someone happened to push.
 
-So `deploy.yml` also triggers on `workflow_run` for Vinyl, Comics, Fortnite and
-Now archive. **A new data workflow has to be added to that list**, or its
+So `deploy.yml` also triggers on `workflow_run` for Vinyl, Comics and Fortnite.
+**A new data workflow has to be added to that list**, or its
 numbers will go stale in exactly the same silent way.
 
 Two details in there are load-bearing:
@@ -186,7 +185,6 @@ scripts/
   make-share-fallback.mjs draws the social image for a show with no photos
   make-site-card.mjs      draws the site's own link-preview card
   gen-font-fallbacks.mjs  measures the fonts so fallbacks match their metrics
-  archive-now.mjs         files the now entry an update replaced
   update-vinyl.mjs        reads the Discogs collection nightly, saves the sleeves
   update-comics.mjs       reads League of Comic Geeks nightly, saves the covers
   update-fortnite.mjs     reads the Fortnite stats nightly, keeps a season archive
@@ -205,7 +203,7 @@ src/
     accounts.json         the handles the fetch scripts read
     blog/*.md             one markdown file per post
     shows/*.md            one markdown file per show
-    now.md + now/         the current now entry, and the ones it replaced
+    now/*.md              one markdown file per now entry, newest is current
     vinyl.json            the record collection, written nightly from Discogs
     comics.json           the comic shelf, written nightly
     fortnite.json         the stats, written nightly and backfilled once
@@ -255,7 +253,7 @@ validates it, and exposes it as a virtual module:
 | ------------------------------------------------- | ------------------ | --------------------------------- |
 | `content/blog/*.md`                               | `virtual:blog`     | you                               |
 | `content/shows/*.md`                              | `virtual:shows`    | you                               |
-| `content/now.md` + `now/`                         | `virtual:now`      | you                               |
+| `content/now/*.md`                                | `virtual:now`      | you                               |
 | `content/vinyl.json`                              | `virtual:vinyl`    | `update-vinyl.mjs`, nightly       |
 | `content/comics.json`                             | `virtual:comics`   | `update-comics.mjs`, nightly      |
 | `content/fortnite.json` + `fortnite-seasons.json` | `virtual:fortnite` | the job, and you for the calendar |
@@ -284,8 +282,7 @@ its own reference next to its content.
 blog posts, shows, and the now page - that commit to this repo through the
 GitHub API when you hit Save. The site stays static; the CMS is a single script
 on one page, and everything downstream (the build-time validation, the deploy
-workflow, the now-archive job) runs off the commit exactly as if it were pushed
-by hand.
+workflow) runs off the commit exactly as if it were pushed by hand.
 
 The two files behind it are `public/admin/index.html` and
 `public/admin/config.yml`. The config mirrors the frontmatter schemas below;
@@ -653,16 +650,18 @@ from, which is why that shelf never had any of these problems.
 
 ## The now page
 
-`/now` is one markdown file, `src/content/now.md`, and it is the only page here
-nothing generates.
+`/now` is a folder of markdown files, `src/content/now/`, and it is the only
+page here nothing generates. One file per entry, named `<YYYY-MM-DD>.md` for
+its `updated` date: the newest entry is what the page shows, and every older
+one is the timeline under it.
 
-The archive is the part worth knowing. You only ever edit `now.md`; **bumping its
-`updated` date is what turns the previous text into an archived entry**, and
-`.github/workflows/now-archive.yml` moves it into `src/content/now/` on push.
-Editing without touching the date is a correction and archives nothing, which
-keeps a typo fix from becoming a second entry saying the same thing.
+**A new entry is a new file** - written by hand, or with the form at `/admin/`.
+Fixing something already published is an edit to that entry's file, not a new
+file, which keeps a typo fix from becoming a second entry saying the same
+thing. Two entries sharing an `updated` date fail the build, and deleting a
+file removes it from the page - git history keeps the text.
 
-`src/content/now/_README.md` has the frontmatter and the rest of the rules.
+`src/content/now/_index.md` has the frontmatter and the rest of the rules.
 
 ## Fortnite
 

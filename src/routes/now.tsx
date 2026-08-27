@@ -30,9 +30,9 @@ const DESCRIPTION = NOW_DESCRIPTION;
  * premise of a now page - see https://nownownow.com. Automating the writing
  * would leave a page that updates constantly and says nothing.
  *
- * What is automated is the keeping. Editing `src/content/now.md` with a new
- * `updated` date archives the old text on push, so writing a new now stays one
- * file and one commit while nothing written before it is lost.
+ * Nothing is automated about the keeping either. Every entry is a file in
+ * `src/content/now/`; the newest is the page and the rest are the timeline, so
+ * writing a new now is one new file and nothing written before it is lost.
  *
  * The date is not decoration. A now page with no date on it is an about page,
  * and the reader cannot tell whether "at the moment" means this week or two
@@ -47,9 +47,10 @@ export function Now() {
   if (!current.body) {
     return (
       <PageShell>
-        {/* Reader-facing, because this is a live page whenever `now.md` is
-            absent - not only a state the build passes through. Naming the file
-            here told a visitor about a path they cannot do anything with. */}
+        {/* Reader-facing, because this is a live page whenever the now folder
+            is empty - not only a state the build passes through. Naming the
+            folder here told a visitor about a path they cannot do anything
+            with. */}
         <PageHeader
           title={HEADING}
           lede="Nothing here at the moment. I have not written one of these yet."

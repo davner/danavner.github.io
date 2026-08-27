@@ -11,9 +11,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # The same two checks the pre-commit hook runs, repeated here because a hook
+  # ESLint and Prettier repeat what the pre-commit hook runs, because a hook
   # is a convenience rather than a gate: `--no-verify` skips it, and a commit
-  # made anywhere but a machine that has run `npm install` never had it.
+  # made anywhere but a machine that has run `npm install` never had it. The
+  # two checks after them - actionlint and the admin-config schema - run only
+  # here, since the files they guard are mostly written outside any hook (the
+  # CMS commits via the GitHub API, and workflows misfire rather than fail).
   lint:
     name: Lint and formatting
     runs-on: ubuntu-latest
@@ -34,6 +37,19 @@ jobs:
       # is useful; CI quietly reformatting it and carrying on is not.
       - name: Prettier
         run: npm run format:check
+
+      # Nothing else checks the workflow files themselves - a typo'd expression
+      # only surfaces when a workflow misfires. Pinned by version and checksum,
+      # the same way the admin page pins its CMS script.
+      - name: actionlint
+        run: |
+          curl -sSLo actionlint.tgz https://github.com/rhysd/actionlint/releases/download/v1.7.7/actionlint_1.7.7_linux_amd64.tar.gz
+          echo "023070a287cd8cccd71515fedc843f1985bf96c436b7effaecce67290e7e0757  actionlint.tgz" | sha256sum -c
+          tar -xzf actionlint.tgz actionlint
+          ./actionlint -color
+
+      - name: Admin config schema
+        run: npm run check:admin
 
   build:
     name: Type-check and build

@@ -119,14 +119,14 @@ a convenience rather than a gate: `--no-verify` skips it.
 
 ## CI
 
-| Workflow       | When                                    | What                                                    |
-| -------------- | --------------------------------------- | ------------------------------------------------------- |
-| `ci.yml`       | every push to `main` and every PR       | lint, format check, type-check, build, Playwright suite |
-| `deploy.yml`   | push to `main`, or a data job finishing | builds and publishes to GitHub Pages                    |
-| `links.yml`    | weekly, Mondays                         | external link check; opens an issue if anything is dead |
-| `vinyl.yml`    | nightly                                 | reads the Discogs collection, commits it if it moved    |
-| `comics.yml`   | nightly                                 | reads the comic collection, commits it if it moved      |
-| `fortnite.yml` | nightly                                 | reads the Fortnite stats, commits them if they moved    |
+| Workflow       | When                                    | What                                                                                                           |
+| -------------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `ci.yml`       | every push to `main` and every PR       | lint, format check, workflow lint (actionlint), admin-config schema check, type-check, build, Playwright suite |
+| `deploy.yml`   | push to `main`, or a data job finishing | builds and publishes to GitHub Pages                                                                           |
+| `links.yml`    | weekly, Mondays                         | external link check; opens an issue if anything is dead                                                        |
+| `vinyl.yml`    | nightly                                 | reads the Discogs collection, commits it if it moved                                                           |
+| `comics.yml`   | nightly                                 | reads the comic collection, commits it if it moved                                                             |
+| `fortnite.yml` | nightly                                 | reads the Fortnite stats, commits them if they moved                                                           |
 
 ### Why the data jobs are named in `deploy.yml`
 
@@ -331,7 +331,10 @@ Details that took deliberate decisions, so they do not get undone casually:
   `public/admin/index.html`). That is the one third-party script anywhere on
   this site, confined to `/admin/` - the promise that visitor-facing pages
   phone home to nobody still holds, and `tests/links.spec.ts` still enforces
-  it on every route it sweeps.
+  it on every route it sweeps. CI validates `config.yml` against the schema
+  that same version of `@sveltia/cms` ships (`npm run check:admin`), so the
+  devDependency in `package.json` must move together with the pinned script
+  tag.
 
 ## Adding a blog post
 

@@ -799,12 +799,18 @@ test.describe("comics", () => {
 
     for (let i = 0; i < count; i++) {
       await options.nth(i).click();
+      // The click and the shelf swap are separate renders, so wait for the
+      // radio to report checked before reading the page - counting tiles
+      // straight after the click reads whichever shelf was still on screen.
+      await expect(options.nth(i)).toBeChecked();
       // Either tiles or an explicit empty state - never a blank page. A pull
       // list is genuinely empty most of the week, so both are correct.
-      const tiles = await page.locator("[data-slot=comic]").count();
-      if (tiles === 0) {
-        await expect(page.getByText(/Nothing (pulled|on this list)/i)).toBeVisible();
-      }
+      await expect(
+        page
+          .locator("[data-slot=comic]")
+          .first()
+          .or(page.getByText(/Nothing (pulled|on this list)/i)),
+      ).toBeVisible();
     }
   });
 

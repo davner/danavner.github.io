@@ -293,11 +293,16 @@ the build-time validator stays the backstop for anything a form rule misses.
 
 Details that took deliberate decisions, so they do not get undone casually:
 
-- **Sign in with a fine-grained personal access token** scoped to this one
-  repository with read/write on Contents. Sveltia stores it in the browser's
-  local storage and talks to `api.github.com` directly - there is no OAuth
-  server to run. Generate one at
+- **Sign in with GitHub** goes through the
+  [sveltia-cms-auth](https://github.com/sveltia/sveltia-cms-auth) worker at
+  `sveltia-cms-auth.danavner.workers.dev` (named by `base_url` in the config),
+  which holds the OAuth app credentials and is locked to `danavner.com` via
+  its `ALLOWED_DOMAINS` secret. The fallback stays available: **Sign In Using
+  Access Token** with a fine-grained personal access token scoped to this one
+  repository with read/write on Contents, generated at
   [github.com/settings/personal-access-tokens](https://github.com/settings/personal-access-tokens).
+  Either way the credential lives in the browser's local storage and the CMS
+  talks to `api.github.com` directly.
 - **Photo uploads are optimized in the browser** before they are committed:
   resized to the same 1600px long edge `scripts/optimize-photos.mjs` uses,
   re-encoded to WebP, and stripped of EXIF (phone photos carry GPS) as a side

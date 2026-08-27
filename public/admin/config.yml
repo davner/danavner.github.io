@@ -11,6 +11,10 @@ backend:
   name: github
   repo: davner/danavner.github.io
   branch: main
+  # "Sign In with GitHub" goes through this OAuth client - the sveltia-cms-auth
+  # worker on Cloudflare, locked to danavner.com via its ALLOWED_DOMAINS secret.
+  # Token sign-in keeps working alongside it.
+  base_url: https://sveltia-cms-auth.danavner.workers.dev
   commit_messages:
     create: 'content({{collection}}): create "{{slug}}"'
     update: 'content({{collection}}): update "{{slug}}"'

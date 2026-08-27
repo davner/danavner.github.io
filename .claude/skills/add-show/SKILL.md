@@ -101,7 +101,7 @@ One file per show at `src/content/shows/<slug>.md`. The slug is the filename and
 becomes the URL, so `<headliner-or-festival>-<city>-<year>`, kebab-case, with
 `-day-1` / `-day-2` appended for a multi-day festival logged as separate nights.
 
-`src/content/shows/_README.md` is the field reference - read it rather than
+`src/content/shows/_index.md` is the field reference - read it rather than
 working from memory. The shape:
 
 ```md

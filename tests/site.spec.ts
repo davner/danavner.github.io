@@ -413,7 +413,7 @@ test.describe("shows", () => {
     }
   });
 
-  test("the collection README is not parsed as an entry", async ({ page }) => {
+  test("the collection reference file is not parsed as an entry", async ({ page }) => {
     const titles = await page.locator("[data-slot=show] h3").allInnerTexts();
     expect(titles.some((title) => /SHOW LOG/i.test(title))).toBe(false);
   });

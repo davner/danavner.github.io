@@ -125,7 +125,7 @@ a convenience rather than a gate: `--no-verify` skips it.
 | `deploy.yml`   | push to `main`, or a data job finishing | builds and publishes to GitHub Pages                                                                           |
 | `links.yml`    | weekly, Mondays                         | external link check; opens an issue if anything is dead                                                        |
 | `vinyl.yml`    | nightly                                 | reads the Discogs collection, commits it if it moved                                                           |
-| `comics.yml`   | nightly                                 | reads the comic collection, commits it if it moved                                                             |
+| `comics.yml`   | weekly, Mondays (probe - see below)     | reads the comic collection, commits it if it moved                                                             |
 | `fortnite.yml` | nightly                                 | reads the Fortnite stats, commits them if they moved                                                           |
 
 ### Why the data jobs are named in `deploy.yml`

@@ -74,7 +74,9 @@ name: Comics
 
 on:
   schedule:
-    - cron: "42 9 * * *" # 09:42 UTC nightly, an hour after the vinyl job.
+    - cron: "42 9 * * 1" # Mondays 09:42 UTC - a weekly probe, not a nightly job, while
+      # League of Comic Geeks blocks runner addresses (see the script header).
+      # The first green run is the signal to put the nightly schedule back.
   workflow_dispatch:
 
 permissions:

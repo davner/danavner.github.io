@@ -79,10 +79,10 @@
   },
   "seasons": [
     {
-      "key": "ch7-s3",
-      "first": "2026-06-06",
+      "key": "ch7-s4",
+      "first": "2026-08-20",
       "fetched": "2026-08-27",
-      "source": "epic",
+      "source": "fortnite-api",
       "stats": {
         "overall": {
           "matches": 22,
@@ -139,6 +139,87 @@
           "minutesPlayed": 289,
           "score": 9097,
           "playersOutlived": 1626
+        }
+      }
+    },
+    {
+      "key": "ch7-s3",
+      "first": "2026-06-06",
+      "fetched": "2026-08-20",
+      "source": "epic",
+      "stats": {
+        "overall": {
+          "matches": 225,
+          "wins": 99,
+          "kills": 1110,
+          "deaths": 126,
+          "kd": 8.81,
+          "winRate": 44,
+          "killsPerMatch": 4.93,
+          "top3": 138,
+          "top5": 30,
+          "top6": 158,
+          "top10": 3,
+          "top12": 35,
+          "top25": 5,
+          "minutesPlayed": 3514,
+          "score": 111569,
+          "playersOutlived": 19058
+        },
+        "solo": {
+          "matches": 8,
+          "wins": 1,
+          "kills": 20,
+          "deaths": 7,
+          "kd": 2.86,
+          "winRate": 12.5,
+          "killsPerMatch": 2.5,
+          "top3": 0,
+          "top5": 0,
+          "top6": 0,
+          "top10": 3,
+          "top12": 0,
+          "top25": 5,
+          "minutesPlayed": 77,
+          "score": 2294,
+          "playersOutlived": 586
+        },
+        "duo": {
+          "matches": 38,
+          "wins": 16,
+          "kills": 117,
+          "deaths": 22,
+          "kd": 5.32,
+          "winRate": 42.1,
+          "killsPerMatch": 3.08,
+          "top3": 0,
+          "top5": 30,
+          "top6": 0,
+          "top10": 0,
+          "top12": 35,
+          "top25": 0,
+          "minutesPlayed": 578,
+          "score": 18152,
+          "playersOutlived": 3315
+        },
+        "trio": null,
+        "squad": {
+          "matches": 168,
+          "wins": 80,
+          "kills": 915,
+          "deaths": 88,
+          "kd": 10.4,
+          "winRate": 47.6,
+          "killsPerMatch": 5.45,
+          "top3": 138,
+          "top5": 0,
+          "top6": 158,
+          "top10": 0,
+          "top12": 0,
+          "top25": 0,
+          "minutesPlayed": 2764,
+          "score": 86877,
+          "playersOutlived": 14763
         }
       }
     },

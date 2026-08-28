@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { type Page, expect, test } from "@playwright/test";
 
 import { readFileSync } from "node:fs";
 
@@ -11,6 +11,37 @@ const SECTION_PATHS = ALL_SECTIONS.map((section) => section.to);
 const SECTION_LABELS = Object.fromEntries(
   ALL_SECTIONS.map((section) => [section.to, section.label]),
 );
+
+/**
+ * Load a route and wait until it has stopped moving, then report the furthest
+ * down the page it ever got.
+ *
+ * Both halves matter. A lazy route mounts in a later commit than the shell, so
+ * a mount effect that scrolls runs after `goto` has resolved and after the
+ * heading is on screen - ask either of those moments where the page is and the
+ * answer is 0 because the bug has not happened yet. And the scroll can be
+ * smooth, arriving over many frames, so a single reading taken part-way
+ * through understates it. The worst offset seen is the honest number.
+ */
+async function loadAndSettle(page: Page, path: string): Promise<number> {
+  await page.goto(path);
+  await page.getByRole("heading", { level: 1 }).waitFor();
+
+  return page.evaluate(
+    () =>
+      new Promise<number>((resolve) => {
+        let worst = window.scrollY;
+        const watch = () => {
+          worst = Math.max(worst, window.scrollY);
+        };
+        window.addEventListener("scroll", watch, { passive: true });
+        window.setTimeout(() => {
+          window.removeEventListener("scroll", watch);
+          resolve(Math.max(worst, window.scrollY));
+        }, 300);
+      }),
+  );
+}
 
 test.describe("navigation", () => {
   test("home renders the hero in the display face", async ({ page }) => {
@@ -67,6 +98,22 @@ test.describe("navigation", () => {
     await page.getByRole("heading", { level: 1 }).waitFor();
     // A smooth scroll already in flight must not survive the route change.
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+  });
+
+  test("every page opens at the top of itself", async ({ page }) => {
+    /*
+     * `ScrollToTop` resets the scroll on navigating, but it does that in its
+     * own mount effect - so a lazy route mounting in a later commit can scroll
+     * the document afterwards and nothing puts it back. A reader who followed a
+     * link then arrives part-way down a page they have not read yet.
+     *
+     * Swept over every route rather than pinned to the one that broke: any
+     * component that reaches for `scrollIntoView` can do this, and the next one
+     * will be on some other page.
+     */
+    for (const path of ROUTES) {
+      expect(await loadAndSettle(page, path), `${path} scrolled itself on load`).toBe(0);
+    }
   });
 
   test("the phone drawer names itself and closes on navigating", async ({ page }) => {
@@ -1286,12 +1333,25 @@ test.describe("controls", () => {
 
 test.describe("chrome", () => {
   test("the skip link is the first stop for a keyboard", async ({ page }) => {
-    await page.goto("/");
-    // Tabbing before React has hydrated moves focus in the pre-render, where
-    // the skip link is not there to receive it.
-    await page.getByRole("heading", { level: 1 }).waitFor();
-    await page.keyboard.press("Tab");
-    await expect(page.locator(":focus")).toContainText("Skip to content");
+    /*
+     * Every route, not just the front page. The skip link is only worth having
+     * if it is the first thing a keyboard reaches, and what moves it is not the
+     * markup - it is anything that scrolls an element into view on mount, which
+     * also moves the sequential focus navigation starting point to wherever it
+     * scrolled. That leaves the skip link, the home link, the whole nav and the
+     * theme toggle behind the reader's first Tab, on that page only.
+     */
+    for (const path of ROUTES) {
+      // `loadAndSettle` rather than `goto`: tabbing before React has hydrated
+      // moves focus in the pre-render, where the skip link is not there to
+      // receive it - and tabbing before a mount effect has run asks the
+      // question before anything could have moved the answer.
+      await loadAndSettle(page, path);
+      await page.keyboard.press("Tab");
+      await expect(page.locator(":focus"), `${path} does not start at the skip link`).toContainText(
+        "Skip to content",
+      );
+    }
   });
 
   test("external links open safely", async ({ page }) => {

@@ -118,13 +118,39 @@ export function NowTimeline({
 
   // Keep the marked date on screen when scrolling moved it, not clicking.
   useEffect(() => {
-    if (!active || jumping.current) return;
+    const port = rail.current;
     // The wrapper rather than the pill: a pill that opens a year carries its
     // year label as a sibling, and scrolling the pill alone leaves that label
     // just off the left edge.
-    rail.current
-      ?.querySelector(`[data-rail-group="${active}"]`)
-      ?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    const group = port?.querySelector<HTMLElement>(`[data-rail-group="${active}"]`);
+    if (!port || !group || !active || jumping.current) return;
+
+    const view = port.getBoundingClientRect();
+    const box = group.getBoundingClientRect();
+    // Nothing to do while the marker is already on screen, which is the state
+    // on mount: `active` starts on the newest entry and the rail starts at its
+    // own left edge. So this only moves once scrolling has carried the marker
+    // off an edge, which is the whole of what it is for.
+    if (box.left >= view.left && box.right <= view.right) return;
+
+    /*
+     * The rail's own viewport, scrolled sideways by hand, for the same reason
+     * `jumpTo` measures against the pane rather than calling `scrollIntoView`:
+     * that method scrolls every scrollable ancestor it can reach, the document
+     * included. Here it dragged the whole page down the moment the component
+     * mounted - `ScrollToTop` resets the scroll in its own mount effect, but
+     * this route is lazy, so it mounts in a later commit and nothing puts the
+     * page back afterwards. It also carried Chrome's sequential focus
+     * navigation starting point down with it, which left the reader's first Tab
+     * landing inside the pane, past the skip link and the entire header.
+     */
+    const left =
+      box.left < view.left
+        ? port.scrollLeft + (box.left - view.left)
+        : port.scrollLeft + (box.right - view.right);
+
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    port.scrollTo({ left, behavior: reduced ? "auto" : "smooth" });
   }, [active]);
 
   if (entries.length === 0) return null;

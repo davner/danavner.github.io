@@ -950,14 +950,14 @@ over a `bg-border` parent, which is what produces the hairline seams.
 
 **Contrast is checked, with one known hole.** Both palettes go through axe in
 CI, and it earns its place: it caught bone type on the ember accent at 3.35:1,
-which is why button labels on ember are near-black rather than bone. The hole
-is the grain overlay in `components/backdrop.tsx`. axe cannot resolve a
-background image, so about one node in ten comes back `incomplete` rather than
-pass or fail: 396 of them across the 13 routes in both themes, every one
-`color-contrast`. That rule is the only undecided result `tests/a11y.spec.ts`
-tolerates; anything else reaching no verdict fails the build. The undecided
-slice is not covered by CI at all and has to be measured from painted pixels by
-hand.
+which is why button labels on ember are near-black rather than bone. Across the
+13 routes in both themes it decides 1,896 of 2,292 contrast nodes and fails none
+of them. The other 396 - 17% - come back `incomplete` rather than pass or fail,
+mostly because the grain overlay in `components/backdrop.tsx` is a background
+image and axe will not guess what is behind one. `color-contrast` is the only
+undecided result `tests/a11y.spec.ts` tolerates; any other rule reaching no
+verdict fails the build. That 17% is not covered by CI at all and has to be
+measured from painted pixels by hand. `PRODUCT.md` breaks the 396 down.
 
 ---
 

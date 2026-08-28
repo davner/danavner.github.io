@@ -31,10 +31,12 @@ const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"]
  *
  * `color-contrast` is the one rule that legitimately lands here, and only for
  * part of the page: the grain overlay in `backdrop.tsx` is a background image
- * axe cannot resolve, so nodes sitting over it come back undecided. It resolves
- * and passes roughly nine nodes in ten; the undecided slice is bounded, and it
- * is measured from painted pixels instead. Everything else is gated, which is
- * green today across every route in both themes.
+ * axe cannot resolve, so nodes sitting over it come back undecided. Measured
+ * across all 13 routes in both themes, it decides 1,896 of 2,292 contrast nodes
+ * and leaves 396 - 17% - undecided, for six specific reasons `PRODUCT.md`
+ * lists. That slice is bounded and is measured from painted pixels instead.
+ * Everything else is gated, which is green today on every route in both
+ * themes.
  *
  * Use `withTags` to change what runs. `disableRules` is not the way to widen
  * this allowlist - how it composes with `withTags` has not been established

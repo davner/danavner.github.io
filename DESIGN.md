@@ -197,9 +197,27 @@ produced or a state that is not warm. It never substitutes for Flyer Red as an
 accent, and the two never sit adjacent as a pair.
 
 **The No Second Dimming Rule.** `ink-faded` is the dim token. Applying an alpha
-on top of it produces text that fails contrast, and it has already done so once
-in shipped code. If something needs to be quieter than `ink-faded`, it needs to
-be smaller or further away, not fainter.
+on top of it produces text that fails contrast. If something needs to be quieter
+than `ink-faded`, it needs to be smaller or further away, not fainter. The same
+applies to the accents: `text-ember` and `text-ion` are already the saturated
+value, and an alpha over either lands under 4.5:1 at readout sizes.
+
+It has shipped five times: the timeline's year label at 3.28:1, the mobile nav's
+group heading at 3.28/3.88:1, the solo badge's "1P" at 2.91:1, the duo badge's
+"2P" at 3.78/3.25:1, and its separator at 2.61/2.11:1. The alpha arrived three
+different ways - `text-muted-foreground/70`, `opacity-70` on a wrapper, and
+`text-ember/50` - so there is no single spelling to grep for, and a lint rule
+that matched the two most common would have missed the third.
+
+**There is deliberately no automated check for the mechanism.** What is worth
+catching is the consequence, and the consequence is a contrast number, which
+axe already produces wherever it can resolve the background - it reported the
+nav heading as an ordinary violation. The reason that one shipped is not that
+contrast is unmeasurable; it is that `tests/a11y.spec.ts` only ever looks at a
+route as it loads, and nobody had opened the menu. Extending that sweep to the
+states a route load never reaches is the guard worth building. A rule that
+hunts for the alpha instead would be a second thing to maintain that has to
+agree with the first, and would still be blind in exactly the same places.
 
 **The Same Artefact Rule.** The two themes are one design on different stock.
 A colour decision that only makes sense in one theme is not finished.
@@ -290,9 +308,12 @@ contrast problem, not a depth problem.
 
 **The Grain Is Not Decoration Rule.** The grain layer is what keeps large flat
 fields from looking dead. It is `aria-hidden`, fixed, and behind everything, and
-it must never be removed to "clean up" a surface. It also makes automated colour
-contrast checking impossible on this site, which is a cost the design accepts
-knowingly.
+it must never be removed to "clean up" a surface. Its cost, accepted knowingly,
+is a hole in automated colour checking: axe will not guess what is behind a
+background image, so 309 of the site's 2,292 contrast nodes come back
+`incomplete` rather than pass or fail. That is a bounded hole, not a total one -
+axe decides 83% of this site's colour - and what falls in it is measured from
+painted pixels instead.
 
 ## Shapes
 
@@ -405,9 +426,10 @@ without one.
   text and wash together.
 - **Do** keep both themes in mind at once. A colour decision that works in only
   one is unfinished.
-- **Do** measure contrast from painted pixels. The grain layer and the `oklch`
-  tokens make automated contrast checking return "incomplete" on this site, so a
-  green axe run proves nothing about colour.
+- **Do** measure contrast from painted pixels for anything sitting over the
+  grain, over a gradient, or over a photograph. axe decides 83% of this site's
+  colour and returns "incomplete" for the rest, so a green run proves a lot and
+  not everything.
 - **Do** tie any motion to the reader. The marquee pauses on hover and
   overflowing text scrolls only while hovered or focused.
 

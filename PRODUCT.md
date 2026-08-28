@@ -133,18 +133,31 @@ Absences that future work must not paper over:
 
 ## Accessibility & Inclusion
 
-**WCAG 2.2 Level AA**, confirmed 2026-08-28.
+**WCAG 2.2 Level AA**, confirmed 2026-08-28. `tests/a11y.spec.ts` runs axe at
+the 2.2 A and AA tags on every route in both themes, and fails on any rule that
+reaches no verdict as well as on any that fails.
 
-Two known gaps between this commitment and the code as it stands, recorded so
-they are not rediscovered as surprises:
+Durable, and easy to overstate in either direction: **axe decides most of the
+colour contrast on this site, and not all of it.** Measured across all 13 routes
+in both themes, 2,292 contrast nodes: 1,896 pass, none fail, and 396 - 17% -
+come back `incomplete`, meaning the check ran and could not reach an answer. The
+reasons are specific and bounded:
 
-- `tests/a11y.spec.ts` runs axe tagged `wcag21aa` and does not test WCAG 2.2 at
-  all. Raising the tag is a real change, not a formality.
-- `README.md` still states the bar as "axe (WCAG 2.1 A and AA)".
+| Nodes | Why axe could not decide                                                                             |
+| ----- | ---------------------------------------------------------------------------------------------------- |
+| 309   | The grain overlay is a background image, and axe will not guess what is behind one                   |
+| 46    | `text-foreground/90` in the prose styles resolves to an `oklab()` string axe's colour parser rejects |
+| 12    | A background gradient                                                                                |
+| 12    | A pseudo-element behind the text                                                                     |
+| 9     | Text partially overlapping another element                                                           |
+| 8     | A run too short for axe to call it text                                                              |
 
-Also true of this codebase, and durable: **axe cannot evaluate colour contrast
-here.** The grain overlay in `src/components/backdrop.tsx` and the `oklch`
-design tokens make every contrast rule return `incomplete` rather than pass or
-fail, and the suite asserts only on violations. A green axe run is not evidence
-about contrast on this site; contrast has to be measured from painted pixels.
-This has already hidden three shipped failures.
+So a green axe run is real evidence about most of this site's colour and no
+evidence at all about that 17%. The 17% is measured from painted pixels instead.
+
+A second gap is not about contrast at all: the suite only ever sees a route as
+it loads. Two of the six failures the 2026-08 audit found were in states it
+never enters - a navigation label at 3.28:1 inside the mobile menu, which axe
+reports as an ordinary violation the moment the sheet is open, and focusable
+content inside an `aria-hidden` subtree with the sort listbox open. Both are
+fixed. The blind spot is not.

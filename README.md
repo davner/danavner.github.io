@@ -166,7 +166,7 @@ mobile viewports, and covers four things:
 
 - **Behaviour** - routing, titles, the writing filter and its URL state, theme
   persistence, markdown rendering, and the derived show stats.
-- **Accessibility** - axe (WCAG 2.1 A and AA) on every route in _both_ themes.
+- **Accessibility** - axe (WCAG 2.2 A and AA) on every route in _both_ themes.
   The palettes are independent, and contrast is the easiest thing to break.
 - **Links and assets** - every in-site link resolves to a real route rather
   than the SPA's 404 fallback, and no image is broken.
@@ -948,9 +948,16 @@ over a `bg-border` parent, which is what produces the hairline seams.
 
 **Motion** is minimal and all of it respects `prefers-reduced-motion`.
 
-**Contrast is enforced, not assumed.** Both palettes are checked by axe in CI.
-That is not decoration: it caught white-on-ember at 3.35:1, which is why button
-text on the ember accent is near-black rather than bone.
+**Contrast is checked, with one known hole.** Both palettes go through axe in
+CI, and it earns its place: it caught bone type on the ember accent at 3.35:1,
+which is why button labels on ember are near-black rather than bone. The hole
+is the grain overlay in `components/backdrop.tsx`. axe cannot resolve a
+background image, so about one node in ten comes back `incomplete` rather than
+pass or fail: 396 of them across the 13 routes in both themes, every one
+`color-contrast`. That rule is the only undecided result `tests/a11y.spec.ts`
+tolerates; anything else reaching no verdict fails the build. The undecided
+slice is not covered by CI at all and has to be measured from painted pixels by
+hand.
 
 ---
 

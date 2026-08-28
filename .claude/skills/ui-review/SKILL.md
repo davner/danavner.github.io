@@ -37,6 +37,13 @@ current task. Say what you changed.
 A change is not done because the code looks right. Load the page and confirm.
 Interact with it: click through, tab through, resize.
 
-`npm test` covers accessibility with axe on every route in both themes, internal
-links, broken images, and horizontal overflow. Run it before claiming a visual
-change is safe.
+`npm test` runs axe at WCAG 2.2 A and AA on every route in both themes, plus
+internal links, broken images, and horizontal overflow. Run it before claiming a
+visual change is safe.
+
+Know what it does not see. It only ever looks at a route as it loads, so nothing
+behind a sheet, a listbox, a popover or a collapsed `<details>` is scanned. And
+the grain overlay leaves about one contrast node in ten undecided, which axe
+reports as `incomplete` rather than pass or fail. A green run is not evidence
+about contrast over the grain, or about any state you have to open to reach:
+look at those yourself.

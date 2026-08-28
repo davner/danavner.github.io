@@ -1,0 +1,390 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-28T00:00:00.000Z",
+  "title": "Design System: danavner.com",
+  "extensions": {
+    "colorMeta": {
+      "flyer-red": {
+        "role": "primary",
+        "displayName": "Flyer Red",
+        "canonical": "oklch(0.53 0.22 30)",
+        "tonalRamp": [
+          "oklch(0.15 0.08 30)",
+          "oklch(0.24 0.13 30)",
+          "oklch(0.33 0.18 30)",
+          "oklch(0.42 0.21 30)",
+          "oklch(0.53 0.22 30)",
+          "oklch(0.66 0.225 32)",
+          "oklch(0.78 0.16 32)",
+          "oklch(0.92 0.06 32)"
+        ]
+      },
+      "flyer-red-hot": {
+        "role": "primary",
+        "displayName": "Flyer Red (dark theme)",
+        "canonical": "oklch(0.66 0.225 32)",
+        "tonalRamp": [
+          "oklch(0.15 0.08 32)",
+          "oklch(0.25 0.14 32)",
+          "oklch(0.36 0.19 32)",
+          "oklch(0.5 0.22 32)",
+          "oklch(0.66 0.225 32)",
+          "oklch(0.76 0.18 32)",
+          "oklch(0.86 0.11 32)",
+          "oklch(0.95 0.04 32)"
+        ]
+      },
+      "photocopy-cyan": {
+        "role": "secondary",
+        "displayName": "Photocopy Cyan",
+        "canonical": "oklch(0.5 0.13 215)",
+        "tonalRamp": [
+          "oklch(0.15 0.05 215)",
+          "oklch(0.25 0.08 215)",
+          "oklch(0.35 0.11 215)",
+          "oklch(0.42 0.12 215)",
+          "oklch(0.5 0.13 215)",
+          "oklch(0.65 0.14 205)",
+          "oklch(0.82 0.14 197)",
+          "oklch(0.94 0.05 197)"
+        ]
+      },
+      "photocopy-cyan-bright": {
+        "role": "secondary",
+        "displayName": "Photocopy Cyan (dark theme)",
+        "canonical": "oklch(0.82 0.14 197)"
+      },
+      "bone": {
+        "role": "tertiary",
+        "displayName": "Bone",
+        "canonical": "oklch(0.6 0.05 268)",
+        "tonalRamp": [
+          "oklch(0.15 0.02 268)",
+          "oklch(0.25 0.03 268)",
+          "oklch(0.35 0.04 268)",
+          "oklch(0.45 0.045 268)",
+          "oklch(0.6 0.05 268)",
+          "oklch(0.75 0.04 90)",
+          "oklch(0.88 0.03 90)",
+          "oklch(0.96 0.015 90)"
+        ]
+      },
+      "bone-bright": {
+        "role": "tertiary",
+        "displayName": "Bone (dark theme)",
+        "canonical": "oklch(0.93 0.02 90)"
+      },
+      "newsprint": {
+        "role": "neutral",
+        "displayName": "Newsprint",
+        "canonical": "oklch(0.965 0.008 85)",
+        "tonalRamp": [
+          "oklch(0.15 0.008 85)",
+          "oklch(0.28 0.008 85)",
+          "oklch(0.42 0.008 85)",
+          "oklch(0.56 0.008 85)",
+          "oklch(0.7 0.008 85)",
+          "oklch(0.85 0.01 85)",
+          "oklch(0.965 0.008 85)",
+          "oklch(0.995 0.004 85)"
+        ]
+      },
+      "newsprint-raised": {
+        "role": "neutral",
+        "displayName": "Newsprint Raised",
+        "canonical": "oklch(0.995 0.004 85)"
+      },
+      "press-black": {
+        "role": "neutral",
+        "displayName": "Press Black",
+        "canonical": "oklch(0.115 0.014 268)",
+        "tonalRamp": [
+          "oklch(0.115 0.014 268)",
+          "oklch(0.155 0.016 268)",
+          "oklch(0.2 0.018 268)",
+          "oklch(0.26 0.018 268)",
+          "oklch(0.42 0.016 268)",
+          "oklch(0.6 0.016 268)",
+          "oklch(0.8 0.012 268)",
+          "oklch(0.95 0.008 90)"
+        ]
+      },
+      "press-black-raised": {
+        "role": "neutral",
+        "displayName": "Press Black Raised",
+        "canonical": "oklch(0.155 0.016 268)"
+      },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "oklch(0.16 0.012 268)" },
+      "ink-reversed": {
+        "role": "neutral",
+        "displayName": "Ink Reversed",
+        "canonical": "oklch(0.95 0.008 90)"
+      },
+      "ink-faded": {
+        "role": "neutral",
+        "displayName": "Ink Faded",
+        "canonical": "oklch(0.46 0.014 268)"
+      },
+      "ink-faded-reversed": {
+        "role": "neutral",
+        "displayName": "Ink Faded Reversed",
+        "canonical": "oklch(0.68 0.016 268)"
+      },
+      "rule": { "role": "neutral", "displayName": "Rule", "canonical": "oklch(0.85 0.01 85)" },
+      "rule-reversed": {
+        "role": "neutral",
+        "displayName": "Rule Reversed",
+        "canonical": "oklch(0.26 0.018 268)"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Page titles only, one or two short words, set as large as the page will carry."
+      },
+      "display-long": {
+        "displayName": "Display Long",
+        "purpose": "The same face when the title is a whole phrase. There is no third size."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section headings inside long-form prose, still in the display face."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Sub-headings in prose, set in the body face."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Everything read at length, capped around max-w-2xl."
+      },
+      "label": {
+        "displayName": "Readout",
+        "purpose": "Facts at instrument scale: dates, venues, counts, catalogue numbers, telescope names. Never prose."
+      }
+    },
+    "shadows": [
+      {
+        "name": "none",
+        "value": "none",
+        "purpose": "The system has no shadow vocabulary. Separation is a hairline border plus one lightness step. Depth comes from the fixed grain layer and the ember bloom behind the page."
+      },
+      {
+        "name": "button-xs",
+        "value": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+        "purpose": "Inherited from shadcn on filled buttons only. Tolerated, not a licence to add a shadow scale."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state",
+        "value": "150ms ease",
+        "purpose": "Corner ticks fading in on hover, and the default for small state changes."
+      },
+      {
+        "name": "marquee",
+        "value": "42s linear infinite",
+        "purpose": "The scrolling wordmark strip. Pauses on hover, so the reader is the stop mechanism."
+      },
+      {
+        "name": "badge-sweep",
+        "value": "4s ease-in-out infinite",
+        "purpose": "The shimmer across the solo-run and duo badges. Cyan on solo, ember on duo."
+      },
+      {
+        "name": "duo-beat",
+        "value": "2.4s ease-in-out infinite",
+        "purpose": "The double heartbeat on the duo badge's heart."
+      },
+      {
+        "name": "overflow-scroll",
+        "value": "ease-in-out 0.2s infinite alternate",
+        "purpose": "A tile line too long for its box slides to show the rest, only while hovered or focused. Duration and shift are measured per line and set inline."
+      },
+      {
+        "name": "reduced",
+        "value": "0.01ms",
+        "purpose": "Every animation and transition collapses under prefers-reduced-motion, and smooth scrolling reverts to auto."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "40rem" },
+      { "name": "md", "value": "48rem" },
+      { "name": "lg", "value": "64rem" },
+      { "name": "xl", "value": "80rem" },
+      { "name": "2xl", "value": "96rem" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The filled call to action. Used once per screen at most.",
+      "html": "<button class=\"ds-btn-primary\">Get to know me</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; height: 2.25rem; padding: 0.5rem 1rem; border: none; border-radius: 4px; background: var(--ember, oklch(0.53 0.22 30)); color: var(--primary-foreground, oklch(0.99 0.004 85)); font-family: var(--font-sans, Inter, system-ui, sans-serif); font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: all 150ms ease; } .ds-btn-primary:hover { background: color-mix(in oklab, var(--ember, oklch(0.53 0.22 30)) 90%, transparent); } .ds-btn-primary:focus-visible { outline: 2px solid var(--ring, oklch(0.53 0.22 30)); outline-offset: 2px; }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "The workhorse control. On hover the border, the text and a faint wash all commit to ember at once.",
+      "html": "<button class=\"ds-btn-outline\">Share</button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; height: 2rem; padding: 0.375rem 0.75rem; border: 1px solid var(--border, oklch(0.85 0.01 85)); border-radius: 0; background: var(--background, oklch(0.965 0.008 85)); color: var(--muted-foreground, oklch(0.46 0.014 268)); font-family: var(--font-mono, ui-monospace, Menlo, monospace); font-size: 0.68rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; cursor: pointer; transition: color 150ms ease, border-color 150ms ease, background-color 150ms ease; } .ds-btn-outline:hover { border-color: var(--ember, oklch(0.53 0.22 30)); background: color-mix(in oklab, var(--ember, oklch(0.53 0.22 30)) 10%, transparent); color: var(--ember, oklch(0.53 0.22 30)); } .ds-btn-outline:focus-visible { outline: 2px solid var(--ring, oklch(0.53 0.22 30)); outline-offset: 2px; }"
+    },
+    {
+      "name": "Rail Pill",
+      "kind": "chip",
+      "refersTo": "rail-pill",
+      "description": "A date in the now timeline's horizontal rail. Marks reading position, not selection, so it carries aria-current rather than a checked state.",
+      "html": "<div style=\"display:flex;gap:1px\"><button class=\"ds-rail-pill\">Aug 10</button><button class=\"ds-rail-pill\" aria-current=\"true\">Jul 14</button></div>",
+      "css": ".ds-rail-pill { flex: none; padding: 0.5rem 0.75rem; border: none; border-radius: 0; box-shadow: 0 0 0 1px var(--border, oklch(0.85 0.01 85)); background: var(--background, oklch(0.965 0.008 85)); color: var(--muted-foreground, oklch(0.46 0.014 268)); font-family: var(--font-mono, ui-monospace, Menlo, monospace); font-size: 0.68rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; white-space: nowrap; cursor: pointer; transition: color 150ms ease, background-color 150ms ease; } .ds-rail-pill:hover { color: var(--ember, oklch(0.53 0.22 30)); } .ds-rail-pill[aria-current=\"true\"] { background: var(--ember, oklch(0.53 0.22 30)); color: var(--primary-foreground, oklch(0.99 0.004 85)); } .ds-rail-pill:focus-visible { outline: 2px solid var(--ring, oklch(0.53 0.22 30)); outline-offset: 2px; }"
+    },
+    {
+      "name": "Readout Link",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "An inline link inside a mono readout line. Underlined at rest, because it inherits the line's colour and the underline is the only thing marking it as a control.",
+      "html": "<p class=\"ds-readout-line\">August 10, 2026 <a class=\"ds-readout-link\" href=\"#\">open this entry</a> - stood for 2 weeks</p>",
+      "css": ".ds-readout-line { margin: 0; font-family: var(--font-mono, ui-monospace, Menlo, monospace); font-size: 0.68rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted-foreground, oklch(0.46 0.014 268)); } .ds-readout-link { color: inherit; text-decoration: underline; text-decoration-color: var(--muted-foreground, oklch(0.46 0.014 268)); text-underline-offset: 4px; transition: color 150ms ease, text-decoration-color 150ms ease; } .ds-readout-link:hover { color: var(--ember, oklch(0.53 0.22 30)); text-decoration-color: var(--ember, oklch(0.53 0.22 30)); } .ds-readout-link:focus-visible { outline: 2px solid var(--ring, oklch(0.53 0.22 30)); outline-offset: 4px; }"
+    },
+    {
+      "name": "Panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "A flat surface one lightness step above the page, separated by a hairline. No shadow, ever.",
+      "html": "<div class=\"ds-panel\"><p class=\"ds-panel-label\">Show log</p><p class=\"ds-panel-body\">Mostly emo, pop punk, and Alexis' favorite artists.</p></div>",
+      "css": ".ds-panel { padding: 1.25rem; border: 1px solid var(--border, oklch(0.85 0.01 85)); border-radius: 0; background: var(--card, oklch(0.995 0.004 85)); } .ds-panel-label { margin: 0 0 0.75rem; font-family: var(--font-mono, ui-monospace, Menlo, monospace); font-size: 0.68rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ember, oklch(0.53 0.22 30)); } .ds-panel-body { margin: 0; font-family: var(--font-sans, Inter, system-ui, sans-serif); font-size: 1.0625rem; line-height: 1.75; color: var(--foreground, oklch(0.16 0.012 268)); }"
+    },
+    {
+      "name": "Registration Panel",
+      "kind": "card",
+      "refersTo": null,
+      "description": "An interactive panel. Ember corner ticks appear on hover and focus-within like registration marks on a printed sheet, and mean the surface does something.",
+      "html": "<a class=\"ds-cut-corners\" href=\"#\"><span class=\"ds-cut-label\">Bruno Mars</span><span class=\"ds-cut-meta\">Madrid, 2026</span></a>",
+      "css": ".ds-cut-corners { position: relative; display: block; padding: 1.25rem; border: 1px solid var(--border, oklch(0.85 0.01 85)); background: var(--card, oklch(0.995 0.004 85)); text-decoration: none; } .ds-cut-corners::before, .ds-cut-corners::after { content: \"\"; position: absolute; width: 0.5rem; height: 0.5rem; border-color: var(--ember, oklch(0.53 0.22 30)); opacity: 0; transition: opacity 150ms ease; } .ds-cut-corners::before { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; } .ds-cut-corners::after { right: -1px; bottom: -1px; border-right: 2px solid; border-bottom: 2px solid; } .ds-cut-corners:hover::before, .ds-cut-corners:hover::after, .ds-cut-corners:focus-within::before, .ds-cut-corners:focus-within::after { opacity: 1; } .ds-cut-label { display: block; font-family: var(--font-display, Anton, Impact, sans-serif); font-size: 1.5rem; line-height: 0.86; letter-spacing: -0.015em; text-transform: uppercase; color: var(--foreground, oklch(0.16 0.012 268)); } .ds-cut-meta { display: block; margin-top: 0.5rem; font-family: var(--font-mono, ui-monospace, Menlo, monospace); font-size: 0.68rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted-foreground, oklch(0.46 0.014 268)); }"
+    },
+    {
+      "name": "Page Title",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "The signature pairing: the display face at poster scale, solid over outlined, with the lede at body scale beneath.",
+      "html": "<div><h1 class=\"ds-title\"><span class=\"ds-title-solid\">Right</span><span class=\"ds-title-outline\">now</span></h1><p class=\"ds-lede\">What I'm doing at the moment, updated whenever it stops being true.</p></div>",
+      "css": ".ds-title { margin: 0; font-family: var(--font-display, Anton, Impact, sans-serif); font-weight: 400; font-size: clamp(3.25rem, 13vw, 9rem); line-height: 0.86; letter-spacing: -0.015em; text-transform: uppercase; } .ds-title-solid { display: block; color: var(--foreground, oklch(0.16 0.012 268)); } .ds-title-outline { display: block; color: transparent; -webkit-text-stroke: 1.5px var(--ember, oklch(0.53 0.22 30)); } .ds-lede { margin: 1.5rem 0 0; max-width: 42rem; font-family: var(--font-sans, Inter, system-ui, sans-serif); font-size: 1.125rem; line-height: 1.625; color: var(--muted-foreground, oklch(0.46 0.014 268)); }"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": null,
+      "description": "A hairline field on the page background, square, with the mono readout face for its placeholder.",
+      "html": "<input class=\"ds-input\" type=\"search\" placeholder=\"Filter the shelf\" />",
+      "css": ".ds-input { width: 100%; height: 2.25rem; padding: 0 0.75rem; border: 1px solid var(--border, oklch(0.85 0.01 85)); border-radius: 0; background: var(--background, oklch(0.965 0.008 85)); color: var(--foreground, oklch(0.16 0.012 268)); font-family: var(--font-mono, ui-monospace, Menlo, monospace); font-size: 0.68rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; transition: border-color 150ms ease; } .ds-input::placeholder { color: var(--muted-foreground, oklch(0.46 0.014 268)); } .ds-input:focus-visible { outline: 2px solid var(--ring, oklch(0.53 0.22 30)); outline-offset: 2px; }"
+    },
+    {
+      "name": "Navigation Link",
+      "kind": "nav",
+      "refersTo": null,
+      "description": "Mono uppercase at readout scale. Hover goes ember; the current route is marked.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-link\" href=\"#\" aria-current=\"page\">Now</a><a class=\"ds-nav-link\" href=\"#\">About</a><a class=\"ds-nav-link\" href=\"#\">Blog</a></nav>",
+      "css": ".ds-nav { display: flex; gap: 1.5rem; } .ds-nav-link { font-family: var(--font-mono, ui-monospace, Menlo, monospace); font-size: 0.68rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; text-decoration: none; color: var(--muted-foreground, oklch(0.46 0.014 268)); transition: color 150ms ease; } .ds-nav-link:hover { color: var(--ember, oklch(0.53 0.22 30)); } .ds-nav-link[aria-current=\"page\"] { color: var(--foreground, oklch(0.16 0.012 268)); } .ds-nav-link:focus-visible { outline: 2px solid var(--ring, oklch(0.53 0.22 30)); outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Deep Field / Gig Flyer",
+    "overview": "Two things Dan cares about share a visual language. The tour poster and the star chart are both stark, both mostly black, and both put enormous type next to small, precise data. That collision is the whole system: an Anton headline set at nine rems of screen width, with a 0.68rem monospace readout sitting under it spelling out a venue, a catalogue number, or a date. Neither element apologises for the other.\n\nThe palette follows from that. Press black and bone type, a flyer red for heat and emphasis, a photocopy cyan for readouts and machine output. The light theme is not a separate design; it is the same poster printed on newsprint instead of pinned to a wall, which is why its background is a warm off-white rather than pure white and why the type is near-black rather than grey.\n\nNothing here is soft. Corners are 4px at most and usually square, separation is a hairline rather than a shadow, and the only thing standing between flat colour and the reader is a film-grain layer and a single ember bloom at the top of the page. This is a site that would rather look printed than rendered.",
+    "keyCharacteristics": [
+      "Poster-scale display type against instrument-scale mono labels, with almost nothing in between",
+      "Near-square geometry: a 4px radius that reads as square at every size that matters",
+      "Flat surfaces separated by hairlines; grain and a single bloom supply all the depth there is",
+      "One hot accent, spent sparingly, and one cold one reserved for machine output",
+      "Two themes that are the same artefact on different stock, not a light design and a dark design"
+    ],
+    "rules": [
+      {
+        "name": "The One Hot Ink Rule",
+        "body": "Flyer Red is the only warm colour in the system and it is spent, not spread. If a screen has more than a few ember marks on it, they are competing rather than pointing, and the newest one is probably the one to cut.",
+        "section": "colors"
+      },
+      {
+        "name": "The Cold Ink Is Machine Output Rule",
+        "body": "Photocopy Cyan marks what a machine produced or a state that is not warm. It never substitutes for Flyer Red as an accent, and the two never sit adjacent as a pair.",
+        "section": "colors"
+      },
+      {
+        "name": "The No Second Dimming Rule",
+        "body": "ink-faded is the dim token. Applying an alpha on top of it produces text that fails contrast, and it has already done so once in shipped code. If something needs to be quieter than ink-faded, it needs to be smaller or further away, not fainter.",
+        "section": "colors"
+      },
+      {
+        "name": "The Same Artefact Rule",
+        "body": "The two themes are one design on different stock. A colour decision that only makes sense in one theme is not finished.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Voices Rule",
+        "body": "A screen speaks at poster scale or at instrument scale. Text that is neither, sitting between the display face and the readout, is usually a heading that has not decided what it is.",
+        "section": "typography"
+      },
+      {
+        "name": "The Readout Is Data Rule",
+        "body": "The mono face means this is a fact: a date, a place, a count, a name from a catalogue. It is not for prose, and prose set in it reads as a machine talking.",
+        "section": "typography"
+      },
+      {
+        "name": "The Type Scales, The Layout Steps Rule",
+        "body": "Prefer clamp() on the display face over a new breakpoint. The grid changes rarely and the type changes constantly.",
+        "section": "layout"
+      },
+      {
+        "name": "The Flat Press Rule",
+        "body": "Separation is a hairline, a lightness step, or space. It is never a shadow. A component that needs a drop shadow to be legible has a contrast problem, not a depth problem.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Grain Is Not Decoration Rule",
+        "body": "The grain layer is what keeps large flat fields from looking dead. It is aria-hidden, fixed, and behind everything, and it must never be removed to clean up a surface. It also makes automated colour contrast checking impossible on this site, which is a cost the design accepts knowingly.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Knocked Corner Rule",
+        "body": "4px is the maximum radius on anything. If a component wants to look softer, the answer is that it does not get to.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Registration Mark Rule",
+        "body": "Corner ticks mean interactive. They appear on hover and focus-within, never at rest, and never as pure ornament.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Commit On Hover Rule",
+        "body": "An interactive element does not hint. Border, text and background move to ember together, so the whole control becomes the target.",
+        "section": "components"
+      },
+      {
+        "name": "The One Ring Rule",
+        "body": "The focus indicator is defined once, in the base layer. A component that wants its own is almost always a component that is about to ship without one.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do set page titles in the display face at clamp(3.25rem, 13vw, 9rem), or at the long size when the title is a phrase. There is no third size.",
+      "Do use the mono readout for facts: dates, venues, counts, catalogue numbers, place names.",
+      "Do separate surfaces with a hairline in rule and a single lightness step.",
+      "Do let interactive elements commit fully to ember on hover, border and text and wash together.",
+      "Do keep both themes in mind at once. A colour decision that works in only one is unfinished.",
+      "Do measure contrast from painted pixels. The grain layer and the oklch tokens make automated contrast checking return incomplete on this site, so a green axe run proves nothing about colour.",
+      "Do tie any motion to the reader. The marquee pauses on hover and overflowing text scrolls only while hovered or focused."
+    ],
+    "donts": [
+      "Don't add a drop shadow. Depth is a hairline, a lightness step, or space.",
+      "Don't exceed a 4px radius, or reach for a pill-shaped control.",
+      "Don't dim ink-faded further with an alpha. It is already the dim value and dimming it again fails contrast.",
+      "Don't spread Flyer Red. It is an emphasis budget, not a brand colour to apply everywhere.",
+      "Don't use Photocopy Cyan as a second accent. It marks machine output.",
+      "Don't write a component-local focus ring. There is one, in the base layer.",
+      "Don't let this drift toward a generic SaaS landing page: rounded cards, soft shadows, gradient buttons, three-column icon-and-heading feature grids.",
+      "Don't let it drift toward a corporate portfolio template either: tasteful neutral greys, a big hero photo, a tidy timeline of roles. This is a personal site that happens to have a career page, not a resume that learned CSS.",
+      "Don't add scroll-triggered reveals, parallax, or elements that animate in as you reach them."
+    ]
+  }
+}

@@ -8,15 +8,13 @@ import "@/index.css";
 
 initVisitorCount();
 
-const container = document.getElementById("root")!;
+/* A document-level concern rather than a component one: Radix sets `aria-hidden`
+   from outside React, and on elements that are not always inside the React tree.
+   So the mirror lives beside the mount rather than in the tree it watches, and
+   is never torn down - the app owns the page for as long as the page exists. */
+inertBehindOverlay();
 
-/* A document-level concern rather than a component one: Radix sets
-   `aria-hidden` on this element from outside React, so the mirror lives beside
-   the mount rather than inside the tree it is watching. Never torn down - the
-   app owns the page for as long as the page exists. */
-inertBehindOverlay(container);
-
-createRoot(container).render(
+createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <App />
   </StrictMode>,

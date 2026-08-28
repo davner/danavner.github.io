@@ -9,7 +9,20 @@ import { ROUTES } from "./routes";
  * interactive elements, heading order. Both themes are checked because the
  * palettes are independent and contrast is the most fragile of those.
  */
-const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"];
+/*
+ * The bar `PRODUCT.md` commits to is WCAG 2.2 AA, so the constant states 2.2
+ * rather than whatever the tool happens to cover. In axe-core 4.12.1 `wcag22a`
+ * matches zero rules and `wcag22aa` matches exactly one, `target-size`; the
+ * A-level tag is listed anyway so this reads as the standard and picks up new
+ * rules as axe adds them.
+ *
+ * Do not swap `withTags` for `options({ rules })` to turn something on.
+ * `AxeBuilder.options()` replaces the tag filter rather than narrowing it, so
+ * the run goes from 63 rules to 90 and promotes `region`, `heading-order`, the
+ * `landmark-*` family and `tabindex` - best-practice rules, not WCAG - into
+ * build gates.
+ */
+const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"];
 
 for (const colorScheme of ["dark", "light"] as const) {
   test.describe(`${colorScheme} mode`, () => {

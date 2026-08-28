@@ -55,7 +55,13 @@ export function SelectControl<T extends string>({
           // Square, hairline, and the page's own background - the shadcn
           // defaults are rounded with a shadow, which nothing else here is.
           "cursor-pointer rounded-none border-border bg-background text-sm shadow-none",
-          "focus-visible:border-ember",
+          /*
+           * No focus styling here on purpose. `focus-visible:border-ember`
+           * painted an ember border underneath the site's ember outline, so a
+           * focused trigger showed two ember strokes 2px apart where every
+           * other control shows one. DESIGN.md's One Ring Rule: the indicator
+           * is defined once, in `index.css`.
+           */
           // The trigger is `w-fit` by default and these sit in a sized row.
           "w-full",
           className,

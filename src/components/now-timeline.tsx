@@ -62,6 +62,13 @@ export function NowTimeline({
    * smooth scroll has settled.
    */
   const jumping = useRef(false);
+  /*
+   * Which entries are currently inside the pane's top band. Kept rather than
+   * derived, because an `IntersectionObserver` callback carries only the
+   * targets whose state *changed* - an entry that is still in the band files no
+   * record at all, so the callback alone cannot see it.
+   */
+  const inBand = useRef(new Set<string>());
 
   const jumpTo = useCallback((date: string) => {
     const pane = viewport.current;
@@ -92,16 +99,39 @@ export function NowTimeline({
     const pane = viewport.current;
     if (!pane) return;
 
+    // The effect re-runs on `entries`, and a set filled by the previous
+    // observer would outlive the observer that filled it.
+    inBand.current = new Set();
+
     const observer = new IntersectionObserver(
       (records) => {
+        // Recorded before the jump guard, not after. A record dropped here is a
+        // fact the set never learns again, and a 500ms smooth scroll fires
+        // plenty of them.
+        for (const record of records) {
+          const date = record.target.getAttribute("data-date");
+          if (!date) continue;
+          if (record.isIntersecting) inBand.current.add(date);
+          else inBand.current.delete(date);
+        }
+
         if (jumping.current) return;
 
-        const top = records
-          .filter((record) => record.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
-
-        const date = top?.target.getAttribute("data-date");
-        if (date) setActive(date);
+        /*
+         * The topmost entry still in the band, not the last one to enter it.
+         * `entries` is newest-first and rendered in that order, so the first of
+         * them in the set is the highest in the pane - no measuring needed, and
+         * none wanted: `boundingClientRect` on a record is a snapshot from when
+         * that record fired, so sorting on it was reading stale geometry.
+         *
+         * The old code took the topmost of `records` instead, which is only the
+         * entries that changed. Scrolling down through a long entry, the one
+         * below it enters the band and files a record while the one above is
+         * still there and files none - so the marker moved on while the entry
+         * the reader was looking at was still at the top of the pane.
+         */
+        const top = entries.find((entry) => inBand.current.has(entry.updated));
+        if (top) setActive(top.updated);
       },
       {
         root: pane,

@@ -870,6 +870,79 @@ test.describe("now", () => {
       .toBe(true);
   });
 
+  test("the rail marks the topmost entry in view, not the last one to arrive", async ({ page }) => {
+    /*
+     * An `IntersectionObserver` callback carries only the targets whose state
+     * changed. Scrolling down through a long entry, the entry below it crosses
+     * into the pane's top band and files a record while the one above is still
+     * in the band and files none - so a callback that reads only its own
+     * records marks the arrival and leaves the entry the reader is actually
+     * looking at unmarked. Measured before the fix, with four entries filed:
+     * over an 80px stretch of scroll the rail named the second entry while the
+     * first still occupied the top of the pane.
+     *
+     * Swept in small steps rather than jumped to one offset. The window where
+     * two entries share the band is only as wide as the gap between them, and a
+     * single hardcoded scrollTop would drift out of it the moment an entry
+     * changes length.
+     */
+    const archived = page.locator("[data-slot=now-archived]");
+    /*
+     * Reported rather than returned quietly, for the same reason the focus test
+     * below spells out: with one entry filed nothing can lag behind anything,
+     * and an early return would leave a green line over a test that never ran.
+     * This arms itself the day a second entry is archived.
+     */
+    test.skip((await archived.count()) < 2, "one archived entry - nothing for the marker to lag");
+
+    const lies = await page.evaluate(async () => {
+      // The pane is the second scroll region on the page; the rail is the first.
+      const pane = document.querySelectorAll<HTMLElement>("[data-slot=scroll-area-viewport]")[1];
+      // Three frames: one for the observer to deliver, one for React to render
+      // the new marker, one of margin.
+      const settle = () =>
+        new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+        );
+
+      /* The band the observer watches: `rootMargin: "0px 0px -70% 0px"` leaves
+         the top 30% of the pane, and entries render newest-first, so the first
+         one touching that band is the topmost. */
+      const topmost = () => {
+        const view = pane.getBoundingClientRect();
+        const floor = view.top + view.height * 0.3;
+        return (
+          [...pane.querySelectorAll<HTMLElement>("[data-slot=now-archived]")].find((entry) => {
+            const box = entry.getBoundingClientRect();
+            return box.top < floor && box.bottom > view.top;
+          })?.dataset.date ?? null
+        );
+      };
+
+      const found: string[] = [];
+      const step = Math.max(40, Math.round(pane.clientHeight * 0.1));
+      pane.scrollTop = 0;
+
+      for (;;) {
+        await settle();
+        const should = topmost();
+        const marked = document.querySelector<HTMLElement>("[data-rail-date][aria-current=true]")
+          ?.dataset.railDate;
+
+        if (should && marked !== should) {
+          found.push(`at ${Math.round(pane.scrollTop)}px the rail marks ${marked}, not ${should}`);
+        }
+
+        if (pane.scrollTop >= pane.scrollHeight - pane.clientHeight - 1) break;
+        pane.scrollTop += step;
+      }
+
+      return found;
+    });
+
+    expect(lies, "the rail marked an entry that was not the topmost one in view").toEqual([]);
+  });
+
   test("the collection reference file is not parsed as an entry", async ({ page }) => {
     /*
      * `src/content/now/_index.md` documents how the collection works; the

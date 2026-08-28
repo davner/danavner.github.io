@@ -92,12 +92,14 @@ export function BlogPost() {
             components={{
               // A code block that scrolls sideways is unreachable to a keyboard
               // unless it can take focus, which is most of them on a phone.
-              pre: ({ children, ...props }) => (
+              // `node` is the mdast node react-markdown hands every override.
+              // Dropped here so the spread cannot land it on the element.
+              pre: ({ node, children, ...props }) => (
                 <pre tabIndex={0} {...props}>
                   {children}
                 </pre>
               ),
-              a: ({ href, children, ...props }) => {
+              a: ({ node, href, children, ...props }) => {
                 const external = href?.startsWith("http");
                 return (
                   <a

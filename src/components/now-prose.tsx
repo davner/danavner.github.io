@@ -23,7 +23,9 @@ export function NowProse({ body }: { body: string }) {
       <Markdown
         remarkPlugins={[remarkGfm]}
         components={{
-          a: ({ href, children, ...props }) => {
+          // `node` is the mdast node react-markdown hands every override.
+          // Dropped here so the spread below cannot land it on the anchor.
+          a: ({ node, href, children, ...props }) => {
             const external = href?.startsWith("http");
             return (
               <a

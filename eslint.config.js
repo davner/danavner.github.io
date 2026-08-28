@@ -23,6 +23,23 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
 
   {
+    rules: {
+      /*
+       * Let a destructure drop a property by naming it beside a rest element.
+       * That is the only way to keep a prop out of a spread, and it is the
+       * pattern react-markdown's own docs give for its `node` prop - which it
+       * hands to every overridden component and which renders as
+       * `node="[object Object]"` if it reaches a DOM element.
+       *
+       * Narrow on purpose: it silences a binding only when a rest element in
+       * the same pattern is collecting everything else, so an ordinary unused
+       * variable is still an error.
+       */
+      "@typescript-eslint/no-unused-vars": ["error", { ignoreRestSiblings: true }],
+    },
+  },
+
+  {
     files: ["src/**/*.{ts,tsx}"],
     languageOptions: {
       ecmaVersion: 2024,

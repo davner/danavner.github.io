@@ -1405,6 +1405,46 @@ test.describe("chrome", () => {
         .toBeLessThanOrEqual(1);
     }
   });
+
+  /*
+   * react-markdown@10 hands each overridden component the mdast `node` it came
+   * from, in with the rest of its props. A component that spreads those onto a
+   * DOM element ships `node` to the browser, which stringifies it, so every
+   * link in every post renders as `<a href="..." node="[object Object]">`.
+   * Invalid HTML on the most common element the site prints, and it arrives
+   * silently - React passes unknown lowercase attributes straight through
+   * without a warning.
+   *
+   * A sweep rather than a check on the pages known to render prose, for the
+   * reason the cursor sweep is one: the version of that test which named its
+   * pages passed while an entire route shipped the defect.
+   */
+  test("no markdown override leaks react-markdown's node prop into the DOM", async ({ page }) => {
+    const leaked: string[] = [];
+    let prose = 0;
+
+    for (const path of ROUTES) {
+      await page.goto(path);
+      // The prose routes are lazy, so their markdown is not in the document
+      // until the chunk has mounted and drawn its heading.
+      await page.getByRole("heading", { level: 1 }).waitFor();
+
+      prose += await page.locator("main .prose-dan").count();
+      leaked.push(
+        ...(await page.evaluate(
+          (where) =>
+            [...document.querySelectorAll("main [node]")].map(
+              (el) => `${where} <${el.tagName.toLowerCase()}>`,
+            ),
+          path,
+        )),
+      );
+    }
+
+    expect(leaked).toEqual([]);
+    // Otherwise a sweep that rendered no markdown at all would pass on zero.
+    expect(prose, "no route rendered any prose, so the sweep proved nothing").toBeGreaterThan(0);
+  });
 });
 
 /**

@@ -808,7 +808,7 @@ test.describe("now", () => {
      * that cost grows with every update. This asserts the shortcut works and
      * that taking it does not drag the page along with it.
      */
-    const rail = page.getByRole("radiogroup", { name: "Jump to a date" });
+    const rail = page.getByRole("toolbar", { name: "Jump to a date" });
     const archived = page.locator("[data-slot=now-archived]");
     const filed = await archived.count();
 
@@ -818,14 +818,37 @@ test.describe("now", () => {
     }
 
     // One date offered per entry filed.
-    await expect(rail.getByRole("radio")).toHaveCount(filed);
+    await expect(rail.getByRole("button")).toHaveCount(filed);
+
+    /*
+     * The closest thing to a WCAG 2.5.3 check the suite can hold: every pill's
+     * accessible name has to contain the text it prints, so a reader saying
+     * "Aug 10" reaches the control they are looking at. axe ships
+     * `label-content-name-mismatch` disabled, so nothing else covers it. It
+     * fails against any hand-written `aria-label` that drifts from `railLabel`,
+     * which is exactly how it broke before.
+     */
+    for (const pill of await rail.getByRole("button").all()) {
+      // The printed text, with the screen-reader-only year taken back out -
+      // that span is rendered, so `innerText` would count it as visible.
+      const shown = await pill.evaluate((el) => {
+        const copy = el.cloneNode(true) as HTMLElement;
+        for (const hidden of copy.querySelectorAll(".sr-only")) hidden.remove();
+        return (copy.textContent ?? "").trim();
+      });
+
+      await expect(
+        rail.getByRole("button", { name: shown }),
+        `no pill is named after the "${shown}" it prints`,
+      ).toHaveCount(1);
+    }
 
     // The pane is the second scroll region on the page; the rail is the first.
     const pane = page.locator("[data-slot=scroll-area-viewport]").nth(1);
-    await rail.getByRole("radio").last().click();
+    await rail.getByRole("button").last().click();
 
     const oldest = await archived.last().getAttribute("data-date");
-    await expect(rail.locator("[aria-checked=true]")).toHaveAttribute("data-rail-date", oldest!);
+    await expect(rail.locator("[aria-current=true]")).toHaveAttribute("data-rail-date", oldest!);
 
     // Nothing to travel to when only one entry is filed.
     if (filed === 1) return;
@@ -954,7 +977,9 @@ test.describe("now", () => {
      *
      * That the marker and the focused link can name different entries is a real
      * confusion for a keyboard user, and it is a change to the component rather
-     * than to this test - reported separately.
+     * than to this test - reported separately. Moving the rail off `aria-checked`
+     * and onto `aria-current` renames that ambiguity honestly - the rail no
+     * longer claims the reader chose this date - but it does not resolve it.
      */
     const archived = page.locator("[data-slot=now-archived]");
     /*
@@ -965,7 +990,7 @@ test.describe("now", () => {
      */
     test.skip((await archived.count()) < 2, "one archived entry - nothing to follow focus between");
 
-    const rail = page.getByRole("radiogroup", { name: "Jump to a date" });
+    const rail = page.getByRole("toolbar", { name: "Jump to a date" });
     // The pane is the second scroll region on the page; the rail is the first.
     const pane = page.locator("[data-slot=scroll-area-viewport]").nth(1);
 
@@ -979,7 +1004,7 @@ test.describe("now", () => {
     await expect
       .poll(
         async () => {
-          const marked = await rail.locator("[aria-checked=true]").getAttribute("data-rail-date");
+          const marked = await rail.locator("[aria-current=true]").getAttribute("data-rail-date");
           if (!marked) return false;
 
           const box = await page

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import * as RovingFocus from "@radix-ui/react-roving-focus";
 import { Link } from "react-router";
 
 import { NowProse } from "@/components/now-prose";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { formatDate } from "@/lib/blog";
 import { heldLabel, type NowEntry } from "@/lib/now";
 import { cn } from "@/lib/utils";
@@ -164,20 +164,22 @@ export function NowTimeline({
        * pane's does.
        */}
       <ScrollArea type="always" viewportRef={rail} className="border border-border">
-        <ToggleGroup
-          type="single"
-          value={active}
-          onValueChange={(next) => {
-            if (next) jumpTo(next);
-          }}
+        <RovingFocus.Root
+          orientation="horizontal"
+          loop
+          role="toolbar"
+          aria-orientation="horizontal"
+          // The verb lives on the container, which is what frees each pill to
+          // be named after nothing but the date it prints.
           aria-label="Jump to a date"
-          className="flex w-max items-stretch p-2"
+          className="flex w-max items-stretch gap-px p-2"
         >
           {entries.map((entry, index) => {
             const year = yearOf(entry.updated);
             // A year label where the year changes, so the rail reads as a scale
             // rather than as a row of interchangeable days.
             const marksYear = index === 0 || yearOf(entries[index - 1].updated) !== year;
+            const marked = entry.updated === active;
 
             return (
               <div
@@ -193,28 +195,65 @@ export function NowTimeline({
                    * the 4.5:1 WCAG 1.4.3 asks of 10.88px text. Undimmed is
                    * 6.42:1 and 7.05:1. The label stays subordinate to the pills
                    * anyway - they carry a border and a background it does not.
+                   *
+                   * Hidden from the accessibility tree because every pill now
+                   * carries its own year: without it a reader hears "2026" and
+                   * then "Aug 10, 2026".
                    */
-                  <span className="readout-dim flex items-center px-3 text-muted-foreground">
+                  <span
+                    aria-hidden
+                    className="readout-dim flex items-center px-3 text-muted-foreground"
+                  >
                     {year}
                   </span>
                 ) : null}
-                <ToggleGroupItem
-                  value={entry.updated}
-                  data-rail-date={entry.updated}
-                  aria-label={`Jump to ${formatDate(entry.updated)}`}
-                  className={cn(
-                    "readout flex-none cursor-pointer px-3 py-2 whitespace-nowrap",
-                    "shadow-[0_0_0_1px_var(--color-border)]",
-                    "bg-background text-muted-foreground hover:bg-background hover:text-ember",
-                    "data-[state=on]:bg-ember data-[state=on]:text-primary-foreground",
-                  )}
-                >
-                  {railLabel(entry.updated)}
-                </ToggleGroupItem>
+                {/*
+                 * `active` is what makes Tab land on the marked pill rather
+                 * than the newest one: the group puts the active item first in
+                 * the candidate list it focuses on entry. Radix `Toolbar` wraps
+                 * this same primitive but does not forward `active`, which is
+                 * why the rail is built on the primitive directly - otherwise a
+                 * reader who scrolled back to an old entry would tab into the
+                 * far end of a list that grows with every update.
+                 */}
+                <RovingFocus.Item asChild active={marked} focusable>
+                  {/* No `aria-label`. The name is computed from the content
+                      below, which is the only form of it that cannot drift out
+                      of step with what the pill prints (WCAG 2.5.3) - drift is
+                      exactly what the label it used to carry had done. */}
+                  <button
+                    type="button"
+                    data-rail-date={entry.updated}
+                    aria-current={marked ? "true" : undefined}
+                    onClick={() => jumpTo(entry.updated)}
+                    className={cn(
+                      "readout inline-flex h-9 flex-none cursor-pointer items-center justify-center",
+                      // `text-sm` rather than `readout`'s own 0.68rem. It is
+                      // what `toggleVariants` was supplying here before this
+                      // component stopped going through it, and dropping it
+                      // would shrink the pill - a look this commit is not the
+                      // place to change.
+                      "px-3 py-2 text-sm whitespace-nowrap transition-colors",
+                      "shadow-[0_0_0_1px_var(--color-border)]",
+                      "focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember",
+                      "bg-background text-muted-foreground",
+                      // Only while it is not the marked one, or hover would
+                      // paint ember text onto the ember pill.
+                      !marked && "hover:text-ember",
+                      marked && "bg-ember text-primary-foreground",
+                    )}
+                  >
+                    {railLabel(entry.updated)}
+                    {/* One interpolated string, not `, {year}`: as separate JSX
+                        children the comma and space are whitespace the name
+                        computation can drop, and it reads "Aug 102026". */}
+                    <span className="sr-only">{`, ${year}`}</span>
+                  </button>
+                </RovingFocus.Item>
               </div>
             );
           })}
-        </ToggleGroup>
+        </RovingFocus.Root>
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
 
@@ -262,11 +301,11 @@ export function NowTimeline({
                 <p className="readout-dim">
                   {/*
                    * The rail pill above and this date are two affordances on the
-                   * same day, told apart deliberately: the pill is a radio that
-                   * scrolls the pane and says "Jump to August 10, 2026"; this is
-                   * a link that leaves the page and says so in its own name. An
-                   * anchor carries `cursor: pointer` from the UA sheet, so it
-                   * needs nothing added for the cursor sweep.
+                   * same day, told apart deliberately: the pill is a button that
+                   * scrolls the pane and is named after nothing but the date it
+                   * shows; this is a link that leaves the page and says so in
+                   * its own name. An anchor carries `cursor: pointer` from the
+                   * UA sheet, so it needs nothing added for the cursor sweep.
                    *
                    * The underline is at rest, not on hover. This line is the only
                    * way into the permalink from inside the app, and it sits in a

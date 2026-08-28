@@ -30,12 +30,7 @@ export function SourceLine({
   return (
     <p className="readout-dim mt-8">
       {count ? <>{count} · </> : null}
-      <a
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="transition-colors hover:text-ember"
-      >
+      <a href={href} target="_blank" rel="noopener noreferrer" className="readout-link">
         Read from {source}
       </a>{" "}
       {formatFetched(fetched)}

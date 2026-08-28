@@ -42,7 +42,7 @@ export function SiteFooter() {
               Last updated {LAST_UPDATED} ·{" "}
               {/* A plain anchor on purpose: /admin/ is a static page outside
                   the SPA, and a router Link would land on the 404 route. */}
-              <a href="/admin/" className="transition-colors hover:text-ember">
+              <a href="/admin/" className="readout-link">
                 Admin
               </a>
             </p>

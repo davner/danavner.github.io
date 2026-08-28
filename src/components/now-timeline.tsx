@@ -337,37 +337,16 @@ export function NowTimeline({
                    * its own name. An anchor carries `cursor: pointer` from the
                    * UA sheet, so it needs nothing added for the cursor sweep.
                    *
-                   * The underline is at rest, not on hover. This line is the only
-                   * way into the permalink from inside the app, and it sits in a
-                   * paragraph the same colour and weight it is - so with the cue
-                   * held back until the pointer arrives, a keyboard or touch user
-                   * meets it as plain text (WCAG 1.4.1). Underlining rather than
-                   * colouring it keeps a dim readout line dim, and follows how
-                   * `prose-dan a` already marks a link in prose: a decoration
-                   * that is there all along and strengthens on hover.
-                   *
-                   * At full strength, and it has to stay there. The link's
-                   * colour is byte-identical to the paragraph's, so the
-                   * underline is the only thing marking this as a control and
-                   * WCAG 1.4.11 wants 3:1 against the background behind it.
-                   * `/60` measured 2.65:1 in the light theme - failing - and
-                   * 3.1:1 in the dark, which is passing by one percent. `/70`
-                   * is roughly the break-even, so there is no alpha here worth
-                   * the arithmetic: undimmed is 6.4:1 light and 7.1:1 dark.
-                   *
-                   * The focus ring is pushed out because the two cues collide
-                   * otherwise. On a 14px box the browser's ring sits 1px past
-                   * the bottom edge, which is the row an underline 4px under a
-                   * 10.9px font lands on - so focusing the link painted the
-                   * underline out and left a ring that read as thicker along
-                   * the bottom. Moving the ring rather than the underline
-                   * leaves the resting line, the one every visitor sees, where
-                   * it was designed.
+                   * `readout-link` carries the resting underline and the pushed
+                   * focus offset. The reasoning and the measurements that used
+                   * to sit here moved to `src/index.css` beside the class, once
+                   * the footer's `/admin/` link and `source-line.tsx` turned out
+                   * to be the same construction.
                    */}
                   <Link
                     to={`/now/${entry.updated}`}
                     aria-label={`${shown} - open this entry`}
-                    className="underline decoration-muted-foreground underline-offset-4 transition-colors focus-visible:outline-offset-4 hover:text-ember hover:decoration-ember"
+                    className="readout-link"
                   >
                     <time dateTime={entry.updated}>{formatDate(entry.updated)}</time>
                     {/* A count, not the photos. Deliberately outside the `time`

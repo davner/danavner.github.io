@@ -460,6 +460,47 @@
     @apply text-ember underline decoration-ember/40 underline-offset-4 transition-colors hover:decoration-ember;
   }
 
+  /*
+   * An inline link inside a readout line - the footer's `/admin/`,
+   * `source-line.tsx`'s source, the archived date on `/now`. Three sites and
+   * counting, which is the point at which the same construction written a
+   * third time gets solved once instead of extended again.
+   *
+   * The underline is at rest, not on hover. These links inherit the
+   * paragraph's colour by design, because colouring one would stop a dim
+   * readout line being dim - so with the only cue held back until a pointer
+   * arrives, a keyboard or touch reader meets a control as plain text (WCAG
+   * 1.4.1). Underlining rather than colouring follows how `.prose-dan a` above
+   * already marks a link in prose: a decoration that is there all along and
+   * strengthens on hover.
+   *
+   * `decoration-muted-foreground` at full strength, and it has to stay there.
+   * The link's colour is byte-identical to the paragraph's, so the underline
+   * is the only thing marking it as a control, and WCAG 1.4.11 wants 3:1 of it
+   * against the background behind. `/60` measured 2.65:1 in the light theme -
+   * failing - and 3.1:1 in the dark, which passes by a whisker. `/70` is
+   * roughly break-even, so there is no alpha here worth the arithmetic:
+   * undimmed is 6.43:1 light and 7.06:1 dark.
+   *
+   * The focus ring is pushed out because the two cues collide otherwise. On a
+   * 14px box the browser's ring sits 1px past the bottom edge, which is the
+   * row an underline 4px under a 10.9px font lands on - so focusing the link
+   * painted the underline out and left a ring that read as thicker along the
+   * bottom. Moving the ring rather than the underline leaves the resting line,
+   * the one every visitor sees, where it was designed.
+   */
+  .readout-link {
+    @apply underline decoration-muted-foreground underline-offset-4 transition-colors;
+  }
+
+  .readout-link:hover {
+    @apply text-ember decoration-ember;
+  }
+
+  .readout-link:focus-visible {
+    @apply outline-offset-4;
+  }
+
   .prose-dan strong {
     @apply font-semibold text-foreground;
   }

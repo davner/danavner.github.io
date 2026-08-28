@@ -1674,6 +1674,56 @@ test.describe("chrome", () => {
     }
   });
 
+  test("an inline link that is not coloured is underlined instead", async ({ page }) => {
+    /*
+     * WCAG 1.4.1: colour cannot be the only thing marking a link, and neither
+     * can hover. A link inside a readout line inherits the paragraph's colour
+     * by design - keeping a dim line dim - so with the underline held back
+     * until the pointer arrives, a keyboard or touch reader meets it as plain
+     * text and never learns it is a control.
+     *
+     * Scoped to anchors directly inside a `<p>` that also holds text of its
+     * own, which is what "a link in a block of text" means - the surrounding
+     * text is the thing the link has to be distinguishable from. Nav lists,
+     * cards and buttons-as-links sit in their own containers and are marked by
+     * position and shape, and 1.4.1 does not reach them. Nor does it reach a
+     * paragraph used purely as a block wrapper: `/about` puts each account
+     * handle in a bordered chip that is a `<p>`'s only content, and underlining
+     * that would be marking a control that is already marked.
+     *
+     * Swept rather than pinned, in the spirit of the cursor test: this pattern
+     * has been written three times in this repo already, and the point is to
+     * catch the fourth before it ships.
+     */
+    for (const path of ROUTES) {
+      await page.goto(path);
+      await page.getByRole("heading", { level: 1 }).waitFor();
+      await page.waitForLoadState("networkidle");
+
+      const bare = await page.evaluate(() =>
+        [...document.querySelectorAll<HTMLAnchorElement>("p > a")]
+          .filter((link) => {
+            const paragraph = link.parentElement!;
+
+            // Text in the paragraph that is not inside a link of its own.
+            const copy = paragraph.cloneNode(true) as HTMLElement;
+            for (const anchor of copy.querySelectorAll("a")) anchor.remove();
+            if (!(copy.textContent ?? "").trim()) return false;
+
+            const own = getComputedStyle(link);
+            const around = getComputedStyle(paragraph);
+            return own.color === around.color && own.textDecorationLine === "none";
+          })
+          .map(
+            (link) =>
+              `"${(link.textContent ?? "").trim().slice(0, 30)}" to ${link.getAttribute("href")}`,
+          ),
+      );
+
+      expect(bare, `${path} has a link that reads as plain text`).toEqual([]);
+    }
+  });
+
   test("external links open safely", async ({ page }) => {
     await page.goto("/career");
     const github = page.locator('a[href="https://github.com/davner"]').first();

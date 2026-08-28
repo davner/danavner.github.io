@@ -13,7 +13,10 @@ export function SoloBadge({ className }: { className?: string }) {
     <Badge variant="ion" className={cn("solo-badge gap-2 px-2.5 py-1", className)}>
       <Sparkles aria-hidden />
       Solo run
-      <span aria-hidden className="border-l border-ion/30 pl-2 opacity-70">
+      {/* The hairline does the separating. No opacity on top of `text-ion` -
+          that is the second dimming DESIGN.md forbids, and at 10.88px it took
+          this to 2.91:1 against the 4.5:1 that 1.4.3 asks of it. */}
+      <span aria-hidden className="border-l border-ion/30 pl-2">
         1P
       </span>
     </Badge>

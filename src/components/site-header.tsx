@@ -214,9 +214,11 @@ export function SiteHeader() {
               {SECTIONS.map((entry) =>
                 isGroup(entry) ? (
                   <div key={entry.label} className="border-b border-border last:border-b-0">
-                    <p className="readout-dim px-4 pt-3 pb-1 text-muted-foreground/70">
-                      {entry.label}
-                    </p>
+                    {/* `readout-dim` is already `--muted-foreground`. Dimming it
+                        again put this group heading at 3.28:1 light and 3.88:1
+                        dark, which axe reports as a real violation the moment
+                        the sheet is open. */}
+                    <p className="readout-dim px-4 pt-3 pb-1">{entry.label}</p>
                     <ul>
                       {entry.items.map((item) => (
                         <MobileItem

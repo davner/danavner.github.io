@@ -12,11 +12,13 @@ export function DuoBadge({ partner, className }: { partner: string; className?: 
     <Badge variant="ember" className={cn("duo-badge gap-2 px-2.5 py-1", className)}>
       <Heart className="duo-heart fill-current" aria-hidden />
       My duo
-      <span aria-hidden className="text-ember/50">
-        /
-      </span>
+      {/* Inherits the badge's ember. `text-ember/50` measured 2.61:1 light and
+          2.11:1 dark; a separator is still text and 1.4.3 still applies. */}
+      <span aria-hidden>/</span>
       {partner}
-      <span aria-hidden className="border-l border-ember/30 pl-2 opacity-70">
+      {/* See `solo-badge.tsx`: the hairline separates, the opacity did not
+          survive contrast at this size. */}
+      <span aria-hidden className="border-l border-ember/30 pl-2">
         2P
       </span>
     </Badge>

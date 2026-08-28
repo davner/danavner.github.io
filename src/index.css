@@ -131,8 +131,30 @@
 }
 
 @layer base {
+  /*
+   * The focus ring at full strength, which is a deliberate departure from
+   * upstream shadcn - it dims the ring to `/50` here and in every component
+   * that paints one, and a future `shadcn add --diff` will offer to put that
+   * back. It should not be taken.
+   *
+   * `--ring` is byte-identical to `--ember` in both themes. Measured against
+   * the resolved tokens: `ring/50` over `--background` reads 2.63:1 in the
+   * light theme and 2.15:1 in the dark, where WCAG 1.4.11 asks 3:1 of a focus
+   * indicator. Undimmed it is 5.32:1 and 5.91:1. `/70` was considered and
+   * rejected at 3.84:1 and 3.27:1 - a quarter of a point of margin in the dark
+   * theme, on a value that moves the moment `--background` is retuned. There is no alpha
+   * that survives both themes, and no value of `--ring` that compensates for a
+   * 50% overlay without breaking the places the token is used undimmed.
+   *
+   * Full strength is also already this site's convention: `about.tsx`,
+   * `comics.tsx`, `fortnite.tsx` and `vinyl.tsx` all paint
+   * `focus-visible:outline-2 focus-visible:outline-ember` undimmed.
+   *
+   * `tests/site.spec.ts` measures this for real on every route. axe has no
+   * focus-indicator rule, so that sweep is the only thing standing behind it.
+   */
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-ring;
   }
 
   html {

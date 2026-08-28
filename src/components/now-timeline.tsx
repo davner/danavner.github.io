@@ -160,7 +160,15 @@ export function NowTimeline({
                 className="flex items-stretch"
               >
                 {marksYear ? (
-                  <span className="readout-dim flex items-center px-3 text-muted-foreground/70">
+                  /*
+                   * `text-muted-foreground` undimmed. It is already this site's
+                   * dim token, so an alpha on top of it dims twice: `/70` reads
+                   * 3.28:1 in the light theme and 3.88:1 in the dark, against
+                   * the 4.5:1 WCAG 1.4.3 asks of 10.88px text. Undimmed is
+                   * 6.42:1 and 7.05:1. The label stays subordinate to the pills
+                   * anyway - they carry a border and a background it does not.
+                   */
+                  <span className="readout-dim flex items-center px-3 text-muted-foreground">
                     {year}
                   </span>
                 ) : null}

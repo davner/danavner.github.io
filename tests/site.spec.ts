@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { readFileSync } from "node:fs";
 
+import { PHOTO_GAP, nowEntriesWithPhotos } from "./now-photos";
 import { ROUTES } from "./routes";
 import { ALL_SECTIONS } from "../src/lib/site";
 
@@ -771,6 +772,242 @@ test.describe("now", () => {
      */
     const text = await page.locator("main").evaluate((el) => el.textContent ?? "");
     expect(text).not.toMatch(/one markdown file per entry/i);
+  });
+
+  test("every photo on an entry is described", async ({ page }) => {
+    /*
+     * Skipped rather than written as "if there is a carousel", which would pass
+     * over an empty set and report green for a path nothing entered. The skip
+     * lifts on its own the day an entry gains photos.
+     *
+     * Every entry at its own address, not the `/now` this describe block opens
+     * on. `NowTimeline` deliberately prints an archived entry's photos as a
+     * count and never as a carousel, so an entry that gains photos while it is
+     * archived lifts the skip above and leaves nothing at `/now` to assert
+     * over - the green-over-an-empty-set failure the skip exists to prevent,
+     * arriving by the back door. Narrowing the predicate to the current entry
+     * would close that hole and open a worse one: photos taken on a current
+     * entry stay on it once it is archived, so this would stop covering them
+     * the week after it first ran. The permalink is where the carousel renders
+     * for every entry - `/now/<current>` redirects to `/now`, which draws the
+     * current entry's - so visiting each one covers the whole set at any age.
+     */
+    const withPhotos = nowEntriesWithPhotos();
+    test.skip(withPhotos.length === 0, PHOTO_GAP);
+
+    for (const date of withPhotos) {
+      await page.goto(`/now/${date}`);
+      const images = page.locator("[data-slot=carousel-item] img");
+      // Awaited rather than counted straight away: the carousel is a lazy
+      // chunk, so the entry's prose renders before any of this exists.
+      await images.first().waitFor();
+
+      const alts = await images.evaluateAll((found) =>
+        found.map((img) => img.getAttribute("alt") ?? ""),
+      );
+
+      expect(alts.length, `no carousel images on /now/${date}`).toBeGreaterThan(0);
+      for (const alt of alts) expect(alt.trim(), `undescribed photo on /now/${date}`).not.toBe("");
+    }
+  });
+
+  test("an archived date opens that entry at its own address", async ({ page }) => {
+    const archived = page.locator("[data-slot=now-archived]");
+    if ((await archived.count()) === 0) return;
+
+    const first = archived.first();
+    const date = await first.getAttribute("data-date");
+    // The prose is what proves the right entry rendered - a link that lands on
+    // the permalink of some other entry would still pass a URL check.
+    const opening = (await first.locator("p").last().innerText()).trim().slice(0, 40);
+
+    await first.getByRole("link").first().click();
+    await page.waitForURL(`**/now/${date}`);
+
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(/now/i);
+    await expect(page.locator("main")).toContainText(opening);
+  });
+
+  test("the current entry's permalink lands on the front door", async ({ page }) => {
+    /*
+     * The date is read off the page rather than written down here. It is the
+     * newest entry by definition, so a literal would break the day the next one
+     * is filed - exactly the fragility the comment in `tests/routes.ts`
+     * describes for the archived date it does have to hardcode.
+     */
+    const current = await page.locator("main time").first().getAttribute("datetime");
+    expect(current).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+
+    await page.goto(`/now/${current}`);
+    await page.waitForURL("**/now");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(/right/i);
+  });
+
+  test("a date nothing was written on falls back to the front door", async ({ page }) => {
+    await page.goto("/now/1999-01-01");
+    await page.waitForURL("**/now");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(/right/i);
+  });
+
+  test("keyboard focus in the archive carries the rail to where the pane is", async ({ page }) => {
+    /*
+     * A live interaction between two mechanisms written independently, so it is
+     * asserted rather than assumed. Focusing a link inside the pane makes the
+     * browser scroll it into view, which fires the pane's IntersectionObserver
+     * and moves the rail's marker.
+     *
+     * Moves it to where the *pane* now is, which is the promise `NowTimeline`
+     * makes and the only one it can keep. The observer marks whichever entry is
+     * nearest the top of the pane, so with more entries filed than fit on a
+     * screen, focusing the last one scrolls it to the bottom and the marker
+     * lands on whatever arrived at the top instead. Asserting the marker
+     * follows *focus* holds only in the degenerate case where the whole archive
+     * fits the pane, and fails as soon as it does not - measured at four
+     * archived entries, where focusing the oldest marks the third. What is
+     * asserted instead is the property that holds at any length: the rail names
+     * an entry the reader can see.
+     *
+     * That the marker and the focused link can name different entries is a real
+     * confusion for a keyboard user, and it is a change to the component rather
+     * than to this test - reported separately.
+     */
+    const archived = page.locator("[data-slot=now-archived]");
+    /*
+     * Reported rather than returned quietly. With one archived entry there is
+     * nothing to follow focus between, and an early return leaves a green line
+     * over a test that did not run - the same reasoning `tests/now-photos.ts`
+     * spells out for the photo skips.
+     */
+    test.skip((await archived.count()) < 2, "one archived entry - nothing to follow focus between");
+
+    const rail = page.getByRole("radiogroup", { name: "Jump to a date" });
+    // The pane is the second scroll region on the page; the rail is the first.
+    const pane = page.locator("[data-slot=scroll-area-viewport]").nth(1);
+
+    await archived.last().getByRole("link").first().focus();
+
+    // The browser scrolled the pane to reach the link, which is what fires the
+    // observer at all. Without this the assertion below would also pass over a
+    // rail that never moved.
+    await expect.poll(() => pane.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
+
+    await expect
+      .poll(
+        async () => {
+          const marked = await rail.locator("[aria-checked=true]").getAttribute("data-rail-date");
+          if (!marked) return false;
+
+          const box = await page
+            .locator(`[data-slot=now-archived][data-date="${marked}"]`)
+            .boundingBox();
+          const view = await pane.boundingBox();
+          if (!box || !view) return false;
+
+          return box.y < view.y + view.height && box.y + box.height > view.y;
+        },
+        { message: "the rail marks a date whose entry is nowhere in the pane" },
+      )
+      .toBe(true);
+  });
+
+  test("a date focused at the archive's edge keeps the whole of its focus ring", async ({
+    page,
+  }) => {
+    /*
+     * What `scroll-py-2` on the pane's viewport is for, and the only thing that
+     * says it is doing anything. Chrome scrolls a newly focused element into
+     * view only when its border box is not already fully inside the scrollport,
+     * and a focus ring bleeding past that box does not count - so a link that
+     * comes to rest flush against an edge keeps its position and loses the
+     * stroke on that side. `scroll-padding` is what moves the edge the browser
+     * measures against.
+     *
+     * The position is set rather than hunted for. The bug needs a link that is
+     * fully visible and hard against the edge, and tabbing and arrowing until
+     * one happens to land there would be a different test on every machine.
+     * Everything after that is a real keyboard move, because `:focus-visible`
+     * is what paints the ring and Chrome only matches it when the last thing
+     * the user did was press a key.
+     *
+     * Measured against the ring the link actually declares rather than a number
+     * written down here, so restyling the ring cannot leave this passing over a
+     * clipped one. It is a floor either way: Chrome paints an `auto` outline a
+     * little wider than its computed width.
+     */
+    const dates = page.locator("[data-slot=now-archived] > p > a");
+    const count = await dates.count();
+    test.skip(count < 2, "one archived entry - nothing can sit against the pane's edge");
+
+    const pane = page
+      .locator("[data-slot=scroll-area-viewport]")
+      .filter({ has: page.locator("[data-slot=now-archived]") });
+    test.skip(
+      !(await pane.evaluate((el) => el.scrollHeight > el.clientHeight + 1)),
+      "the whole archive fits in the pane - nothing can sit against its edge",
+    );
+
+    // Not the last one: placing a link against the bottom edge needs room left
+    // to scroll past it, and the last entry has none.
+    const target = dates.nth(count - 2);
+    await target.focus();
+    // Away and back, so the return trip is a keypress and the ring is painted.
+    await page.keyboard.press("Shift+Tab");
+
+    const flush = await target.evaluate((link) => {
+      const port = link.closest("[data-slot=scroll-area-viewport]") as HTMLElement;
+      port.scrollTop += link.getBoundingClientRect().bottom - port.getBoundingClientRect().bottom;
+      return port.getBoundingClientRect().bottom - link.getBoundingClientRect().bottom;
+    });
+    expect(Math.abs(flush), "could not place a date against the pane's edge").toBeLessThan(1);
+
+    await page.keyboard.press("Tab");
+    await expect(target).toBeFocused();
+
+    const measured = await target.evaluate((link) => {
+      const port = link.closest("[data-slot=scroll-area-viewport]") as HTMLElement;
+      const ring = getComputedStyle(link);
+      const scrollport = getComputedStyle(port);
+      return {
+        clearance: port.getBoundingClientRect().bottom - link.getBoundingClientRect().bottom,
+        reach: parseFloat(ring.outlineOffset) + parseFloat(ring.outlineWidth),
+        top: parseFloat(scrollport.scrollPaddingTop),
+        bottom: parseFloat(scrollport.scrollPaddingBottom),
+      };
+    });
+
+    expect(measured.reach, "the focused date draws no ring to clear").toBeGreaterThan(0);
+    expect(
+      measured.clearance,
+      "the focus ring is clipped by the pane's edge",
+    ).toBeGreaterThanOrEqual(measured.reach);
+    // The top edge clips the same way and cannot be driven into the same
+    // position from inside the pane, so it is held by what the pane reserves.
+    expect(measured.top, "the pane reserves nothing at its top edge").toBeGreaterThanOrEqual(
+      measured.reach,
+    );
+    expect(measured.bottom).toBeGreaterThanOrEqual(measured.reach);
+  });
+
+  test("the archive prints a photo count and never a carousel", async ({ page }) => {
+    /*
+     * Holds at any entry count, with photos or without, which is why it is not
+     * skipped: it is the assertion that keeps the pane from quietly growing a
+     * carousel per archived entry. The pane is a fixed height and mounts every
+     * entry at once, so that would be one embla instance per entry inside a
+     * scrolling container, and taller than the pane on a phone.
+     */
+    const archived = page.locator("[data-slot=now-archived]");
+    if ((await archived.count()) === 0) return;
+
+    await expect(archived.locator("[data-slot=carousel]")).toHaveCount(0);
+
+    // The count, when there is one, is a sibling of the date rather than inside
+    // it - `datetime="2026-08-10"` must not end up describing "August 10, 2026
+    // - 3 photos".
+    const stamps = await archived
+      .locator("time")
+      .evaluateAll((els) => els.map((el) => el.textContent ?? ""));
+    for (const stamp of stamps) expect(stamp).not.toMatch(/photos?/i);
   });
 });
 

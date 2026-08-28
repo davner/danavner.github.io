@@ -1,12 +1,17 @@
+import { MONTHS } from "./dates";
+
 /**
  * The one-line description of a show, used for the share sheet, the link
  * preview a message app renders, and the page's meta description.
  *
- * This module has no imports at all, which is the point: the build calls it
- * from Node while writing the per-show HTML, and the browser calls it from the
- * share button. `ShowLike` is declared structurally rather than derived from
- * `Show` so that pulling it into the Node build does not drag in the app's
- * virtual modules and path aliases. Any real `Show` satisfies it.
+ * This module imports nothing the Node build cannot resolve, which is the
+ * point: the build calls it from Node while writing the per-show HTML, and the
+ * browser calls it from the share button. `./dates` is spelled relatively for
+ * exactly that reason - Vite's own config gets no `@/` alias resolution.
+ *
+ * `ShowLike` is declared structurally rather than derived from `Show` so that
+ * pulling it into the Node build does not drag in the app's virtual modules and
+ * path aliases. Any real `Show` satisfies it.
  */
 export interface ShowLike {
   title: string;
@@ -19,21 +24,6 @@ export interface ShowLike {
   city: string;
   lineup: string[];
 }
-
-const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
 
 /** Spells the date out to whatever precision the entry has, year included. */
 export function fullShowDate(show: Pick<ShowLike, "date" | "endDate">): string {

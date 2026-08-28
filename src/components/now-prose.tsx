@@ -11,6 +11,11 @@ import remarkGfm from "remark-gfm";
  * No syntax highlighting here, unlike a blog post. A now entry is prose about a
  * few weeks of life; carrying a highlighter into this route to cover the case
  * where one contains a code block would cost more than the case is worth.
+ *
+ * `remarkPlugins` is paired with the `GFM` constant in `now-summary.ts`, which
+ * parses the same body into the entry's description and share card. A plugin
+ * added here has to be represented there, or the two read the same markdown as
+ * two different syntaxes and a link previews with words the page never prints.
  */
 export function NowProse({ body }: { body: string }) {
   return (

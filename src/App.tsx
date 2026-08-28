@@ -29,7 +29,12 @@ const ShowDetail = lazy(() =>
 // board, and nothing else needs it, so it loads on demand too.
 const Vinyl = lazy(() => import("@/routes/vinyl").then((module) => ({ default: module.Vinyl })));
 
-// The now page renders markdown, so it pulls in the renderer as well.
+// The now page renders markdown, so it pulls in the renderer as well. One
+// `lazy` and one component for both `/now` and `/now/:date`: `/now/<current>`
+// redirects to `/now`, which is the commonest path a shared link takes, and
+// `React.lazy` caches per component identity rather than per module - so a
+// second `lazy()` on the same specifier would suspend a second time after the
+// redirect and flash the skeleton twice on the happy path.
 const Now = lazy(() => import("@/routes/now").then((module) => ({ default: module.Now })));
 
 // The comics page is a cover grid of its own, loaded on demand like the records.
@@ -40,6 +45,16 @@ const Fortnite = lazy(() =>
 );
 
 export function App() {
+  // Hoisted so both now routes share one element, and with it one lazy
+  // identity - see the `Now` import above.
+  const nowRoute = (
+    <RouteBoundary>
+      <Suspense fallback={<PostSkeleton />}>
+        <Now />
+      </Suspense>
+    </RouteBoundary>
+  );
+
   return (
     <BrowserRouter>
       <ScrollToTop />
@@ -101,16 +116,8 @@ export function App() {
                 </RouteBoundary>
               }
             />
-            <Route
-              path="/now"
-              element={
-                <RouteBoundary>
-                  <Suspense fallback={<PostSkeleton />}>
-                    <Now />
-                  </Suspense>
-                </RouteBoundary>
-              }
-            />
+            <Route path="/now" element={nowRoute} />
+            <Route path="/now/:date" element={nowRoute} />
             <Route
               path="/comics"
               element={

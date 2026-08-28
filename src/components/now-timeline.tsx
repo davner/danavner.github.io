@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "react-router";
 
 import { NowProse } from "@/components/now-prose";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { formatDate } from "@/lib/blog";
-import { heldForDays, type NowEntry } from "@/lib/now";
+import { heldLabel, type NowEntry } from "@/lib/now";
 import { cn } from "@/lib/utils";
 
 /** "Jul 14" - the rail is a scale, so it only needs enough to place a point on it. */
@@ -20,16 +21,6 @@ function yearOf(date: string): string {
   return date.slice(0, 4);
 }
 
-/** How long an entry stood, when that is more than a day. */
-function heldLabel(entry: NowEntry, replacedBy: NowEntry | undefined): string {
-  const held = heldForDays(entry, replacedBy);
-  if (held === null || held < 1) return "";
-
-  if (held < 14) return `${held} ${held === 1 ? "day" : "days"}`;
-  if (held < 60) return `${Math.round(held / 7)} weeks`;
-  return `${Math.round(held / 30)} months`;
-}
-
 /**
  * The archive, as a rail of dates over a reading pane.
  *
@@ -42,6 +33,14 @@ function heldLabel(entry: NowEntry, replacedBy: NowEntry | undefined): string {
  * The two stay in step both ways. Picking a date scrolls the pane to it;
  * scrolling the pane moves the marker on the rail, so the rail always says where
  * you are rather than only where you last clicked.
+ *
+ * An archived entry with photos prints a count, never the photos themselves.
+ * Two reasons, both about the pane rather than about taste: it is capped at
+ * `max-h-[26rem]`, and an `aspect-4/3` carousel is taller than that on a phone,
+ * so one entry's pictures would push the archive itself off the screen. And
+ * every archived entry is mounted at once, so ten entries with photos is ten
+ * embla instances measuring inside a scrolling container - a cost that grows
+ * with the archive and is paid by everyone who opens the page.
  */
 export function NowTimeline({
   entries,
@@ -185,15 +184,36 @@ export function NowTimeline({
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
 
+      {/*
+       * `scroll-py-2` reserves the focus ring's room at the pane's own edges.
+       * Chrome only scrolls a newly focused element into view when its border
+       * box is not already fully inside the scrollport - a ring bleeding past
+       * that box does not count - so a link sitting flush against an edge keeps
+       * its position and loses the stroke on that side. Measured: the archived
+       * date link's ring reaches 6.2px past its box, and tabbing to a link,
+       * arrow-scrolling to read, then tabbing on lands one 3.1px from the top
+       * edge with its top stroke clipped away entirely. `scroll-padding` is
+       * what that test measures against, so 8px here is a floor on the
+       * clearance every focusable in the pane gets, rather than an antidote
+       * this one link carries and the next one added forgets.
+       */}
       <ScrollArea
         type="always"
         viewportRef={viewport}
         className="border border-border"
-        viewportClassName="max-h-[26rem] p-5 sm:max-h-[34rem] sm:p-8"
+        viewportClassName="max-h-[26rem] scroll-py-2 p-5 sm:max-h-[34rem] sm:p-8"
       >
         <ol className="flex flex-col gap-16 border-l border-border pl-6 sm:pl-8">
           {entries.map((entry, index) => {
             const held = heldLabel(entry, entries[index - 1] ?? current);
+            const count = entry.photos.length;
+            // Whatever the link prints, in the same order, so the accessible
+            // name contains its own visible text - WCAG 2.5.3. Building the two
+            // separately is how the count ends up on screen and not in the name.
+            const shown =
+              count > 0
+                ? `${formatDate(entry.updated)} - ${count} ${count === 1 ? "photo" : "photos"}`
+                : formatDate(entry.updated);
 
             return (
               <li
@@ -206,7 +226,57 @@ export function NowTimeline({
                 }}
               >
                 <p className="readout-dim">
-                  <time dateTime={entry.updated}>{formatDate(entry.updated)}</time>
+                  {/*
+                   * The rail pill above and this date are two affordances on the
+                   * same day, told apart deliberately: the pill is a radio that
+                   * scrolls the pane and says "Jump to August 10, 2026"; this is
+                   * a link that leaves the page and says so in its own name. An
+                   * anchor carries `cursor: pointer` from the UA sheet, so it
+                   * needs nothing added for the cursor sweep.
+                   *
+                   * The underline is at rest, not on hover. This line is the only
+                   * way into the permalink from inside the app, and it sits in a
+                   * paragraph the same colour and weight it is - so with the cue
+                   * held back until the pointer arrives, a keyboard or touch user
+                   * meets it as plain text (WCAG 1.4.1). Underlining rather than
+                   * colouring it keeps a dim readout line dim, and follows how
+                   * `prose-dan a` already marks a link in prose: a decoration
+                   * that is there all along and strengthens on hover.
+                   *
+                   * At full strength, and it has to stay there. The link's
+                   * colour is byte-identical to the paragraph's, so the
+                   * underline is the only thing marking this as a control and
+                   * WCAG 1.4.11 wants 3:1 against the background behind it.
+                   * `/60` measured 2.65:1 in the light theme - failing - and
+                   * 3.1:1 in the dark, which is passing by one percent. `/70`
+                   * is roughly the break-even, so there is no alpha here worth
+                   * the arithmetic: undimmed is 6.4:1 light and 7.1:1 dark.
+                   *
+                   * The focus ring is pushed out because the two cues collide
+                   * otherwise. On a 14px box the browser's ring sits 1px past
+                   * the bottom edge, which is the row an underline 4px under a
+                   * 10.9px font lands on - so focusing the link painted the
+                   * underline out and left a ring that read as thicker along
+                   * the bottom. Moving the ring rather than the underline
+                   * leaves the resting line, the one every visitor sees, where
+                   * it was designed.
+                   */}
+                  <Link
+                    to={`/now/${entry.updated}`}
+                    aria-label={`${shown} - open this entry`}
+                    className="underline decoration-muted-foreground underline-offset-4 transition-colors focus-visible:outline-offset-4 hover:text-ember hover:decoration-ember"
+                  >
+                    <time dateTime={entry.updated}>{formatDate(entry.updated)}</time>
+                    {/* A count, not the photos. Deliberately outside the `time`
+                        element: inside, `datetime="2026-08-10"` would be
+                        describing "August 10, 2026 - 3 photos". */}
+                    {count > 0 ? (
+                      <>
+                        {" - "}
+                        {count} {count === 1 ? "photo" : "photos"}
+                      </>
+                    ) : null}
+                  </Link>
                   {held ? <> - stood for {held}</> : null}
                 </p>
                 <div className="mt-4">

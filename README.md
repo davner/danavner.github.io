@@ -202,7 +202,7 @@ eslint.config.js          the browser half, the Node half, prettier last
 .husky/pre-commit         lint-staged, then a whole-project type-check
 .git-blame-ignore-revs    formatting-only commits, skipped by git blame
 vite-plugin-content.ts    reads + validates every content collection at build time
-vite-plugin-share-pages.ts writes one HTML file per show so links preview properly
+vite-plugin-share-pages.ts writes an HTML file per show and per now entry, so links preview
 vite.config.ts            aliases, Tailwind, and the 404.html fallback
 src/
   content/
@@ -215,7 +215,7 @@ src/
     comics.json           the comic shelf, written nightly
     fortnite.json         the stats, written nightly and backfilled once
     fortnite-seasons.json the season calendar - rollovers by the job, names by hand
-  routes/                 one file per page
+  routes/                 a file per page, or per pair sharing one lazy chunk
   components/
     ui/                   shadcn/ui, vendored: Badge, Button, Carousel, Checkbox,
                           Empty, Label, NavigationMenu, Popover, ScrollArea,
@@ -227,11 +227,18 @@ src/
     filter-toggle.tsx     the filter pills, and the one place a control's height lives
     select-control.tsx    the single-choice control, on shadcn's Select
     fact-line.tsx         a detail page's own facts, set under its title
+    share.tsx             the share sheet, whatever the subject is
+    share-show.tsx        a show as a share subject
+    share-now.tsx         a now entry as a share subject
   lib/
     blog.ts               post helpers over the plugin's output
     shows.ts              sorting, year grouping, derived show stats
     show-summary.ts       one-line show description, shared with the Node build
-    show-card.ts          draws the shareable poster on a canvas
+    card-canvas.ts        the sheet, the palette, and the marks both cards share
+    show-card.ts          composes the kit into a show's poster
+    now-card.ts           composes the kit into a now entry's poster
+    now-summary.ts        a now entry's title, date and excerpt, shared with the Node build
+    dates.ts              the month table and the long date, one for each summary
     vinyl.ts              filtering, sorting, and derived collection stats
     comics.ts             the shelves, and the issue counts derived from them
     fortnite.ts           windows, playlists, placement tiers, and the deltas
@@ -484,27 +491,52 @@ Three more details worth knowing:
 - **Partial dates are fine.** `2026` renders with no day label under the 2026
   heading, `2026-06` renders as "Jun", a full date as "Jun 20".
 
-### Sharing a show
+### Sharing a show, or a now entry
 
-Every entry has its own page at `/shows/<slug>` and a **Share** button.
+Both have their own page and a **Share** button, and both open the same panel -
+`components/share.tsx`, with `share-show.tsx` and `share-now.tsx` as the two
+adapters that say what the subject is.
 
-The button renders a 1080×1920 poster from the entry on a canvas: photo, lineup,
-rating, venue, date, and the URL. It then opens a panel offering the poster and
-the link as **separate** actions.
+The panel renders a 1080×1920 poster from the entry on a canvas and offers it
+and the link as **separate** actions. What goes on the poster is the only part
+that differs:
 
-That separation is the whole design. Handing `navigator.share()` a payload with
-a file _and_ a URL _and_ a body of text lets each app decide what to do with all
-three, and Messages decides to stack them, so you get a full-height poster, the
-entire lineup as a paragraph, and the link underneath. Sending one thing at a
-time means an Instagram story gets the poster and a text message gets a link
-that previews itself. On a desktop, where `navigator.share` is usually missing,
-the panel offers the same poster to save and the link to copy.
+| Subject                    | The poster carries                                                           |
+| -------------------------- | ---------------------------------------------------------------------------- |
+| A show                     | Photo, name, tour, openers, rating, venue, date, and the URL                 |
+| A now entry with photos    | Photo, the entry's date set large, as much of the prose as fits, and the URL |
+| A now entry with no photos | Nothing - the sheet offers the link alone                                    |
+
+**A now entry without photos shares as a link.** Without the photo the top third
+of the card is empty and the biggest thing left on it is a date, which is a
+screenshot of a calendar rather than something worth sending.
+
+**The poster never quietly claims to be the whole entry.** It takes whole
+paragraphs while they fit, so a cut never lands mid-sentence, and when anything
+was dropped the last line takes an ellipsis _and_ the footer reads **READ THE
+REST AT** rather than **READ IT AT**. An ellipsis says something is missing; the
+footer is what says where to get it.
+
+**A card that cannot be drawn still offers the link.** The link actions render
+in every state of the panel - building, ready, and failed - because a poster
+that failed to render is not a reason to withhold the one thing the panel can
+always do.
+
+That separation of poster and link is the whole design. Handing
+`navigator.share()` a payload with a file _and_ a URL _and_ a body of text lets
+each app decide what to do with all three, and Messages decides to stack them,
+so you get a full-height poster, the entire lineup as a paragraph, and the link
+underneath. Sending one thing at a time means an Instagram story gets the poster
+and a text message gets a link that previews itself. On a desktop, where
+`navigator.share` is usually missing, the panel offers the same poster to save
+and the link to copy.
 
 The link itself previews properly because `vite-plugin-share-pages.ts` writes a
-real `dist/shows/<slug>/index.html` per show at build time, each with its own
-title, description, and `og:image`. Crawlers behind iMessage, Slack, and
-WhatsApp read the served HTML and never run the router, so without those files
-every shared show would preview as the same generic site card.
+real `dist/shows/<slug>/index.html` per show and a `dist/now/<date>/index.html`
+per now entry at build time, each with its own title, description, and
+`og:image`. Crawlers behind iMessage, Slack, and WhatsApp read the served HTML
+and never run the router, so without those files every shared link would preview
+as the same generic site card.
 
 #### Why a Spotify link looks better than an image, and where it does not
 
@@ -700,6 +732,34 @@ Fixing something already published is an edit to that entry's file, not a new
 file, which keeps a typo fix from becoming a second entry saying the same
 thing. Two entries sharing an `updated` date fail the build, and deleting a
 file removes it from the page - git history keeps the text.
+
+**Every entry has a permanent address** at `/now/<YYYY-MM-DD>`, so a link keeps
+meaning the entry it was sent for. `/now` stays the front door showing whatever
+is current, and `/now/<the current date>` redirects there - one entry is never
+live at two addresses at once. Both views are the same component in
+`src/routes/now.tsx` behind one `lazy()`, because the redirect is the commonest
+path a shared link takes and a second lazy identity would make it flash the
+skeleton twice.
+
+**Photos are optional.** They live in `public/img/now/<YYYY-MM-DD>/`, take the
+same `src` / `alt` / `caption` objects a show's photos do, and go through
+`scripts/optimize-photos.mjs` (or the CMS's in-browser resize) before they enter
+the repo. The current entry renders them as a strip under the prose; archived
+entries print a count instead, because the archive pane is a fixed height and a
+carousel per entry would push the archive itself off a phone screen.
+
+**A shared now link previews as itself.** `vite-plugin-share-pages.ts` writes a
+real `dist/now/<date>/index.html` per entry, with that entry's date in the
+title and its opening paragraph as the description - the same mechanism the
+show pages use, and for the same reason: crawlers read the served HTML and
+never run the router. The current entry gets a file too, even though its URL
+redirects, because the crawler never follows the redirect.
+
+One consequence worth knowing before it gets filed as a bug: **one entry has
+two titles depending on which URL you arrive by.** `/now` is `Now · Dan Avner`,
+because the front door is undated - it is always whatever is current.
+`/now/2026-08-27` is `Now · August 27, 2026 · Dan Avner`, because being dated is
+the whole reason a permalink exists.
 
 `src/content/now/_index.md` has the frontmatter and the rest of the rules.
 
@@ -948,9 +1008,20 @@ Things that were not obvious, in case you hit them too:
   `image-rendering: pixelated`. It pauses via `IntersectionObserver` when it is
   below the fold, which is most of the time, and settles into a single still
   frame under `prefers-reduced-motion`.
-- **`lib/show-summary.ts` imports nothing.** It is called from the browser by
-  the share button and from Node by the build that writes the per-show HTML, so
-  a single `@/` alias or `virtual:` import in it would break the Node side.
+- **`lib/show-summary.ts` and `lib/now-summary.ts` may not import a `@/` alias
+  or a `virtual:` specifier.** Both are called from the browser by the share
+  button and from Node by the build that writes the per-entry HTML, and
+  `vite-plugin-share-pages.ts` reaches them by relative path from Vite's config
+  context. Neither kind of specifier resolves there: `resolve.alias` applies to
+  the app's module graph, not to the config bundle, and the `virtual:` modules
+  do not exist yet because `contentPlugin` is what creates them. Bare npm
+  specifiers are fine, which is why `now-summary.ts` can parse markdown with
+  `mdast-util-from-markdown` and friends - esbuild leaves them external to the
+  config bundle and Node loads them itself. `dates.ts` imports nothing at all,
+  which is why the month table lives there rather than in either summary. The
+  rule is enforced rather than remembered: `tsconfig.node.json` lists exactly
+  these files and defines no `@` path, so an aliased import fails `tsc -b`
+  before the build reaches Vite.
 
 ---
 

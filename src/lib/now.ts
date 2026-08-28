@@ -1,10 +1,15 @@
 import { now as rawNow } from "virtual:now";
 
+import type { Photo } from "@/lib/photo";
+import { SITE_URL } from "@/lib/site";
+
 export interface NowEntry {
   /** ISO date, `YYYY-MM-DD`. Empty on `current` when nothing is written yet. */
   updated: string;
   /** Markdown body with the frontmatter block removed. */
   body: string;
+  /** Optional, and validated at build time like every other collection's. */
+  photos: Photo[];
 }
 
 export interface Now {
@@ -65,4 +70,43 @@ export function heldForDays(entry: NowEntry, replacedBy: NowEntry | undefined): 
   if (Number.isNaN(from) || Number.isNaN(to) || to <= from) return null;
 
   return Math.round((to - from) / 86_400_000);
+}
+
+/**
+ * How long an entry stood, phrased. Empty when it stood less than a day, or
+ * when it is the current entry and nothing has replaced it yet.
+ *
+ * Beside `heldForDays` rather than in the timeline that first printed it: the
+ * permalink page prints the same figure, and two copies of the wording is two
+ * places for "3 weeks" to become "21 days".
+ */
+export function heldLabel(entry: NowEntry, replacedBy: NowEntry | undefined): string {
+  const held = heldForDays(entry, replacedBy);
+  if (held === null || held < 1) return "";
+
+  if (held < 14) return `${held} ${held === 1 ? "day" : "days"}`;
+  if (held < 60) return `${Math.round(held / 7)} weeks`;
+  return `${Math.round(held / 30)} months`;
+}
+
+/** Canonical, stable address for one entry. Mirrors `showUrl` in `lib/show-card.ts`. */
+export function nowUrl(entry: Pick<NowEntry, "updated">): string {
+  return `${SITE_URL}/now/${entry.updated}`;
+}
+
+/**
+ * One archived entry and what replaced it, for its "stood for" figure.
+ *
+ * Null for the current entry and for a date nothing was written on. The route
+ * sends both of those back to `/now`, so it has no reason to tell them apart -
+ * while an entry is current its home *is* `/now`, and a date with no file
+ * behind it has no home at all.
+ */
+export function archivedEntry(date: string): { entry: NowEntry; replacedBy: NowEntry } | null {
+  const index = now.archive.findIndex((entry) => entry.updated === date);
+  if (index === -1) return null;
+
+  // `archive` is newest first, so the entry before it in the list is the one
+  // that pushed it down - and for the newest archived entry that is `current`.
+  return { entry: now.archive[index], replacedBy: now.archive[index - 1] ?? now.current };
 }

@@ -294,12 +294,22 @@ collections:
     folder: /src/content/now
     # Entries are named for their date - matches the files already in the folder.
     slug: "{{fields.updated}}"
-    preview_path: "/now"
+    # The entry's own address, matching shows above. On the one case where the
+    # two differ - correcting an archived entry - /now/{{slug}} opens exactly
+    # that entry and /now never would. For the current entry it redirects to
+    # /now, which is right.
+    preview_path: "/now/{{slug}}"
     aliases_field: false
     icon: schedule
     editor: { preview: false }
     summary: "{{updated}}"
     sortable_fields: [updated]
+    # {{slug}} here is the entry's date, from the slug template above. Shows and
+    # blog interpolate a string slug; this is the first one derived from a
+    # datetime widget, so an upload landing anywhere but
+    # public/img/now/<YYYY-MM-DD>/ is the thing to check first.
+    media_folder: "/public/img/now/{{slug}}"
+    public_folder: "/img/now/{{slug}}"
     fields:
       - name: updated
         label: Updated
@@ -310,6 +320,26 @@ collections:
           A new entry replaces the current one on /now the moment its date is
           newest. Fixing something you already published? Edit that entry
           instead of creating a new one.
+      - name: photos
+        label: Photos
+        label_singular: Photo
+        widget: list
+        required: false
+        summary: "{{caption}}"
+        thumbnail: src
+        fields:
+          - name: src
+            label: Photo
+            widget: image
+            hint: Resized to 1600px and stripped of location data on upload.
+          - name: alt
+            label: Alt text
+            widget: string
+            hint: Describe what is in the frame, for screen readers.
+          - name: caption
+            label: Caption
+            widget: string
+            hint: Printed over the bottom of the photo.
       - name: body
         label: Body
         widget: markdown

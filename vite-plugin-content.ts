@@ -4,6 +4,8 @@ import path from "node:path";
 import { load as parseYaml } from "js-yaml";
 import type { Plugin } from "vite";
 
+import { nowParagraphs } from "./src/lib/now-summary";
+
 const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;
 const WORDS_PER_MINUTE = 200;
 
@@ -1065,10 +1067,12 @@ function readFortnite(root: string, publicDir: string) {
 interface NowEntry {
   updated: string;
   body: string;
+  /** Derived rather than redeclared, so it cannot drift from what `asPhotos` returns. */
+  photos: ReturnType<typeof asPhotos>;
 }
 
 /** Parses and validates one now entry. */
-function parseNowEntry(raw: string, file: string): NowEntry {
+function parseNowEntry(raw: string, file: string, publicDir: string): NowEntry {
   const { meta, body } = splitFrontmatter("now", file, raw);
 
   const updated = asDate(meta.updated);
@@ -1078,7 +1082,21 @@ function parseNowEntry(raw: string, file: string): NowEntry {
 
   if (!body) fail("now", file, "the entry has no body");
 
-  return { updated, body };
+  /*
+   * A body is not the same as prose. An entry made of nothing but a heading, an
+   * image, or a fenced code block has a body and no paragraphs, and paragraphs
+   * are what the description, the tab, and the share card are all read from -
+   * so it would ship with an empty `<meta name="description">`, which is not a
+   * degraded preview but the entry sent with nothing said about it.
+   */
+  if (nowParagraphs(body).length === 0) {
+    fail("now", file, "the entry has no prose - it needs at least one paragraph to describe it");
+  }
+
+  // The same rules every other collection's photos get: `alt` and `caption`
+  // both required, and a local `src` has to exist. Nothing about a now entry
+  // makes them looser, so nothing here is a second set of checks.
+  return { updated, body, photos: asPhotos("now", meta.photos, file, publicDir) };
 }
 
 /**
@@ -1095,8 +1113,13 @@ function parseNowEntry(raw: string, file: string): NowEntry {
  *
  * A missing folder is not an error, the same way an empty content directory is
  * a log with nothing in it. The page renders its empty state instead.
+ *
+ * Exported for the same reason `readShows` is: the build writes a real HTML
+ * page per entry and must see exactly what the app sees. No return annotation -
+ * it is inferred from the local `NowEntry` above, because the app's `NowEntry`
+ * imports `virtual:now` and cannot be named from the Node side.
  */
-function readNow(root: string) {
+export function readNow(root: string, publicDir: string) {
   const dir = path.resolve(root, "src/content/now");
   const files = existsSync(dir)
     ? readdirSync(dir).filter((name) => name.endsWith(".md") && !name.startsWith("_"))
@@ -1105,7 +1128,7 @@ function readNow(root: string) {
   const entries = files
     .map((name) => ({
       file: name,
-      entry: parseNowEntry(readFileSync(path.join(dir, name), "utf8"), name),
+      entry: parseNowEntry(readFileSync(path.join(dir, name), "utf8"), name, publicDir),
     }))
     // Newest first, the way every other collection here sorts.
     .sort((a, b) => b.entry.updated.localeCompare(a.entry.updated));
@@ -1128,7 +1151,7 @@ function readNow(root: string) {
 
   const [current, ...archive] = entries.map(({ entry }) => entry);
 
-  return { current: current ?? { updated: "", body: "" }, archive };
+  return { current: current ?? { updated: "", body: "", photos: [] }, archive };
 }
 
 /**
@@ -1215,7 +1238,7 @@ export function contentPlugin(): Plugin {
         return `export const vinyl = ${JSON.stringify(readVinyl(root, publicDir))};`;
       }
       if (id === resolvedId(NOW)) {
-        return `export const now = ${JSON.stringify(readNow(root))};`;
+        return `export const now = ${JSON.stringify(readNow(root, publicDir))};`;
       }
       if (id === resolvedId(COMICS)) {
         return `export const comics = ${JSON.stringify(readComics(root, publicDir))};`;

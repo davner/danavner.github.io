@@ -1,17 +1,17 @@
 {
   "user": "dnafam",
   "url": "https://www.discogs.com/user/dnafam/collection",
-  "fetched": "2026-08-27",
+  "fetched": "2026-08-28",
   "value": {
-    "minimum": "$1,181.87",
-    "median": "$1,900.32",
-    "maximum": "$2,959.76"
+    "minimum": "$1,206.87",
+    "median": "$1,940.34",
+    "maximum": "$3,011.76"
   },
   "owners": [
     {
       "id": "dan",
       "name": "Dan",
-      "count": 44
+      "count": 45
     },
     {
       "id": "alexis",
@@ -20,6 +20,26 @@
     }
   ],
   "records": [
+    {
+      "id": 37113360,
+      "instanceId": 2178260497,
+      "owner": "dan",
+      "artist": "Charli XCX",
+      "title": "Party 4 U",
+      "year": 2026,
+      "label": "Atlantic",
+      "catno": "5026854087580",
+      "format": "7\"",
+      "variant": "Ultra Clear",
+      "genres": [
+        "Pop"
+      ],
+      "styles": [],
+      "added": "2026-08-27",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/37113360",
+      "cover": "/img/vinyl/37113360.webp"
+    },
     {
       "id": 18730927,
       "instanceId": 2173563387,

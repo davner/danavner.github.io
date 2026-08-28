@@ -24,6 +24,24 @@ import { ROUTES } from "./routes";
  */
 const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"];
 
+/*
+ * axe's third bucket. `incomplete` is a rule that ran and reached no verdict,
+ * which reads exactly like a pass to anything that only looks at `violations`
+ * - so a rule that quietly stops evaluating never shows up.
+ *
+ * `color-contrast` is the one rule that legitimately lands here, and only for
+ * part of the page: the grain overlay in `backdrop.tsx` is a background image
+ * axe cannot resolve, so nodes sitting over it come back undecided. It resolves
+ * and passes roughly nine nodes in ten; the undecided slice is bounded, and it
+ * is measured from painted pixels instead. Everything else is gated, which is
+ * green today across every route in both themes.
+ *
+ * Use `withTags` to change what runs. `disableRules` is not the way to widen
+ * this allowlist - how it composes with `withTags` has not been established
+ * here, and `options()` is already known to discard the tag filter outright.
+ */
+const INDETERMINATE_BY_DESIGN = new Set(["color-contrast"]);
+
 for (const colorScheme of ["dark", "light"] as const) {
   test.describe(`${colorScheme} mode`, () => {
     for (const path of ROUTES) {
@@ -34,7 +52,8 @@ for (const colorScheme of ["dark", "light"] as const) {
         // The starfield paints on a canvas; let it settle so nothing is mid-render.
         await page.waitForLoadState("networkidle");
 
-        const { violations } = await new AxeBuilder({ page }).withTags(TAGS).analyze();
+        const { violations, incomplete } = await new AxeBuilder({ page }).withTags(TAGS).analyze();
+        const unexplained = incomplete.filter((r) => !INDETERMINATE_BY_DESIGN.has(r.id));
 
         if (violations.length > 0) {
           await testInfo.attach("axe-violations", {
@@ -42,10 +61,21 @@ for (const colorScheme of ["dark", "light"] as const) {
             contentType: "application/json",
           });
         }
+        // Attached whether or not anything is wrong, so the size of the
+        // undecided slice stays visible rather than being inferred.
+        await testInfo.attach("axe-incomplete", {
+          body: JSON.stringify(incomplete, null, 2),
+          contentType: "application/json",
+        });
 
         expect(
           violations.map((v) => `${v.id} (${v.nodes.length}): ${v.help}`),
           `${path} in ${colorScheme} mode`,
+        ).toEqual([]);
+
+        expect(
+          unexplained.map((r) => `${r.id} (${r.nodes.length}): ${r.help}`),
+          `${path} in ${colorScheme} mode reached no verdict`,
         ).toEqual([]);
       });
     }

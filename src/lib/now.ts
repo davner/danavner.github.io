@@ -34,12 +34,28 @@ export const now: Now = rawNow;
 export function stalenessInDays(updated: string, today = new Date()): number | null {
   if (!updated) return null;
 
-  // Both ends parsed as UTC noon so a timezone can never shift the count by a
-  // day, the same way `formatDate` in `lib/blog.ts` avoids it.
+  /*
+   * `updated` is a floating calendar date - it carries no timezone, and the
+   * entry was not written at an instant the reader shares. So the honest
+   * question is not how much time has elapsed, it is how many of the reader's
+   * own days have turned since the day on the entry. That means "today" is
+   * built from the *local* calendar date: read at 17:00 in Los Angeles, an
+   * entry dated that morning is still today's, though UTC has moved on.
+   *
+   * Both ends are still anchored at noon so the subtraction lands on a whole
+   * day rather than an hour either side of one, and a DST switch between them
+   * cannot round the count off by a day.
+   *
+   * Accepted consequence: near the date line a reader can be a day ahead of
+   * the author, so an entry filed the author's today can read "yesterday".
+   * That is the right answer for that reader's calendar. The reverse - a
+   * reader behind the author, reading an entry dated tomorrow - is what
+   * `Math.max(0, ...)` below is for.
+   */
   const then = new Date(`${updated}T12:00:00Z`).getTime();
   if (Number.isNaN(then)) return null;
 
-  const nowMs = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 12);
+  const nowMs = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), 12);
 
   return Math.max(0, Math.round((nowMs - then) / 86_400_000));
 }

@@ -687,6 +687,44 @@ test.describe("now", () => {
     );
   });
 
+  /*
+   * The staleness used to be counted against the UTC calendar day. Read at
+   * 17:00 in Los Angeles, an entry written that same morning said "yesterday",
+   * because UTC had already rolled over while the reader was still on the day
+   * the entry is dated. That is several hours every evening for every visitor
+   * in the Americas, so it is worth pinning a clock to.
+   */
+  test.describe("staleness counted in the reader's own days", () => {
+    test.use({ timezoneId: "America/Los_Angeles" });
+
+    test("an entry filed today still reads as today once UTC has moved on", async ({ page }) => {
+      const stamp = page.locator("main time").first();
+      // An empty now page carries no date, so there is no count to check.
+      if ((await stamp.count()) === 0) return;
+
+      // Read rather than hardcoded: the newest entry changes every time one is
+      // filed, and a literal here would only fail on the next one.
+      const updated = await stamp.getAttribute("datetime");
+      expect(updated).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+
+      /*
+       * 03:00 UTC the day after the entry's date. Los Angeles is UTC-7 or
+       * UTC-8 depending on the season, so that instant is the evening of the
+       * entry's own local day on either side of a DST switch - while the UTC
+       * date has already advanced. Doing the arithmetic in UTC keeps the
+       * offset out of it.
+       */
+      const evening = new Date(Date.parse(`${updated}T03:00:00Z`) + 86_400_000);
+      expect(evening.toISOString().slice(0, 10)).not.toBe(updated);
+
+      await page.clock.setFixedTime(evening);
+      await page.reload();
+      await page.getByRole("heading", { level: 1 }).waitFor();
+
+      await expect(page.locator("main").getByText(/last updated/i)).toContainText(/- today$/);
+    });
+  });
+
   test("the archive appears only once an entry has been filed", async ({ page }) => {
     /*
      * The timeline grows one entry at a time as new files land in the folder,

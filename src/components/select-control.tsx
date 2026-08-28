@@ -55,7 +55,7 @@ export function SelectControl<T extends string>({
           // Square, hairline, and the page's own background - the shadcn
           // defaults are rounded with a shadow, which nothing else here is.
           "cursor-pointer rounded-none border-border bg-background text-sm shadow-none",
-          "focus-visible:border-ember focus-visible:ring-0",
+          "focus-visible:border-ember",
           // The trigger is `w-fit` by default and these sit in a sized row.
           "w-full",
           className,

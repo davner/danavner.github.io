@@ -43,7 +43,7 @@ function ScrollArea({
          */
         tabIndex={0}
         className={cn(
-          "size-full rounded-[inherit] transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring",
+          "size-full rounded-[inherit] transition-[color,box-shadow]",
           viewportClassName,
         )}
       >

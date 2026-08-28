@@ -131,30 +131,67 @@
 }
 
 @layer base {
-  /*
-   * The focus ring at full strength, which is a deliberate departure from
-   * upstream shadcn - it dims the ring to `/50` here and in every component
-   * that paints one, and a future `shadcn add --diff` will offer to put that
-   * back. It should not be taken.
-   *
-   * `--ring` is byte-identical to `--ember` in both themes. Measured against
-   * the resolved tokens: `ring/50` over `--background` reads 2.63:1 in the
-   * light theme and 2.15:1 in the dark, where WCAG 1.4.11 asks 3:1 of a focus
-   * indicator. Undimmed it is 5.32:1 and 5.91:1. `/70` was considered and
-   * rejected at 3.84:1 and 3.27:1 - a quarter of a point of margin in the dark
-   * theme, on a value that moves the moment `--background` is retuned. There is no alpha
-   * that survives both themes, and no value of `--ring` that compensates for a
-   * 50% overlay without breaking the places the token is used undimmed.
-   *
-   * Full strength is also already this site's convention: `about.tsx`,
-   * `comics.tsx`, `fortnite.tsx` and `vinyl.tsx` all paint
-   * `focus-visible:outline-2 focus-visible:outline-ember` undimmed.
-   *
-   * `tests/site.spec.ts` measures this for real on every route. axe has no
-   * focus-indicator rule, so that sweep is the only thing standing behind it.
-   */
   * {
-    @apply border-border outline-ring;
+    @apply border-border;
+  }
+
+  /*
+   * The focus ring, in one place.
+   *
+   * It used to be spelled ten ways - an outline colour on the `*` rule above,
+   * now gone, which only recoloured whatever ring the browser had already
+   * decided to paint, plus a three-pixel box-shadow ring in each of seven shadcn
+   * components, every one of which also killed the outline so its own ring could
+   * win. (Do not write those ring utilities out here. Tailwind scans comments
+   * along with code, and naming a class puts its CSS back in the bundle.)
+   *
+   * Ten declarations of one idea is how the site shipped its loudest control -
+   * the ember-filled "Get to know me" on the landing page - with no keyboard
+   * focus indicator at all: it is a plain anchor, so it had none of the seven,
+   * and the one thing it did inherit painted ember on ember. The skip link, the
+   * selected filter pill on `/comics` and the mode toggle on `/fortnite` were
+   * the same defect.
+   *
+   * What an indicator has to guarantee is 3:1 against whatever it sits on, and
+   * this site puts controls on exactly two kinds of surface: a neutral -
+   * `--card`, `--popover`, `--muted` and `--accent` all measure within 1.3:1
+   * of `--background` in a given theme - and `--ember`, which fills the skip
+   * link, the primary button, the checked checkbox and the selected filter
+   * pill.
+   *
+   * No colour in the palette clears 3:1 against both. Measured through the
+   * canvas against the resolved tokens, the best candidate is `--foreground`
+   * at 3.30:1 over ember in the light theme and 2.97:1 in the dark; `--ion` is
+   * 1.10:1 and 2.08:1, `--star` 1.49:1 and 2.81:1. So recolouring the ring is
+   * not available, and neither is a second ring colour chosen per control -
+   * that is the ten-declarations problem again with more branches.
+   *
+   * Moving the stroke off the control is available, and it is one rule. At
+   * `outline-offset: 2px` the ring never touches the control's own fill; the
+   * gap shows the surface behind, which is a neutral everywhere on this site,
+   * so the ember stroke reads at 5.32:1 in the light theme and 5.91:1 in the
+   * dark against both of its edges - including on the ember-filled controls,
+   * where it now reads as a ring with daylight under it rather than as the
+   * control having quietly grown by three pixels.
+   *
+   * Two consequences worth knowing before changing this:
+   *
+   * - An `outline-none` in a component's class list opts that element out
+   *   entirely, because utilities outrank this layer. That is deliberate and
+   *   `vinyl.tsx`'s search field uses it - it marks focus with
+   *   `focus-visible:border-ember` instead - but it is also how the ring went
+   *   missing before, so a new `outline-none` needs a reason.
+   * - An outward stroke is clipped by an ancestor's `overflow: hidden`. A
+   *   control inside a clipping container paints its ring inward instead, with
+   *   a negative offset: `fortnite.tsx`'s season cards and
+   *   `navigation-menu.tsx`'s panel links both do.
+   *
+   * `tests/site.spec.ts` measures this for real on every route, in both
+   * themes. axe has no focus-indicator rule, so that sweep is the only thing
+   * standing behind it.
+   */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
   }
 
   html {

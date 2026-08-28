@@ -1429,19 +1429,214 @@ test.describe("controls", () => {
   });
 });
 
+/**
+ * Measures the focus indicator painted on `document.activeElement`.
+ *
+ * Handed to `page.evaluate`, which serialises it and runs it in the page, so it
+ * closes over nothing in this file and carries its own helpers.
+ *
+ * Two things it deliberately does not do. It computes over resolved token
+ * colours rather than painted pixels, so it cannot see the grain overlay -
+ * measured against real pixels the same ring reads about 0.2 lower, so anything
+ * landing within ~0.3 of 3.0 needs a manual check against a screenshot. And it
+ * credits any painted outline, ring or border on the focused element, without
+ * proving that candidate appeared *because* of the focus - so an element with a
+ * permanent 3:1 border and a broken focus ring passes.
+ *
+ * That second one is not hypothetical any more, so do not read it as a caveat.
+ * The landing page's "Get to know me" is exactly that element: `border-ember`
+ * over `bg-ember`, which scores 5.91:1 against the page behind it whether or not
+ * the control has any focus indicator at all - and it had none. This sweep was
+ * green on it. What failed the route once the `auto` branch below was tightened
+ * was the skip link, which carries the same ember-on-ember ring and no border to
+ * hide behind. Closing it properly means proving a candidate is focus-conditional
+ * - by reading each element's resting style, or by looking for a matching rule
+ * whose selector carries `:focus` - and that is a change to this file that has
+ * not been made.
+ *
+ * What it does catch, which is the trap that produced the ring commit, is a
+ * `border-ring` with no width: a zero-width border is not a candidate at all.
+ */
+const measureFocusIndicator = async () => {
+  // Two frames, so nothing is read mid-transition.
+  await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+  const el = document.activeElement;
+  if (!el || el === document.body || el === document.documentElement) return null;
+
+  const style = getComputedStyle(el);
+
+  /* Canvas is the only reliable way to turn `oklch(...)`,
+   `oklab(... / .5)` and `color-mix(...)` into sRGB and to composite
+   alpha over a backdrop. An unparseable colour leaves `fillStyle`
+   alone, so it reads as the backdrop and scores 1:1 - loudly wrong
+   rather than quietly passing. */
+  const paint = (color: string, over: string) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 1;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
+    ctx.fillStyle = over;
+    ctx.fillRect(0, 0, 1, 1);
+    ctx.fillStyle = color;
+    ctx.fillRect(0, 0, 1, 1);
+    return [...ctx.getImageData(0, 0, 1, 1).data].slice(0, 3);
+  };
+
+  const luminance = (rgb: number[]) =>
+    rgb
+      .map((channel) => channel / 255)
+      .map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4))
+      .reduce((sum, c, i) => sum + c * [0.2126, 0.7152, 0.0722][i], 0);
+
+  /* The adjacent colour 1.4.11 measures against, composited from the
+     root down rather than taken from the first ancestor that declares
+     one. Plenty of them are translucent: the select trigger's
+     `dark:bg-input/30` reads as a light grey over white and a near
+     black over the page it is actually on. */
+  const flatten = (color: string, over: string) => {
+    const [r, g, b] = paint(color, over);
+    return `rgb(${r}, ${g}, ${b})`;
+  };
+
+  const chain: Element[] = [];
+  for (let node: Element | null = el; node; node = node.parentElement) chain.push(node);
+  chain.reverse();
+
+  let outside = "rgb(255, 255, 255)";
+  for (const node of chain.slice(0, -1)) {
+    outside = flatten(getComputedStyle(node).backgroundColor, outside);
+  }
+  const inside = flatten(style.backgroundColor, outside);
+
+  const ratio = (color: string, behind: string) => {
+    const front = luminance(paint(color, behind));
+    const back = luminance(paint(behind, behind));
+    return (Math.max(front, back) + 0.05) / (Math.min(front, back) + 0.05);
+  };
+
+  const candidates: { what: string; contrast: number }[] = [];
+
+  if (style.outlineStyle === "auto") {
+    /*
+     * Chrome's own focus ring. It paints the author's `outline-color` *and* a
+     * contrasting companion stroke the computed style does not expose, so the
+     * author colour is not the whole indicator and measuring it against what
+     * surrounds the element would fail elements that are fine.
+     *
+     * What the companion stroke cannot rescue is a ring drawn in the colour of
+     * the fill it hugs. `auto` puts the stroke hard against the element's edge,
+     * so `--ring` on a `bg-ember` control paints ember on ember and reads as
+     * the control having grown by a pixel - which is how the landing page's
+     * primary call to action shipped with no keyboard indicator at all while
+     * this sweep scored it `Infinity` and passed.
+     *
+     * So the browser's ring is credited only where the author's colour is
+     * distinguishable from the element's own background. Where it is not, the
+     * sweep reports that measurement instead, and fails on it.
+     */
+    const onItsOwnFill = ratio(style.outlineColor, inside);
+    candidates.push({
+      what: `the browser's own focus ring, ${style.outlineColor} on ${inside}`,
+      contrast: onItsOwnFill >= 3 ? Infinity : onItsOwnFill,
+    });
+  } else if (style.outlineStyle !== "none" && parseFloat(style.outlineWidth) > 0) {
+    // A negative offset paints the outline inside the box, over the
+    // element's own background rather than over what surrounds it.
+    const behind = parseFloat(style.outlineOffset) < 0 ? inside : outside;
+    candidates.push({
+      what: `outline ${style.outlineWidth} ${style.outlineColor}`,
+      contrast: ratio(style.outlineColor, behind),
+    });
+  }
+
+  // Rings are box-shadows. Split on top-level commas only - `rgba(0, 0,
+  // 0, 0)` has commas of its own - and keep the ones with real spread.
+  const shadows: string[] = [];
+  let depth = 0;
+  let current = "";
+  for (const character of style.boxShadow === "none" ? "" : style.boxShadow) {
+    if (character === "(") depth += 1;
+    if (character === ")") depth -= 1;
+    if (character === "," && depth === 0) {
+      shadows.push(current);
+      current = "";
+    } else current += character;
+  }
+  if (current.trim()) shadows.push(current);
+
+  for (const shadow of shadows) {
+    const at = shadow.search(/(^|\s)-?[\d.]+px/);
+    if (at < 0) continue;
+    const lengths = (shadow.slice(at).match(/-?[\d.]+px/g) ?? []).map(parseFloat);
+    const spread = lengths.length >= 4 ? lengths[3] : 0;
+    const color = shadow.slice(0, at).trim();
+    if (spread > 0 && color) {
+      const behind = shadow.includes("inset") ? inside : outside;
+      candidates.push({
+        what: `ring ${spread}px ${color}`,
+        contrast: ratio(color, behind),
+      });
+    }
+  }
+
+  // Width first. `focus-visible:border-ring` sets a colour on a border
+  // Tailwind's preflight gave a width of 0, which paints nothing - the
+  // exact thing that made an earlier audit call buttons unaffected.
+  if (parseFloat(style.borderTopWidth) > 0) {
+    // A border runs along an edge with the element's own background on
+    // one side and the page on the other. Contrast against either side
+    // makes it visible, so take the better of the two.
+    candidates.push({
+      what: `border ${style.borderTopWidth} ${style.borderTopColor}`,
+      contrast: Math.max(ratio(style.borderTopColor, inside), ratio(style.borderTopColor, outside)),
+    });
+  }
+
+  const text = (el.textContent ?? "").trim().replace(/\s+/g, " ").slice(0, 24);
+  const slot = el.getAttribute("data-slot");
+
+  return {
+    // Identity, for spotting the wrap back to the first stop.
+    key: `${el.tagName}|${el.className}|${text}`,
+    label: `${el.tagName.toLowerCase()}${slot ? `[${slot}]` : ""} "${text}"`,
+    // 1.4.11 is satisfied if *an* indicator clears 3:1.
+    best: Math.max(0, ...candidates.map((candidate) => candidate.contrast)),
+    candidates,
+    transitionDuration: style.transitionDuration,
+  };
+};
+
+type FocusIndicator = NonNullable<Awaited<ReturnType<typeof measureFocusIndicator>>>;
+
+/** The one-line failure a measurement under 3:1 turns into. */
+function describeFailure(result: FocusIndicator) {
+  const detail = result.candidates
+    .map((candidate) => `${candidate.what} at ${candidate.contrast.toFixed(2)}:1`)
+    .join("; ");
+  return `${result.label} - ${detail || "no indicator at all"}`;
+}
+
 test.describe("focus indicators", () => {
   /*
    * The site's own `prefers-reduced-motion` block collapses every transition to
-   * 0.01ms, so the settle below is a formality rather than a wait per stop. The
-   * guard inside the test is what proves that is still true - `ui/button.tsx`
-   * carries `transition-all` and `ui/scroll-area.tsx` carries
-   * `transition-[color,box-shadow]`, so reading computed style the instant
-   * after focus lands returns the pre-transition value. A first attempt at this
-   * test read `oklab(0 0 0 / 0) 0px 0px 0px 0px` off a focused Button and very
-   * nearly filed "buttons paint no focus ring at all" as a finding.
+   * 0.01ms, so the settle inside `measureFocusIndicator` is a formality rather
+   * than a wait per stop. The guard in each test is what proves that is still
+   * true - `ui/button.tsx` carries `transition-all` and `ui/scroll-area.tsx`
+   * carries `transition-[color,box-shadow]`, so reading computed style the
+   * instant after focus lands returns the pre-transition value. A first attempt
+   * at this test read `oklab(0 0 0 / 0) 0px 0px 0px 0px` off a focused Button
+   * and very nearly filed "buttons paint no focus ring at all" as a finding.
+   * `transition-colors` now animates `outline-color` too, which is worse: it
+   * starts at `currentColor`, so an unsettled reading measures the text colour.
    */
+  const expectSettled = (transitionDuration: string) =>
+    expect(
+      parseFloat(transitionDuration),
+      "reduced motion no longer collapses transitions, so these readings are mid-transition",
+    ).toBeLessThanOrEqual(0.001);
+
   /* Both themes, for the reason `tests/a11y.spec.ts` gives: the palettes are
-     independent and contrast is the most fragile thing in them. Two tests
+     independent and contrast is the most fragile thing in them. Separate tests
      rather than one loop, so they run in parallel and name the theme that
      broke. */
   for (const colorScheme of ["light", "dark"] as const) {
@@ -1459,16 +1654,10 @@ test.describe("focus indicators", () => {
        * reason `CLAUDE.md` gives for the cursor sweep: a check scoped to one page
        * passes happily while another page ships the defect.
        *
-       * Two things this deliberately does not do. It computes over resolved token
-       * colours rather than painted pixels, so it cannot see the grain overlay -
-       * measured against real pixels the same ring reads about 0.2 lower, so
-       * anything landing within ~0.3 of 3.0 needs a manual check against a
-       * screenshot. And it credits any painted outline, ring or border on the
-       * focused element, without proving that candidate appeared *because* of the
-       * focus - so an element with a permanent 3:1 border and a broken focus ring
-       * would pass. What it does catch, which is the trap that produced this
-       * commit, is a `border-ring` with no width: a zero-width border is not a
-       * candidate at all.
+       * It reaches only what Tab reaches from a fresh page load, so anything
+       * behind a closed disclosure is invisible to it. The menu sweep below
+       * covers the navigation menus; nothing covers the phone Sheet or the
+       * Select listbox yet.
        */
       let guarded = false;
 
@@ -1483,169 +1672,93 @@ test.describe("focus indicators", () => {
         for (let stop = 0; stop < 250; stop++) {
           await page.keyboard.press("Tab");
 
-          const result = await page.evaluate(async () => {
-            // Two frames, so nothing is read mid-transition.
-            await new Promise((resolve) =>
-              requestAnimationFrame(() => requestAnimationFrame(resolve)),
-            );
-
-            const el = document.activeElement;
-            if (!el || el === document.body || el === document.documentElement) return null;
-
-            const style = getComputedStyle(el);
-
-            /* Canvas is the only reliable way to turn `oklch(...)`,
-             `oklab(... / .5)` and `color-mix(...)` into sRGB and to composite
-             alpha over a backdrop. An unparseable colour leaves `fillStyle`
-             alone, so it reads as the backdrop and scores 1:1 - loudly wrong
-             rather than quietly passing. */
-            const paint = (color: string, over: string) => {
-              const canvas = document.createElement("canvas");
-              canvas.width = canvas.height = 1;
-              const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
-              ctx.fillStyle = over;
-              ctx.fillRect(0, 0, 1, 1);
-              ctx.fillStyle = color;
-              ctx.fillRect(0, 0, 1, 1);
-              return [...ctx.getImageData(0, 0, 1, 1).data].slice(0, 3);
-            };
-
-            const luminance = (rgb: number[]) =>
-              rgb
-                .map((channel) => channel / 255)
-                .map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4))
-                .reduce((sum, c, i) => sum + c * [0.2126, 0.7152, 0.0722][i], 0);
-
-            /* The adjacent colour 1.4.11 measures against, composited from the
-               root down rather than taken from the first ancestor that declares
-               one. Plenty of them are translucent: the select trigger's
-               `dark:bg-input/30` reads as a light grey over white and a near
-               black over the page it is actually on. */
-            const flatten = (color: string, over: string) => {
-              const [r, g, b] = paint(color, over);
-              return `rgb(${r}, ${g}, ${b})`;
-            };
-
-            const chain: Element[] = [];
-            for (let node: Element | null = el; node; node = node.parentElement) chain.push(node);
-            chain.reverse();
-
-            let outside = "rgb(255, 255, 255)";
-            for (const node of chain.slice(0, -1)) {
-              outside = flatten(getComputedStyle(node).backgroundColor, outside);
-            }
-            const inside = flatten(style.backgroundColor, outside);
-
-            const ratio = (color: string, behind: string) => {
-              const front = luminance(paint(color, behind));
-              const back = luminance(paint(behind, behind));
-              return (Math.max(front, back) + 0.05) / (Math.min(front, back) + 0.05);
-            };
-
-            const candidates: { what: string; contrast: number }[] = [];
-
-            if (style.outlineStyle === "auto") {
-              /* Chrome's own focus ring. It paints the author's `outline-color`
-               *and* a contrasting companion stroke the computed style does not
-               expose, so the author colour is not the indicator and measuring
-               it would fail elements that are fine. */
-              candidates.push({ what: "the browser's own focus ring", contrast: Infinity });
-            } else if (style.outlineStyle !== "none" && parseFloat(style.outlineWidth) > 0) {
-              // A negative offset paints the outline inside the box, over the
-              // element's own background rather than over what surrounds it.
-              const behind = parseFloat(style.outlineOffset) < 0 ? inside : outside;
-              candidates.push({
-                what: `outline ${style.outlineWidth} ${style.outlineColor}`,
-                contrast: ratio(style.outlineColor, behind),
-              });
-            }
-
-            // Rings are box-shadows. Split on top-level commas only - `rgba(0, 0,
-            // 0, 0)` has commas of its own - and keep the ones with real spread.
-            const shadows: string[] = [];
-            let depth = 0;
-            let current = "";
-            for (const character of style.boxShadow === "none" ? "" : style.boxShadow) {
-              if (character === "(") depth += 1;
-              if (character === ")") depth -= 1;
-              if (character === "," && depth === 0) {
-                shadows.push(current);
-                current = "";
-              } else current += character;
-            }
-            if (current.trim()) shadows.push(current);
-
-            for (const shadow of shadows) {
-              const at = shadow.search(/(^|\s)-?[\d.]+px/);
-              if (at < 0) continue;
-              const lengths = (shadow.slice(at).match(/-?[\d.]+px/g) ?? []).map(parseFloat);
-              const spread = lengths.length >= 4 ? lengths[3] : 0;
-              const color = shadow.slice(0, at).trim();
-              if (spread > 0 && color) {
-                const behind = shadow.includes("inset") ? inside : outside;
-                candidates.push({
-                  what: `ring ${spread}px ${color}`,
-                  contrast: ratio(color, behind),
-                });
-              }
-            }
-
-            // Width first. `focus-visible:border-ring` sets a colour on a border
-            // Tailwind's preflight gave a width of 0, which paints nothing - the
-            // exact thing that made an earlier audit call buttons unaffected.
-            if (parseFloat(style.borderTopWidth) > 0) {
-              // A border runs along an edge with the element's own background on
-              // one side and the page on the other. Contrast against either side
-              // makes it visible, so take the better of the two.
-              candidates.push({
-                what: `border ${style.borderTopWidth} ${style.borderTopColor}`,
-                contrast: Math.max(
-                  ratio(style.borderTopColor, inside),
-                  ratio(style.borderTopColor, outside),
-                ),
-              });
-            }
-
-            const text = (el.textContent ?? "").trim().replace(/\s+/g, " ").slice(0, 24);
-            const slot = el.getAttribute("data-slot");
-
-            return {
-              // Identity, for spotting the wrap back to the first stop.
-              key: `${el.tagName}|${el.className}|${text}`,
-              label: `${el.tagName.toLowerCase()}${slot ? `[${slot}]` : ""} "${text}"`,
-              // 1.4.11 is satisfied if *an* indicator clears 3:1.
-              best: Math.max(0, ...candidates.map((candidate) => candidate.contrast)),
-              candidates,
-              transitionDuration: style.transitionDuration,
-            };
-          });
+          const result = await page.evaluate(measureFocusIndicator);
 
           // Focus left the document, or wrapped back to a stop already measured.
           if (result === null || seen.has(result.key)) break;
           seen.add(result.key);
 
           if (!guarded) {
-            /*
-             * If the reduced-motion collapse ever stops working, this fails
-             * loudly rather than letting the sweep read transparent pre-transition
-             * values and report every indicator as fine.
-             */
-            expect(
-              parseFloat(result.transitionDuration),
-              "reduced motion no longer collapses transitions, so these readings are mid-transition",
-            ).toBeLessThanOrEqual(0.001);
+            expectSettled(result.transitionDuration);
             guarded = true;
           }
 
-          if (result.best < 3) {
-            const detail = result.candidates
-              .map((candidate) => `${candidate.what} at ${candidate.contrast.toFixed(2)}:1`)
-              .join("; ");
-            bad.push(`${result.label} - ${detail || "no indicator at all"}`);
-          }
+          if (result.best < 3) bad.push(describeFailure(result));
         }
 
         expect(bad, `${path} has focus indicators under 3:1 in ${colorScheme} mode`).toEqual([]);
+      }
+    });
+
+    test(`a navigation menu's own links clear 3:1 in ${colorScheme} mode`, async ({ page }) => {
+      await page.emulateMedia({ reducedMotion: "reduce", colorScheme });
+
+      /*
+       * A separate test rather than a branch inside the sweep above, because
+       * opening things mid-sweep means deciding which of 250 blind tab stops is
+       * safe to press Enter on. Here the trigger is known, so the drive is
+       * three keystrokes and the panel's contents are the whole subject.
+       *
+       * It exists because the sweep cannot see a closed disclosure, and
+       * `ui/navigation-menu.tsx` shipped a rule that zeroed both the ring and
+       * the outline on every link in the Hobbies panel - written against
+       * `:focus`, which out-specifies the link's own `:focus-visible`
+       * indicator, so it took the ring away from keyboard users specifically.
+       * The sweep reported green throughout.
+       *
+       * Driven by keyboard end to end: `locator.press` focuses and then sends a
+       * real keydown, which is what makes the links match `:focus-visible` when
+       * Tab arrives. A mouse-opened menu is entitled to paint nothing.
+       *
+       * Below `sm` the bar collapses into the phone Sheet and these triggers
+       * are `display: none`, so on the mobile project this measures nothing.
+       * That is not coverage of the phone menu, which has none.
+       */
+      let guarded = false;
+
+      for (const path of ROUTES) {
+        await page.goto(path);
+        await page.getByRole("heading", { level: 1 }).waitFor();
+        await page.waitForLoadState("networkidle");
+
+        const triggers = page.locator("[data-slot=navigation-menu-trigger]:visible");
+        const bad: string[] = [];
+
+        for (let index = 0; index < (await triggers.count()); index++) {
+          const trigger = triggers.nth(index);
+          const label = (await trigger.textContent())?.trim() || `menu ${index + 1}`;
+
+          await trigger.press("Enter");
+          const panel = page.locator("[data-slot=navigation-menu-content]");
+          await panel.waitFor();
+
+          const links = await panel.locator("[data-slot=navigation-menu-link]").count();
+          expect(links, `${path}: the ${label} menu opened with nothing in it`).toBeGreaterThan(0);
+
+          for (let stop = 0; stop < links; stop++) {
+            await page.keyboard.press("Tab");
+
+            // Every link in an open panel is an ordinary tab stop, so falling
+            // out of it early means the panel closed under the test and the
+            // measurements after this point would be of the page behind it.
+            const inPanel = await panel.evaluate((node) => node.contains(document.activeElement));
+            expect(inPanel, `${path}: focus left the ${label} menu at stop ${stop + 1}`).toBe(true);
+
+            const result = await page.evaluate(measureFocusIndicator);
+            if (result === null) continue;
+
+            if (!guarded) {
+              expectSettled(result.transitionDuration);
+              guarded = true;
+            }
+
+            if (result.best < 3) bad.push(`${label}: ${describeFailure(result)}`);
+          }
+
+          await page.keyboard.press("Escape");
+        }
+
+        expect(bad, `${path} has menu links under 3:1 in ${colorScheme} mode`).toEqual([]);
       }
     });
   }

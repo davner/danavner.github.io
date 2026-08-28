@@ -3,6 +3,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { useSearchParams } from "react-router";
 
 import { EmptyState } from "@/components/empty-state";
+import { FilterStatus } from "@/components/filter-status";
 import { CONTROL_CLASS, FilterToggle } from "@/components/filter-toggle";
 import { PageHeader, PageShell } from "@/components/page";
 import { ScrollingText } from "@/components/scrolling-text";
@@ -326,6 +327,12 @@ export function Vinyl() {
           />
         </div>
       </div>
+
+      {/* One sentence for every state the owner toggle and the search box can
+          produce between them, including the empty one - "0 of 83" is the
+          answer, and the reader already knows what they typed. Rendered
+          unconditionally so the region exists before the count changes. */}
+      <FilterStatus message={`${visible.length} of ${records.length} records shown`} />
 
       {visible.length > 0 ? (
         <ul className="mt-8 grid grid-cols-2 gap-px sm:grid-cols-3 lg:grid-cols-4">

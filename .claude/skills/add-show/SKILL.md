@@ -136,8 +136,10 @@ The night in the user's voice - lightly edited, not rewritten.
 ```
 
 A festival needs `type: festival` and a `title`; a normal show takes its heading
-from `lineup[0]`. `solo: true` and `with:` are mutually exclusive and the build
-enforces it.
+from `lineup[0]`. `with:`, `duo: true`, and `solo: true` are three spellings of
+one question - only ever one of them appears, and the build enforces it. When
+the user says they went with only Alexis, write `duo: true` rather than her
+name; a bigger group is a `with` list naming everyone, her included.
 
 ### The notes
 

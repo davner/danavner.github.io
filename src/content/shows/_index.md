@@ -44,11 +44,14 @@ zero, and unrated shows are excluded from the average at the top of the page.
 ## Who you went with
 
 `with` is a list of names. Went alone? Use `solo: true` instead and the entry
-gets a **SOLO RUN / 1P** badge. Setting both is an error - the build will say so.
+gets a **SOLO RUN / 1P** badge. Just the two of you? Use `duo: true` and the
+entry gets a **MY DUO / 2P** badge for the partner set in
+`src/content/profile.ts` without typing her name. Only ever one of the three -
+setting two is an error and the build will say so.
 
-When the only name is the partner set in `src/content/profile.ts`, the entry
-renders a **MY DUO / 2P** badge instead of a list of one. Any other combination
-is just names, because a duo is two players and nothing else.
+`duo: true` is the preferred spelling going forward; a `with` list whose only
+name is the partner keeps working and renders the same badge. Any other
+combination is just names, because a duo is two players and nothing else.
 
 ## Video
 
@@ -125,8 +128,9 @@ lineup:
 | `capacity` | no        | How many the place holds for a night like this. Confirm it; never guess.             |
 | `rating`   | no        | 0–5 horns, decimals allowed. Omit for unrated.                                       |
 | `bestSong` | no        | The one that stayed with you. Shown as "Best live".                                  |
-| `with`     | no        | List of names you went with                                                          |
-| `solo`     | no        | `true` for a solo run. Mutually exclusive with `with`.                               |
+| `with`     | no        | List of names you went with. Only ever one of `with` / `duo` / `solo`.               |
+| `duo`      | no        | `true` for just the two of you, without typing her name. Only ever one of the three. |
+| `solo`     | no        | `true` for a solo run. Only ever one of `with` / `duo` / `solo`.                     |
 | `subtitle` | no        | Qualifier under the heading, e.g. "Day 1"                                            |
 | `video`    | no        | Full URL. A YouTube playlist labels itself "Playlist".                               |
 | `setlists` | no        | `{ band, url }` pairs. Each `band` must be in `lineup`. Renders as per-band buttons. |

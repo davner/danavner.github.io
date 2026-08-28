@@ -39,7 +39,10 @@ export interface Show {
   lineup: string[];
   /** Out of {@link MAX_RATING} horns, partials allowed. `null` means unrated. */
   rating: number | null;
-  /** Who came along. Written as `with:` in frontmatter. */
+  /**
+   * Who came along. Written as `with:` in frontmatter; `duo: true` frontmatter
+   * expands to `[profile.partner]`.
+   */
   companions: string[];
   /** Went alone, deliberately recorded rather than merely unstated. */
   solo: boolean;
@@ -68,8 +71,14 @@ export function isDuo(show: Show): boolean {
   return !show.solo && show.companions.length === 1 && show.companions[0] === profile.partner;
 }
 
-/** Parsed, validated, and sorted newest-first by the content plugin. */
-export const shows: Show[] = rawShows;
+/**
+ * Parsed, validated, and sorted newest-first by the content plugin. `duo: true`
+ * frontmatter is expanded here into the partner's name, so downstream nothing
+ * knows the shorthand existed.
+ */
+export const shows: Show[] = rawShows.map(({ duo, ...show }) =>
+  duo ? { ...show, companions: [profile.partner] } : show,
+);
 
 export interface ShowYear {
   year: string;

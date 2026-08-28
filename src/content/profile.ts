@@ -61,8 +61,8 @@ export const profile = {
   emailUser: "ldpavner",
   emailDomain: "gmail.com",
   /**
-   * Shows where this is the only name in `with` render as a duo rather than a
-   * list of one. Player two.
+   * Shows with `duo: true`, or where this is the only name in `with`, render
+   * as a duo rather than a list of one. Player two.
    */
   partner: "Alexis A.",
   /** How she is referred to in prose, as opposed to in a companions list. */

@@ -322,9 +322,20 @@ function parseShow({ file, meta, body, slug }: Frontmatter, publicDir: string) {
     .map((name) => name.trim())
     .filter(Boolean);
   const solo = meta.solo === true;
+  const duo = meta.duo === true;
 
   if (solo && companions.length > 0) {
     fail("shows", file, "`solo: true` contradicts `with` - drop one");
+  }
+  if (duo && solo) {
+    fail("shows", file, "`duo: true` contradicts `solo: true` - pick one");
+  }
+  if (duo && companions.length > 0) {
+    fail(
+      "shows",
+      file,
+      "`duo: true` contradicts `with` - a bigger night lists every name, hers included",
+    );
   }
 
   return {
@@ -342,6 +353,9 @@ function parseShow({ file, meta, body, slug }: Frontmatter, publicDir: string) {
     rating,
     companions,
     solo,
+    // A frontmatter spelling, not an app field: src/lib/shows.ts expands it to
+    // the partner's name in `companions` and strips it.
+    duo,
     video,
     // A YouTube playlist URL is just a video URL with a `list` param, so the
     // link labels itself rather than needing a second field.

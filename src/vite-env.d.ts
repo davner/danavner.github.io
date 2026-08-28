@@ -13,8 +13,11 @@ declare module "virtual:blog" {
 declare module "virtual:shows" {
   import type { Show } from "@/lib/shows";
 
-  /** Supplied by `contentPlugin()` in `vite-plugin-content.ts`. */
-  export const shows: Show[];
+  /**
+   * Supplied by `contentPlugin()` in `vite-plugin-content.ts`. `duo` is raw
+   * frontmatter - `src/lib/shows.ts` expands it into `companions` and strips it.
+   */
+  export const shows: (Show & { duo: boolean })[];
 }
 
 declare module "virtual:comics" {

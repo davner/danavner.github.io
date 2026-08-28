@@ -130,12 +130,17 @@ collections:
         label_singular: Name
         widget: list
         required: false
-        hint: Leave empty and set Solo instead if you went alone. Never both.
+        hint: Everyone who came along. Just the two of you? Set Duo instead. Alone? Solo. Only ever one of the three.
+      - name: duo
+        label: Duo
+        widget: boolean
+        required: false
+        hint: Just you and Alexis - renders the MY DUO badge without typing her name. Only ever one of the three.
       - name: solo
         label: Solo
         widget: boolean
         required: false
-        hint: Renders the SOLO RUN badge. Mutually exclusive with "Went with".
+        hint: Renders the SOLO RUN badge. Only ever one of the three.
       - name: photos
         label: Photos
         label_singular: Photo

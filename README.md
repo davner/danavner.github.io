@@ -428,24 +428,25 @@ standout: true
 Free-form markdown about the night. Optional.
 ```
 
-| Field      | Required  | Notes                                                                                |
-| ---------- | --------- | ------------------------------------------------------------------------------------ |
-| `lineup`   | shows     | Every band, top billing first. No duplicates.                                        |
-| `title`    | festivals | The event name. On a show, shorthand for a one-band night.                           |
-| `type`     | no        | `show` (default) or `festival`                                                       |
-| `date`     | yes       | `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` - use what you remember                           |
-| `endDate`  | no        | Multi-day festivals. Renders as "Nov 15–16".                                         |
-| `city`     | yes       |                                                                                      |
-| `venue`    | no        | Omit for festivals with no fixed venue                                               |
-| `capacity` | no        | How many the place holds for a night like this. Confirm it; never guess.             |
-| `subtitle` | no        | Qualifier under the heading, e.g. "Day 1"                                            |
-| `rating`   | no        | 0–5 🤘, decimals allowed. Omit for unrated.                                          |
-| `with`     | no        | List of names. Mutually exclusive with `solo`.                                       |
-| `solo`     | no        | `true` renders a **SOLO RUN · 1P** badge                                             |
-| `video`    | no        | Full URL. A YouTube playlist labels itself "Playlist".                               |
-| `setlists` | no        | `{ band, url }` pairs. Each `band` must be in `lineup`. Renders as per-band buttons. |
-| `photos`   | no        | Objects with `src` / `alt` / `caption`. All three required.                          |
-| `standout` | no        | Adds a flame and pins it to the ticker                                               |
+| Field      | Required  | Notes                                                                                                   |
+| ---------- | --------- | ------------------------------------------------------------------------------------------------------- |
+| `lineup`   | shows     | Every band, top billing first. No duplicates.                                                           |
+| `title`    | festivals | The event name. On a show, shorthand for a one-band night.                                              |
+| `type`     | no        | `show` (default) or `festival`                                                                          |
+| `date`     | yes       | `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` - use what you remember                                              |
+| `endDate`  | no        | Multi-day festivals. Renders as "Nov 15–16".                                                            |
+| `city`     | yes       |                                                                                                         |
+| `venue`    | no        | Omit for festivals with no fixed venue                                                                  |
+| `capacity` | no        | How many the place holds for a night like this. Confirm it; never guess.                                |
+| `subtitle` | no        | Qualifier under the heading, e.g. "Day 1"                                                               |
+| `rating`   | no        | 0–5 🤘, decimals allowed. Omit for unrated.                                                             |
+| `with`     | no        | List of names. Only ever one of `with` / `duo` / `solo`.                                                |
+| `duo`      | no        | `true` renders the **MY DUO · 2P** badge without typing the partner's name. Only ever one of the three. |
+| `solo`     | no        | `true` renders a **SOLO RUN · 1P** badge. Only ever one of the three.                                   |
+| `video`    | no        | Full URL. A YouTube playlist labels itself "Playlist".                                                  |
+| `setlists` | no        | `{ band, url }` pairs. Each `band` must be in `lineup`. Renders as per-band buttons.                    |
+| `photos`   | no        | Objects with `src` / `alt` / `caption`. All three required.                                             |
+| `standout` | no        | Adds a flame and pins it to the ticker                                                                  |
 
 Photos live in `public/img/shows/<slug>/` and render as a swipeable strip with
 prev/next buttons and a counter. One photo drops the controls.
@@ -474,8 +475,10 @@ There is also an `add-show` skill in `.claude/skills/` that runs the whole
 routine: looks up the tour name, venue, and openers, optimizes the photos,
 writes their alt text and captions, and produces the markdown file.
 
-`solo: true` renders a **SOLO RUN / 1P** badge. When the only name in `with` is
-the partner named in `profile.ts`, the entry renders **MY DUO / 2P** instead.
+`solo: true` renders a **SOLO RUN / 1P** badge. `duo: true` renders the
+**MY DUO / 2P** badge for the partner named in `profile.ts` without typing her
+name - the preferred way to log a night for two, though a `with` list whose
+only name is the partner still renders the same badge.
 
 **Every subsection is conditional** - no rating, no lineup, no companions, no
 photos, no notes means nothing renders in its place. The stat row works the same

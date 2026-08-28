@@ -42,7 +42,7 @@ export function Career() {
             href="https://github.com/davner"
             target="_blank"
             rel="noreferrer noopener"
-            className="inline-flex items-center gap-2 border border-border px-5 py-3 transition-colors hover:border-ember hover:bg-ember/10 hover:text-ember"
+            className="inline-flex items-center gap-2 border border-border px-5 py-3 transition-colors hover:border-ember hover:bg-ember/5 hover:text-ember"
           >
             <span className="readout">GitHub</span>
             <ArrowUpRight className="size-4" />
@@ -155,7 +155,7 @@ export function Career() {
           href={scholar.href}
           target="_blank"
           rel="noreferrer noopener"
-          className="group mt-px flex items-center gap-4 border border-t-0 border-border p-6 transition-colors hover:border-ember hover:bg-ember/10 hover:text-ember sm:p-8"
+          className="group mt-px flex items-center gap-4 border border-t-0 border-border p-6 transition-colors hover:border-ember hover:bg-ember/5 hover:text-ember sm:p-8"
         >
           <span className="flex-1">
             <span className="readout block text-ember">Publications</span>

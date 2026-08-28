@@ -135,7 +135,7 @@ export function Home() {
               </Link>
               <Link
                 to="/career"
-                className="inline-flex items-center gap-2 border border-border px-5 py-3 transition-colors hover:border-ember hover:bg-ember/10 hover:text-ember"
+                className="inline-flex items-center gap-2 border border-border px-5 py-3 transition-colors hover:border-ember hover:bg-ember/5 hover:text-ember"
               >
                 <span className="readout">The day job</span>
               </Link>

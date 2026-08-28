@@ -238,7 +238,7 @@ function ShowBody({ show }: { show: (typeof shows)[number] }) {
       <Section>
         <Link
           to="/shows"
-          className="readout group inline-flex items-center gap-2 border border-border px-5 py-3 text-muted-foreground transition-colors hover:border-ember hover:bg-ember/10 hover:text-ember"
+          className="readout group inline-flex items-center gap-2 border border-border px-5 py-3 text-muted-foreground transition-colors hover:border-ember hover:bg-ember/5 hover:text-ember"
         >
           <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
           All shows

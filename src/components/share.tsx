@@ -134,7 +134,7 @@ export function Share({ subject, className }: { subject: Shareable; className?: 
   }
 
   const action =
-    "readout w-full justify-start rounded-none hover:border-ember hover:bg-ember/10 hover:text-ember";
+    "readout w-full justify-start rounded-none hover:border-ember hover:bg-ember/5 hover:text-ember";
 
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
@@ -143,7 +143,7 @@ export function Share({ subject, className }: { subject: Shareable; className?: 
           variant="outline"
           size="sm"
           className={cn(
-            "readout rounded-none text-muted-foreground hover:border-ember hover:bg-ember/10 hover:text-ember",
+            "readout rounded-none text-muted-foreground hover:border-ember hover:bg-ember/5 hover:text-ember",
             className,
           )}
         >

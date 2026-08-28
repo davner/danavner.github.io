@@ -21,8 +21,15 @@ const buttonVariants = cva(
         // Any outline button: on hover the whole thing goes ember and picks up
         // a faint ember wash, so it reads as a target rather than lighting up
         // only its edges.
+        //
+        // The wash is 5% and not more. Ember on `--background` is 5.32:1 in the
+        // light theme, so there is only 0.82 of headroom over the 4.5:1 that
+        // 1.4.3 asks, and an ember wash spends it: at 10% the label measured
+        // 4.32:1 from painted pixels on all six controls that use this pattern.
+        // 5% measures 4.77:1, 4.72 at its worst pixel. Anything darker fails
+        // the light theme again.
         outline:
-          "border border-border bg-background transition-colors hover:border-ember hover:bg-ember/10 hover:text-ember",
+          "border border-border bg-background transition-colors hover:border-ember hover:bg-ember/5 hover:text-ember",
         secondary: "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",

@@ -7,7 +7,7 @@ import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 
 import { FactLine } from "@/components/fact-line";
-import { PageShell } from "@/components/page";
+import { PageHeader, PageShell } from "@/components/page";
 import { Badge } from "@/components/ui/badge";
 import { CATEGORY_LABEL, formatDate, getPost, posts } from "@/lib/blog";
 import { useDocumentMeta } from "@/lib/use-document-meta";
@@ -42,9 +42,10 @@ export function BlogPost() {
       </Link>
 
       <article className="mt-10">
-        <header>
-          <h1 className="display text-[clamp(2.5rem,8vw,5rem)]">{post.title}</h1>
-
+        {/* A post title is a phrase, so it takes the long step - and the header
+            block itself is the shared one, so a post's title, lede and meta sit
+            at the same measurements as every other page's. */}
+        <PageHeader title={post.title} size="long" lede={post.summary}>
           {/* When it went up and what it costs to read, stated the same way a
               show page states its date and room. */}
           <FactLine
@@ -62,12 +63,6 @@ export function BlogPost() {
             {post.draft ? <Badge variant="ember">Draft</Badge> : null}
           </div>
 
-          {post.summary ? (
-            <p className="mt-7 text-lg leading-relaxed text-muted-foreground text-pretty">
-              {post.summary}
-            </p>
-          ) : null}
-
           {post.tags.length > 0 ? (
             <ul className="mt-6 flex flex-wrap gap-x-4 gap-y-2">
               {post.tags.map((tag) => (
@@ -77,9 +72,9 @@ export function BlogPost() {
               ))}
             </ul>
           ) : null}
-        </header>
+        </PageHeader>
 
-        <div className="rule-ticks my-10" />
+        <div className="rule-ticks mb-10" />
 
         <div className="prose-dan">
           <Markdown

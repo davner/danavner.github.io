@@ -26,16 +26,18 @@ import {
   type ModeStats,
   type SeasonEntry,
 } from "@/lib/fortnite";
+import { PAGE_META } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
 /*
- * Two names, deliberately. The tab and the nav say "Fortnite", because that is
- * what someone is looking for in a list of links and what `site.ts` calls it -
- * `tests/site.spec.ts` holds the two together. The headline on the page is free
+ * Two names, deliberately. The tab, the nav, and the served HTML all say
+ * "Fortnite", from the one entry in `lib/routes.ts`, because that is what
+ * someone is looking for in a list of links. The headline on the page is free
  * to be the joke.
  */
-const TITLE = "Fortnite";
+const META = PAGE_META["/fortnite"];
+
 /** Solid, then outlined, the way every page title on the site is set. */
 const HEADING = (
   <>
@@ -43,7 +45,6 @@ const HEADING = (
     <span className="display-outline-ember block">droppin’?</span>
   </>
 );
-const DESCRIPTION = "Wins, kills, and how good I am. 1v1 me.";
 
 /**
  * The four numbers worth reading first, in the order they answer "how is he
@@ -262,7 +263,7 @@ function SeasonHistory({ active, onSelect }: { active: string; onSelect: (key: s
 }
 
 export function Fortnite() {
-  useDocumentMeta(TITLE, DESCRIPTION);
+  useDocumentMeta(META.title, META.description);
 
   const [params, setParams] = useSearchParams();
 
@@ -314,7 +315,7 @@ export function Fortnite() {
     <PageShell>
       <PageHeader
         title={HEADING}
-        lede={DESCRIPTION}
+        lede={META.description}
         aside={
           fortnite.name ? (
             <div className="border border-border p-6">

@@ -16,7 +16,7 @@ import {
   type NowEntry,
 } from "@/lib/now";
 import { nowDate, nowSummary, nowTitle } from "@/lib/now-summary";
-import { NOW_DESCRIPTION } from "@/lib/site";
+import { PAGE_META } from "@/lib/routes";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
 // Most now entries are words only, and the carousel is ~24kB of embla that they
@@ -27,11 +27,11 @@ const PhotoCarousel = lazy(() =>
 );
 
 /*
- * The tab and the nav say "Now" - that is what `site.ts` calls it, and
- * `tests/site.spec.ts` holds the two together. The headline is the same word
- * given room to breathe.
+ * The tab, the nav, and the HTML the build serves a crawler all say "Now" - one
+ * entry in `lib/routes.ts` feeds all three. The headline is the same word given
+ * room to breathe.
  */
-const TITLE = "Now";
+const META = PAGE_META["/now"];
 
 /** Solid, then outlined, the way every page title on the site is set. */
 const HEADING = (
@@ -40,7 +40,6 @@ const HEADING = (
     <span className="display-outline-ember block">now</span>
   </>
 );
-const DESCRIPTION = NOW_DESCRIPTION;
 
 /*
  * Deliberately the one page on the site nothing generates.
@@ -90,7 +89,7 @@ export function Now() {
  * years ago. So the staleness is spelled out in words next to it.
  */
 function NowCurrent() {
-  useDocumentMeta(TITLE, DESCRIPTION);
+  useDocumentMeta(META.title, META.description);
 
   const { current, archive } = now;
   const days = stalenessInDays(current.updated);
@@ -121,10 +120,10 @@ function NowCurrent() {
          * came from, so a lede that explains it again is the first sentence read
          * back in a worse voice. What is left worth saying is when it changes,
          * and that sentence had already been written for the search result.
-         * Sharing the constant also means the page and its link preview cannot
-         * drift into describing the page differently.
+         * Sharing the one entry in `lib/routes.ts` also means the page and its
+         * link preview cannot drift into describing the page differently.
          */
-        lede={DESCRIPTION}
+        lede={META.description}
       />
 
       <div className="max-w-2xl">
@@ -190,7 +189,7 @@ function NowPermalink({ entry, replacedBy }: { entry: NowEntry; replacedBy: NowE
   /*
    * `nowTitle` is the one title string for this page, and the build composes the
    * emitted `<title>` from the same call - `useDocumentMeta` appends the site
-   * name here, `vite-plugin-share-pages.ts` appends it there, both with the same
+   * name here, `vite-plugin-pages.ts` appends it there, both with the same
    * separator. The served HTML and the tab cannot say different things.
    */
   useDocumentMeta(nowTitle(entry), nowSummary(entry));

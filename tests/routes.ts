@@ -1,14 +1,10 @@
+import { STATIC_PATHS } from "../src/lib/routes";
+
 /** Every page the site serves, used by most of the suites. */
-export const ROUTES = [
-  "/",
-  "/about",
-  "/career",
-  "/blog",
-  "/shows",
-  "/vinyl",
-  "/now",
-  "/comics",
-  "/fortnite",
+export const ROUTES: readonly string[] = [
+  // Straight from the manifest the build writes those pages from, so a new
+  // section joins every sweep at the same moment it gets a page.
+  ...STATIC_PATHS,
   "/blog/welcome",
   "/blog/building-this-site",
   "/shows/bruno-mars-madrid-2026",
@@ -27,4 +23,4 @@ export const ROUTES = [
    * So: pick a date that is filed and is not the newest.
    */
   "/now/2026-08-10",
-] as const;
+];

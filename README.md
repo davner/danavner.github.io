@@ -187,6 +187,7 @@ file, down to checking that a photo path actually exists in `public/`.
 ```
 public/                   served as-is (CNAME, favicon, photos, fetched covers)
   admin/                  Sveltia CMS: index.html and config.yml, see "Editing from the browser"
+  robots.txt              allows everything but /admin and /admin/, and names the sitemap
 scripts/
   optimize-photos.mjs     resizes any image and strips its EXIF
   make-share-fallback.mjs draws the social image for a show with no photos
@@ -202,8 +203,9 @@ eslint.config.js          the browser half, the Node half, prettier last
 .husky/pre-commit         lint-staged, then a whole-project type-check
 .git-blame-ignore-revs    formatting-only commits, skipped by git blame
 vite-plugin-content.ts    reads + validates every content collection at build time
-vite-plugin-share-pages.ts writes an HTML file per show and per now entry, so links preview
-vite.config.ts            aliases, Tailwind, and the 404.html fallback
+vite-plugin-cover-variants.ts derives a smaller copy of every vinyl and comic cover, into dist
+vite-plugin-pages.ts      writes a real HTML page per route, plus 404.html and sitemap.xml
+vite.config.ts            aliases, Tailwind, fonts, and the footer's build date
 src/
   content/
     profile.ts            everything the Home / About / Career pages render
@@ -534,10 +536,17 @@ and a text message gets a link that previews itself. On a desktop, where
 `navigator.share` is usually missing, the panel offers the same poster to save
 and the link to copy.
 
-The link itself previews properly because `vite-plugin-share-pages.ts` writes a
-real `dist/shows/<slug>/index.html` per show and a `dist/now/<date>/index.html`
-per now entry at build time, each with its own title, description, and
-`og:image`. Crawlers behind iMessage, Slack, and WhatsApp read the served HTML
+The link itself previews properly because `vite-plugin-pages.ts` writes a
+real `dist/shows/<slug>.html` per show and a `dist/now/<date>.html` per now
+entry at build time, each with its own title, description, `rel=canonical`,
+and `og:image`. A page with a photo of its own also gets that photo's
+`og:image:alt` and its real `og:image:width` and `og:image:height`, measured
+from the file with sharp at build time so the card is never announced at the
+wrong shape. A page with no photo falls back to a share card and keeps the
+tags `index.html` ships: both cards are drawn 1200x630, and the alt there
+describes the site card. A remote `http(s)` image gets an alt and no
+dimensions, because measuring one would mean a network fetch during the build.
+Crawlers behind iMessage, Slack, and WhatsApp read the served HTML
 and never run the router, so without those files every shared link would preview
 as the same generic site card.
 
@@ -751,8 +760,8 @@ the repo. The current entry renders them as a strip under the prose; archived
 entries print a count instead, because the archive pane is a fixed height and a
 carousel per entry would push the archive itself off a phone screen.
 
-**A shared now link previews as itself.** `vite-plugin-share-pages.ts` writes a
-real `dist/now/<date>/index.html` per entry, with that entry's date in the
+**A shared now link previews as itself.** `vite-plugin-pages.ts` writes a
+real `dist/now/<date>.html` per entry, with that entry's date in the
 title and its opening paragraph as the description - the same mechanism the
 show pages use, and for the same reason: crawlers read the served HTML and
 never run the router. The current entry gets a file too, even though its URL
@@ -818,7 +827,7 @@ each entry and you finish it. One entry per season, newest first:
   "name": "Hunters",
   "start": "2024-12-01",
   "end": "2025-02-21",
-  "main": { "name": "Jade", "id": "...", "image": "/img/fortnite/jade.png" }
+  "main": { "name": "Jade", "id": "...", "image": "/img/fortnite/jade.webp" }
 }
 ```
 
@@ -840,8 +849,9 @@ node scripts/fetch-fortnite-skins.mjs
 ```
 
 which resolves it against Fortnite-API's cosmetics catalogue, downloads the
-render into `public/img/fortnite/`, and writes the resolved id and image path
-back into the calendar. No key needed - the cosmetics routes are the free half.
+render into `public/img/fortnite/` as WebP with its transparency intact, and
+writes the resolved id and image path back into the calendar. No key needed -
+the cosmetics routes are the free half.
 
 **Entries add themselves.** At a rollover the nightly job detects the new
 season from Epic's backend numbering and prepends an entry with no `name` and
@@ -970,9 +980,10 @@ publishes `dist/` to GitHub Pages.
 > **GitHub Actions**. Serving from the branch root would serve the un-built
 > `index.html`.
 
-The custom domain lives in `public/CNAME` so it survives every deploy. Deep
-links work because the build writes a `404.html` copy of `index.html` - Pages
-serves it for unknown paths and the client router takes over.
+The custom domain lives in `public/CNAME` so it survives every deploy. Every
+route the site serves has a real HTML file, so a bare request for `/vinyl`
+answers 200 with that page's own meta. `404.html` is the backstop for everything
+else - Pages serves it for unknown paths and the client router takes over.
 
 ---
 
@@ -997,6 +1008,16 @@ Things that were not obvious, in case you hit them too:
   measured and rejected: Comics is 2 kB gzipped and Fortnite 5 kB, but making
   them eager pulls everything they _share_ into the entry too, which came to
   +24 kB. A route chunk earns its request or it does not.
+- **Each page preloads its own route chunk.** Cold, the chain is HTML, then the
+  entry bundle, then the route chunk - and the browser cannot see the third
+  until the second has been fetched, parsed and run. `vite-plugin-pages.ts`
+  writes a `modulepreload` for the route's own chunk into that route's HTML, so
+  it is in flight while the entry is still parsing. The map from route to source
+  module is written out rather than derived from the path: `/blog/:slug` renders
+  `blog-post.tsx` and `/shows/:slug` renders `show.tsx`, so a rule that matched
+  names would skip the two heaviest chunks on the site. A module that ends up in
+  no chunk fails the build rather than quietly losing its preload. `404.html`
+  gets none, because it stands in for every path and so has no route of its own.
 - **A deploy can delete the chunk an open tab is about to ask for.** Chunk names
   are content-hashed, so a deploy writes new ones and removes the old. A tab
   opened before it still points at the old names, and clicking a lazy route used
@@ -1005,33 +1026,71 @@ Things that were not obvious, in case you hit them too:
   once. The guard is a timestamp rather than a flag on purpose: the obvious
   version clears the flag when the app mounts, which happens _before_ the chunk
   fails again, and loops forever.
-- **`404.html` is a copy of `index.html` with one line removed.** GitHub Pages
-  has no SPA rewrite, so it serves `404.html` for every path that is not `/` -
-  which makes it the one place the two entry points can differ. The home page's
-  hero photo is preloaded from the HTML, because React renders it and the URL
-  otherwise does not exist until the bundle has run (1.5s of dead time on
-  mobile). That preload is stripped from `404.html` so a deep link into
-  `/fortnite` does not pay 47 kB for a photo it never shows. The build fails if
-  the markers that make the strip possible go missing.
+- **Only `index.html` preloads the home page's hero.** The photo is the home
+  page's largest contentful paint and it is preloaded from the HTML, because
+  React renders it and the URL otherwise does not exist until the bundle has run
+  (1.5s of dead time on mobile). No other page shows it, and `index.html` is the
+  only file Pages serves at `/`, so `vite-plugin-pages.ts` strips the preload out
+  of every file it generates - `404.html` and each share page - and none of them
+  pays 47 kB for a photo it never shows. The build fails if the markers that make
+  the strip possible go missing.
+- **The vinyl and comics grids offer a smaller cover, and it only pays off at
+  DPR 1.** Each tile's `srcSet` names a 300w sleeve beside the 500w one and a
+  250w comic cover beside the 400w one, with a `sizes` string giving the width
+  the tile actually lays out at. Measured on a first load of a 1280px desktop
+  viewport at DPR 1, the covers `/vinyl` fetches drop from 1280 KiB to 490 KiB
+  and `/comics` from 1267 KiB to 558 KiB. On a Pixel 7 the saving is zero,
+  which is worth stating rather than hiding: a tile there lays out at 189.5
+  CSS px, and DPR 2.625 makes that 497 device px, so the 500w sleeve is
+  already the right pick and the 400w comic cover is already under-sized. The
+  win is entirely DPR 1. `vite-plugin-cover-variants.ts` derives the variants
+  into `dist` and they are deliberately not committed: `update-vinyl.mjs` and
+  `update-comics.mjs` delete every `.webp` in those directories that is not a
+  cover they just fetched, and their workflows stage the result with
+  `git add -A`, so a committed variant would be deleted on the next nightly run
+  and the deletion committed. That costs about 0.3s of build time across the
+  90 covers and about 1.7 MB of `dist`. The same plugin derives them on demand
+  in dev, because a `srcSet` candidate that 404s leaves the tile blank rather
+  than falling back to `src`.
+- **Every route is a real file, and three of them are two files.**
+  `vite-plugin-pages.ts` writes `about.html`, `blog/welcome.html`, and one page
+  per show and per now entry, each carrying its own title, description, `og:*`
+  tags and `rel=canonical`. Without them a bare request for anything but `/`
+  answers 404 - humans never notice, because `404.html` boots the app anyway,
+  but crawlers stop there and Lighthouse refuses to run at all. The flat name is
+  what makes `/about` serve directly: the directory form costs a 301 to
+  `/about/` first. `/blog`, `/shows` and `/now` also name directories this build
+  fills, and nothing documents which form Pages prefers when both exist, so each
+  of those is written twice with identical bytes.
+- **The sitemap is generated and nothing on the site links to it.**
+  `vite-plugin-pages.ts` writes `dist/sitemap.xml` from the same page list it
+  just wrote files from, minus the current now entry's permalink, which
+  redirects to `/now`. `public/robots.txt` names it, which is how a crawler
+  finds it - and is the reason there is no link to it in the footer, because
+  `tests/links.spec.ts` follows every in-site href and expects an `h1` at the
+  other end. `<loc>` and nothing else: the deploy checks out at depth 1, so
+  there is no per-file git history to read a `lastmod` out of.
 - **The footer fire is a simulation, not a sprite.** `components/pixel-fire.tsx`
   runs the Doom fire routine on a low-resolution canvas scaled up with
   `image-rendering: pixelated`. It pauses via `IntersectionObserver` when it is
   below the fold, which is most of the time, and settles into a single still
   frame under `prefers-reduced-motion`.
-- **`lib/show-summary.ts` and `lib/now-summary.ts` may not import a `@/` alias
-  or a `virtual:` specifier.** Both are called from the browser by the share
-  button and from Node by the build that writes the per-entry HTML, and
-  `vite-plugin-share-pages.ts` reaches them by relative path from Vite's config
-  context. Neither kind of specifier resolves there: `resolve.alias` applies to
-  the app's module graph, not to the config bundle, and the `virtual:` modules
-  do not exist yet because `contentPlugin` is what creates them. Bare npm
-  specifiers are fine, which is why `now-summary.ts` can parse markdown with
-  `mdast-util-from-markdown` and friends - esbuild leaves them external to the
-  config bundle and Node loads them itself. `dates.ts` imports nothing at all,
-  which is why the month table lives there rather than in either summary. The
-  rule is enforced rather than remembered: `tsconfig.node.json` lists exactly
-  these files and defines no `@` path, so an aliased import fails `tsc -b`
-  before the build reaches Vite.
+- **The `lib/` modules the build reads may not import a `@/` alias or a
+  `virtual:` specifier.** `show-summary.ts`, `now-summary.ts`, `routes.ts`,
+  `site.ts` and `covers.ts` are each called from the browser - the share
+  button, the page meta, the cover tiles - and from Node by the plugin that
+  reaches them by relative path from Vite's config context,
+  `vite-plugin-pages.ts` for the first four and `vite-plugin-cover-variants.ts`
+  for `covers.ts`. Neither kind of specifier resolves there: `resolve.alias`
+  applies to the app's module graph, not to the config bundle, and the
+  `virtual:` modules do not exist yet because `contentPlugin` is what creates
+  them. Bare npm specifiers are fine, which is why `now-summary.ts` can parse
+  markdown with `mdast-util-from-markdown` and friends - esbuild leaves them
+  external to the config bundle and Node loads them itself. `dates.ts` imports
+  nothing at all, which is why the month table lives there rather than in
+  either summary. The rule is enforced rather than remembered:
+  `tsconfig.node.json` lists exactly these files and defines no `@` path, so an
+  aliased import fails `tsc -b` before the build reaches Vite.
 
 ---
 

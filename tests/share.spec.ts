@@ -54,7 +54,7 @@ test.describe("link previews", () => {
     const titles = new Set<string>();
 
     for (const slug of SLUGS) {
-      const html = readFileSync(path.join(DIST, "shows", slug, "index.html"), "utf8");
+      const html = readFileSync(path.join(DIST, "shows", `${slug}.html`), "utf8");
 
       const meta = metaFrom(html);
 
@@ -98,7 +98,7 @@ test.describe("now link previews", () => {
     const titles = new Set<string>();
 
     for (const date of NOW_DATES) {
-      const html = readFileSync(path.join(DIST, "now", date, "index.html"), "utf8");
+      const html = readFileSync(path.join(DIST, "now", `${date}.html`), "utf8");
       const meta = metaFrom(html);
 
       const title = /<title>([^<]*)<\/title>/.exec(html)?.[1];
@@ -151,7 +151,7 @@ test.describe("now link previews", () => {
     test.skip(archived.length === 0, "only one now entry filed - none is archived yet");
 
     const date = archived[archived.length - 1];
-    const html = readFileSync(path.join(DIST, "now", date, "index.html"), "utf8");
+    const html = readFileSync(path.join(DIST, "now", `${date}.html`), "utf8");
     const emitted = metaFrom(html)("description");
 
     await page.goto(`/now/${date}`);
@@ -185,7 +185,7 @@ test.describe("now link previews", () => {
       )?.[1];
       expect(first, `${date} has no readable first photo`).toBeTruthy();
 
-      const html = readFileSync(path.join(DIST, "now", date, "index.html"), "utf8");
+      const html = readFileSync(path.join(DIST, "now", `${date}.html`), "utf8");
       expect(metaFrom(html)("og:image"), `${date} does not preview as its own photo`).toBe(
         `https://danavner.com${first}`,
       );
@@ -200,7 +200,7 @@ test.describe("now link previews", () => {
  * contain, and both of them are plain prose with one ordinary link - so a
  * heading, an image, a list, a reference link or a parenthesised URL meets
  * nothing that would notice it came out mangled. Its output is the meta
- * description baked into every `dist/now/<date>/index.html`, the tab
+ * description baked into every `dist/now/<date>.html`, the tab
  * description, and the poster's excerpt, which is three surfaces where the
  * mistake is only visible after it has been sent.
  *
@@ -566,7 +566,7 @@ test.describe("the description and the page read the same markdown", () => {
 /**
  * The one line a shared link previews with.
  *
- * `nowSummary` is what every `dist/now/<date>/index.html` carries as its
+ * `nowSummary` is what every `dist/now/<date>.html` carries as its
  * description and what the tab shows, and nothing exercised its cut: the two
  * filed entries both open with a paragraph short enough to survive whole.
  */

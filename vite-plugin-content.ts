@@ -1169,6 +1169,25 @@ export function readNow(root: string, publicDir: string) {
 }
 
 /**
+ * The blog posts, parsed the same way the app sees them. Exported for the
+ * reason `readShows` is: the build writes a real HTML page per post and a
+ * second parser would drift out of step with this one.
+ *
+ * Drafts come back with everything else. The only draft filter in this file is
+ * in `load`, which is what keeps them out of the shipped bundle - a caller that
+ * turns these into URLs has to drop them itself, or the build hands an unfinished
+ * post to every crawler that reads the sitemap.
+ */
+export function readPosts(root: string, publicDir: string) {
+  const collection = COLLECTIONS.find((entry) => entry.name === "blog")!;
+  return readCollection(
+    collection,
+    path.resolve(root, "src/content/blog"),
+    publicDir,
+  ) as ReturnType<typeof parsePost>[];
+}
+
+/**
  * The published shows, parsed the same way the app sees them. Exported so the
  * build can write a real HTML page per show without a second parser drifting
  * out of step with this one.

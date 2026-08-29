@@ -5,15 +5,15 @@ import { FramedPhoto } from "@/components/framed-photo";
 import { PageHeader, PageShell, Section } from "@/components/page";
 import { Badge } from "@/components/ui/badge";
 import { education, observing, profile, roles, skills, socials } from "@/content/profile";
+import { PAGE_META } from "@/lib/routes";
 import { useDocumentMeta } from "@/lib/use-document-meta";
+
+const META = PAGE_META["/career"];
 
 const scholar = socials.find((social) => social.icon === "graduation-cap")!;
 
 export function Career() {
-  useDocumentMeta(
-    "Career",
-    "A decade of writing software for telescopes: the roles, the toolkit, and the nights on a mountain that inform both.",
-  );
+  useDocumentMeta(META.title, META.description);
 
   return (
     <PageShell>

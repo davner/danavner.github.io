@@ -192,7 +192,7 @@ npm test        # build first; the suite runs against dist/
 
 The build fails on a malformed entry or a photo path that does not exist, which
 is the point - a broken show never reaches the live site. The build also writes
-`dist/shows/<slug>/index.html` so the new entry gets its own link preview.
+`dist/shows/<slug>.html` so the new entry gets its own link preview.
 
 Then stage only the new markdown file and its photos, show `git status --short`,
 and stop. Committing needs an explicit instruction.

@@ -1928,6 +1928,122 @@ test.describe("chrome", () => {
     });
   });
 
+  /*
+   * A lazy route paints the shell around a fallback while its chunk is in
+   * flight, and the footer goes wherever the fallback leaves it. Below the fold
+   * is the only place it can sit without moving when the real page arrives, and
+   * the jump it makes otherwise is the largest layout shift on the site.
+   *
+   * Swept rather than pinned to the page it was found on: `App` names the
+   * fallback once per lazy route, so nothing stops the next one being given a
+   * shorter stand-in. Eager routes leave the loop on their own - they arrive
+   * with their `h1` already rendered, and a fallback has none.
+   */
+  test("a route waiting on its chunk keeps the footer below the fold", async ({ page }) => {
+    /*
+     * The routes `App` imports directly rather than through `lazy`. Every other
+     * entry in `ROUTES` waits on a chunk, and the count is what the sweep
+     * checks itself against at the end.
+     */
+    const EAGER_ROUTES = ["/", "/about", "/career", "/blog"];
+
+    /*
+     * Taller than the fallback reaches unaided, so only a container that grows
+     * to the viewport can put the footer past it. Both projects' stock heights
+     * are shorter than the fallback's own content, which means the footer
+     * clears those folds whether the container stretches or not and the
+     * assertion below would hold on the exact layout it exists to catch. The
+     * second measurement in the loop is what keeps this number ahead of the
+     * fallback as the fallback changes. Width is left as the project set it.
+     */
+    const FOLD = 1200;
+    await page.setViewportSize({ width: page.viewportSize()!.width, height: FOLD });
+
+    /*
+     * The chunks a route waits on are every script under `assets/` except the
+     * one the document loads: nothing else is statically imported, so
+     * everything else arrives on demand. Read off the page rather than named,
+     * because the filename is content-hashed. Holding the entry too would
+     * spend the delay before React has run, with no shell and no fallback on
+     * screen, and then spend it again on the route chunk.
+     */
+    await page.goto("/");
+    const entry = await page.locator("script[type=module][src]").first().getAttribute("src");
+    expect(entry, "the document loads no module script").not.toBeNull();
+
+    /*
+     * Held until the reads below are done rather than for a fixed spell. Each
+     * page carries a `modulepreload` for its own chunk, so the request goes out
+     * while the document is still parsing - ahead of the entry, ahead of React,
+     * ahead of anything there is to measure. A fixed window can expire before
+     * the fallback is on screen, and a route whose chunk landed early renders
+     * its `h1` in the first commit, takes the eager branch below, and is skipped
+     * without failing anything.
+     */
+    let holding = false;
+    await page.route(
+      (url) => /^\/assets\/.+\.js$/.test(url.pathname) && url.pathname !== entry,
+      async (route) => {
+        while (holding) await new Promise((resolve) => setTimeout(resolve, 25));
+        await route.continue();
+      },
+    );
+
+    const footer = page.locator("footer");
+    const title = page.getByRole("heading", { level: 1 });
+    let measured = 0;
+
+    for (const path of ROUTES) {
+      holding = true;
+      // `commit` rather than the default: `load` does not resolve until the
+      // held chunk has landed, by which point the fallback is gone.
+      await page.goto(path, { waitUntil: "commit" });
+      await footer.waitFor();
+
+      // An eager route renders its page in the same commit as the shell, so
+      // there is no fallback on screen to measure.
+      if ((await title.count()) > 0) {
+        holding = false;
+        continue;
+      }
+
+      const box = await footer.boundingBox();
+      // The bottom of the fallback's own content, which is what the footer
+      // would sit under if the container did not stretch.
+      const content = await page.locator("[data-slot=skeleton]").last().boundingBox();
+      holding = false;
+      measured += 1;
+
+      expect(box, `${path} renders no footer while its chunk loads`).not.toBeNull();
+      expect(
+        box!.y,
+        `${path} paints its footer above the fold while loading`,
+      ).toBeGreaterThanOrEqual(FOLD);
+
+      expect(content, `${path} renders no fallback content to measure`).not.toBeNull();
+      expect(
+        content!.y + content!.height,
+        `${path}'s fallback now fills the pinned viewport by itself, so this ` +
+          `test can no longer tell a stretched container from an unstretched ` +
+          `one - raise FOLD`,
+      ).toBeLessThan(FOLD);
+
+      // Let the chunk land before the next route pulls the page out from under
+      // the request that is still being held.
+      await title.waitFor();
+    }
+
+    /*
+     * Every lazy route, not merely one of them. A fallback that stopped
+     * rendering, or a chunk that arrived before the fallback could, puts routes
+     * in the eager branch one at a time - and a sweep that only needs a single
+     * catch keeps passing while the coverage drains away.
+     */
+    expect(measured, "a lazy route was not caught waiting on its chunk").toBe(
+      ROUTES.length - EAGER_ROUTES.length,
+    );
+  });
+
   test("no page scrolls horizontally", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 800 });
     for (const path of ROUTES) {

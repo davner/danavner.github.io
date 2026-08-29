@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+# The Sveltia CMS. Nothing on the site links to it and a login screen is not a
+# search result; publishing a sitemap is the moment to say so out loud. Both
+# spellings, because a rule ending in a slash does not match the bare `/admin`
+# that Pages redirects from.
+Disallow: /admin
+Disallow: /admin/
+
+Sitemap: https://danavner.com/sitemap.xml

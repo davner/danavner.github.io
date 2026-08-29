@@ -17,6 +17,7 @@ import { PageHeader, PageShell, Section } from "@/components/page";
 import { SocialLinks } from "@/components/social-links";
 import { Badge } from "@/components/ui/badge";
 import { funFact, interests, profile, type Interest } from "@/content/profile";
+import { PAGE_META } from "@/lib/routes";
 import { showStats } from "@/lib/shows";
 import { cn } from "@/lib/utils";
 import { useDocumentMeta } from "@/lib/use-document-meta";
@@ -57,11 +58,10 @@ const trailingSpan = trailingSpanFor(interests.length);
 const SM_SPAN: Record<number, string> = { 1: "", 2: "sm:col-span-2" };
 const LG_SPAN: Record<number, string> = { 1: "", 2: "lg:col-span-2", 3: "lg:col-span-3" };
 
+const META = PAGE_META["/about"];
+
 export function About() {
-  useDocumentMeta(
-    "About",
-    "The non-work half. Alexis, Milly and Penny, shows, records, comics, Legos, and one very specific bowling achievement.",
-  );
+  useDocumentMeta(META.title, META.description);
 
   return (
     <PageShell>

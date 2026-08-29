@@ -18,10 +18,10 @@
       bundle has parsed and run - measured at 1.5s of dead time on mobile before
       the request went out.
 
-      Marked so the 404.html copy can drop it: GitHub Pages serves index.html
-      for "/" and 404.html for every deep link, and preloading the home hero on
-      /fortnite would be 47 kB nobody asked for. See `githubPagesSpaFallback`
-      in vite.config.ts.
+      Marked so every generated page can drop it: this file is the only one
+      GitHub Pages serves at "/", and preloading the home hero on /fortnite
+      would be 47 kB nobody asked for. `vite-plugin-pages.ts` builds all of
+      them from this file with the marked block taken out.
     -->
     <!-- home-preload:start -->
     <link

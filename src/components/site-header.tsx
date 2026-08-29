@@ -36,7 +36,10 @@ const LABEL = "font-mono text-[0.68rem] font-medium tracking-[0.18em] uppercase"
  * so the accent has to be turned off rather than merely overridden.
  */
 const BAR_ITEM = cn(
-  "group relative flex h-full items-center gap-1.5 rounded-none px-1.5 transition-colors sm:px-3",
+  // `flex-row` is stated rather than left to the default: `NavigationMenuLink`'s
+  // own base sets `flex-col`, and a direction is not a display, so merging the
+  // two class strings keeps both.
+  "group relative flex h-full flex-row items-center gap-1.5 rounded-none px-1.5 transition-colors sm:px-3",
   "bg-transparent! hover:bg-transparent! focus:bg-transparent! data-[state=open]:bg-transparent!",
 );
 
@@ -68,7 +71,9 @@ export function SiteHeader() {
   const isOn = (to: string) => pathname === to || pathname.startsWith(`${to}/`);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
+    /* Opaque, so the bar's contrast is a property of the bar rather than of
+       whatever cover art happens to scroll under it. */
+    <header className="sticky top-0 z-50 border-b border-border bg-background">
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-2 sm:gap-3 sm:px-6">
         <NavLink
           to="/"
@@ -144,8 +149,14 @@ export function SiteHeader() {
                 </NavigationMenuItem>
               ) : (
                 <NavigationMenuItem key={entry.to} className="flex">
-                  <NavigationMenuLink asChild>
-                    <NavLink to={entry.to} className={BAR_ITEM}>
+                  {/* `BAR_ITEM` goes on the link rather than on the `NavLink`
+                      inside it. `Slot` concatenates the two class strings
+                      instead of merging them, so a bar item spelled on the
+                      child never out-ranks the panel styling on the parent -
+                      it just sits beside it. Passed here, `cn` resolves the
+                      pair. */}
+                  <NavigationMenuLink asChild className={BAR_ITEM}>
+                    <NavLink to={entry.to}>
                       {({ isActive }) => (
                         <>
                           <span

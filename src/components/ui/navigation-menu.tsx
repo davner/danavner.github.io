@@ -19,6 +19,15 @@ function NavigationMenu({
       data-viewport={viewport}
       className={cn(
         "group/navigation-menu relative flex max-w-max flex-1 items-center justify-center",
+        /*
+         * Radix wraps the list in an unclassed `<div style="position:relative">`,
+         * so a consumer's `h-full` on the list resolves against a block box with
+         * no definite height and falls back to `auto`. Reached by element rather
+         * than by `data-slot` because that div carries neither a class nor a
+         * slot. Inert unless the root itself is given a height, and while
+         * `viewport` is off the root has exactly one child.
+         */
+        "[&>div]:h-full",
         className,
       )}
       {...props}

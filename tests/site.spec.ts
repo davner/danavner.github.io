@@ -182,6 +182,105 @@ test.describe("navigation", () => {
   });
 });
 
+test.describe("the header", () => {
+  /* Both themes, because the palettes are independent and this is a contrast
+     property. Separate tests so they run in parallel and name the one that
+     broke. */
+  for (const colorScheme of ["light", "dark"] as const) {
+    test(`decides its own contrast in ${colorScheme} mode`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme });
+      // The cover shelf is the brightest thing that ever scrolls under the bar,
+      // and a translucent header takes whatever is behind it into the contrast
+      // of its own labels - which makes the measurement a property of the page
+      // rather than of the header.
+      await page.goto("/vinyl");
+      await page.getByRole("heading", { level: 1 }).waitFor();
+
+      const surface = await page.evaluate(() => {
+        const style = getComputedStyle(document.querySelector("header")!);
+
+        // Painted over two opposite grounds. A translucent fill carries the
+        // ground through, so the two reads disagree; an opaque one cannot.
+        const over = (ground: string) => {
+          const canvas = document.createElement("canvas");
+          canvas.width = canvas.height = 1;
+          const context = canvas.getContext("2d", { willReadFrequently: true })!;
+          context.fillStyle = ground;
+          context.fillRect(0, 0, 1, 1);
+          context.fillStyle = style.backgroundColor;
+          context.fillRect(0, 0, 1, 1);
+          return [...context.getImageData(0, 0, 1, 1).data].slice(0, 3).join();
+        };
+
+        return {
+          color: style.backgroundColor,
+          backdropFilter: style.backdropFilter,
+          opaque: over("#000000") === over("#ffffff"),
+        };
+      });
+
+      expect(
+        surface.opaque,
+        `the header paints ${surface.color}, which the page shows through`,
+      ).toBe(true);
+      expect(
+        surface.backdropFilter,
+        "a backdrop filter puts the page back underneath the header's labels",
+      ).toBe("none");
+    });
+  }
+
+  test("the bar items fill the header's height", async ({ page }) => {
+    // The bar is `hidden sm:flex`, so it exists at all only above 640.
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto("/");
+    await page.getByRole("heading", { level: 1 }).waitFor();
+    await page.evaluate(() => document.fonts.ready);
+
+    const bar = await page.evaluate(() => {
+      const header = document.querySelector("header")!;
+      const items = [
+        ...header.querySelectorAll(
+          "[data-slot=navigation-menu-link], [data-slot=navigation-menu-trigger]",
+        ),
+      ].filter((item) => (item as HTMLElement).offsetParent !== null);
+
+      const label = (item: Element) =>
+        `${item.getAttribute("data-slot")} "${(item.textContent ?? "").trim()}"`;
+
+      return {
+        // The content box: `border-b` is not part of the bar the items sit in.
+        tall: header.clientHeight,
+        triggers: items.filter((item) => item.getAttribute("data-slot")?.endsWith("trigger"))
+          .length,
+        links: items.filter((item) => item.getAttribute("data-slot")?.endsWith("link")).length,
+        short: items
+          .filter((item) => Math.abs(item.getBoundingClientRect().height - header.clientHeight) > 1)
+          .map((item) => `${label(item)} is ${item.getBoundingClientRect().height}px`),
+        // The rule marking the current section is the one absolutely positioned
+        // child of a bar item, and it is meant to sit on the header's own edge.
+        rules: items.flatMap((item) => {
+          const rule = [...item.children].find(
+            (child) => getComputedStyle(child).position === "absolute",
+          );
+          if (!rule) return [];
+          const off = Math.abs(
+            rule.getBoundingClientRect().bottom - header.getBoundingClientRect().bottom,
+          );
+          return off > 1 ? [`${label(item)}'s rule sits ${off.toFixed(1)}px off the edge`] : [];
+        }),
+      };
+    });
+
+    // Both kinds, named: the trigger is styled through a different base than
+    // the plain links and was the half an earlier version of this missed.
+    expect(bar.links, "the bar rendered no plain links to measure").toBeGreaterThan(0);
+    expect(bar.triggers, "the bar rendered no group trigger to measure").toBeGreaterThan(0);
+    expect(bar.short, `the bar is ${bar.tall}px and these do not fill it`).toEqual([]);
+    expect(bar.rules).toEqual([]);
+  });
+});
+
 test.describe("theme", () => {
   test("toggles and survives a reload", async ({ page }) => {
     await page.goto("/");

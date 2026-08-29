@@ -76,6 +76,38 @@ const EXPLAINED: Record<string, (node: FindingNode) => boolean> = {
    * asserts directly rather than leaving on trust - so the reference is sound
    * and only the check is undecidable. Any other reason this rule lands in
    * `incomplete`, `noId` above all, still fails.
+   *
+   * The blind spot, for whoever is about to put another ARIA attribute on a
+   * trigger that already carries `aria-controls`. This reads `messageKey` as
+   * if it named the node's one undecidable attribute, and it does not. In
+   * axe-core 4.12.1 `ariaValidAttrValueEvaluate` keeps a single `messageKey`
+   * variable and overwrites it while iterating the node's `aria-*` attributes,
+   * so only the last one to write it survives into the `data()` this predicate
+   * reads. Four attributes write it: `aria-controls` sets
+   * `controlsWithinPopup`, `aria-current` sets `ariaCurrent`, and
+   * `aria-labelledby` and `aria-describedby` set `noId` when they point at an
+   * id that is not in the document. Give one element an `aria-controls` into a
+   * popup and a dangling `aria-labelledby`, and the two collide, with whichever
+   * attribute axe processes last deciding what the whole node reports. When
+   * `controlsWithinPopup` is the one that survives, `every` here is satisfied,
+   * the node is admitted, and the dangling reference passes the gate instead of
+   * failing it. That is the sort listbox defect above, arriving wearing the
+   * share popover's excuse.
+   *
+   * What bounds it is that the collision only reaches results the rule left
+   * undecided. An attribute whose value is outright invalid goes into axe's
+   * `invalid` list, which makes the rule return false and report an ordinary
+   * violation, and violations are gated with no allowlist in front of them.
+   * The exposure is precisely a dangling idref sharing an element with a popup
+   * trigger. Nothing on the site puts those together, which is why this is
+   * recorded rather than fixed.
+   *
+   * Worth naming the shape plainly, because it is the reason this branch
+   * exists repeated one level down: a gate that read only `violations` hid real
+   * defects sitting in `incomplete`, and an allowlist keyed on one message can
+   * hide a real defect sitting behind the one message it was written to admit.
+   * If a trigger ever does carry both, the fix is for this predicate to stop
+   * letting `messageKey` speak for the entire node.
    */
   "aria-valid-attr-value": (node) =>
     node.all.length > 0 &&

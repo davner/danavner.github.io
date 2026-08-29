@@ -130,14 +130,18 @@ export function BlogPost() {
       </article>
 
       {newer || older ? (
-        <nav
-          aria-label="More posts"
-          className="mt-20 grid gap-px border border-border bg-border sm:grid-cols-2"
-        >
+        /* Seams per cell rather than a `bg-border` behind the grid. The newest
+           post has only an older link, and a grid is as wide as its columns
+           whether or not anything is in them, so a seam colour behind it paints
+           a grey block in the column the newer link would fill. A 1px spread
+           shadow takes no layout space, so with `gap-px` each link's shadow
+           lands on the exact pixel its neighbour's does. Same idiom as the
+           record shelf and the season grid. */
+        <nav aria-label="More posts" className="mt-20 grid gap-px sm:grid-cols-2">
           {older ? (
             <Link
               to={`/blog/${older.slug}`}
-              className="group bg-background p-6 transition-colors hover:bg-card/60 sm:p-8"
+              className="group bg-background p-6 shadow-[0_0_0_1px_var(--color-border)] transition-colors hover:bg-card/60 sm:p-8"
             >
               <span className="readout-dim flex items-center gap-2">
                 <ArrowLeft className="size-3.5 transition-transform group-hover:-translate-x-0.5" />
@@ -147,14 +151,12 @@ export function BlogPost() {
                 {older.title}
               </span>
             </Link>
-          ) : (
-            <span className="hidden bg-background sm:block" />
-          )}
+          ) : null}
 
           {newer ? (
             <Link
               to={`/blog/${newer.slug}`}
-              className="group bg-background p-6 text-right transition-colors hover:bg-card/60 sm:col-start-2 sm:p-8"
+              className="group bg-background p-6 text-right shadow-[0_0_0_1px_var(--color-border)] transition-colors hover:bg-card/60 sm:col-start-2 sm:p-8"
             >
               <span className="readout-dim flex items-center justify-end gap-2">
                 Newer

@@ -234,6 +234,55 @@ test.describe("blog", () => {
     );
   });
 
+  test("the more-posts nav draws its seams per cell", async ({ page }) => {
+    // Two columns, so the missing cell is a cell rather than a row that is
+    // simply not there.
+    await page.setViewportSize({ width: 900, height: 900 });
+
+    // The newest post is the one with nothing newer to link to, which is the
+    // case a grid painted in the seam colour fills with an empty grey block.
+    await page.goto("/blog");
+    await page.getByRole("heading", { level: 1 }).waitFor();
+    const newest = await page
+      .locator('main article a[href^="/blog/"]')
+      .first()
+      .getAttribute("href");
+    expect(newest, "the blog index lists no posts to open").not.toBeNull();
+
+    await page.goto(newest!);
+    await page.getByRole("heading", { level: 1 }).waitFor();
+
+    const nav = page.locator('[aria-label="More posts"]');
+    await expect(nav).toHaveCount(1);
+    expect(
+      await nav.evaluate((el) => el.children.length),
+      "the newest post has something newer to link to, so this measured the wrong post",
+    ).toBe(1);
+
+    const seams = await nav.evaluate((el) => {
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 1;
+      const context = canvas.getContext("2d", { willReadFrequently: true })!;
+
+      /* Over magenta rather than black: `transparent` composites to whatever it
+         is painted on, and a ground the palette contains would read as a match. */
+      const rgb = (color: string) => {
+        context.fillStyle = "#ff00ff";
+        context.fillRect(0, 0, 1, 1);
+        context.fillStyle = color;
+        context.fillRect(0, 0, 1, 1);
+        return [...context.getImageData(0, 0, 1, 1).data].slice(0, 3).join();
+      };
+
+      const seam = rgb(getComputedStyle(document.documentElement).getPropertyValue("--border"));
+      return [el, ...el.querySelectorAll("*")]
+        .filter((node) => rgb(getComputedStyle(node).backgroundColor) === seam)
+        .map((node) => `<${node.tagName.toLowerCase()}>`);
+    });
+
+    expect(seams, "the nav paints the seam colour somewhere a cell is missing").toEqual([]);
+  });
+
   test("a post renders markdown, code, tables, and heading anchors", async ({ page }) => {
     await page.goto("/blog/building-this-site");
     await expect(page).toHaveTitle("How this site is built · Dan Avner");

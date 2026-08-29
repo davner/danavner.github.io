@@ -1,9 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 
 /**
- * `src/components/filter-status.tsx` is the site's first live region: the one
- * thing on the page that speaks without being asked. `/vinyl` is its only
- * caller so far, at `src/routes/vinyl.tsx`.
+ * `src/components/filter-status.tsx` is the site's live region: the one thing on
+ * the page that speaks without being asked. Four pages filter a collection, and
+ * every one of them mounts it.
  *
  * Everything worth testing about it is about *when* it speaks, which is not
  * visible in a screenshot, not visible in the DOM at rest, and not something
@@ -43,86 +43,287 @@ async function spoken(page: Page): Promise<string[]> {
   return log.filter((entry) => entry.kind === "changed").map((entry) => entry.text);
 }
 
-/** `55 of 55 records shown`, read off the page rather than written down: the
-    shelf is refilled from Discogs nightly, so any figure here goes stale. */
-async function shelfSentence(page: Page): Promise<string> {
-  const shown = await page.locator("[data-slot=record]").count();
-  const total = await page.locator("[data-slot=stat] dd").first().innerText();
-  return `${shown} of ${Number(total)} records shown`;
+/** Record what a screen reader would react to, from before the app loads. */
+async function watchAnnouncements(page: Page) {
+  await page.addInitScript(() => {
+    const log: Announcement[] = [];
+    (window as unknown as { __announcements: Announcement[] }).__announcements = log;
+
+    const regionIn = (node: Node): Element | null => {
+      if (!(node instanceof Element)) return null;
+      return node.matches('[role="status"]') ? node : node.querySelector('[role="status"]');
+    };
+
+    new MutationObserver((records) => {
+      for (const record of records) {
+        for (const added of record.addedNodes) {
+          const region = regionIn(added);
+          if (region) log.push({ kind: "mounted", text: region.textContent ?? "" });
+        }
+
+        // A text change inside a region that was already on the page. When
+        // the region itself arrives the mutation's target is its parent, so
+        // this deliberately does not fire for the mount.
+        const host = record.target instanceof Element ? record.target : record.target.parentElement;
+        const region = host?.closest('[role="status"]');
+        if (region) log.push({ kind: "changed", text: region.textContent ?? "" });
+      }
+      // `document` rather than `document.documentElement`, which is still
+      // null this early: an init script runs before the page's own scripts
+      // and before the parser has built the root element.
+    }).observe(document, { subtree: true, childList: true, characterData: true });
+  });
 }
 
-test.describe("the filtered-count live region", () => {
-  test.beforeEach(async ({ page }) => {
-    await page.addInitScript(() => {
-      const log: Announcement[] = [];
-      (window as unknown as { __announcements: Announcement[] }).__announcements = log;
+/** The number a filter pill prints after its label. */
+async function pillCount(page: Page, name: RegExp): Promise<number> {
+  const text = (await page.getByRole("radio", { name }).innerText()).trim();
+  const digits = /(\d+)\s*$/.exec(text);
+  expect(digits, `the "${text}" pill prints no count to read a total off`).not.toBeNull();
+  return Number(digits![1]);
+}
 
-      const regionIn = (node: Node): Element | null => {
-        if (!(node instanceof Element)) return null;
-        return node.matches('[role="status"]') ? node : node.querySelector('[role="status"]');
-      };
+/**
+ * `55 of 55 records shown`, read off the page rather than written down: the
+ * shelf is refilled from Discogs nightly, so any figure here goes stale.
+ *
+ * The total comes from the "Everything" pill and not from the Records stat.
+ * The stat counts the shelf the owner filter left behind, so once a filter is
+ * on, it is the shown figure a second time.
+ */
+async function shelfSentence(page: Page): Promise<string> {
+  const shown = await page.locator("[data-slot=record]").count();
+  return `${shown} of ${await pillCount(page, /^Everything/)} records shown`;
+}
 
-      new MutationObserver((records) => {
-        for (const record of records) {
-          for (const added of record.addedNodes) {
-            const region = regionIn(added);
-            if (region) log.push({ kind: "mounted", text: region.textContent ?? "" });
-          }
+/**
+ * The playlist row on `/fortnite`, which is only on the page when more than one
+ * playlist was played in the window on screen.
+ */
+const playlists = (page: Page) => page.getByRole("radiogroup", { name: "Playlist" });
 
-          // A text change inside a region that was already on the page. When
-          // the region itself arrives the mutation's target is its parent, so
-          // this deliberately does not fire for the mount.
-          const host =
-            record.target instanceof Element ? record.target : record.target.parentElement;
-          const region = host?.closest('[role="status"]');
-          if (region) log.push({ kind: "changed", text: region.textContent ?? "" });
-        }
-        // `document` rather than `document.documentElement`, which is still
-        // null this early: an init script runs before the page's own scripts
-        // and before the parser has built the root element.
-      }).observe(document, { subtree: true, childList: true, characterData: true });
+/**
+ * `Showing Lifetime, Solo`, read off both controls rather than written down:
+ * the seasons are refilled nightly, so a name in this file goes stale.
+ *
+ * Both dimensions, because both move the board. The playlist is read with
+ * `textContent` and not `innerText`, because the pill is set in `readout` -
+ * `text-transform: uppercase` - and `innerText` hands back the rendering rather
+ * than the label the page built its sentence from.
+ *
+ * The playlist half is dropped when the row is not rendered, which mirrors the
+ * page: a window with one playlist played offers no choice to announce.
+ */
+async function boardSentence(page: Page): Promise<string> {
+  const season = await page.getByRole("combobox", { name: "Season" }).innerText();
+  if ((await playlists(page).count()) === 0) return `Showing ${season}`;
+
+  const playlist = await playlists(page).getByRole("radio", { checked: true }).textContent();
+  return `Showing ${season}, ${playlist?.trim()}`;
+}
+
+/**
+ * One control that filters a collection, and what the region owes the reader
+ * once it has been used.
+ *
+ * `apply` waits on the page having re-rendered, not on the URL having moved.
+ * The two are a commit apart, and reading the count in between measures the
+ * list that was on screen before the click.
+ *
+ * Every collection page owns its own nouns - records, posts, comics, a season -
+ * so the sentence is read back off the page rather than written down here. The
+ * shelves are refilled nightly and the blog grows, so a figure in this file
+ * goes stale the week after it is written.
+ */
+interface Control {
+  /** Names the test, so a failure says which control went quiet. */
+  name: string;
+  /** Changes what is on screen, and fails if it did not. */
+  apply: (page: Page) => Promise<void>;
+  /** The sentence the region should be left holding once `apply` has settled. */
+  sentence: (page: Page) => Promise<string>;
+}
+
+/**
+ * A page that filters a collection, and every control that filters it.
+ *
+ * A list rather than one control per page, because a page with two of them has
+ * to answer for both and a table shaped for one cannot ask. `/fortnite` is
+ * filtered by season and by playlist, and the playlist is the dimension a
+ * season-only sentence leaves silent while every figure on the board moves.
+ */
+interface Announcer {
+  path: string;
+  controls: Control[];
+}
+
+const ANNOUNCERS: Announcer[] = [
+  {
+    path: "/vinyl",
+    controls: [
+      {
+        name: "owner",
+        apply: async (page) => {
+          const owners = page.getByRole("radio");
+          expect(await owners.count(), "the shelf offers no owner to filter by").toBeGreaterThan(1);
+          await owners.nth(1).click();
+          await expect(owners.nth(1)).toHaveAttribute("aria-checked", "true");
+        },
+        sentence: shelfSentence,
+      },
+    ],
+  },
+  {
+    path: "/blog",
+    controls: [
+      {
+        name: "category",
+        apply: async (page) => {
+          const work = page.getByRole("radio", { name: /^Work/ });
+          await work.click();
+          await expect(work).toHaveAttribute("aria-checked", "true");
+        },
+        sentence: async (page) => {
+          const shown = await page.locator("main article").count();
+          return `${shown} of ${await pillCount(page, /^Everything/)} posts shown`;
+        },
+      },
+    ],
+  },
+  {
+    path: "/comics",
+    controls: [
+      {
+        name: "shelf",
+        apply: async (page) => {
+          await page.getByRole("radio", { name: /^Wants/ }).click();
+          await expect(page).toHaveURL(/shelf=wants/);
+          // The shelf's own heading, which is rendered from the same label the
+          // sentence is built out of.
+          await expect(page.locator("#shelf-list")).toHaveText(/^Wants$/);
+        },
+        sentence: async (page) => {
+          const shown = await page.locator("[data-slot=comic]").count();
+          // The shelf's own `sr-only` heading, which is where the page says which
+          // list is on screen - so the two cannot drift apart.
+          return `${shown} comics on the ${await page.locator("#shelf-list").innerText()} shelf`;
+        },
+      },
+    ],
+  },
+  {
+    path: "/fortnite",
+    controls: [
+      {
+        name: "season",
+        apply: async (page) => {
+          const season = page.getByRole("combobox", { name: "Season" });
+          const before = await season.innerText();
+          await season.click();
+          await page.getByRole("option").nth(1).click();
+          await expect(page).toHaveURL(/season=/);
+          await expect(season).not.toHaveText(before);
+        },
+        sentence: boardSentence,
+      },
+      {
+        name: "playlist",
+        apply: async (page) => {
+          const modes = playlists(page).getByRole("radio");
+          expect(await modes.count(), "the board offers no playlist to filter by").toBeGreaterThan(
+            1,
+          );
+
+          // The second pill rather than a named one: which playlists exist
+          // depends on what was played in the window, and the nightly job
+          // decides that.
+          await modes.nth(1).click();
+          await expect(page).toHaveURL(/mode=/);
+          await expect(modes.nth(1)).toHaveAttribute("aria-checked", "true");
+        },
+        sentence: boardSentence,
+      },
+    ],
+  },
+];
+
+test.describe("every page that filters says what the filter did", () => {
+  for (const announcer of ANNOUNCERS) {
+    test.describe(announcer.path, () => {
+      test.beforeEach(async ({ page }) => {
+        await watchAnnouncements(page);
+        await page.goto(announcer.path);
+        await page.getByRole("heading", { level: 1 }).waitFor();
+      });
+
+      test("the region is polite, and rendered before it has anything to say", async ({ page }) => {
+        const region = page.locator('[role="status"]');
+
+        await expect(region).toHaveCount(1);
+        // `role="status"` is already polite; the component restates it because
+        // some screen readers have honoured one and not the other.
+        await expect(region).toHaveAttribute("aria-live", "polite");
+
+        /*
+         * Out of sight and still in the accessibility tree. `sr-only` clips it
+         * rather than hiding it, and the difference matters: `display: none` and
+         * `visibility: hidden` both stop a live region announcing at all, and
+         * neither is visible as a change on screen.
+         */
+        await expect(region).not.toBeInViewport();
+        const style = await region.evaluate((el) => {
+          const computed = getComputedStyle(el);
+          return { display: computed.display, visibility: computed.visibility };
+        });
+        expect(style.display, "a display:none live region never announces").not.toBe("none");
+        expect(style.visibility, "a visibility:hidden live region never announces").not.toBe(
+          "hidden",
+        );
+      });
+
+      test("arriving on the page announces nothing", async ({ page }) => {
+        await page.waitForTimeout(SETTLED);
+
+        const log = await readAnnouncements(page);
+        expect(
+          log.filter((entry) => entry.kind === "mounted"),
+          "the region has to be on the page before its content changes, or the change is missed",
+        ).toHaveLength(1);
+        expect(
+          log.filter((entry) => entry.kind === "changed").map((entry) => entry.text),
+          "the page read its own count out loud to anyone who just arrived",
+        ).toEqual([]);
+      });
+
+      for (const control of announcer.controls) {
+        test(`changing the ${control.name} announces the result`, async ({ page }) => {
+          await page.waitForTimeout(SETTLED);
+
+          await control.apply(page);
+          const answer = await control.sentence(page);
+
+          await page.waitForTimeout(SETTLED);
+          expect(
+            await spoken(page),
+            "a sighted reader watched the list change and this one was told nothing",
+          ).toEqual([answer]);
+        });
+      }
     });
+  }
+});
 
+/**
+ * The shelf's search box, which is the control the settle window exists for.
+ *
+ * It fires on every keystroke where every other filter on the site fires once,
+ * so these are `/vinyl`-only by nature rather than by convenience.
+ */
+test.describe("the vinyl search box", () => {
+  test.beforeEach(async ({ page }) => {
+    await watchAnnouncements(page);
     await page.goto("/vinyl");
     await page.getByRole("heading", { level: 1 }).waitFor();
-  });
-
-  test("the region is polite, and rendered before it has anything to say", async ({ page }) => {
-    const region = page.locator('[role="status"]');
-
-    await expect(region).toHaveCount(1);
-    // `role="status"` is already polite; the component restates it because some
-    // screen readers have honoured one and not the other.
-    await expect(region).toHaveAttribute("aria-live", "polite");
-    await expect(region).toHaveText(await shelfSentence(page));
-
-    /*
-     * Out of sight and still in the accessibility tree. `sr-only` clips it
-     * rather than hiding it, and the difference matters: `display: none` and
-     * `visibility: hidden` both stop a live region announcing at all, and
-     * neither is visible as a change on screen.
-     */
-    await expect(region).not.toBeInViewport();
-    const style = await region.evaluate((el) => {
-      const computed = getComputedStyle(el);
-      return { display: computed.display, visibility: computed.visibility };
-    });
-    expect(style.display, "a display:none live region never announces").not.toBe("none");
-    expect(style.visibility, "a visibility:hidden live region never announces").not.toBe("hidden");
-  });
-
-  test("arriving on the page announces nothing", async ({ page }) => {
-    await page.waitForTimeout(SETTLED);
-
-    const log = await readAnnouncements(page);
-    expect(
-      log.filter((entry) => entry.kind === "mounted"),
-      "the region has to be on the page before its content changes, or the change is missed",
-    ).toHaveLength(1);
-    expect(
-      log.filter((entry) => entry.kind === "changed").map((entry) => entry.text),
-      "the shelf read its own count out loud to anyone who just arrived",
-    ).toEqual([]);
   });
 
   test("a burst of keystrokes announces the answer once, not every step", async ({ page }) => {
@@ -148,7 +349,7 @@ test.describe("the filtered-count live region", () => {
   });
 
   test("a search with no matches announces none of the shelf", async ({ page }) => {
-    const total = Number(await page.locator("[data-slot=stat] dd").first().innerText());
+    const total = await pillCount(page, /^Everything/);
 
     await page
       .getByRole("searchbox", { name: /search the collection/i })

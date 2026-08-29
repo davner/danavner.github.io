@@ -23,11 +23,9 @@ const SETTLE_MS = 500;
  * all, and the only way to find out is to leave the field and read the list.
  *
  * Deliberately not `/vinyl`-specific: the caller supplies the sentence and its
- * own nouns, so this owns only the announcing. Reusable is not the same as
- * used, though - `/vinyl` is the only caller today, while `/comics`, `/blog`
- * and `/fortnite` all filter their own collections and announce nothing. Same
- * gap, still open, and this is what should close it rather than a new
- * component.
+ * own nouns, so this owns only the announcing. Every page that filters a
+ * collection mounts it - `/vinyl`, `/blog`, `/comics` and `/fortnite` - and a
+ * fifth one should reach for this rather than a second component.
  *
  * Two things it has to get right, and both are about *when* rather than what:
  *

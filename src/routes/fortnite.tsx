@@ -2,6 +2,7 @@ import { UserRound } from "lucide-react";
 import { useSearchParams } from "react-router";
 
 import { EmptyState } from "@/components/empty-state";
+import { FilterStatus } from "@/components/filter-status";
 import { FilterToggle } from "@/components/filter-toggle";
 import { PageHeader, PageShell } from "@/components/page";
 import { ScrollingText } from "@/components/scrolling-text";
@@ -311,6 +312,26 @@ export function Fortnite() {
 
   const note = active?.season ? coverage(active.season) : null;
 
+  /* What the season select and the season history both choose, spelled the way
+     the select spells it. */
+  const windowLabel = active?.season?.name
+    ? `${active.label}: ${active.season.name}`
+    : (active?.label ?? "nothing on file");
+
+  /*
+   * The board is a season *and* a playlist, so the announcement is both. The
+   * playlist moves every figure on it - wins, win rate, kills, matches, and the
+   * number of tiles - so a region that names only the season repeats itself
+   * word for word while the whole board changes underneath it.
+   *
+   * Named only where the playlist row is on the page. With one playlist played
+   * there is no choice to report, and "All modes" would name a control the
+   * reader was never offered.
+   */
+  const playlistLabel = MODES.find((mode) => mode.id === activeMode)?.label;
+  const showing =
+    modes.length > 1 && playlistLabel ? `${windowLabel}, ${playlistLabel}` : windowLabel;
+
   return (
     <PageShell>
       <PageHeader
@@ -325,6 +346,12 @@ export function Fortnite() {
           ) : undefined
         }
       />
+
+      {/* One region for every way of changing what the board shows - the season
+          select above it, the playlist row inside it, and the season grid at the
+          foot of the page. Outside every conditional branch, because a live
+          region that arrives with its content is not announced. */}
+      <FilterStatus message={`Showing ${showing}`} />
 
       {/* Season first, then playlist. They are one control stack rather than
           two, and the season is the outer choice - it decides which playlists
@@ -382,7 +409,7 @@ export function Fortnite() {
               formed the wrong impression of it. */}
           {note ? <p className="readout-dim mb-6 text-ember">{note}</p> : null}
 
-          <section aria-label={`${MODES.find((mode) => mode.id === activeMode)?.label} stats`}>
+          <section aria-label={`${playlistLabel} stats`}>
             {/* Seams per tile rather than a `bg-border` behind the grid - a
                 row that is not full would otherwise paint the gap grey, which
                 is exactly what "All modes" does now that it shows four tiles

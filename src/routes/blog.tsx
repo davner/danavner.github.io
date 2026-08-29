@@ -1,6 +1,7 @@
 import { useSearchParams } from "react-router";
 
 import { EmptyState } from "@/components/empty-state";
+import { FilterStatus } from "@/components/filter-status";
 import { FilterToggle } from "@/components/filter-toggle";
 import { PageHeader, PageShell } from "@/components/page";
 import { PostCard } from "@/components/post-card";
@@ -57,6 +58,11 @@ export function Blog() {
           }))}
         />
       </PageHeader>
+
+      {/* What the category pills above just did, for a reader who cannot see the
+          grid change under them. Rendered unconditionally, and on the empty
+          result too - none of them is the answer to what was asked. */}
+      <FilterStatus message={`${visible.length} of ${posts.length} posts shown`} />
 
       <section aria-labelledby="posts">
         {/* Every card title below is an `h3`, so this is what the outline has

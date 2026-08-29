@@ -2,6 +2,7 @@ import { ArrowUpRight, BookOpen } from "lucide-react";
 import { useSearchParams } from "react-router";
 
 import { EmptyState } from "@/components/empty-state";
+import { FilterStatus } from "@/components/filter-status";
 import { FilterToggle } from "@/components/filter-toggle";
 import { PageHeader, PageShell } from "@/components/page";
 import { ScrollingText } from "@/components/scrolling-text";
@@ -236,6 +237,11 @@ export function Comics() {
           <Stat label="Most of" value={publishers[0].name} />
         </dl>
       ) : null}
+
+      {/* Outside the shelf's own emptiness check on purpose: a live region that
+          appears at the same moment as its content is never announced, so this
+          has to be on the page before the shelf changes under it. */}
+      <FilterStatus message={`${shown.length} comics on the ${shelf.label} shelf`} />
 
       <section aria-labelledby="shelf-list">
         {/* The shelf's own label, so the outline says which of the lists is on

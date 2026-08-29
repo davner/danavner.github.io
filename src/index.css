@@ -130,6 +130,41 @@
   --font-display: "Anton", "Anton Fallback", "Arial Narrow", "Haettenschweiler", Impact, sans-serif;
 }
 
+/*
+ * The type scale, named by role.
+ *
+ * Every step is a `clamp()` or a fixed size, so the display face never steps at
+ * a breakpoint. A size that steps at `sm` can grow in the same frame its
+ * container shrinks - the stat boards go from two columns to four there - and a
+ * size that is a function of the viewport cannot.
+ */
+@theme {
+  /*
+   * A step only the body face uses carries its leading with it. Without the
+   * pairing every call site of that step inherits the root's unitless 1.5 and
+   * flattens toward it.
+   */
+  --text-sm: 0.875rem;
+  --text-sm--line-height: calc(1.25 / 0.875);
+  --text-lede: 1.125rem;
+  --text-lede--line-height: calc(1.75 / 1.125);
+
+  /*
+   * A step the display face uses carries none, and must not be given one. Their
+   * leading belongs to the face: `.display` sets 0.86 and `.prose-dan h2` sets
+   * 0.95, both in `@layer components`, and a paired line-height arrives as a
+   * utility - which out-ranks that layer and would silently beat both. The
+   * consequence is that a sans-face call site of one of these states its own
+   * `leading-*`.
+   */
+  --text-hero: clamp(4rem, 17vw, 12.5rem);
+  --text-poster: clamp(3.25rem, 13vw, 9rem);
+  --text-poster-long: clamp(1.75rem, 6.4vw, 4.5rem);
+  --text-feature: clamp(3rem, 2rem + 5vw, 4.5rem);
+  --text-heading: clamp(1.5rem, 1.1rem + 2vw, 2.25rem);
+  --text-title: clamp(1.25rem, 1.05rem + 1vw, 1.5rem);
+}
+
 @layer base {
   * {
     @apply border-border;

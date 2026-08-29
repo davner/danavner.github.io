@@ -30,7 +30,7 @@
             "option": "off"
           }
         ],
-        "image": "/img/fortnite/chlorophyll-ivy.png",
+        "image": "/img/fortnite/chlorophyll-ivy.webp",
         "style": "Sunflower Ivy"
       }
     },
@@ -59,7 +59,7 @@
             "option": "Off"
           }
         ],
-        "image": "/img/fortnite/lady-windfrost.png",
+        "image": "/img/fortnite/lady-windfrost.webp",
         "style": "Dark Lady Windfrost"
       }
     },
@@ -80,7 +80,7 @@
             "option": "on"
           }
         ],
-        "image": "/img/fortnite/lisa.png"
+        "image": "/img/fortnite/lisa.webp"
       }
     },
     {
@@ -95,7 +95,7 @@
         "name": "Terrible Tornado",
         "id": "Character_IvyStub",
         "variants": [],
-        "image": "/img/fortnite/terrible-tornado.png"
+        "image": "/img/fortnite/terrible-tornado.webp"
       }
     },
     {
@@ -115,7 +115,7 @@
             "option": "HUMAN"
           }
         ],
-        "image": "/img/fortnite/poison-ivy.png",
+        "image": "/img/fortnite/poison-ivy.webp",
         "style": "HUMAN"
       }
     },
@@ -140,7 +140,7 @@
             "option": "Haylee Skye"
           }
         ],
-        "image": "/img/fortnite/haylee-skye.png"
+        "image": "/img/fortnite/haylee-skye.webp"
       }
     },
     {
@@ -155,7 +155,7 @@
         "name": "Guff",
         "id": "CID_752_Athena_Commando_M_Comet",
         "variants": [],
-        "image": "/img/fortnite/guff.png"
+        "image": "/img/fortnite/guff.webp"
       }
     },
     {
@@ -175,7 +175,7 @@
             "option": "On"
           }
         ],
-        "image": "/img/fortnite/hatsune-miku.png"
+        "image": "/img/fortnite/hatsune-miku.webp"
       }
     },
     {
@@ -207,7 +207,7 @@
             "option": "Voidburn Jade"
           }
         ],
-        "image": "/img/fortnite/jade.png",
+        "image": "/img/fortnite/jade.webp",
         "style": "Voidburn Jade"
       }
     }

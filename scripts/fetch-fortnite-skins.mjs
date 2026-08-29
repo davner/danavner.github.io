@@ -24,9 +24,11 @@
  * ## Why this does not go through `optimize-photos.mjs`
  *
  * That script exists to strip EXIF off phone photos and re-encode them as JPEG.
- * Neither applies. These come from an API with no metadata to leak, and JPEG has
- * no alpha channel - a character render is a cutout on transparency, and
- * flattening it would put a white box behind every outfit on the page.
+ * There is no EXIF on an API render to strip, and JPEG has no alpha channel - a
+ * character render is a cutout on transparency, and flattening it would put a
+ * white box behind every outfit on the page. So the encode happens here, as
+ * WebP at the same quality the record sleeves and comic covers are written at:
+ * lossy, a fraction of PNG's weight, and it keeps the cutout.
  */
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 
@@ -184,7 +186,7 @@ async function main() {
     const source = cosmetic.images?.icon ?? cosmetic.images?.smallIcon;
     if (!source) throw new Error(`"${season.main.name}" has no render`);
 
-    const name = `${slug(season.main.name)}.png`;
+    const name = `${slug(season.main.name)}.webp`;
     const out = new URL(name, OUT_DIR);
 
     const response = await fetch(source);
@@ -199,7 +201,7 @@ async function main() {
         fit: "inside",
         withoutEnlargement: true,
       })
-      .png({ compressionLevel: 9 })
+      .webp({ quality: 82 })
       .toFile(out.pathname);
 
     // Written back so the content file records what the name resolved to, and

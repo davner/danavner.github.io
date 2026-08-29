@@ -166,22 +166,46 @@ function LegacyPostRedirect() {
 
 /**
  * Stands in for a lazily-loaded route while its chunk arrives. Roughly the shape
- * of a page: a kicker, a title over two lines, then a column of prose.
+ * of a page: a kicker, a title over two lines, then prose.
+ *
+ * `min-h-dvh` is what keeps the footer off the screen until the page is real.
+ * The shell above is a column with `main` on `flex-1`, so a fallback shorter
+ * than the viewport parks the footer at the bottom of the fold and then drops
+ * it the moment the chunk lands - a layout shift on every lazy route.
+ *
+ * Three things this must never grow, each of them counted somewhere else: an
+ * `h1`, which every wait on a page title would resolve against; a
+ * `role="status"`, which the shelf's live region is the only one of; and
+ * `inert` or `data-aria-hidden`, which `lib/inert-behind-overlay.ts` owns
+ * outright and reports anything else wearing.
  */
 function PostSkeleton() {
   return (
-    <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-20" aria-hidden>
+    <div className="mx-auto min-h-dvh max-w-3xl px-4 py-16 sm:px-6 sm:py-20" aria-hidden>
       <Skeleton className="h-4 w-32" />
       <Skeleton className="mt-8 h-5 w-56" />
       <Skeleton className="mt-5 h-11 w-full" />
       <Skeleton className="mt-3 h-11 w-2/3" />
-      {/* `gap` rather than `space-y`, so the stack does not depend on which
-          child happens to be first. */}
-      <div className="mt-10 flex flex-col gap-3">
-        {Array.from({ length: 8 }, (_, index) => (
-          <Skeleton key={index} className="h-4" style={{ width: `${95 - index * 4}%` }} />
-        ))}
-      </div>
+
+      {/* Two paragraphs, because the box around them is a viewport tall. One
+          block of lines fills two thirds of that and leaves the rest blank,
+          which reads as a page that failed rather than one still arriving.
+
+          The second is shorter and cut to its own widths: two blocks ragged the
+          same way read as one shape stamped twice, which is the giveaway that
+          none of it is text. */}
+      {[
+        { lines: 8, start: 95 },
+        { lines: 6, start: 93 },
+      ].map(({ lines, start }) => (
+        // `gap` rather than `space-y`, so the stack does not depend on which
+        // child happens to be first.
+        <div key={start} className="mt-10 flex flex-col gap-3">
+          {Array.from({ length: lines }, (_, index) => (
+            <Skeleton key={index} className="h-4" style={{ width: `${start - index * 4}%` }} />
+          ))}
+        </div>
+      ))}
     </div>
   );
 }

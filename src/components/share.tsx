@@ -155,7 +155,7 @@ export function Share({ subject, className }: { subject: Shareable; className?: 
       <PopoverContent
         align="start"
         aria-label={`Share ${heading}`}
-        className="max-h-(--radix-popover-content-available-height) w-[min(20rem,calc(100vw-2rem))] overflow-y-auto rounded-none border-border bg-background p-4 shadow-2xl"
+        className="max-h-(--radix-popover-content-available-height) w-[min(20rem,calc(100vw-2rem))] overflow-y-auto rounded-none border-border bg-background p-4"
       >
         <div className="flex items-start justify-between gap-3">
           <p className="readout text-ember">Share</p>

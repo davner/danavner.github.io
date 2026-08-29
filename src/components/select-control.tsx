@@ -52,8 +52,8 @@ export function SelectControl<T extends string>({
            */
           "data-[size=default]:h-11",
           // Square, hairline, and the page's own background - the shadcn
-          // defaults are rounded with a shadow, which nothing else here is.
-          "cursor-pointer rounded-none border-border bg-background text-sm shadow-none",
+          // default is rounded, which nothing else here is.
+          "cursor-pointer rounded-none border-border bg-background text-sm",
           /*
            * No focus styling here on purpose. `focus-visible:border-ember`
            * painted an ember border underneath the site's ember outline, so a

@@ -114,7 +114,7 @@ export function SiteHeader() {
                   {/* `rounded-none!` for the same reason: the panel's radius
                       arrives through a `group-data-[viewport=false]` variant
                       that out-specifies a plain utility. Nothing here is round. */}
-                  <NavigationMenuContent className="rounded-none! border-border bg-background p-0 shadow-none">
+                  <NavigationMenuContent className="rounded-none! border-border p-0">
                     <ul className="w-44">
                       {entry.items.map((item) => (
                         <li key={item.to} className="border-b border-border last:border-b-0">

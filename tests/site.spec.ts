@@ -2,6 +2,7 @@ import { type Page, expect, test } from "@playwright/test";
 
 import { readFileSync } from "node:fs";
 
+import { OPEN_STATES, reachOpenState } from "./open-states";
 import { PHOTO_GAP, nowEntriesWithPhotos } from "./now-photos";
 import { ROUTES } from "./routes";
 import { ALL_SECTIONS } from "../src/lib/site";
@@ -2049,6 +2050,89 @@ test.describe("focus indicators", () => {
       }
     });
   }
+});
+
+/**
+ * Every surface a panel or a page can put on screen.
+ *
+ * The overlays live in portals outside `main`, and the navigation panel is in
+ * neither - so each root is named rather than the sweep starting at `body`,
+ * which would take in the fixed backdrop layers as well.
+ */
+const SURFACES =
+  "main, [role=dialog], [data-slot=select-content], [data-slot=navigation-menu-content]";
+
+/**
+ * Elements separating themselves with a shadow rather than a hairline.
+ *
+ * Blur is what is measured, not the presence of a `box-shadow`: a spread-only
+ * `0 0 0 1px` takes no layout space and is how a grid cell draws its own seam
+ * on this site, so those have to pass.
+ *
+ * Handed to `page.evaluate`, which serialises it and runs it in the page, so it
+ * closes over nothing in this file.
+ */
+const blurredShadows = (surfaces: string) => {
+  const found: string[] = [];
+  const seen = new Set<Element>();
+
+  for (const root of document.querySelectorAll(surfaces)) {
+    for (const el of [root, ...root.querySelectorAll("*")]) {
+      if (seen.has(el)) continue;
+      seen.add(el);
+
+      const shadow = getComputedStyle(el).boxShadow;
+      if (shadow === "none") continue;
+
+      // Split on top-level commas only - `rgba(0, 0, 0, 0.1)` has commas of
+      // its own - then read the third length, which is the blur radius.
+      const layers: string[] = [];
+      let depth = 0;
+      let current = "";
+      for (const character of shadow) {
+        if (character === "(") depth += 1;
+        if (character === ")") depth -= 1;
+        if (character === "," && depth === 0) {
+          layers.push(current);
+          current = "";
+        } else current += character;
+      }
+      if (current.trim()) layers.push(current);
+
+      for (const layer of layers) {
+        const lengths = (layer.match(/-?[\d.]+px/g) ?? []).map(parseFloat);
+        if ((lengths[2] ?? 0) > 0) {
+          const slot = el.getAttribute("data-slot");
+          found.push(`<${el.tagName.toLowerCase()}>${slot ? `[${slot}]` : ""} ${layer.trim()}`);
+        }
+      }
+    }
+  }
+  return found;
+};
+
+test.describe("surfaces", () => {
+  test("nothing on a route separates itself with a shadow", async ({ page }) => {
+    for (const path of ROUTES) {
+      await page.goto(path);
+      await page.getByRole("heading", { level: 1 }).waitFor();
+
+      expect(await page.evaluate(blurredShadows, SURFACES), path).toEqual([]);
+    }
+  });
+
+  test("nothing a panel opens separates itself with a shadow", async ({ page }) => {
+    // The raised surfaces are exactly the ones a route load never renders, so
+    // a sweep over `ROUTES` alone sees none of them.
+    for (const state of OPEN_STATES) {
+      await reachOpenState(page, state);
+
+      expect(
+        await page.evaluate(blurredShadows, SURFACES),
+        `${state.path} with ${state.name}`,
+      ).toEqual([]);
+    }
+  });
 });
 
 test.describe("chrome", () => {

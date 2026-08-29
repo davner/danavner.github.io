@@ -465,6 +465,56 @@ test.describe("shows", () => {
     const titles = await page.locator("[data-slot=show] h3").allInnerTexts();
     expect(titles.some((title) => /SHOW LOG/i.test(title))).toBe(false);
   });
+
+  /*
+   * The photo counter prints its position twice: a zero-padded pair for the
+   * eye, and a sentence for the live region. A screen reader reads the pair as
+   * "oh one slash oh five", so the pair is `aria-hidden` and the sentence is
+   * the whole of what gets announced.
+   *
+   * Read as an aria snapshot rather than as text, because `textContent` runs
+   * both copies together and so matches whichever half survives - which is how
+   * either one could be deleted with every test still green.
+   */
+  test.describe("the photo counter", () => {
+    const REGION = "[data-slot=carousel] [aria-live]";
+
+    test.beforeEach(async ({ page }) => {
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await page.goto("/shows/bruno-mars-madrid-2026");
+      await page.getByRole("heading", { level: 1 }).waitFor();
+    });
+
+    test("announces a sentence and never the padded pair", async ({ page }) => {
+      const region = page.locator(REGION);
+      await expect(region).toHaveCount(1);
+      // Not `assertive`: a position is worth stating, never worth interrupting.
+      await expect(region).toHaveAttribute("aria-live", "polite");
+
+      const photos = await page.locator("[data-slot=carousel-item]").count();
+      expect(photos, "the show has no photo strip to count").toBeGreaterThan(1);
+
+      await expect
+        .poll(() => region.ariaSnapshot(), {
+          message: "the accessibility tree holds something other than the counter's sentence",
+        })
+        .toBe(`- paragraph: Photo 1 of ${photos}`);
+    });
+
+    test("announces the new position after the strip moves", async ({ page }) => {
+      const region = page.locator(REGION);
+      const photos = await page.locator("[data-slot=carousel-item]").count();
+      expect(photos, "the show has no photo strip to advance").toBeGreaterThan(1);
+
+      await page.getByRole("button", { name: "Next slide" }).click();
+
+      // A sentence that never changes is read once and never again, which is
+      // indistinguishable from a working counter until someone advances.
+      await expect
+        .poll(() => region.ariaSnapshot(), { message: "the strip moved and the region did not" })
+        .toBe(`- paragraph: Photo 2 of ${photos}`);
+    });
+  });
 });
 
 test.describe("vinyl", () => {
@@ -1456,6 +1506,19 @@ test.describe("controls", () => {
  *
  * What it does catch, which is the trap that produced the ring commit, is a
  * `border-ring` with no width: a zero-width border is not a candidate at all.
+ *
+ * `opacity` is folded in, because it composites an element's whole rendering -
+ * its outline along with it - over what is behind it, so the colour the computed
+ * style names is not the colour that reaches the screen. Without it a control
+ * dimmed to half strength scores as though its ring were at full strength; with
+ * it, the same ring reads 2.15:1 in dark and 2.63:1 in light, which is 1.4.11
+ * failed by a margin the ~0.2 above would never account for.
+ *
+ * It is folded as one multiplication down the chain against an already-flattened
+ * backdrop: exact for a single translucent element over an opaque page, and
+ * drifting where two of them stack, because real nested groups composite their
+ * contents before the outer opacity applies. `filter`, `mix-blend-mode` and
+ * `backdrop-filter` are not read at all.
  */
 const measureFocusIndicator = async () => {
   // Two frames, so nothing is read mid-transition.
@@ -1470,13 +1533,17 @@ const measureFocusIndicator = async () => {
    `oklab(... / .5)` and `color-mix(...)` into sRGB and to composite
    alpha over a backdrop. An unparseable colour leaves `fillStyle`
    alone, so it reads as the backdrop and scores 1:1 - loudly wrong
-   rather than quietly passing. */
-  const paint = (color: string, over: string) => {
+   rather than quietly passing.
+
+   `alpha` is the compositing `opacity` applies on top of whatever the
+   colour carries itself, which is what `globalAlpha` multiplies. */
+  const paint = (color: string, over: string, alpha = 1) => {
     const canvas = document.createElement("canvas");
     canvas.width = canvas.height = 1;
     const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
     ctx.fillStyle = over;
     ctx.fillRect(0, 0, 1, 1);
+    ctx.globalAlpha = alpha;
     ctx.fillStyle = color;
     ctx.fillRect(0, 0, 1, 1);
     return [...ctx.getImageData(0, 0, 1, 1).data].slice(0, 3);
@@ -1493,23 +1560,37 @@ const measureFocusIndicator = async () => {
      one. Plenty of them are translucent: the select trigger's
      `dark:bg-input/30` reads as a light grey over white and a near
      black over the page it is actually on. */
-  const flatten = (color: string, over: string) => {
-    const [r, g, b] = paint(color, over);
+  const flatten = (color: string, over: string, alpha = 1) => {
+    const [r, g, b] = paint(color, over, alpha);
     return `rgb(${r}, ${g}, ${b})`;
+  };
+
+  /* A computed `opacity` is a plain number, but a browser handing back
+     anything else must not turn every measurement below into NaN. */
+  const opacityOf = (declared: string) => {
+    const value = parseFloat(declared);
+    return Number.isFinite(value) ? value : 1;
   };
 
   const chain: Element[] = [];
   for (let node: Element | null = el; node; node = node.parentElement) chain.push(node);
   chain.reverse();
 
+  /* Multiplied down the chain, because an ancestor's `opacity` dims the
+     focused element as surely as its own does - and it dims that ancestor's
+     background at the same time, so the backdrop is built with it too. */
+  let opacity = 1;
   let outside = "rgb(255, 255, 255)";
   for (const node of chain.slice(0, -1)) {
-    outside = flatten(getComputedStyle(node).backgroundColor, outside);
+    const ancestor = getComputedStyle(node);
+    opacity *= opacityOf(ancestor.opacity);
+    outside = flatten(ancestor.backgroundColor, outside, opacity);
   }
-  const inside = flatten(style.backgroundColor, outside);
+  opacity *= opacityOf(style.opacity);
+  const inside = flatten(style.backgroundColor, outside, opacity);
 
   const ratio = (color: string, behind: string) => {
-    const front = luminance(paint(color, behind));
+    const front = luminance(paint(color, behind, opacity));
     const back = luminance(paint(behind, behind));
     return (Math.max(front, back) + 0.05) / (Math.min(front, back) + 0.05);
   };
@@ -1602,6 +1683,9 @@ const measureFocusIndicator = async () => {
     // 1.4.11 is satisfied if *an* indicator clears 3:1.
     best: Math.max(0, ...candidates.map((candidate) => candidate.contrast)),
     candidates,
+    // Already folded into every contrast above. Reported so a failure caused by
+    // a dimmed control does not read as a badly chosen colour.
+    opacity,
     transitionDuration: style.transitionDuration,
   };
 };
@@ -1613,27 +1697,179 @@ function describeFailure(result: FocusIndicator) {
   const detail = result.candidates
     .map((candidate) => `${candidate.what} at ${candidate.contrast.toFixed(2)}:1`)
     .join("; ");
-  return `${result.label} - ${detail || "no indicator at all"}`;
+  const dimmed =
+    result.opacity < 1 ? `, painted at ${Math.round(result.opacity * 100)}% opacity` : "";
+  return `${result.label} - ${detail || "no indicator at all"}${dimmed}`;
 }
 
+/**
+ * Stop every transition on the page, for the length of one measurement.
+ *
+ * The site's `prefers-reduced-motion` block stops what moves and deliberately
+ * lets colour and opacity keep transitioning, so the preference alone no longer
+ * settles a style read two frames after focus lands. `ui/button.tsx` carries
+ * `transition-all` and `transition-colors` animates `outline-color`, which
+ * starts at `currentColor` - so an unsettled reading measures the text colour
+ * and reports a control with a perfectly good ring as having none.
+ *
+ * Injected after each `goto`, because a navigation drops the tag with the
+ * document.
+ */
+const freezeTransitions = (page: Page) =>
+  page.addStyleTag({
+    content:
+      "*,*::before,*::after{transition-duration:0s !important;animation-duration:0s !important}",
+  });
+
 test.describe("focus indicators", () => {
-  /*
-   * The site's own `prefers-reduced-motion` block collapses every transition to
-   * 0.01ms, so the settle inside `measureFocusIndicator` is a formality rather
-   * than a wait per stop. The guard in each test is what proves that is still
-   * true - `ui/button.tsx` carries `transition-all` and `ui/scroll-area.tsx`
-   * carries `transition-[color,box-shadow]`, so reading computed style the
-   * instant after focus lands returns the pre-transition value. A first attempt
-   * at this test read `oklab(0 0 0 / 0) 0px 0px 0px 0px` off a focused Button
-   * and very nearly filed "buttons paint no focus ring at all" as a finding.
-   * `transition-colors` now animates `outline-color` too, which is worse: it
-   * starts at `currentColor`, so an unsettled reading measures the text colour.
-   */
+  /* What proves `freezeTransitions` is still in place. Without it every
+     measurement below is taken mid-transition and means nothing. */
   const expectSettled = (transitionDuration: string) =>
     expect(
       parseFloat(transitionDuration),
-      "reduced motion no longer collapses transitions, so these readings are mid-transition",
+      "transitions are no longer frozen, so these readings are mid-transition",
     ).toBeLessThanOrEqual(0.001);
+
+  test("the end of the photo strip keeps the keyboard", async ({ page }) => {
+    /*
+     * `disabled` on the arrow that has just been pressed takes the button out
+     * of the tab order under the reader's hands, and focus falls to `<body>` -
+     * from where the whole document has to be tabbed through again. The end
+     * state is announced instead, and this is what says focus stayed put.
+     */
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/shows/bilmuri-los-angeles-2026");
+    await page.getByRole("heading", { level: 1 }).waitFor();
+    await freezeTransitions(page);
+
+    const counter = page.locator("[data-slot=carousel] [aria-live=polite]");
+    const slides = await page.locator("[data-slot=carousel-item]").count();
+    expect(slides, "the show has no photo strip to advance").toBeGreaterThan(1);
+
+    const next = page.getByRole("button", { name: "Next slide" });
+    await next.focus();
+    for (let slide = 2; slide <= slides; slide++) {
+      await page.keyboard.press("Enter");
+      await expect(counter).toHaveText(new RegExp(`^${String(slide).padStart(2, "0")}\\b`));
+    }
+
+    // The press that lands on the end state, which is where focus is at risk.
+    await page.keyboard.press("Enter");
+    await expect(next).toHaveAttribute("aria-disabled", "true");
+    expect(
+      await page.evaluate(() => document.activeElement?.getAttribute("data-slot") ?? null),
+      "the arrow dropped focus when it reached the end",
+    ).toBe("carousel-next");
+
+    const result = await page.evaluate(measureFocusIndicator);
+    expect(result, "nothing is focused").not.toBeNull();
+    expectSettled(result!.transitionDuration);
+    expect(result!.best, describeFailure(result!)).toBeGreaterThanOrEqual(3);
+  });
+
+  test("an arrow at the end of the strip dims its icon and not its ring", async ({ page }) => {
+    /*
+     * `ui/carousel.tsx` puts the end-state dimming on the icon rather than on
+     * the button, because `opacity` composites everything an element paints and
+     * a ring at half strength is one an arrow deliberately left focusable
+     * cannot fall back on 1.4.11's exception for.
+     *
+     * Both halves are here because either alone is satisfiable by a wrong
+     * implementation: dimming the whole button still dims the icon, and
+     * deleting the dimming outright still leaves the ring perfect.
+     */
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/shows/bruno-mars-madrid-2026");
+    await page.getByRole("heading", { level: 1 }).waitFor();
+    await freezeTransitions(page);
+
+    const counter = page.locator("[data-slot=carousel] [aria-live=polite]");
+    const slides = await page.locator("[data-slot=carousel-item]").count();
+    expect(slides, "the show has no photo strip with two ends").toBeGreaterThan(1);
+
+    /* One arrow as it is painted right now, plus the indicator it shows while
+       focused. The alpha is multiplied down from the root rather than read off
+       each element, because an `opacity` on any ancestor of the icon reaches
+       the button's ring on the way past. */
+    const readOne = async (slot: string) => {
+      const button = page.locator(`[data-slot=${slot}]`);
+      await button.focus();
+
+      const indicator = await page.evaluate(measureFocusIndicator);
+      expect(indicator, `${slot} would not take focus`).not.toBeNull();
+
+      const paint = await button.evaluate((el) => {
+        const alphaTo = (from: Element) => {
+          let alpha = 1;
+          for (let node: Element | null = from; node; node = node.parentElement) {
+            const declared = parseFloat(getComputedStyle(node).opacity);
+            alpha *= Number.isFinite(declared) ? declared : 1;
+          }
+          return alpha;
+        };
+        const icon = el.querySelector("svg");
+        return {
+          ended: el.getAttribute("aria-disabled") === "true",
+          control: alphaTo(el),
+          icon: icon ? alphaTo(icon) : null,
+        };
+      });
+
+      expect(paint.icon, `${slot} has no icon to dim`).not.toBeNull();
+      return { slot, ...paint, indicator: indicator! };
+    };
+
+    const readArrows = async () => ({
+      "carousel-previous": await readOne("carousel-previous"),
+      "carousel-next": await readOne("carousel-next"),
+    });
+
+    const first = await readArrows();
+    expectSettled(first["carousel-previous"].indicator.transitionDuration);
+    expect(first["carousel-previous"].ended, "the strip did not open on its first slide").toBe(
+      true,
+    );
+    expect(first["carousel-next"].ended, "the strip has nowhere to advance to").toBe(false);
+
+    const next = page.getByRole("button", { name: "Next slide" });
+    await next.focus();
+    for (let slide = 2; slide <= slides; slide++) {
+      await page.keyboard.press("Enter");
+      await expect(counter).toHaveText(new RegExp(`^${String(slide).padStart(2, "0")}\\b`));
+    }
+
+    const last = await readArrows();
+    expect(last["carousel-next"].ended, "the last slide left the next arrow live").toBe(true);
+    expect(
+      last["carousel-previous"].ended,
+      "the last slide left the previous arrow at an end",
+    ).toBe(false);
+
+    // Each arrow against itself in the other state, so the comparison is one
+    // element on one page and needs no constant to lean on.
+    for (const [ended, live] of [
+      [first["carousel-previous"], last["carousel-previous"]],
+      [last["carousel-next"], first["carousel-next"]],
+    ]) {
+      expect(
+        ended.icon,
+        `${ended.slot} at the end of the strip is painted exactly like a live one`,
+      ).toBeLessThan(live.icon!);
+
+      expect(
+        ended.control,
+        `${ended.slot} dims the whole control, so its focus ring goes with it`,
+      ).toBe(1);
+
+      /* The consequence, measured rather than inferred. The guard is what
+         stops it passing on two arrows that both show nothing. */
+      expect(live.indicator.best, describeFailure(live.indicator)).toBeGreaterThanOrEqual(3);
+      expect(
+        ended.indicator.best,
+        `${ended.slot}'s focus indicator weakened at the end of the strip: ${describeFailure(ended.indicator)}`,
+      ).toBeGreaterThanOrEqual(live.indicator.best);
+    }
+  });
 
   /* Both themes, for the reason `tests/a11y.spec.ts` gives: the palettes are
      independent and contrast is the most fragile thing in them. Separate tests

@@ -77,6 +77,25 @@ export const OPEN_STATES: OpenState[] = [
     },
   },
   {
+    /*
+     * The last slide is the state the arrow changes into, and the state where
+     * dropping focus would strand the keyboard. Driven to the end rather than to
+     * any slide, because the end is where both the `aria-disabled` announcement
+     * and the dimmed styling arrive.
+     */
+    name: "the photo carousel on its last slide",
+    path: "/shows/bilmuri-los-angeles-2026",
+    reach: async (page) => {
+      const slides = page.locator("[data-slot=carousel-item]");
+      const count = await slides.count();
+      expect(count, "the show has no photo strip to advance").toBeGreaterThan(1);
+
+      const next = page.getByRole("button", { name: "Next slide" });
+      for (let step = 1; step < count; step++) await next.click();
+      await expect(next).toHaveAttribute("aria-disabled", "true");
+    },
+  },
+  {
     name: "the email address revealed",
     path: "/career",
     reach: async (page) => {

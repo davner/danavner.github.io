@@ -1,5 +1,5 @@
 import { Check, Copy, Mail } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { profile } from "@/content/profile";
@@ -15,6 +15,17 @@ import { cn } from "@/lib/utils";
 export function EmailReveal({ className }: { className?: string }) {
   const [address, setAddress] = useState("");
   const [copied, setCopied] = useState(false);
+  const link = useRef<HTMLAnchorElement>(null);
+
+  /*
+   * The button that was pressed is replaced by the address, so without this the
+   * keyboard lands on `<body>` and the answer is somewhere behind the reader.
+   * The anchor's accessible name is the address itself, so arriving on it is
+   * also how the result is announced - no live region needed on the page.
+   */
+  useEffect(() => {
+    if (address) link.current?.focus();
+  }, [address]);
 
   function reveal() {
     setAddress(`${profile.emailUser}@${profile.emailDomain}`);
@@ -47,7 +58,7 @@ export function EmailReveal({ className }: { className?: string }) {
   return (
     <span className={cn("inline-flex flex-wrap items-stretch gap-2", className)}>
       <Button asChild variant="outline" className={shape}>
-        <a href={`mailto:${address}`}>
+        <a ref={link} href={`mailto:${address}`}>
           <Mail />
           {address}
         </a>

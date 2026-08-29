@@ -77,10 +77,19 @@ export function PhotoCarousel({ photos, label }: { photos: Photo[]; label: strin
               <CarouselNext className="static size-7 translate-y-0 border-border text-muted-foreground hover:border-ember hover:text-ember" />
             </div>
 
+            {/* The same count twice: a zero-padded pair set in the tabular face
+                for the eye, and a sentence for the live region. The pair reads
+                aloud as "oh one slash oh five", so it is the eye's copy only and
+                the sentence is what the region actually announces. */}
             <p className="readout-dim tabular-nums" aria-live="polite">
-              <span className="text-ember">{String(active + 1).padStart(2, "0")}</span>
-              {" / "}
-              {String(photos.length).padStart(2, "0")}
+              <span aria-hidden>
+                <span className="text-ember">{String(active + 1).padStart(2, "0")}</span>
+                {" / "}
+                {String(photos.length).padStart(2, "0")}
+              </span>
+              <span className="sr-only">
+                Photo {active + 1} of {photos.length}
+              </span>
             </p>
           </div>
         )}

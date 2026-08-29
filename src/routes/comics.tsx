@@ -7,14 +7,16 @@ import { PageHeader, PageShell } from "@/components/page";
 import { ScrollingText } from "@/components/scrolling-text";
 import { SourceLine } from "@/components/source-line";
 import { comics, issueCount, SHELVES, type ComicEntry, type ShelfId } from "@/lib/comics";
+import { coverSrcSet } from "@/lib/covers";
+import { PAGE_META } from "@/lib/routes";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
 /*
- * The tab and the nav say "Comics" - that is what `site.ts` calls it and what
- * someone scans a list of links for, and `tests/site.spec.ts` holds the two
- * together. The headline is free to be the line.
+ * The tab, the nav, and the HTML the build serves a crawler all say "Comics" -
+ * one entry in `lib/routes.ts` feeds all three, and it is the word someone
+ * scans a list of links for. The headline is free to be the line.
  */
-const TITLE = "Comics";
+const META = PAGE_META["/comics"];
 
 /** Solid, then outlined, the way every page title on the site is set. */
 const HEADING = (
@@ -23,8 +25,6 @@ const HEADING = (
     <span className="display-outline-ember block">comes great responsibility</span>
   </>
 );
-const DESCRIPTION =
-  "Every run I own, what is waiting at the shop this week, and what I still want - read from League of Comic Geeks nightly.";
 
 const SHELF_IDS = SHELVES.map((entry) => entry.id);
 
@@ -53,6 +53,24 @@ function formatReleased(date: string): string {
     timeZone: "UTC",
   });
 }
+
+/**
+ * How wide a cover is laid out, so the browser can choose between the two
+ * candidates in `srcSet` before there is any layout to measure. Kept beside the
+ * grid classes below, which are what it describes.
+ *
+ * The fixed clause is the one that earns the string. Past 1152px `max-w-6xl`
+ * stops the page growing, so a tile stops at the 220px five columns leave it
+ * inside the shell's `sm:px-6` and four `gap-px` seams. Written as `20vw`
+ * instead, a 1440px desktop asks for 288px, skips the 250w cover and fetches
+ * the full one.
+ *
+ * The `vw` clauses round up, never down. Asking for a few px too many costs a
+ * few bytes at the top of a breakpoint; asking for too few picks a candidate
+ * that cannot fill the tile and ships it blurred.
+ */
+const COVER_SIZES =
+  "(min-width: 1152px) 220px, (min-width: 1024px) 20vw, (min-width: 640px) 33vw, 50vw";
 
 /**
  * One cover in the grid. The whole tile is the link and it goes to League of
@@ -105,6 +123,8 @@ function ComicTile({ entry }: { entry: ComicEntry }) {
         {entry.cover ? (
           <img
             src={entry.cover}
+            srcSet={coverSrcSet(entry.cover) ?? undefined}
+            sizes={COVER_SIZES}
             /* Decoration for a tile that names the comic in text directly
                beneath it - describing it again would make a screen reader read
                every entry twice. */
@@ -152,7 +172,7 @@ function ComicTile({ entry }: { entry: ComicEntry }) {
 }
 
 export function Comics() {
-  useDocumentMeta(TITLE, DESCRIPTION);
+  useDocumentMeta(META.title, META.description);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const raw = searchParams.get("shelf");
@@ -217,26 +237,38 @@ export function Comics() {
         </dl>
       ) : null}
 
-      <p className="readout-dim mt-8">{shelf.note}</p>
+      <section aria-labelledby="shelf-list">
+        {/* The shelf's own label, so the outline says which of the lists is on
+            screen. Every tile below is an `h3`, and without this the page is a
+            title and then a run of comic names, with nothing in between to say
+            what they are. */}
+        <h2 id="shelf-list" className="sr-only">
+          {shelf.label}
+        </h2>
 
-      {shown.length > 0 ? (
-        <ul className="mt-4 grid grid-cols-2 gap-px sm:grid-cols-3 lg:grid-cols-5">
-          {shown.map((entry) => (
-            <ComicTile key={entry.key} entry={entry} />
-          ))}
-        </ul>
-      ) : (
-        <EmptyState className="mt-4">
-          {active === "pullList" ? "Nothing pulled this week." : "Nothing on this list right now."}
-        </EmptyState>
-      )}
+        <p className="readout-dim mt-8">{shelf.note}</p>
 
-      <SourceLine
-        count={`${shown.length} shown`}
-        href={comics.url}
-        source="League of Comic Geeks"
-        fetched={comics.fetched}
-      />
+        {shown.length > 0 ? (
+          <ul className="mt-4 grid grid-cols-2 gap-px sm:grid-cols-3 lg:grid-cols-5">
+            {shown.map((entry) => (
+              <ComicTile key={entry.key} entry={entry} />
+            ))}
+          </ul>
+        ) : (
+          <EmptyState className="mt-4">
+            {active === "pullList"
+              ? "Nothing pulled this week."
+              : "Nothing on this list right now."}
+          </EmptyState>
+        )}
+
+        <SourceLine
+          count={`${shown.length} shown`}
+          href={comics.url}
+          source="League of Comic Geeks"
+          fetched={comics.fetched}
+        />
+      </section>
     </PageShell>
   );
 }

@@ -26,8 +26,12 @@ import {
   type Tally,
   type VinylRecord,
 } from "@/lib/vinyl";
+import { coverSrcSet } from "@/lib/covers";
+import { PAGE_META } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { useDocumentMeta } from "@/lib/use-document-meta";
+
+const META = PAGE_META["/vinyl"];
 
 /** The gap between the page's major blocks, matching the show log's rhythm. */
 const BLOCK = "mt-16";
@@ -38,6 +42,24 @@ const TITLE = (
     <span className="display-outline-ember block">spinnin’ you around now</span>
   </>
 );
+
+/**
+ * How wide a sleeve is laid out, so the browser can choose between the two
+ * candidates in `srcSet` before there is any layout to measure. Kept beside the
+ * grid classes below, which are what it describes.
+ *
+ * The fixed clause is the one that earns the string. Past 1152px `max-w-6xl`
+ * stops the page growing, so a tile stops at the 276px four columns leave it
+ * inside the shell's `sm:px-6` and three `gap-px` seams. Written as `25vw`
+ * instead, a 1440px desktop asks for 360px, skips the 300w sleeve and fetches
+ * the full one.
+ *
+ * The `vw` clauses round up, never down. Asking for a few px too many costs a
+ * few bytes at the top of a breakpoint; asking for too few picks a candidate
+ * that cannot fill the tile and ships it blurred.
+ */
+const COVER_SIZES =
+  "(min-width: 1152px) 276px, (min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw";
 
 /**
  * One sleeve in the grid. The whole tile is the link, and it goes to Discogs -
@@ -73,6 +95,8 @@ function RecordTile({ record }: { record: VinylRecord }) {
         {record.cover ? (
           <img
             src={record.cover}
+            srcSet={coverSrcSet(record.cover) ?? undefined}
+            sizes={COVER_SIZES}
             /* The sleeve is decoration for a tile that already names the record
                in text directly beneath it, so describing it again would make a
                screen reader read every entry twice. */
@@ -148,10 +172,7 @@ function TallyList({
 }
 
 export function Vinyl() {
-  useDocumentMeta(
-    "Vinyl",
-    "Every record Alexis and I own, read from Discogs nightly - what it is, when it was pressed, and whose shelf it is on.",
-  );
+  useDocumentMeta(META.title, META.description);
 
   // Owner and sort live in the URL so a filtered shelf is linkable and survives
   // a refresh, the same contract the blog's category filter has. The search box
@@ -295,61 +316,70 @@ export function Vinyl() {
         {asides.length > 0 ? <p className="readout-dim mt-4">{asides.join(" · ")}</p> : null}
       </section>
 
-      {/* A full block below the counts and half of one above the grid, so the
-          row reads as belonging to the sleeves rather than to the stats. */}
-      <div className={cn(BLOCK, "flex flex-col gap-4 sm:flex-row sm:items-center")}>
-        <SelectControl
-          label="Sort records"
-          value={sort}
-          onChange={(value: Sort) => update({ sort: value })}
-          options={SORTS.map((option) => ({ value: option, label: SORT_LABEL[option] }))}
-          className="sm:w-56"
-        />
+      <section aria-labelledby="records">
+        {/* Every sleeve below is an `h3`. Without this the outline is the page
+            title and then a run of album titles, with nothing in between to say
+            what they are. */}
+        <h2 id="records" className="sr-only">
+          The records
+        </h2>
 
-        <div className="relative sm:ml-auto sm:w-72">
-          <Search
-            className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted-foreground"
-            aria-hidden
+        {/* A full block below the counts and half of one above the grid, so the
+            row reads as belonging to the sleeves rather than to the stats. */}
+        <div className={cn(BLOCK, "flex flex-col gap-4 sm:flex-row sm:items-center")}>
+          <SelectControl
+            label="Sort records"
+            value={sort}
+            onChange={(value: Sort) => update({ sort: value })}
+            options={SORTS.map((option) => ({ value: option, label: SORT_LABEL[option] }))}
+            className="sm:w-56"
           />
-          {/* Same `CONTROL_CLASS` as the select beside it, so the row lines up
-              on one baseline instead of by eye. */}
-          <input
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Artist, label, genre"
-            aria-label="Search the collection"
-            className={cn(
-              CONTROL_CLASS,
-              "w-full border border-border bg-background pl-11 text-sm",
-              "placeholder:text-muted-foreground focus-visible:border-ember focus-visible:outline-none",
-            )}
-          />
+
+          <div className="relative sm:ml-auto sm:w-72">
+            <Search
+              className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden
+            />
+            {/* Same `CONTROL_CLASS` as the select beside it, so the row lines up
+                on one baseline instead of by eye. */}
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Artist, label, genre"
+              aria-label="Search the collection"
+              className={cn(
+                CONTROL_CLASS,
+                "w-full border border-border bg-background pl-11 text-sm",
+                "placeholder:text-muted-foreground focus-visible:border-ember focus-visible:outline-none",
+              )}
+            />
+          </div>
         </div>
-      </div>
 
-      {/* One sentence for every state the owner toggle and the search box can
-          produce between them, including the empty one - "0 of 83" is the
-          answer, and the reader already knows what they typed. Rendered
-          unconditionally so the region exists before the count changes. */}
-      <FilterStatus message={`${visible.length} of ${records.length} records shown`} />
+        {/* One sentence for every state the owner toggle and the search box can
+            produce between them, including the empty one - "0 of 83" is the
+            answer, and the reader already knows what they typed. Rendered
+            unconditionally so the region exists before the count changes. */}
+        <FilterStatus message={`${visible.length} of ${records.length} records shown`} />
 
-      {visible.length > 0 ? (
-        <ul className="mt-8 grid grid-cols-2 gap-px sm:grid-cols-3 lg:grid-cols-4">
-          {visible.map((record) => (
-            <RecordTile key={record.instanceId} record={record} />
-          ))}
-        </ul>
-      ) : (
-        <EmptyState className="mt-8">Nothing on the shelf matches “{query}”.</EmptyState>
-      )}
+        {visible.length > 0 ? (
+          <ul className="mt-8 grid grid-cols-2 gap-px sm:grid-cols-3 lg:grid-cols-4">
+            {visible.map((record) => (
+              <RecordTile key={record.instanceId} record={record} />
+            ))}
+          </ul>
+        ) : (
+          <EmptyState className="mt-8">Nothing on the shelf matches “{query}”.</EmptyState>
+        )}
 
-      <SourceLine
-        count={`${visible.length} of ${records.length} shown`}
-        href={collection.url}
-        source="Discogs"
-        fetched={collection.fetched}
-      />
+        <SourceLine
+          count={`${visible.length} of ${records.length} shown`}
+          href={collection.url}
+          source="Discogs"
+          fetched={collection.fetched}
+        />
+      </section>
     </PageShell>
   );
 }

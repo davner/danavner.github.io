@@ -92,8 +92,10 @@ person to write is the part a person should write.
   specific, and willing to be unimpressive about itself.
 - **Never use the em dash.** A plain hyphen instead. This is a standing rule in
   `CLAUDE.md` and applies to prose, code comments, and documentation alike.
-- The existing visual system is incumbent authority. There is no `DESIGN.md`;
-  the tokens, components, and CSS are the record until one is written.
+- The existing visual system is incumbent authority, and `DESIGN.md` at the
+  repo root is where it is written down: the palette, the type scale, the
+  components, and a do/don't list that the code already cites by name. The
+  tokens and the CSS remain what actually ships.
 
 ## Evidence on Hand
 

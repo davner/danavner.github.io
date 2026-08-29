@@ -22,9 +22,12 @@ const SETTLE_MS = 500;
  * satisfy it: a screen reader user typing in the search box is told nothing at
  * all, and the only way to find out is to leave the field and read the list.
  *
- * Deliberately not `/vinyl`-specific. Every collection on the site filters the
- * same way and has the same gap, so the caller supplies the sentence and its
- * own nouns and this owns only the announcing.
+ * Deliberately not `/vinyl`-specific: the caller supplies the sentence and its
+ * own nouns, so this owns only the announcing. Reusable is not the same as
+ * used, though - `/vinyl` is the only caller today, while `/comics`, `/blog`
+ * and `/fortnite` all filter their own collections and announce nothing. Same
+ * gap, still open, and this is what should close it rather than a new
+ * component.
  *
  * Two things it has to get right, and both are about *when* rather than what:
  *

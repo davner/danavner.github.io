@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 
+import { OPEN_STATES, reachOpenState } from "./open-states";
 import { ROUTES } from "./routes";
 
 /**
@@ -113,7 +114,59 @@ const EXPLAINED: Record<string, (node: FindingNode) => boolean> = {
   "aria-valid-attr-value": (node) =>
     node.all.length > 0 &&
     node.all.every((check) => check.data?.messageKey === "controlsWithinPopup"),
+  /*
+   * `aria-labelledby` on the navigation panel, pointing at the trigger that
+   * opened it. Radix sets it on every `NavigationMenuContent` and gives the
+   * element no role, so axe cannot decide whether the name reaches anything and
+   * reports the attribute as unsupported rather than as wrong.
+   *
+   * Nothing is lost either way. A div with no role has no accessible name to
+   * carry in the first place, and what tells a reader where they are is the
+   * trigger's own `aria-expanded` and `aria-controls`.
+   *
+   * Pinned to that one attribute on that one element rather than to the
+   * message: the comment above explains why `messageKey` cannot be trusted to
+   * speak for a whole node. A prohibited attribute of ours would name something
+   * other than `aria-labelledby`, or sit on an element that has a role, and
+   * still fails.
+   */
+  "aria-prohibited-attr": (node) =>
+    node.none.length > 0 &&
+    node.none.every(
+      (check) =>
+        check.data?.role == null &&
+        check.data?.nodeName === "div" &&
+        Array.isArray(check.data?.prohibited) &&
+        check.data.prohibited.length === 1 &&
+        check.data.prohibited[0] === "aria-labelledby",
+    ) &&
+    // Radix builds this id as `${baseId}-content-${value}`, so the infix is
+    // what says the node is a navigation panel rather than anything of ours.
+    node.target.some((target) => String(target).includes("-content-")),
 };
+
+/*
+ * The one node kept out of every scan, and it is Radix's rather than ours.
+ *
+ * While a navigation panel is open, `NavigationMenuTrigger` renders a visually
+ * hidden `<span aria-hidden tabindex="0">` beside itself. axe reads that as
+ * `aria-hidden-focus`, and on the face of it that is right: a tab stop nothing
+ * assistive can see.
+ *
+ * It is not a stop. Its `onFocus` hands focus straight into the panel, so the
+ * span is how Tab gets into the content at all rather than something Tab gets
+ * caught on. There is no prop to turn it off, so the choice is between allowing
+ * this node and never scanning a menu open - and a state a route load never
+ * reaches is exactly where this suite has found real defects before.
+ *
+ * Excluded by node, never by rule: `aria-hidden-focus` is how the sort listbox
+ * defect was caught, and allowing it outright would have hidden that. The
+ * redirect the exclusion rests on is asserted at the foot of this file rather
+ * than taken on trust, in both tab directions, so a Radix release that stops
+ * moving focus out of the proxy fails here instead of going quiet.
+ */
+const RADIX_FOCUS_PROXY =
+  '[data-slot="navigation-menu-item"] > span[aria-hidden="true"][tabindex="0"]';
 
 /** The undecided results with no accepted reason for being undecided. */
 function unexplained(incomplete: Finding[]): Finding[] {
@@ -131,7 +184,10 @@ function unexplained(incomplete: Finding[]): Finding[] {
  * sweeps below produce failures that are otherwise indistinguishable.
  */
 async function expectAxeClean(page: Page, testInfo: TestInfo, subject: string) {
-  const { violations, incomplete } = await new AxeBuilder({ page }).withTags(TAGS).analyze();
+  const { violations, incomplete } = await new AxeBuilder({ page })
+    .withTags(TAGS)
+    .exclude(RADIX_FOCUS_PROXY)
+    .analyze();
 
   if (violations.length > 0) {
     await testInfo.attach("axe-violations", {
@@ -171,143 +227,6 @@ for (const colorScheme of ["dark", "light"] as const) {
       });
     }
   });
-}
-
-/**
- * A state the page only reaches because someone did something.
- *
- * The sweep above sees a route exactly as it loads, and that is where two of
- * the six failures the 2026-08 audit found were hiding: a navigation label at
- * 3.28:1 that axe reports as an ordinary violation the moment the sheet is
- * open, and focusable content inside an `aria-hidden` subtree with the sort
- * listbox open. Nothing had ever asked. Measured while writing this, stripping
- * the `inert` mirror back out reproduces the second one exactly - seven
- * `aria-hidden-focus` violations with the listbox open, three undecided nodes
- * of the same rule with the sheet open - so this sweep is the guard on that
- * fix that does not care how the fix is implemented.
- */
-interface OpenState {
-  /** Reads as the test name, so it says which state broke. */
-  name: string;
-  path: string;
-  /**
-   * Forced when the control only exists at one size. The phone menu's trigger
-   * is `sm:hidden`, so without this the state is unreachable in the desktop
-   * project and the test would have to skip itself half the time.
-   */
-  width?: number;
-  /** Drives the page into the state, and fails if it did not get there. */
-  reach: (page: Page) => Promise<void>;
-}
-
-const OPEN_STATES: OpenState[] = [
-  {
-    name: "the phone menu open",
-    path: "/",
-    width: 390,
-    reach: async (page) => {
-      await page.getByRole("button", { name: "Main menu" }).click();
-      await expect(page.getByRole("dialog", { name: /menu/i })).toBeVisible();
-    },
-  },
-  {
-    name: "the sort listbox open",
-    path: "/vinyl",
-    reach: async (page) => {
-      await page.getByRole("combobox", { name: /sort records/i }).click();
-      await expect(page.getByRole("listbox")).toBeVisible();
-    },
-  },
-  {
-    name: "the share popover open",
-    path: "/shows/bruno-mars-madrid-2026",
-    reach: async (page) => {
-      await page.getByRole("button", { name: /^Share/ }).click();
-      const panel = page.getByRole("dialog", { name: /^Share / });
-      await expect(panel).toBeVisible();
-      /*
-       * The card is drawn on a canvas after the panel opens. Scanning while it
-       * is still building measures the spinner rather than the panel, so wait
-       * for the loading line to go - it leaves on both the success and the
-       * failure path, and the failure path is a state worth scanning too.
-       */
-      await expect(panel.getByText("Building the card")).toHaveCount(0, { timeout: 20_000 });
-    },
-  },
-  {
-    name: "every year on the show log expanded",
-    path: "/shows",
-    reach: async (page) => {
-      const years = page.locator("details");
-      const count = await years.count();
-      // If the log ever stops using disclosures this state evaporates silently,
-      // and a sweep over nothing passes.
-      expect(count, "the show log has no year disclosures to expand").toBeGreaterThan(0);
-
-      for (let index = 0; index < count; index++) {
-        const year = years.nth(index);
-        if ((await year.getAttribute("open")) === null) await year.locator("summary").click();
-      }
-      await expect(page.locator("details:not([open])")).toHaveCount(0);
-    },
-  },
-  /*
-   * The comic shelves render one at a time, so a load of /comics puts two of
-   * the three nowhere in the DOM at all - and every tile on them is a heading
-   * and a link like any other.
-   *
-   * Named here rather than read from `SHELVES`, which reaches this file only
-   * through `src/lib/comics` and a Vite virtual module the test runner cannot
-   * resolve. The URL assertions in `showShelf` are what holds the two copies
-   * together: the page drops the query for whichever shelf is the default, so
-   * a shelf that became the landing one fails here rather than going quiet.
-   */
-  {
-    name: "the pull list shown",
-    path: "/comics",
-    reach: (page) => showShelf(page, /^This week/i, "pullList"),
-  },
-  {
-    name: "the wants shelf shown",
-    path: "/comics",
-    reach: (page) => showShelf(page, /^Wants/i, "wants"),
-  },
-];
-
-/**
- * Click a comic shelf pill and wait until the row has stopped moving.
- *
- * The pills cross-fade, and axe reads whatever colours are on screen when it
- * runs. Mid-transition those are interpolated blends belonging to neither
- * palette, and they report as contrast failures no reader is ever shown.
- *
- * The row is asked what is still animating rather than one pill asked whether
- * it has arrived at its colour, which looks equivalent and is not:
- * `aria-checked` moves a commit after the click, so a colour wait reads the
- * pill on its way out, finds it already wearing the value being waited for,
- * and returns with the whole row still fading.
- */
-async function showShelf(page: Page, label: RegExp, id: string) {
-  await page.getByRole("radio", { name: label }).click();
-  await expect(page).toHaveURL(new RegExp(`shelf=${id}`));
-
-  await expect
-    .poll(
-      () =>
-        page.getByRole("radiogroup").evaluate((row) => row.getAnimations({ subtree: true }).length),
-      { message: "the shelf pills are still cross-fading" },
-    )
-    .toBe(0);
-}
-
-/** Load `state.path` and drive it into `state`, ready to be scanned. */
-async function reachOpenState(page: Page, state: OpenState) {
-  if (state.width) await page.setViewportSize({ width: state.width, height: 800 });
-  await page.goto(state.path);
-  await page.getByRole("heading", { level: 1 }).waitFor();
-  await page.waitForLoadState("networkidle");
-
-  await state.reach(page);
 }
 
 test.describe("states a route load never reaches", () => {
@@ -379,6 +298,52 @@ test.describe("heading order", () => {
       await expectHeadingOrder(page, `${state.path} with ${state.name}`);
     });
   }
+});
+
+/**
+ * The other half of the `RADIX_FOCUS_PROXY` exclusion above.
+ *
+ * The proxy is allowed because it passes focus on rather than holding it. This
+ * is what checks that it does, in the one state where it is rendered at all.
+ *
+ * Both directions, because they are two branches of the same `onFocus` and only
+ * one of them is Tab arriving from the trigger. Coming back out of the panel the
+ * proxy is met from the other side, and focus resting on it there is the same
+ * defect `aria-hidden-focus` names - a stop nothing assistive can see - reached
+ * by the direction the forward assertion cannot speak for.
+ */
+test("the navigation menu hands the keyboard to its panel and back", async ({ page }) => {
+  // The bar is `hidden sm:flex`, so the trigger exists only above 640.
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+  await page.getByRole("heading", { level: 1 }).waitFor();
+
+  const trigger = page.locator("[data-slot=navigation-menu-trigger]").first();
+  await trigger.press("Enter");
+  const panel = page.locator("[data-slot=navigation-menu-content]");
+  await panel.waitFor();
+
+  await page.keyboard.press("Tab");
+
+  expect(
+    await panel.evaluate((node) => node.contains(document.activeElement)),
+    "Tab stopped on the hidden proxy instead of being handed into the panel",
+  ).toBe(true);
+
+  await page.keyboard.press("Shift+Tab");
+
+  // Both halves in one assertion: off the proxy, and onto the control the
+  // panel belongs to rather than anywhere else the tab order might lead.
+  expect(
+    await page.evaluate((selector) => {
+      const active = document.activeElement;
+      return {
+        onProxy: active?.matches(selector) ?? false,
+        slot: active?.getAttribute("data-slot") ?? null,
+      };
+    }, RADIX_FOCUS_PROXY),
+    "Shift+Tab out of the panel did not land back on its trigger",
+  ).toEqual({ onProxy: false, slot: "navigation-menu-trigger" });
 });
 
 /**

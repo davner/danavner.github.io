@@ -218,12 +218,20 @@
       scroll-behavior: auto;
     }
 
+    /*
+     * An allowlist rather than a blanket kill. What the preference asks for is
+     * less movement, and a colour or an opacity crossfade is not movement -
+     * collapsing those takes away the only hover and focus cue several controls
+     * have. Anything not named here stops transitioning, `transform` above all.
+     */
     *,
     *::before,
     *::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
+      transition-property:
+        color, background-color, border-color, text-decoration-color, outline-color, fill, stroke,
+        opacity !important;
     }
   }
 }
@@ -363,6 +371,24 @@
     .group:focus-within .scroll-on-hover[data-overflow="true"] > span {
       animation: none;
       transform: none;
+    }
+
+    /*
+     * With nothing to slide, the hidden tail has to arrive some other way: the
+     * line wraps and the tile grows, rather than half a record's pressing
+     * sitting behind an edge that will never move.
+     *
+     * Keyed on the class and not on `data-overflow`, which is set from a
+     * measurement these rules change. A wrapped line does not overflow, so the
+     * component would clear the attribute, the rules would stop applying, the
+     * line would go back to one row, and the measurement would set it again.
+     */
+    .scroll-on-hover {
+      overflow: visible;
+    }
+
+    .scroll-on-hover > span {
+      white-space: normal;
     }
   }
 

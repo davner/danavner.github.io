@@ -1901,6 +1901,7 @@ test.describe("focus indicators", () => {
         await page.goto(path);
         await page.getByRole("heading", { level: 1 }).waitFor();
         await page.waitForLoadState("networkidle");
+        await freezeTransitions(page);
 
         const seen = new Set<string>();
         const bad: string[] = [];
@@ -1956,6 +1957,7 @@ test.describe("focus indicators", () => {
         await page.goto(path);
         await page.getByRole("heading", { level: 1 }).waitFor();
         await page.waitForLoadState("networkidle");
+        await freezeTransitions(page);
 
         const triggers = page.locator("[data-slot=navigation-menu-trigger]:visible");
         const bad: string[] = [];

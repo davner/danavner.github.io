@@ -9,6 +9,7 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel";
 import type { Photo } from "@/lib/photo";
+import { useReducedMotion } from "@/lib/use-reduced-motion";
 
 /**
  * Photo strip for a show, built on the shadcn/ui Carousel.
@@ -20,6 +21,7 @@ import type { Photo } from "@/lib/photo";
 export function PhotoCarousel({ photos, label }: { photos: Photo[]; label: string }) {
   const [api, setApi] = useState<CarouselApi>();
   const [active, setActive] = useState(0);
+  const reduce = useReducedMotion();
 
   useEffect(() => {
     if (!api) return;
@@ -44,7 +46,18 @@ export function PhotoCarousel({ photos, label }: { photos: Photo[]; label: strin
     <figure className="mt-5 max-w-2xl">
       <Carousel
         setApi={setApi}
-        opts={{ align: "start", loop: false }}
+        /*
+         * The strip's travel is a script animation, so the CSS reduced-motion
+         * block cannot reach it. `duration: 0` makes embla jump to the slide
+         * instead of gliding to it.
+         *
+         * The key is absent rather than `undefined` when the preference is off.
+         * Embla merges options by key presence, so `duration: undefined` would
+         * replace its default rather than leave it, and every strip would jump
+         * for everyone. Presence is also how it notices the options changed, so
+         * it re-initialises when the preference does.
+         */
+        opts={{ align: "start", loop: false, ...(reduce && { duration: 0 }) }}
         aria-label={`Photos from ${label}`}
       >
         {/* The frame wraps only the photos. Putting it on the Carousel root

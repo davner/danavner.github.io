@@ -27,7 +27,10 @@ import {
   type Show,
   type Tally,
 } from "@/lib/shows";
+import { PAGE_META } from "@/lib/routes";
 import { useDocumentMeta } from "@/lib/use-document-meta";
+
+const META = PAGE_META["/shows"];
 
 function ShowRow({ show }: { show: Show }) {
   const date = formatShowDate(show);
@@ -197,10 +200,7 @@ function RepeatList({
 }
 
 export function Shows() {
-  useDocumentMeta(
-    "Shows",
-    "A running log of every show I have been to - who played, where, and if I lost my hearing.",
-  );
+  useDocumentMeta(META.title, META.description);
 
   if (showStats.total === 0) {
     return (
@@ -293,34 +293,44 @@ export function Shows() {
       </div>
 
       <PageShell className="pt-16">
-        {/* Each year is a collapsible accordion. The most recent year opens by
-            default; older years start minimized so the log stays scannable. */}
-        <div className="border-t border-border">
-          {showsByYear.map((group, groupIndex) => (
-            <details
-              key={group.year}
-              {...(groupIndex === 0 ? { open: true } : {})}
-              className="group/year border-b border-border"
-            >
-              <summary className="group/sum flex cursor-pointer list-none items-center justify-between gap-6 py-4 select-none marker:hidden [&::-webkit-details-marker]:hidden">
-                <span className="display text-2xl transition-colors group-hover/sum:text-ember sm:text-3xl">
-                  {group.year}
-                </span>
-                <span className="flex items-center gap-3 text-muted-foreground">
-                  <span className="readout-dim">
-                    {group.shows.length} {group.shows.length === 1 ? "entry" : "entries"}
+        <section aria-labelledby="log">
+          {/* Every row below is an `h3`, and the years above them are
+              disclosure summaries rather than headings, so this is the only
+              thing in the outline that says what the rows are. `sr-only`
+              because the page title already says it in print. */}
+          <h2 id="log" className="sr-only">
+            The log
+          </h2>
+
+          {/* Each year is a collapsible accordion. The most recent year opens by
+              default; older years start minimized so the log stays scannable. */}
+          <div className="border-t border-border">
+            {showsByYear.map((group, groupIndex) => (
+              <details
+                key={group.year}
+                {...(groupIndex === 0 ? { open: true } : {})}
+                className="group/year border-b border-border"
+              >
+                <summary className="group/sum flex cursor-pointer list-none items-center justify-between gap-6 py-4 select-none marker:hidden [&::-webkit-details-marker]:hidden">
+                  <span className="display text-2xl transition-colors group-hover/sum:text-ember sm:text-3xl">
+                    {group.year}
                   </span>
-                  <ChevronDown className="size-4 shrink-0 transition-transform duration-200 group-hover/sum:text-ember group-open/year:rotate-180" />
-                </span>
-              </summary>
-              <ul className="border-t border-border">
-                {group.shows.map((show) => (
-                  <ShowRow key={show.slug} show={show} />
-                ))}
-              </ul>
-            </details>
-          ))}
-        </div>
+                  <span className="flex items-center gap-3 text-muted-foreground">
+                    <span className="readout-dim">
+                      {group.shows.length} {group.shows.length === 1 ? "entry" : "entries"}
+                    </span>
+                    <ChevronDown className="size-4 shrink-0 transition-transform duration-200 group-hover/sum:text-ember group-open/year:rotate-180" />
+                  </span>
+                </summary>
+                <ul className="border-t border-border">
+                  {group.shows.map((show) => (
+                    <ShowRow key={show.slug} show={show} />
+                  ))}
+                </ul>
+              </details>
+            ))}
+          </div>
+        </section>
       </PageShell>
     </>
   );

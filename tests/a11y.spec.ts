@@ -9,8 +9,9 @@ import { ROUTES } from "./routes";
  * interactive elements, heading order. Both themes are checked because the
  * palettes are independent and contrast is the most fragile of those.
  *
- * Two sweeps, in one file so the tag list and the allowlist below cannot fork:
- * every route as it loads, and then the states a route load never reaches.
+ * Three sweeps, in one file so the tag list and the allowlist below cannot
+ * fork: every route as it loads, the states a route load never reaches, and
+ * heading order across both.
  */
 /*
  * The bar `PRODUCT.md` commits to is WCAG 2.2 AA, so the constant states 2.2
@@ -250,7 +251,64 @@ const OPEN_STATES: OpenState[] = [
       await expect(page.locator("details:not([open])")).toHaveCount(0);
     },
   },
+  /*
+   * The comic shelves render one at a time, so a load of /comics puts two of
+   * the three nowhere in the DOM at all - and every tile on them is a heading
+   * and a link like any other.
+   *
+   * Named here rather than read from `SHELVES`, which reaches this file only
+   * through `src/lib/comics` and a Vite virtual module the test runner cannot
+   * resolve. The URL assertions in `showShelf` are what holds the two copies
+   * together: the page drops the query for whichever shelf is the default, so
+   * a shelf that became the landing one fails here rather than going quiet.
+   */
+  {
+    name: "the pull list shown",
+    path: "/comics",
+    reach: (page) => showShelf(page, /^This week/i, "pullList"),
+  },
+  {
+    name: "the wants shelf shown",
+    path: "/comics",
+    reach: (page) => showShelf(page, /^Wants/i, "wants"),
+  },
 ];
+
+/**
+ * Click a comic shelf pill and wait until the row has stopped moving.
+ *
+ * The pills cross-fade, and axe reads whatever colours are on screen when it
+ * runs. Mid-transition those are interpolated blends belonging to neither
+ * palette, and they report as contrast failures no reader is ever shown.
+ *
+ * The row is asked what is still animating rather than one pill asked whether
+ * it has arrived at its colour, which looks equivalent and is not:
+ * `aria-checked` moves a commit after the click, so a colour wait reads the
+ * pill on its way out, finds it already wearing the value being waited for,
+ * and returns with the whole row still fading.
+ */
+async function showShelf(page: Page, label: RegExp, id: string) {
+  await page.getByRole("radio", { name: label }).click();
+  await expect(page).toHaveURL(new RegExp(`shelf=${id}`));
+
+  await expect
+    .poll(
+      () =>
+        page.getByRole("radiogroup").evaluate((row) => row.getAnimations({ subtree: true }).length),
+      { message: "the shelf pills are still cross-fading" },
+    )
+    .toBe(0);
+}
+
+/** Load `state.path` and drive it into `state`, ready to be scanned. */
+async function reachOpenState(page: Page, state: OpenState) {
+  if (state.width) await page.setViewportSize({ width: state.width, height: 800 });
+  await page.goto(state.path);
+  await page.getByRole("heading", { level: 1 }).waitFor();
+  await page.waitForLoadState("networkidle");
+
+  await state.reach(page);
+}
 
 test.describe("states a route load never reaches", () => {
   for (const colorScheme of ["dark", "light"] as const) {
@@ -260,12 +318,7 @@ test.describe("states a route load never reaches", () => {
           page,
         }, testInfo) => {
           await page.emulateMedia({ colorScheme });
-          if (state.width) await page.setViewportSize({ width: state.width, height: 800 });
-          await page.goto(state.path);
-          await page.getByRole("heading", { level: 1 }).waitFor();
-          await page.waitForLoadState("networkidle");
-
-          await state.reach(page);
+          await reachOpenState(page, state);
 
           await expectAxeClean(
             page,
@@ -274,6 +327,56 @@ test.describe("states a route load never reaches", () => {
           );
         });
       }
+    });
+  }
+});
+
+/**
+ * Heading order, on its own builder.
+ *
+ * `heading-order` is a best-practice rule rather than a WCAG one, so `TAGS`
+ * never reaches it and a card title two levels under the page title goes
+ * unreported. Adding "best-practice" to `TAGS` would fix that and promote a
+ * dozen unrelated rules into build gates at the same time, which is the trade
+ * the comment on `TAGS` exists to refuse - so this runs as a second scan with
+ * `withRules`, which sets its own `runOnly` and leaves `TAGS` alone.
+ *
+ * Over `OPEN_STATES` as well as the routes, because axe reads the DOM and the
+ * pages keep a good deal of themselves out of it: every year on the show log
+ * but the newest starts inside a closed `<details>`, and the comic shelves
+ * render one at a time. Gating only what a plain load happens to render leaves
+ * the rest to be found by hand.
+ *
+ * One pass rather than one per theme: nesting is structure, and the palettes
+ * cannot change it.
+ */
+async function expectHeadingOrder(page: Page, subject: string) {
+  const { violations } = await new AxeBuilder({ page }).withRules(["heading-order"]).analyze();
+
+  expect(
+    violations.flatMap((violation) => violation.nodes.map((node) => node.html)),
+    `${subject} skips a heading level`,
+  ).toEqual([]);
+}
+
+test.describe("heading order", () => {
+  for (const path of ROUTES) {
+    test(`${path} nests its headings under the page title`, async ({ page }) => {
+      await page.goto(path);
+      await page.getByRole("heading", { level: 1 }).waitFor();
+      await page.waitForLoadState("networkidle");
+
+      await expectHeadingOrder(page, path);
+    });
+  }
+
+  for (const state of OPEN_STATES) {
+    test(`${state.path} with ${state.name} nests its headings under the page title`, async ({
+      page,
+    }) => {
+      await reachOpenState(page, state);
+
+      await expectHeadingOrder(page, `${state.path} with ${state.name}`);
     });
   }
 });

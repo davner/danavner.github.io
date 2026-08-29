@@ -5,7 +5,10 @@ import { FilterToggle } from "@/components/filter-toggle";
 import { PageHeader, PageShell } from "@/components/page";
 import { PostCard } from "@/components/post-card";
 import { CATEGORIES, CATEGORY_LABEL, posts, postsByCategory, type Category } from "@/lib/blog";
+import { PAGE_META } from "@/lib/routes";
 import { useDocumentMeta } from "@/lib/use-document-meta";
+
+const META = PAGE_META["/blog"];
 
 type Filter = Category | "all";
 
@@ -19,10 +22,7 @@ function isFilter(value: string | null): value is Filter {
 }
 
 export function Blog() {
-  useDocumentMeta(
-    "Blog",
-    "Dan Avner's blog. Posts on scientific software and engineering, plus the personal stuff. Filter by work or personal.",
-  );
+  useDocumentMeta(META.title, META.description);
 
   // Kept in the URL so a filtered view is linkable and survives a refresh.
   const [searchParams, setSearchParams] = useSearchParams();
@@ -58,15 +58,24 @@ export function Blog() {
         />
       </PageHeader>
 
-      {visible.length > 0 ? (
-        <div className="grid gap-px border border-border bg-border sm:grid-cols-2">
-          {visible.map((post) => (
-            <PostCard key={post.slug} post={post} />
-          ))}
-        </div>
-      ) : (
-        <EmptyState>Nothing here yet. Check back soon.</EmptyState>
-      )}
+      <section aria-labelledby="posts">
+        {/* Every card title below is an `h3`, so this is what the outline has
+            to say they are. `sr-only` because the filter above it already
+            tells a sighted reader what the grid is. */}
+        <h2 id="posts" className="sr-only">
+          The posts
+        </h2>
+
+        {visible.length > 0 ? (
+          <div className="grid gap-px border border-border bg-border sm:grid-cols-2">
+            {visible.map((post) => (
+              <PostCard key={post.slug} post={post} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState>Nothing here yet. Check back soon.</EmptyState>
+        )}
+      </section>
     </PageShell>
   );
 }

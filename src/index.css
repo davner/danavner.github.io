@@ -140,6 +140,15 @@
  */
 @theme {
   /*
+   * Tailwind's own size scale goes, so a named step is the only way to set
+   * type. Asking for one of the stock sizes after this generates no CSS at all,
+   * which is louder than rendering at a size nobody chose. (Do not write one of
+   * those class names out here to say which. Tailwind scans comments along with
+   * code, and `tests/bundle.spec.ts` greps for them.)
+   */
+  --text-*: initial;
+
+  /*
    * A step only the body face uses carries its leading with it. Without the
    * pairing every call site of that step inherits the root's unitless 1.5 and
    * flattens toward it.

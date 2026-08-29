@@ -136,7 +136,7 @@ function ShowBody({ show }: { show: (typeof shows)[number] }) {
           <ul className="grid gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
             {show.lineup.map((band) => {
               const setlist = show.setlists.find((entry) => entry.band === band);
-              const inner = <span className="text-lg">{band}</span>;
+              const inner = <span className="text-lede">{band}</span>;
 
               return (
                 <li key={band} className="flex bg-background">

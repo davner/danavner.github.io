@@ -11,15 +11,7 @@ const HORNS = "🤘🏽";
  * free and keeps the actual emoji rather than substituting a flat icon for it.
  * The row is decorative; the label carries the value for assistive tech.
  */
-export function Rating({
-  value,
-  className,
-  size = "base",
-}: {
-  value: number;
-  className?: string;
-  size?: "base" | "sm";
-}) {
+export function Rating({ value, className }: { value: number; className?: string }) {
   const clamped = Math.min(Math.max(value, 0), MAX_RATING);
   // Rounded once and used for both the label and the bar, so the fill always
   // shows exactly what the accessible label claims. An average like 4.6667
@@ -36,8 +28,7 @@ export function Rating({
       aria-label={`Rated ${label}`}
       title={label}
       className={cn(
-        "relative inline-block leading-none tracking-[0.15em] select-none",
-        size === "sm" ? "text-xs" : "text-base",
+        "relative inline-block text-sm leading-none tracking-[0.15em] select-none",
         className,
       )}
     >

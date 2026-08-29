@@ -9,10 +9,8 @@ export function NotFound() {
 
   return (
     <PageShell className="max-w-2xl text-center">
-      <p className="display text-[clamp(6rem,25vw,14rem)] text-ember">404</p>
-      <h1 className="display mt-4 text-3xl text-balance sm:text-4xl">
-        Nothing at these coordinates
-      </h1>
+      <p className="display text-hero text-ember">404</p>
+      <h1 className="display mt-4 text-heading text-balance">Nothing at these coordinates</h1>
       <p className="mt-5 leading-relaxed text-muted-foreground text-pretty">
         Whatever you were after is not here. It either moved or it never existed, and I cannot tell
         you which from where I am standing.

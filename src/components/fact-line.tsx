@@ -25,7 +25,7 @@ export function FactLine({
     <ul
       data-slot="facts"
       className={cn(
-        "flex flex-col gap-y-1 text-lg text-muted-foreground",
+        "flex flex-col gap-y-1 text-lede text-muted-foreground",
         "sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3",
         className,
       )}

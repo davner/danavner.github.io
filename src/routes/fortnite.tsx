@@ -109,32 +109,17 @@ function details(stats: ModeStats, against: ModeStats | null, mode: ModeId) {
  * One figure in the board. Same `dl` idiom the shows and vinyl stat tiles use -
  * a term and its number, hairlines drawn by the grid behind it.
  */
-function Stat({
-  label,
-  value,
-  against,
-  big = false,
-}: {
-  label: string;
-  value: string;
-  against?: Delta | null;
-  big?: boolean;
-}) {
+function Stat({ label, value, against }: { label: string; value: string; against?: Delta | null }) {
   return (
     <dl
       data-slot="stat"
       className="bg-background p-5 shadow-[0_0_0_1px_var(--color-border)] sm:p-6"
     >
       <dt className="readout-dim">{label}</dt>
-      <dd
-        className={
-          big
-            ? "display mt-2 text-3xl text-balance sm:text-5xl"
-            : "display mt-2 text-2xl text-balance sm:text-3xl"
-        }
-      >
-        {value}
-      </dd>
+      {/* Every figure at one size. Setting the four headline tiles larger said
+          nothing the "against lifetime" line under them does not already say,
+          and it is the delta that carries the comparison. */}
+      <dd className="display mt-2 text-heading text-balance">{value}</dd>
       {against ? (
         <dd
           className={cn(
@@ -192,7 +177,7 @@ function MainPortrait({ season, className }: { season: SeasonEntry; className?: 
 function SeasonHistory({ active, onSelect }: { active: string; onSelect: (key: string) => void }) {
   return (
     <section aria-labelledby="mains" className="mt-16">
-      <h2 id="mains" className="display text-2xl sm:text-3xl">
+      <h2 id="mains" className="display text-heading">
         Season by season
       </h2>
       <p className="readout-dim mt-2">The outfit I mained each season, oldest at the end.</p>
@@ -235,7 +220,7 @@ function SeasonHistory({ active, onSelect }: { active: string; onSelect: (key: s
                   {/* A just-rolled-over season has no name until a human adds
                       one - the label above still identifies the card. */}
                   {season.name ? (
-                    <p className="display mt-1 text-lg text-balance">{season.name}</p>
+                    <p className="display mt-1 text-title text-balance">{season.name}</p>
                   ) : null}
 
                   {/* The outfit, in ember, pinned to the bottom so the line
@@ -341,7 +326,7 @@ export function Fortnite() {
           fortnite.name ? (
             <div className="border border-border p-6">
               <p className="readout-dim">Epic name</p>
-              <p className="display mt-2 text-3xl break-all sm:text-4xl">{fortnite.name}</p>
+              <p className="display mt-2 text-heading break-all">{fortnite.name}</p>
             </div>
           ) : undefined
         }
@@ -416,13 +401,7 @@ export function Fortnite() {
                 instead of six. Same idiom as the season grid below. */}
             <div className="grid grid-cols-2 gap-px sm:grid-cols-4">
               {headline(stats, against).map((tile) => (
-                <Stat
-                  key={tile.label}
-                  label={tile.label}
-                  value={tile.value}
-                  against={tile.delta}
-                  big
-                />
+                <Stat key={tile.label} label={tile.label} value={tile.value} against={tile.delta} />
               ))}
             </div>
 

@@ -159,7 +159,7 @@ function TallyList({
         <ol className="mt-5 space-y-3">
           {entries.map((entry) => (
             <li key={entry.name} className="flex items-baseline justify-between gap-4">
-              <span className="text-lg text-pretty">{entry.name}</span>
+              <span className="text-lede text-pretty">{entry.name}</span>
               <span className="readout-dim shrink-0 tabular-nums">{entry.count}</span>
             </li>
           ))}
@@ -291,7 +291,7 @@ export function Vinyl() {
           {tiles.map((tile) => (
             <dl key={tile.label} data-slot="stat" className="bg-background p-5 sm:p-6">
               <dt className="readout-dim">{tile.label}</dt>
-              <dd className="display mt-2 text-2xl text-balance sm:text-3xl">{tile.value}</dd>
+              <dd className="display mt-2 text-heading text-balance">{tile.value}</dd>
             </dl>
           ))}
 

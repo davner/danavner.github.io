@@ -13,7 +13,7 @@ export function PostCard({ post }: { post: Post }) {
         </Badge>
       </div>
 
-      <h3 className="display mt-5 text-3xl text-balance transition-colors group-hover:text-ember sm:text-4xl">
+      <h3 className="display mt-5 text-heading text-balance transition-colors group-hover:text-ember">
         <Link to={`/blog/${post.slug}`} className="after:absolute after:inset-0">
           {post.title}
         </Link>

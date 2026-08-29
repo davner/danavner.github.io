@@ -235,6 +235,9 @@
 
   body {
     @apply bg-background text-foreground antialiased;
+    /* The running-text step, and it belongs here rather than on `html`: a root
+       font-size rescales every `rem` in the spacing scale along with the type. */
+    font-size: 1.0625rem;
     font-synthesis-weight: none;
     text-rendering: optimizeLegibility;
   }
@@ -534,7 +537,7 @@
   /* ---- Long-form -------------------------------------------------------- */
 
   .prose-dan {
-    @apply text-[1.0625rem] leading-[1.75] text-foreground/90;
+    @apply leading-[1.75] text-foreground/90;
   }
 
   .prose-dan > * + * {
@@ -542,16 +545,18 @@
   }
 
   .prose-dan h2 {
-    @apply mt-14 scroll-mt-32 font-display text-3xl tracking-tight text-foreground uppercase sm:text-4xl;
+    @apply mt-14 scroll-mt-32 font-display text-heading tracking-tight text-foreground uppercase;
     line-height: 0.95;
   }
 
+  /* The leading is stated here because `title` carries none: at that step the
+     leading belongs to the display face, and a prose heading is not in it. */
   .prose-dan h3 {
-    @apply mt-10 scroll-mt-32 text-xl font-semibold tracking-tight text-foreground;
+    @apply mt-10 scroll-mt-32 text-title leading-[1.4] font-semibold tracking-tight text-foreground;
   }
 
   .prose-dan h4 {
-    @apply mt-8 scroll-mt-32 text-base font-semibold tracking-tight text-foreground;
+    @apply mt-8 scroll-mt-32 text-lede font-semibold tracking-tight text-foreground;
   }
 
   .prose-dan a {
@@ -623,7 +628,7 @@
   /* A pull quote, not an aside. Set larger than the body and given air above and
      below, so a line worth stopping on actually stops you. */
   .prose-dan blockquote {
-    @apply my-10 border-l-2 border-ember pl-6 text-xl leading-snug text-balance text-foreground italic sm:my-12 sm:pl-8 sm:text-2xl;
+    @apply my-10 border-l-2 border-ember pl-6 text-title leading-snug text-balance text-foreground italic sm:my-12 sm:pl-8;
   }
 
   .prose-dan hr {

@@ -4,8 +4,10 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
+// A badge is a readout with a border round it, so the mono label comes from the
+// `readout` utility rather than from a second spelling of its five declarations.
 const badgeVariants = cva(
-  "inline-flex w-fit shrink-0 items-center justify-center gap-1.5 overflow-hidden border px-2 py-0.5 whitespace-nowrap transition-[color,box-shadow] [&>svg]:pointer-events-none [&>svg]:size-3",
+  "readout inline-flex w-fit shrink-0 items-center justify-center gap-1.5 overflow-hidden border px-2 py-0.5 whitespace-nowrap transition-[color,box-shadow] [&>svg]:pointer-events-none [&>svg]:size-3",
   {
     variants: {
       variant: {
@@ -19,14 +21,9 @@ const badgeVariants = cva(
         ember: "border-ember/50 text-ember",
         ion: "border-ion/50 text-ion",
       },
-      size: {
-        default: "readout",
-        sm: "px-1.5 py-0 text-[0.62rem] font-mono font-medium tracking-[0.14em] uppercase",
-      },
     },
     defaultVariants: {
       variant: "default",
-      size: "default",
     },
   },
 );
@@ -34,18 +31,13 @@ const badgeVariants = cva(
 function Badge({
   className,
   variant,
-  size,
   asChild = false,
   ...props
 }: React.ComponentProps<"span"> & VariantProps<typeof badgeVariants> & { asChild?: boolean }) {
   const Comp = asChild ? Slot : "span";
 
   return (
-    <Comp
-      data-slot="badge"
-      className={cn(badgeVariants({ variant, size }), className)}
-      {...props}
-    />
+    <Comp data-slot="badge" className={cn(badgeVariants({ variant }), className)} {...props} />
   );
 }
 

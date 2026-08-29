@@ -87,7 +87,7 @@ export function Home() {
       <section className="mx-auto max-w-6xl px-4 pt-12 pb-14 sm:px-6 sm:pt-16">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start lg:gap-12">
           <div>
-            <h1 className="display text-[clamp(4rem,17vw,12.5rem)]">
+            <h1 className="display text-hero">
               <span className="block">Dan</span>
               <span className="display-outline block">Avner</span>
             </h1>
@@ -121,7 +121,7 @@ export function Home() {
               </Label>
             </p>
 
-            <p className="mt-4 max-w-xl text-xl leading-snug text-pretty sm:text-2xl">
+            <p className="mt-4 max-w-xl text-title leading-snug text-pretty">
               <span className="text-ember">{profile.greeting}</span> {profile.blurb}
             </p>
 
@@ -179,7 +179,7 @@ export function Home() {
                   to={entry.to}
                   className="group flex items-center gap-4 border-b border-border py-6 transition-colors hover:bg-card/60 sm:gap-8 sm:py-8"
                 >
-                  <span className="display text-4xl transition-all duration-200 group-hover:translate-x-1 group-hover:text-ember sm:text-6xl">
+                  <span className="display text-feature transition-all duration-200 group-hover:translate-x-1 group-hover:text-ember">
                     {entry.title}
                   </span>
                   <span className="ml-auto hidden max-w-sm text-right text-sm leading-relaxed text-muted-foreground text-pretty lg:block">
@@ -210,7 +210,7 @@ export function Home() {
                 className="group flex flex-col bg-background p-6 transition-colors hover:bg-card/60 sm:p-8"
               >
                 <p className="readout text-ember">Latest post</p>
-                <p className="display mt-4 text-3xl text-balance transition-colors group-hover:text-ember sm:text-4xl">
+                <p className="display mt-4 text-heading text-balance transition-colors group-hover:text-ember">
                   {latestPost.title}
                 </p>
                 <p className="mt-4 flex-1 leading-relaxed text-muted-foreground text-pretty">
@@ -229,7 +229,7 @@ export function Home() {
                 className="group flex flex-col bg-background p-6 transition-colors hover:bg-card/60 sm:p-8"
               >
                 <p className="readout text-ember">Last show</p>
-                <p className="display mt-4 text-3xl text-balance transition-colors group-hover:text-ember sm:text-4xl">
+                <p className="display mt-4 text-heading text-balance transition-colors group-hover:text-ember">
                   {latestShow.title}
                 </p>
                 <p className="mt-4 flex-1 leading-relaxed text-muted-foreground text-pretty">

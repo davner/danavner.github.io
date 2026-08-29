@@ -65,7 +65,7 @@ export class RouteBoundary extends Component<Props, State> {
 
     return (
       <div className="mx-auto max-w-2xl px-4 py-20 text-center sm:px-6">
-        <p className="display text-3xl text-balance sm:text-4xl">This page did not load</p>
+        <p className="display text-heading text-balance">This page did not load</p>
         <p className="mt-5 leading-relaxed text-muted-foreground text-pretty">
           Usually this means the site updated while the tab was open and the page you asked for
           moved out from under it. Reloading normally sorts it.

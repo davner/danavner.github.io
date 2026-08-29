@@ -96,10 +96,8 @@ export function FilterToggle<T extends string>({
           <span className="readout">{option.label}</span>
           {/* No opacity here: dimming the count to 70% drops it under the
               4.5:1 AA contrast floor against both the ember and the plain
-              background. The mono face at 0.65rem is already secondary. */}
-          {option.count != null ? (
-            <span className="font-mono text-[0.65rem]">{option.count}</span>
-          ) : null}
+              background. The mono readout face is already secondary. */}
+          {option.count != null ? <span className="readout">{option.count}</span> : null}
         </ToggleGroupItem>
       ))}
     </ToggleGroup>

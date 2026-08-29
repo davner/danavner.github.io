@@ -142,7 +142,7 @@ export function BlogPost() {
                 <ArrowLeft className="size-3.5 transition-transform group-hover:-translate-x-0.5" />
                 Older
               </span>
-              <span className="display mt-3 block text-xl text-balance transition-colors group-hover:text-ember">
+              <span className="display mt-3 block text-title text-balance transition-colors group-hover:text-ember">
                 {older.title}
               </span>
             </Link>
@@ -157,7 +157,7 @@ export function BlogPost() {
                 Newer
                 <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
               </span>
-              <span className="display mt-3 block text-xl text-balance transition-colors group-hover:text-ember">
+              <span className="display mt-3 block text-title text-balance transition-colors group-hover:text-ember">
                 {newer.title}
               </span>
             </Link>

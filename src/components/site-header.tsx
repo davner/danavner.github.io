@@ -23,9 +23,6 @@ import {
 import { isGroup, SECTIONS, type Section } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
-/** The mono label every nav item is set in, at both sizes. */
-const LABEL = "font-mono text-[0.68rem] font-medium tracking-[0.18em] uppercase";
-
 /**
  * A top-level bar item: mono label with the ember rule on the header's edge.
  *
@@ -85,7 +82,7 @@ export function SiteHeader() {
             )
           }
         >
-          <span className="display text-xl sm:text-2xl">Dan Avner</span>
+          <span className="display text-title">Dan Avner</span>
         </NavLink>
 
         <NavigationMenu
@@ -104,8 +101,7 @@ export function SiteHeader() {
                   <NavigationMenuTrigger className={cn(BAR_ITEM, "cursor-pointer")}>
                     <span
                       className={cn(
-                        LABEL,
-                        "transition-colors",
+                        "readout transition-colors",
                         entry.items.some((item) => isOn(item.to))
                           ? "text-foreground"
                           : "text-muted-foreground group-hover:text-foreground",
@@ -161,8 +157,7 @@ export function SiteHeader() {
                         <>
                           <span
                             className={cn(
-                              LABEL,
-                              "transition-colors",
+                              "readout transition-colors",
                               isActive
                                 ? "text-foreground"
                                 : "text-muted-foreground group-hover:text-foreground",
@@ -196,7 +191,7 @@ export function SiteHeader() {
               className="gap-2 rounded-none bg-transparent! px-2 text-muted-foreground hover:bg-transparent! hover:text-foreground sm:hidden"
             >
               <Menu />
-              <span className={LABEL}>Menu</span>
+              <span className="readout">Menu</span>
             </Button>
           </SheetTrigger>
 
@@ -208,7 +203,13 @@ export function SiteHeader() {
               drawer over something. */}
           <SheetContent side="right" className="gap-0 border-border bg-background p-0">
             <SheetHeader className="border-b border-border p-4">
-              <SheetTitle className={cn(LABEL, "text-left text-muted-foreground")}>Menu</SheetTitle>
+              {/* `font-medium` is stated because `SheetTitle`'s own base sets
+                  `font-semibold`, and a utility out-ranks `readout` - so
+                  without it this one label sits a weight above the six others
+                  set the same way. */}
+              <SheetTitle className="readout font-medium text-left text-muted-foreground">
+                Menu
+              </SheetTitle>
               {/* Required for the dialog to have a description; there is nothing
                   useful to say about a list of links, so it is read-only-to-AT. */}
               <SheetDescription className="sr-only">
@@ -270,8 +271,7 @@ function PanelLabel({ item, active }: { item: Section; active: boolean }) {
   return (
     <span
       className={cn(
-        LABEL,
-        "transition-colors",
+        "readout transition-colors",
         // Hover brightens; ember is reserved for the page you are on. Using it
         // for both made every row you passed over look like the current one.
         active ? "text-ember" : "text-muted-foreground group-hover/link:text-foreground",
@@ -325,7 +325,7 @@ function MobileItem({
             {isActive ? (
               <span className="absolute top-1/2 left-0 h-4 w-0.5 -translate-y-1/2 bg-ember" />
             ) : null}
-            <span className={LABEL}>{item.label}</span>
+            <span className="readout">{item.label}</span>
           </>
         )}
       </NavLink>

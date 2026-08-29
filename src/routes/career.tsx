@@ -64,7 +64,7 @@ export function Career() {
               </div>
 
               <div>
-                <h3 className="display text-2xl sm:text-3xl">{role.title}</h3>
+                <h3 className="display text-heading">{role.title}</h3>
                 <p className="mt-2 text-muted-foreground text-pretty">{role.summary}</p>
 
                 <ul className="mt-6 space-y-3">
@@ -81,7 +81,7 @@ export function Career() {
                 <ul className="mt-6 flex flex-wrap gap-2">
                   {role.stack.map((tech) => (
                     <li key={tech}>
-                      <Badge variant="outline" size="sm" className="rounded-none border-border">
+                      <Badge variant="outline" className="rounded-none border-border">
                         {tech}
                       </Badge>
                     </li>
@@ -96,7 +96,7 @@ export function Career() {
       <Section title="On sky">
         <div className="grid gap-px border border-border bg-border sm:grid-cols-[auto_minmax(0,1fr)]">
           <div className="bg-background p-6 sm:p-8">
-            <p className="display text-6xl text-ember sm:text-7xl">{observing.nights}</p>
+            <p className="display text-feature text-ember">{observing.nights}</p>
             <p className="readout-dim mt-2">Nights observing</p>
           </div>
           <div className="bg-background p-6 sm:p-8">
@@ -127,7 +127,7 @@ export function Career() {
                 <ul className="flex flex-wrap gap-2">
                   {group.items.map((item) => (
                     <li key={item}>
-                      <Badge variant="outline" size="sm" className="rounded-none border-border">
+                      <Badge variant="outline" className="rounded-none border-border">
                         {item}
                       </Badge>
                     </li>
@@ -144,7 +144,7 @@ export function Career() {
           {education.map((entry) => (
             <div key={entry.school} className="bg-background p-6 sm:p-8">
               <p className="readout text-ember">{entry.period}</p>
-              <h3 className="display mt-3 text-2xl">{entry.degree}</h3>
+              <h3 className="display mt-3 text-title">{entry.degree}</h3>
               <p className="mt-2 font-mono text-sm text-muted-foreground">{entry.school}</p>
               <p className="readout-dim mt-1">{entry.location}</p>
             </div>
@@ -171,7 +171,7 @@ export function Career() {
       <Section>
         <div className="border border-ember/40 p-8 text-center sm:p-12">
           <p className="readout text-ember">Sidereal Software</p>
-          <h2 className="display mx-auto mt-5 max-w-3xl text-4xl text-balance sm:text-6xl">
+          <h2 className="display mx-auto mt-5 max-w-3xl text-feature text-balance">
             Science is hard enough. The software should not be.
           </h2>
           <p className="mx-auto mt-6 max-w-xl leading-relaxed text-muted-foreground text-pretty">

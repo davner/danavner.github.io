@@ -66,7 +66,7 @@ function ShowRow({ show }: { show: Show }) {
       )}
 
       <div>
-        <h3 className="display flex items-center gap-3 text-2xl sm:text-3xl">
+        <h3 className="display flex items-center gap-3 text-heading">
           <Link
             to={`/shows/${show.slug}`}
             className="inline-flex items-center gap-2 transition-colors group-hover:text-ember after:absolute after:inset-0"
@@ -184,7 +184,7 @@ function RepeatList({
         <ol className="mt-5 space-y-3">
           {entries.map((entry) => (
             <li key={entry.name} className="flex items-baseline justify-between gap-4">
-              <span className="text-lg text-pretty">{entry.name}</span>
+              <span className="text-lede text-pretty">{entry.name}</span>
               <span className="readout-dim shrink-0 tabular-nums">
                 {entry.count} {unit}
                 {entry.count === 1 ? "" : "s"}
@@ -229,7 +229,7 @@ export function Shows() {
         showStats.averageRating != null ? (
           <span className="flex flex-wrap items-center gap-2">
             {Number(showStats.averageRating.toFixed(1))}
-            <Rating value={showStats.averageRating} size="sm" />
+            <Rating value={showStats.averageRating} />
           </span>
         ) : null,
       show: showStats.averageRating != null,
@@ -267,7 +267,7 @@ export function Shows() {
           {stats.map((stat) => (
             <dl key={stat.label} className="bg-background p-5 sm:p-6">
               <dt className="readout-dim">{stat.label}</dt>
-              <dd className="display mt-2 text-2xl text-balance sm:text-3xl">{stat.value}</dd>
+              <dd className="display mt-2 text-heading text-balance">{stat.value}</dd>
             </dl>
           ))}
 
@@ -312,7 +312,7 @@ export function Shows() {
                 className="group/year border-b border-border"
               >
                 <summary className="group/sum flex cursor-pointer list-none items-center justify-between gap-6 py-4 select-none marker:hidden [&::-webkit-details-marker]:hidden">
-                  <span className="display text-2xl transition-colors group-hover/sum:text-ember sm:text-3xl">
+                  <span className="display text-heading transition-colors group-hover/sum:text-ember">
                     {group.year}
                   </span>
                   <span className="flex items-center gap-3 text-muted-foreground">

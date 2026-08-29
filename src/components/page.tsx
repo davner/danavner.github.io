@@ -17,12 +17,12 @@ export function PageShell({ className, children }: { className?: string; childre
  */
 const TITLE_SIZE = {
   /** One or two short words, set as large as the page will carry. */
-  default: "text-[clamp(3.25rem,13vw,9rem)]",
+  default: "text-poster",
   /**
    * A whole phrase. Same face, sized so a long line still clears a 320px
    * screen without breaking mid-word.
    */
-  long: "text-[clamp(1.75rem,6.4vw,4.5rem)]",
+  long: "text-poster-long",
 } as const;
 
 /**
@@ -63,7 +63,7 @@ export function PageHeader({
           a lede here, a fact line on the detail pages, the kicker on the
           landing page. */}
       {lede ? (
-        <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground text-pretty">
+        <p className="mt-6 max-w-2xl text-lede leading-relaxed text-muted-foreground text-pretty">
           {lede}
         </p>
       ) : null}
@@ -108,7 +108,7 @@ export function Section({
     <section id={id} className={cn("mt-24 first:mt-0", className)}>
       {title ? (
         <div className="mb-8 flex items-end justify-between gap-6 border-b border-border pb-3">
-          <h2 className="display text-2xl sm:text-3xl">{title}</h2>
+          <h2 className="display text-heading">{title}</h2>
           {action}
         </div>
       ) : null}

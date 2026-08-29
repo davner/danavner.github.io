@@ -283,7 +283,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-background p-5 sm:p-6">
       <dt className="readout-dim">{label}</dt>
-      <dd className="display mt-2 text-3xl text-pretty sm:text-4xl">{value}</dd>
+      <dd className="display mt-2 text-heading text-pretty">{value}</dd>
     </div>
   );
 }

@@ -111,7 +111,7 @@ export function About() {
           </div>
         }
       >
-        <div className="mt-10 max-w-xl space-y-6 text-lg leading-relaxed text-muted-foreground text-pretty">
+        <div className="mt-10 max-w-xl space-y-6 text-lede leading-relaxed text-muted-foreground text-pretty">
           <p>
             I live in Los Angeles County. I moved here to be near my wife's family and stayed for
             the food, which is some of the best I've had anywhere. The traffic and the beach parking
@@ -161,12 +161,12 @@ export function About() {
         <div className="flex flex-col items-start gap-6 border border-ember/40 p-8 sm:flex-row sm:items-center sm:p-12">
           <Trophy className="size-10 shrink-0 text-ember" />
           <div className="flex-1">
-            <p className="display text-3xl text-balance sm:text-4xl">{funFact}</p>
+            <p className="display text-heading text-balance">{funFact}</p>
             <p className="mt-3 text-muted-foreground text-pretty">
               It has been downhill ever since.
             </p>
           </div>
-          <p className="display text-6xl text-ember sm:text-7xl">#2</p>
+          <p className="display text-feature text-ember">#2</p>
         </div>
       </Section>
     </PageShell>
@@ -234,7 +234,7 @@ function InterestCard({
         className={cn(interest.feature && "gap-8 lg:flex lg:items-end lg:justify-between", "mt-6")}
       >
         <div>
-          <h3 className="display flex items-center gap-2 text-2xl transition-colors group-hover:text-ember">
+          <h3 className="display flex items-center gap-2 text-title transition-colors group-hover:text-ember">
             {interest.to ? (
               <Link
                 to={interest.to}
@@ -264,7 +264,7 @@ function InterestCard({
 
         {interest.feature ? (
           <p className="mt-6 shrink-0 lg:mt-0 lg:text-right">
-            <span className="display block text-5xl text-ember">{showStats.total}</span>
+            <span className="display block text-feature text-ember">{showStats.total}</span>
             <span className="readout-dim">logged so far</span>
           </p>
         ) : null}

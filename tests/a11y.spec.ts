@@ -39,12 +39,14 @@ type FindingNode = Finding["nodes"][number];
  *
  * Keyed by rule and then decided per node, rather than as a set of rule ids,
  * because the same rule can be undecidable for a bounded reason in one place
- * and be sitting on a real defect in another. `aria-valid-attr-value` is both
- * on this site at once, and only in states a route load never reaches: on the
- * share popover's trigger it is axe declining to resolve an `aria-controls`
- * that points into a popup, and on the sort listbox's group it is an
- * `aria-labelledby` pointing at an id that is not in the document. Allowing
- * the rule outright to excuse the first would hide the second.
+ * and be sitting on a real defect in another. `aria-valid-attr-value` was both
+ * on this site at once, in states a route load never reaches: on the share
+ * popover's trigger it is axe declining to resolve an `aria-controls` that
+ * points into a popup, and on the sort listbox it was a `role="group"` whose
+ * `aria-labelledby` pointed at an id no label ever rendered. Allowing the rule
+ * outright to excuse the first would have hidden the second, which this sweep
+ * caught and `select-control.tsx` fixed by dropping the group. Only the popup
+ * case is allowed, and only at the nodes that give that reason.
  *
  * `color-contrast` is allowed at every node, and only for part of the page:
  * the grain overlay in `backdrop.tsx` is a background image axe cannot

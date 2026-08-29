@@ -2,7 +2,6 @@ import { CONTROL_CLASS } from "@/components/filter-toggle";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -70,18 +69,25 @@ export function SelectControl<T extends string>({
         <SelectValue />
       </SelectTrigger>
 
+      {/*
+       * No `SelectGroup` around the options. A group exists to separate
+       * several labelled sections, and there is one section here - so it
+       * carried no information, and Radix gives every group an
+       * `aria-labelledby` pointing at the id `SelectLabel` would have used.
+       * With no label that id is never in the document, which axe rates
+       * critical under `aria-valid-attr-value` and reports only while the
+       * listbox is open.
+       */}
       <SelectContent className="rounded-none border-border">
-        <SelectGroup>
-          {options.map((option) => (
-            <SelectItem
-              key={option.value}
-              value={option.value}
-              className="cursor-pointer rounded-none"
-            >
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectGroup>
+        {options.map((option) => (
+          <SelectItem
+            key={option.value}
+            value={option.value}
+            className="cursor-pointer rounded-none"
+          >
+            {option.label}
+          </SelectItem>
+        ))}
       </SelectContent>
     </Select>
   );

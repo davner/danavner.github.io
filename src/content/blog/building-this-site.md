@@ -62,3 +62,13 @@ function githubPagesSpaFallback(): Plugin {
 ```
 
 It is a hack. It is also six lines, has no runtime cost, and means I never think about it again.
+
+---
+
+**Editor's note, August 29, 2026.** The build has moved on, and so has some of what is above.
+`githubPagesSpaFallback` is gone - one plugin, `vite-plugin-pages.ts`, writes every HTML file the site
+ships. `404.html` is no longer a byte-for-byte copy either: the home page's hero preload is stripped
+out of it, because no other page shows that photo. And a hard refresh on `/blog/welcome` does not 404
+any more, because every route now gets a real file of its own - the fallback is for the paths that are
+genuinely unknown. It is still the reason deep links ever worked here, which is why it is still on
+the page.

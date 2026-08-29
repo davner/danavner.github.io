@@ -1597,35 +1597,6 @@ test.describe("controls", () => {
       expect(wrong, `${path} has clickable elements without a pointer`).toEqual([]);
     }
   });
-
-  test("stat figures stay inside their tiles at 320px", async ({ page }) => {
-    // Figures set in the display face used to overflow their own cells on the
-    // narrowest screens, crossing the divider into the number beside them. The
-    // page still did not scroll sideways, so the overflow check in
-    // links.spec.ts could not see it.
-    await page.setViewportSize({ width: 320, height: 900 });
-    await page.goto("/vinyl");
-    await page.getByRole("heading", { level: 1 }).waitFor();
-    await page.evaluate(() => document.fonts.ready);
-
-    const overflowing = await page.evaluate(() => {
-      const bad: string[] = [];
-      document.querySelectorAll("[data-slot=stat] dd").forEach((dd) => {
-        const cell = dd.parentElement!;
-        const style = getComputedStyle(cell);
-        const avail =
-          cell.getBoundingClientRect().width -
-          parseFloat(style.paddingLeft) -
-          parseFloat(style.paddingRight);
-        const range = document.createRange();
-        range.selectNodeContents(dd);
-        if (range.getBoundingClientRect().width > avail + 0.5) bad.push(dd.textContent ?? "?");
-      });
-      return bad;
-    });
-
-    expect(overflowing).toEqual([]);
-  });
 });
 
 /**
@@ -2512,27 +2483,6 @@ test.describe("chrome", () => {
     expect(measured, "a lazy route was not caught waiting on its chunk").toBe(
       ROUTES.length - EAGER_ROUTES.length,
     );
-  });
-
-  test("no page scrolls horizontally", async ({ page }) => {
-    await page.setViewportSize({ width: 320, height: 800 });
-    for (const path of ROUTES) {
-      await page.goto(path);
-      // Lazy routes render a skeleton first and the display face swaps in after
-      // load, so measuring straight after `goto` measures a page mid-layout.
-      await page.getByRole("heading", { level: 1 }).waitFor();
-      await page.evaluate(() => document.fonts.ready);
-
-      await expect
-        .poll(
-          () =>
-            page.evaluate(
-              () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-            ),
-          { message: `${path} overflows` },
-        )
-        .toBeLessThanOrEqual(1);
-    }
   });
 
   /*

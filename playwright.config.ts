@@ -29,7 +29,14 @@ export default defineConfig({
   },
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"], ...launch } },
-    { name: "mobile", use: { ...devices["Pixel 7"], ...launch } },
+    {
+      name: "mobile",
+      use: { ...devices["Pixel 7"], ...launch },
+      // The width sweep sets its own viewport for every case it runs, 412 -
+      // the Pixel 7's - among them, so running it here would take the same
+      // measurements a second time under a device that never applies.
+      testIgnore: ["**/responsive.spec.ts"],
+    },
   ],
   webServer: {
     command: `npm run preview -- --port ${PORT} --host 127.0.0.1`,

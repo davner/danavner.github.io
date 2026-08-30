@@ -54,7 +54,7 @@ function showFacts(show: (typeof shows)[number]) {
   const fact = (Icon: typeof Calendar, text: string) =>
     text ? (
       <span className="flex items-center gap-2">
-        <Icon className="size-4 shrink-0 text-ember" aria-hidden />
+        <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
         {text}
       </span>
     ) : null;
@@ -149,7 +149,7 @@ function ShowBody({ show }: { show: (typeof shows)[number] }) {
                     >
                       {inner}
                       <span className="readout-dim ml-auto flex shrink-0 items-center gap-1.5 transition-colors group-hover:text-ember">
-                        <ListMusic className="size-3.5 text-ember" aria-hidden />
+                        <ListMusic className="size-3.5" aria-hidden />
                         Setlist
                         <ArrowUpRight className="size-3 opacity-0 transition-opacity group-hover:opacity-70" />
                       </span>
@@ -189,7 +189,7 @@ function ShowBody({ show }: { show: (typeof shows)[number] }) {
           <div className="space-y-4">
             {show.bestSong ? (
               <p className="flex items-center gap-2 text-muted-foreground">
-                <Music className="size-4 shrink-0 text-ember" aria-hidden />
+                <Music className="size-4 shrink-0 text-muted-foreground" aria-hidden />
                 <span>
                   <span className="readout-dim">Best live</span> {show.bestSong}
                 </span>
@@ -206,7 +206,7 @@ function ShowBody({ show }: { show: (typeof shows)[number] }) {
               </p>
             ) : show.companions.length > 0 ? (
               <p className="flex items-center gap-2 text-muted-foreground">
-                <Users className="size-4 shrink-0 text-ember" aria-hidden />
+                <Users className="size-4 shrink-0 text-muted-foreground" aria-hidden />
                 <span>
                   <span className="sr-only">Went with </span>
                   {show.companions.join(", ")}

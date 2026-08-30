@@ -58,7 +58,7 @@ function ShowRow({ show }: { show: Show }) {
           middle of the row. */}
       {date ? (
         <p className="readout-dim flex items-center gap-1.5 self-start tabular-nums">
-          <Calendar className="size-3.5 shrink-0 text-ember" aria-hidden />
+          <Calendar className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
           {date}
         </p>
       ) : (
@@ -99,7 +99,7 @@ function ShowRow({ show }: { show: Show }) {
 
         {show.bestSong ? (
           <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
-            <Music className="size-3.5 shrink-0 text-ember" aria-hidden />
+            <Music className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
             <span>
               <span className="readout-dim">Best live</span> {show.bestSong}
             </span>
@@ -116,7 +116,7 @@ function ShowRow({ show }: { show: Show }) {
           </p>
         ) : show.companions.length > 0 ? (
           <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
-            <Users className="size-3.5 shrink-0 text-ember" aria-hidden />
+            <Users className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
             <span>
               <span className="sr-only">Went with </span>
               {show.companions.join(", ")}
@@ -135,19 +135,19 @@ function ShowRow({ show }: { show: Show }) {
       <div className="space-y-1.5 sm:text-right">
         {show.venue ? (
           <p className="flex items-center gap-1.5 font-mono text-sm sm:justify-end">
-            <Building2 className="size-3.5 shrink-0 text-ember" aria-hidden />
+            <Building2 className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
             {show.venue}
           </p>
         ) : null}
         <p className="readout-dim flex items-center gap-1.5 sm:justify-end">
-          <MapPin className="size-3.5 shrink-0 text-ember" aria-hidden />
+          <MapPin className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
           {show.city}
         </p>
         {/* Capacity only means anything next to another capacity, so it lives
             in the list rather than only on the show's own page. */}
         {show.capacity ? (
           <p className="readout-dim flex items-center gap-1.5 sm:justify-end">
-            <Ticket className="size-3.5 shrink-0 text-ember" aria-hidden />
+            <Ticket className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
             {show.capacity.toLocaleString("en-US")} cap
           </p>
         ) : null}

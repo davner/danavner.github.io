@@ -227,6 +227,8 @@ function InterestCard({
   const body = (
     <>
       <div className="flex items-start justify-between">
+        {/* The tile's one mark, so it points rather than competes: nothing else
+            in the card is coloured until the title takes ember on hover. */}
         <Icon className="size-6 text-ember" />
       </div>
 

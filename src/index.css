@@ -717,6 +717,10 @@
   color: var(--ion);
 }
 
+/* A literal is machine output, which is what the cold ink marks - so numbers
+   and the names bound to them take `--ion` alongside the strings, rather than a
+   hue that exists nowhere else in the palette. One rule, because the token
+   already carries its own value per theme. */
 .hljs-number,
 .hljs-symbol,
 .hljs-bullet,
@@ -724,17 +728,7 @@
 .hljs-template-variable,
 .hljs-link,
 .hljs-selector-attr {
-  color: oklch(0.58 0.16 300);
-}
-
-.dark .hljs-number,
-.dark .hljs-symbol,
-.dark .hljs-bullet,
-.dark .hljs-variable,
-.dark .hljs-template-variable,
-.dark .hljs-link,
-.dark .hljs-selector-attr {
-  color: oklch(0.8 0.13 300);
+  color: var(--ion);
 }
 
 .hljs-title,

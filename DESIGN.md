@@ -19,35 +19,59 @@ colors:
   rule: "oklch(0.85 0.01 85)"
   rule-reversed: "oklch(0.26 0.018 268)"
 typography:
-  display:
+  hero:
+    fontFamily: "Anton, Anton Fallback, Arial Narrow, Haettenschweiler, Impact, sans-serif"
+    fontSize: "clamp(4rem, 17vw, 12.5rem)"
+    fontWeight: 400
+    lineHeight: 0.86
+    letterSpacing: "-0.015em"
+  poster:
     fontFamily: "Anton, Anton Fallback, Arial Narrow, Haettenschweiler, Impact, sans-serif"
     fontSize: "clamp(3.25rem, 13vw, 9rem)"
     fontWeight: 400
     lineHeight: 0.86
     letterSpacing: "-0.015em"
-  display-long:
+  poster-long:
     fontFamily: "Anton, Anton Fallback, Arial Narrow, Haettenschweiler, Impact, sans-serif"
     fontSize: "clamp(1.75rem, 6.4vw, 4.5rem)"
     fontWeight: 400
     lineHeight: 0.86
     letterSpacing: "-0.015em"
-  headline:
+  feature:
     fontFamily: "Anton, Anton Fallback, Arial Narrow, Haettenschweiler, Impact, sans-serif"
-    fontSize: "1.875rem"
+    fontSize: "clamp(3rem, 2rem + 5vw, 4.5rem)"
+    fontWeight: 400
+    lineHeight: 0.86
+    letterSpacing: "-0.015em"
+  heading:
+    fontFamily: "Anton, Anton Fallback, Arial Narrow, Haettenschweiler, Impact, sans-serif"
+    fontSize: "clamp(1.5rem, 1.1rem + 2vw, 2.25rem)"
     fontWeight: 400
     lineHeight: 0.95
     letterSpacing: "-0.015em"
   title:
     fontFamily: "Inter Variable, Inter Fallback, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "1.25rem"
+    fontSize: "clamp(1.25rem, 1.05rem + 1vw, 1.5rem)"
     fontWeight: 600
     lineHeight: 1.4
     letterSpacing: "-0.01em"
+  lede:
+    fontFamily: "Inter Variable, Inter Fallback, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "1.125rem"
+    fontWeight: 400
+    lineHeight: 1.5556
+    letterSpacing: "normal"
   body:
     fontFamily: "Inter Variable, Inter Fallback, ui-sans-serif, system-ui, sans-serif"
     fontSize: "1.0625rem"
     fontWeight: 400
-    lineHeight: 1.75
+    lineHeight: 1.5
+    letterSpacing: "normal"
+  sm:
+    fontFamily: "Inter Variable, Inter Fallback, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "0.875rem"
+    fontWeight: 400
+    lineHeight: 1.4286
     letterSpacing: "normal"
   label:
     fontFamily: "JetBrains Mono Variable, JetBrains Mono Fallback, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
@@ -58,8 +82,8 @@ typography:
 rounded:
   sm: "3px"
   md: "4px"
-  lg: "6px"
-  xl: "8px"
+  lg: "4px"
+  xl: "4px"
 spacing:
   gutter: "1rem"
   gutter-wide: "1.5rem"
@@ -238,18 +262,33 @@ kept nearly empty.
 
 ### Hierarchy
 
-- **Display** (400, `clamp(3.25rem, 13vw, 9rem)`, 0.86, `-0.015em`, uppercase):
-  page titles, one or two short words, set as large as the page will carry. Line
-  height under 1 and negative tracking are what make it read as a poster rather
-  than a headline.
-- **Display Long** (400, `clamp(1.75rem, 6.4vw, 4.5rem)`): the same face for a
+Every step is a `clamp()` on the display face, so type scales with the viewport
+and the layout is the only thing that steps. Asking for a stock Tailwind size
+generates no CSS at all, which is louder than rendering at a size nobody chose.
+
+- **Hero** (400, `clamp(4rem, 17vw, 12.5rem)`, 0.86, `-0.015em`, uppercase): the
+  largest mark on the site. The wordmark on the landing page and the numeral on
+  the 404, and nothing else.
+- **Poster** (400, `clamp(3.25rem, 13vw, 9rem)`): a page title of one or two
+  short words, set as large as the page will carry. Line height under 1 and
+  negative tracking are what make it read as a poster rather than a headline.
+- **Poster Long** (400, `clamp(1.75rem, 6.4vw, 4.5rem)`): the same face for a
   title that is a whole phrase, sized so a long line still clears a 320px screen
-  without breaking mid-word. There is no third size.
-- **Headline** (400, `1.875rem` rising to `2.25rem`, 0.95): section headings
-  inside long-form prose, still in the display face.
-- **Title** (600, `1.25rem`): sub-headings in prose, set in the body face.
-- **Body** (400, `1.0625rem`, 1.75): everything read at length, capped around
-  `max-w-2xl` so a line stays comfortable.
+  without breaking mid-word.
+- **Feature** (400, `clamp(3rem, 2rem + 5vw, 4.5rem)`): one figure or one line
+  standing alone, where a heading-scale number would stop reading as a figure.
+- **Heading** (400, `clamp(1.5rem, 1.1rem + 2vw, 2.25rem)`, 0.95): a section
+  heading, a card title, a stat figure, a prose `h2`. Still the display face.
+- **Title** (600, `clamp(1.25rem, 1.05rem + 1vw, 1.5rem)`): a tile title or a
+  prose sub-heading, in either face depending on which side of the collision it
+  belongs to.
+- **Lede** (400, `1.125rem`, 1.5556): the paragraph under a page title, and
+  intro prose.
+- **Body** (400, `1.0625rem`, 1.5 on the page and 1.75 inside prose): everything
+  read at length, capped around `max-w-2xl` so a line stays comfortable. It is
+  set on `body`, never on `html`, because a root font-size rescales every `rem`
+  in the spacing scale along with the type.
+- **Small** (400, `0.875rem`, 1.4286): a secondary line, and the controls.
 - **Label** (500, `0.68rem`, `0.18em`, uppercase, mono): section labels, dates,
   venue lines, catalogue numbers, telescope names. The instrument scale.
 
@@ -258,6 +297,13 @@ kept nearly empty.
 **The Two Voices Rule.** A screen speaks at poster scale or at instrument scale.
 Text that is neither, sitting between the display face and the readout, is
 usually a heading that has not decided what it is.
+
+**The Bare Display Step Rule.** Only the two sans steps, `lede` and `sm`, carry
+a paired line-height. The six display steps deliberately carry none, because a
+size utility out-ranks anything set in a component layer: give `heading` a
+leading and it silently beats the `0.86` that makes the poster face a poster.
+This asymmetry looks like an oversight and is not. Symmetry here costs every
+bare call site its leading.
 
 **The Readout Is Data Rule.** The mono face means this is a fact: a date, a
 place, a count, a name from a catalogue. It is not for prose, and prose set in
@@ -282,6 +328,14 @@ Nothing on the site may scroll horizontally; the whole route list is swept for i
 in the test suite.
 
 ### Named Rules
+
+**The Two Steps Rule.** The design has two structural breakpoints and no more:
+`sm` (640px) turns the phone menu into a bar and a single column into two, and
+`lg` (1024px) brings in the paired-column layouts. `md` (768px) is sanctioned for
+grid column counts only. Nothing uses `xl` or `2xl`, because the shell caps at
+`max-w-6xl` and every width past about 1200px draws the same column. The display
+face takes no breakpoint at all - a size that steps where a grid also steps is
+how a figure ends up wider than the cell holding it.
 
 **The Type Scales, The Layout Steps Rule.** Prefer `clamp()` on the display face
 over a new breakpoint. The grid changes rarely and the type changes constantly.
@@ -319,7 +373,7 @@ painted pixels instead.
 
 ## Shapes
 
-Near-square, everywhere. The radius scale runs from 3px to 8px off a 4px base,
+Near-square, everywhere. The radius scale runs from 3px to 4px off a 4px base,
 and 4px on a 36px control reads as square with the corner just knocked off. Some
 components are fully square by choice: the timeline rail's date pills, the share
 panel, the photo frames.
@@ -419,8 +473,8 @@ without one.
 
 ### Do:
 
-- **Do** set page titles in the display face at `clamp(3.25rem, 13vw, 9rem)`, or
-  at the long size when the title is a phrase. There is no third size.
+- **Do** set a page title with `PageHeader`, which offers the poster step and
+  the long one. A page that spells its own size out is a page inventing a step.
 - **Do** use the mono readout for facts: dates, venues, counts, catalogue
   numbers, place names.
 - **Do** separate surfaces with a hairline in `rule` and a single lightness step.

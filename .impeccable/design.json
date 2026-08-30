@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-28T00:00:00.000Z",
+  "generatedAt": "2026-08-30T00:00:00Z",
   "title": "Design System: danavner.com",
   "extensions": {
     "colorMeta": {
@@ -114,7 +114,11 @@
         "displayName": "Press Black Raised",
         "canonical": "oklch(0.155 0.016 268)"
       },
-      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "oklch(0.16 0.012 268)" },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "oklch(0.16 0.012 268)"
+      },
       "ink-reversed": {
         "role": "neutral",
         "displayName": "Ink Reversed",
@@ -130,7 +134,11 @@
         "displayName": "Ink Faded Reversed",
         "canonical": "oklch(0.68 0.016 268)"
       },
-      "rule": { "role": "neutral", "displayName": "Rule", "canonical": "oklch(0.85 0.01 85)" },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Rule",
+        "canonical": "oklch(0.85 0.01 85)"
+      },
       "rule-reversed": {
         "role": "neutral",
         "displayName": "Rule Reversed",
@@ -138,29 +146,45 @@
       }
     },
     "typographyMeta": {
-      "display": {
-        "displayName": "Display",
-        "purpose": "Page titles only, one or two short words, set as large as the page will carry."
+      "hero": {
+        "displayName": "Hero",
+        "purpose": "The largest mark on the site: the landing wordmark and the 404 numeral."
       },
-      "display-long": {
-        "displayName": "Display Long",
-        "purpose": "The same face when the title is a whole phrase. There is no third size."
+      "poster": {
+        "displayName": "Poster",
+        "purpose": "A page title of one or two short words."
       },
-      "headline": {
-        "displayName": "Headline",
-        "purpose": "Section headings inside long-form prose, still in the display face."
+      "poster-long": {
+        "displayName": "Poster Long",
+        "purpose": "A page title that is a whole phrase."
+      },
+      "feature": {
+        "displayName": "Feature",
+        "purpose": "One figure or one line standing alone."
+      },
+      "heading": {
+        "displayName": "Heading",
+        "purpose": "Section heading, card title, stat figure, prose h2."
       },
       "title": {
         "displayName": "Title",
-        "purpose": "Sub-headings in prose, set in the body face."
+        "purpose": "Tile title or prose sub-heading."
+      },
+      "lede": {
+        "displayName": "Lede",
+        "purpose": "The paragraph under a page title, and intro prose."
       },
       "body": {
         "displayName": "Body",
-        "purpose": "Everything read at length, capped around max-w-2xl."
+        "purpose": "Everything read at length. Set on body, never on html."
+      },
+      "sm": {
+        "displayName": "Small",
+        "purpose": "Secondary lines and controls."
       },
       "label": {
-        "displayName": "Readout",
-        "purpose": "Facts at instrument scale: dates, venues, counts, catalogue numbers, telescope names. Never prose."
+        "displayName": "Label",
+        "purpose": "The instrument scale: dates, venues, catalogue numbers."
       }
     },
     "shadows": [
@@ -208,11 +232,18 @@
       }
     ],
     "breakpoints": [
-      { "name": "sm", "value": "40rem" },
-      { "name": "md", "value": "48rem" },
-      { "name": "lg", "value": "64rem" },
-      { "name": "xl", "value": "80rem" },
-      { "name": "2xl", "value": "96rem" }
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
     ]
   },
   "components": [
@@ -302,68 +333,63 @@
     "rules": [
       {
         "name": "The One Hot Ink Rule",
-        "body": "Flyer Red is the only warm colour in the system and it is spent, not spread. If a screen has more than a few ember marks on it, they are competing rather than pointing, and the newest one is probably the one to cut.",
-        "section": "colors"
+        "body": "Flyer Red is the only warm colour in the system and it is spent, not spread. If a screen has more than a few ember marks on it, they are competing rather than pointing, and the newest one is probably the one to cut."
       },
       {
         "name": "The Cold Ink Is Machine Output Rule",
-        "body": "Photocopy Cyan marks what a machine produced or a state that is not warm. It never substitutes for Flyer Red as an accent, and the two never sit adjacent as a pair.",
-        "section": "colors"
+        "body": "Photocopy Cyan marks what a machine produced or a state that is not warm. It never substitutes for Flyer Red as an accent, and the two never sit adjacent as a pair."
       },
       {
         "name": "The No Second Dimming Rule",
-        "body": "ink-faded is the dim token. Applying an alpha on top of it produces text that fails contrast, and it has already done so once in shipped code. If something needs to be quieter than ink-faded, it needs to be smaller or further away, not fainter.",
-        "section": "colors"
+        "body": "`ink-faded` is the dim token. Applying an alpha on top of it produces text that fails contrast. If something needs to be quieter than `ink-faded`, it needs to be smaller or further away, not fainter. The same applies to the accents: `text-ember` and `text-ion` are already the saturated value, and an alpha over either lands under 4.5:1 at readout sizes."
       },
       {
         "name": "The Same Artefact Rule",
-        "body": "The two themes are one design on different stock. A colour decision that only makes sense in one theme is not finished.",
-        "section": "colors"
+        "body": "The two themes are one design on different stock. A colour decision that only makes sense in one theme is not finished."
       },
       {
         "name": "The Two Voices Rule",
-        "body": "A screen speaks at poster scale or at instrument scale. Text that is neither, sitting between the display face and the readout, is usually a heading that has not decided what it is.",
-        "section": "typography"
+        "body": "A screen speaks at poster scale or at instrument scale. Text that is neither, sitting between the display face and the readout, is usually a heading that has not decided what it is."
+      },
+      {
+        "name": "The Bare Display Step Rule",
+        "body": "Only the two sans steps, `lede` and `sm`, carry a paired line-height. The six display steps deliberately carry none, because a size utility out-ranks anything set in a component layer: give `heading` a leading and it silently beats the `0.86` that makes the poster face a poster. This asymmetry looks like an oversight and is not. Symmetry here costs every bare call site its leading."
       },
       {
         "name": "The Readout Is Data Rule",
-        "body": "The mono face means this is a fact: a date, a place, a count, a name from a catalogue. It is not for prose, and prose set in it reads as a machine talking.",
-        "section": "typography"
+        "body": "The mono face means this is a fact: a date, a place, a count, a name from a catalogue. It is not for prose, and prose set in it reads as a machine talking."
+      },
+      {
+        "name": "The Two Steps Rule",
+        "body": "The design has two structural breakpoints and no more: `sm` (640px) turns the phone menu into a bar and a single column into two, and `lg` (1024px) brings in the paired-column layouts. `md` (768px) is sanctioned for grid column counts only. Nothing uses `xl` or `2xl`, because the shell caps at `max-w-6xl` and every width past about 1200px draws the same column. The display face takes no breakpoint at all - a size that steps where a grid also steps is how a figure ends up wider than the cell holding it."
       },
       {
         "name": "The Type Scales, The Layout Steps Rule",
-        "body": "Prefer clamp() on the display face over a new breakpoint. The grid changes rarely and the type changes constantly.",
-        "section": "layout"
+        "body": "Prefer `clamp()` on the display face over a new breakpoint. The grid changes rarely and the type changes constantly."
       },
       {
         "name": "The Flat Press Rule",
-        "body": "Separation is a hairline, a lightness step, or space. It is never a shadow. A component that needs a drop shadow to be legible has a contrast problem, not a depth problem.",
-        "section": "elevation"
+        "body": "Separation is a hairline, a lightness step, or space. It is never a shadow. A component that needs a drop shadow to be legible has a contrast problem, not a depth problem."
       },
       {
         "name": "The Grain Is Not Decoration Rule",
-        "body": "The grain layer is what keeps large flat fields from looking dead. It is aria-hidden, fixed, and behind everything, and it must never be removed to clean up a surface. It also makes automated colour contrast checking impossible on this site, which is a cost the design accepts knowingly.",
-        "section": "elevation"
+        "body": "The grain layer is what keeps large flat fields from looking dead. It is `aria-hidden`, fixed, and behind everything, and it must never be removed to \"clean up\" a surface. Its cost, accepted knowingly, is a hole in automated colour checking: axe will not guess what is behind a background image, so 309 of the site's 2,292 contrast nodes come back `incomplete` rather than pass or fail. That is a bounded hole, not a total one - axe decides 83% of this site's colour - and what falls in it is measured from painted pixels instead."
       },
       {
         "name": "The Knocked Corner Rule",
-        "body": "4px is the maximum radius on anything. If a component wants to look softer, the answer is that it does not get to.",
-        "section": "shapes"
+        "body": "4px is the maximum radius on anything. If a component wants to look softer, the answer is that it does not get to."
       },
       {
         "name": "The Registration Mark Rule",
-        "body": "Corner ticks mean interactive. They appear on hover and focus-within, never at rest, and never as pure ornament.",
-        "section": "shapes"
+        "body": "Corner ticks mean interactive. They appear on hover and focus-within, never at rest, and never as pure ornament."
       },
       {
         "name": "The Commit On Hover Rule",
-        "body": "An interactive element does not hint. Border, text and background move to ember together, so the whole control becomes the target.",
-        "section": "components"
+        "body": "An interactive element does not hint. Border, text and background move to ember together, so the whole control becomes the target."
       },
       {
         "name": "The One Ring Rule",
-        "body": "The focus indicator is defined once, in the base layer. A component that wants its own is almost always a component that is about to ship without one.",
-        "section": "components"
+        "body": "The focus indicator is defined once, in the base layer. A component that wants its own is almost always a component that is about to ship without one."
       }
     ],
     "dos": [

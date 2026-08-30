@@ -15,13 +15,107 @@
 export const WIDTH = 1080;
 export const HEIGHT = 1920;
 
-export const INK = "#f4f1ea";
-export const DIM = "#8b8b93";
-export const EMBER = "#e6431a";
-export const VOID = "#08090d";
-
 /** Every card left-aligns to this. */
 export const PAD = 96;
+
+/**
+ * Every colour a card paints, resolved to a literal a canvas will accept.
+ *
+ * The card is a dark artefact whatever theme the reader is in - it is a poster,
+ * and the poster is black - so the palette is read from the dark tokens rather
+ * than from the page.
+ */
+export interface Palette {
+  ink: string;
+  dim: string;
+  ember: string;
+  void: string;
+  /** Ember at 35%, the centre of the bloom. */
+  emberGlow: string;
+  /** Ember at 0%, where the bloom fades out. */
+  emberFade: string;
+  /** The void at 0%, where the photo starts fading into the card. */
+  voidFade: string;
+  /** Ink at 18%, the rule over a card's footer. */
+  hairline: string;
+}
+
+/**
+ * The palette, read off the site's own dark tokens.
+ *
+ * Every alpha variant is derived here rather than by a caller, because a canvas
+ * colour string has no element to resolve `var()` against: `color-mix(in oklab,
+ * var(--ember) 35%, transparent)` is dropped on assignment and leaves the
+ * previous fill in place. Substituting the resolved token into the `color-mix`
+ * is what makes the derivation work, and it stays right if a token is respelled
+ * as hex or rgb.
+ *
+ * The probe has to be in the document: a detached element resolves every custom
+ * property to the empty string, and a palette of empty strings paints a card in
+ * whatever colour the canvas happened to be holding. `display: none` still
+ * resolves them, so it is attached, read, and removed. An empty read throws
+ * rather than returning, because the share sheet's failure path is honest and a
+ * card in the wrong colours is not.
+ */
+export function palette(): Palette {
+  const element = document.createElement("div");
+  element.className = "dark";
+  element.style.display = "none";
+  document.body.append(element);
+
+  try {
+    const style = getComputedStyle(element);
+    const read = (token: string) => {
+      const value = style.getPropertyValue(token).trim();
+      if (!value) throw new Error(`the card cannot read ${token} from the palette`);
+      return value;
+    };
+    const alpha = (colour: string, percent: number) =>
+      `color-mix(in oklab, ${colour} ${percent}%, transparent)`;
+
+    const ink = read("--foreground");
+    const ember = read("--ember");
+    /* Deliberately blacker than `--background`'s press-black: the card is its
+       own sheet, not a screenshot of a page, so this is a value rather than a
+       copy of a token that would drift with the site's. */
+    const black = "#08090d";
+
+    return {
+      ink,
+      dim: read("--muted-foreground"),
+      ember,
+      void: black,
+      emberGlow: alpha(ember, 35),
+      emberFade: alpha(ember, 0),
+      voidFade: alpha(black, 0),
+      hairline: alpha(ink, 18),
+    };
+  } finally {
+    element.remove();
+  }
+}
+
+/**
+ * Throws unless `colour` is one a canvas will actually paint.
+ *
+ * `fillStyle` ignores a string it cannot parse and keeps whatever it had, so a
+ * bad colour paints the previous one and nothing anywhere reports it. Two
+ * sentinels are what catch that: an ignored assignment leaves each sentinel in
+ * place, so the two reads disagree. A single read cannot tell an ignored
+ * assignment from a successful one, and `CSS.supports("color", ...)` answers
+ * true for the strings that fail here.
+ *
+ * Leaves `fillStyle` on whatever it last set, so it belongs before a fill is
+ * set up rather than in the middle of one.
+ */
+export function assertPaintable(context: CanvasRenderingContext2D, colour: string) {
+  context.fillStyle = "#010203";
+  context.fillStyle = colour;
+  const first = context.fillStyle;
+  context.fillStyle = "#040506";
+  context.fillStyle = colour;
+  if (context.fillStyle !== first) throw new Error(`${colour} is not a colour a canvas will paint`);
+}
 
 /** What a renderer hands back. */
 export interface Card {
@@ -42,6 +136,7 @@ export interface Card {
 export async function createCard(): Promise<{
   canvas: HTMLCanvasElement;
   context: CanvasRenderingContext2D;
+  palette: Palette;
 }> {
   await document.fonts.ready;
 
@@ -50,10 +145,16 @@ export async function createCard(): Promise<{
   canvas.height = HEIGHT;
   const context = canvas.getContext("2d")!;
 
-  context.fillStyle = VOID;
+  // Once, over the whole palette, rather than at each fill: a renderer that
+  // paints an unparseable colour draws a card in the wrong colour and says
+  // nothing, and the share sheet's failure path is the honest end of that.
+  const colours = palette();
+  for (const colour of Object.values(colours)) assertPaintable(context, colour);
+
+  context.fillStyle = colours.void;
   context.fillRect(0, 0, WIDTH, HEIGHT);
 
-  return { canvas, context };
+  return { canvas, context, palette: colours };
 }
 
 /**
@@ -139,12 +240,13 @@ export function drawTopPhoto(
   context: CanvasRenderingContext2D,
   image: HTMLImageElement,
   height: number,
+  palette: Palette,
 ) {
   drawCover(context, image, 0, 0, WIDTH, height);
 
   const fade = context.createLinearGradient(0, height - 420, 0, height);
-  fade.addColorStop(0, "rgba(8,9,13,0)");
-  fade.addColorStop(1, VOID);
+  fade.addColorStop(0, palette.voidFade);
+  fade.addColorStop(1, palette.void);
   context.fillStyle = fade;
   context.fillRect(0, height - 420, WIDTH, 420);
 }
@@ -160,10 +262,10 @@ export function drawTopPhoto(
  * because its photo height is 0 and the bloom sits at the top where the picture
  * would have ended.
  */
-export function drawBloom(context: CanvasRenderingContext2D, centerY: number) {
+export function drawBloom(context: CanvasRenderingContext2D, centerY: number, palette: Palette) {
   const glow = context.createRadialGradient(WIDTH / 2, centerY, 0, WIDTH / 2, centerY, 900);
-  glow.addColorStop(0, "rgba(230,67,26,0.35)");
-  glow.addColorStop(1, "rgba(230,67,26,0)");
+  glow.addColorStop(0, palette.emberGlow);
+  glow.addColorStop(1, palette.emberFade);
   context.fillStyle = glow;
   context.fillRect(0, 0, WIDTH, HEIGHT);
 }
@@ -195,8 +297,8 @@ export function drawReadout(
  * venue, city and date under it and sets the rule at `HEIGHT - 300`, while the
  * now card has none of that to fill the gap and puts it lower.
  */
-export function drawHairline(context: CanvasRenderingContext2D, y: number) {
-  context.strokeStyle = "rgba(244,241,234,0.18)";
+export function drawHairline(context: CanvasRenderingContext2D, y: number, palette: Palette) {
+  context.strokeStyle = palette.hairline;
   context.lineWidth = 2;
   context.beginPath();
   context.moveTo(PAD, y);

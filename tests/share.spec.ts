@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSyn
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-import { expect, test } from "@playwright/test";
+import { type Page, expect, test } from "@playwright/test";
 import * as cheerio from "cheerio";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -1252,5 +1252,170 @@ test.describe("share a now entry", () => {
     const card = page.locator("img[alt^='Share card']");
     await expect(card).toBeVisible({ timeout: 15_000 });
     await expect(card).toHaveAttribute("data-truncated", "true");
+  });
+});
+
+test.describe("the card's palette", () => {
+  /**
+   * The show whose card is measured. Any show with a photo would do; this one
+   * is already the suite's share fixture.
+   */
+  const SHOW = "/shows/bruno-mars-madrid-2026";
+
+  async function openCard(page: Page) {
+    await page.goto(SHOW);
+    await page.getByRole("heading", { level: 1 }).waitFor();
+    await page.getByRole("button", { name: /^Share/ }).click();
+
+    const card = page.locator("img[alt^='Share card']");
+    await expect(card).toBeVisible({ timeout: 15_000 });
+    return card;
+  }
+
+  test("the bloom is painted in the site's ember, not a copy of it", async ({ page }) => {
+    /*
+     * Read off the PNG rather than off the source, because a constant standing
+     * in for a token is invisible to every check of the code: it compiles, it
+     * paints, and it goes on painting the colour the site has stopped using.
+     * The pixels are the only place that shows.
+     *
+     * The bloom's centre is the one pixel on a photo card whose colour is
+     * arithmetic rather than photograph: the picture stops at 900, the fade
+     * with it, and the heading is set below and to the left - so (540, 940) is
+     * the glow at full strength over the card's own black. The expectation is
+     * composited in the page from the token, so this compares the card against
+     * the site rather than against a number written down here.
+     */
+    const card = await openCard(page);
+
+    const sample = await card.evaluate(async (img) => {
+      const bitmap = new Image();
+      bitmap.src = (img as HTMLImageElement).src;
+      await bitmap.decode();
+
+      const sheet = document.createElement("canvas");
+      sheet.width = bitmap.naturalWidth;
+      sheet.height = bitmap.naturalHeight;
+      const context = sheet.getContext("2d", { willReadFrequently: true })!;
+      context.drawImage(bitmap, 0, 0);
+      const at = (x: number, y: number) => [...context.getImageData(x, y, 1, 1).data].slice(0, 3);
+
+      const probe = document.createElement("div");
+      probe.className = "dark";
+      probe.style.display = "none";
+      document.body.append(probe);
+      const ember = getComputedStyle(probe).getPropertyValue("--ember").trim();
+      probe.remove();
+
+      // The same compositing the card does, from the token rather than from the
+      // card's own derivation of it.
+      const swatch = document.createElement("canvas");
+      swatch.width = swatch.height = 1;
+      const paint = swatch.getContext("2d", { willReadFrequently: true })!;
+      paint.fillStyle = "#08090d";
+      paint.fillRect(0, 0, 1, 1);
+      paint.fillStyle = `color-mix(in oklab, ${ember} 35%, transparent)`;
+      paint.fillRect(0, 0, 1, 1);
+
+      return {
+        size: [sheet.width, sheet.height],
+        bloom: at(540, 940),
+        corner: at(4, sheet.height - 4),
+        want: [...paint.getImageData(0, 0, 1, 1).data].slice(0, 3),
+        ember,
+      };
+    });
+
+    expect(sample.size, "the card is not the sheet these coordinates were read from").toEqual([
+      1080, 1920,
+    ]);
+    expect(sample.ember, "the dark ember token is not resolving").not.toBe("");
+    // The card's own black, which is a value rather than a token.
+    expect(sample.corner, "the corner is not the card's ground - the sample has moved").toEqual([
+      8, 9, 13,
+    ]);
+
+    for (const [index, channel] of ["red", "green", "blue"].entries()) {
+      expect(
+        Math.abs(sample.bloom[index] - sample.want[index]),
+        `the bloom's ${channel} is ${sample.bloom[index]} where the ember token gives ${sample.want[index]}`,
+      ).toBeLessThanOrEqual(2);
+    }
+  });
+
+  test("a canvas ignores a colour that needs an element to resolve", async ({ page }) => {
+    /*
+     * The platform behaviour the palette is built around, pinned rather than
+     * remembered. A canvas colour string has no element to resolve `var()`
+     * against, and `fillStyle` answers an unparseable value by ignoring the
+     * assignment - so a palette that handed the canvas `var(--ember)` would
+     * paint whatever the previous fill was and report nothing.
+     *
+     * Two sentinels, because one read cannot tell an ignored assignment from a
+     * successful one: an ignored assignment leaves each sentinel in place, so
+     * the reads follow the sentinels rather than the value.
+     *
+     * If a future Chrome starts resolving these, this fails - and that is the
+     * signal that the palette could be simpler, not that the test is wrong.
+     */
+    await page.goto(SHOW);
+
+    const reads = await page.evaluate(() => {
+      const context = document.createElement("canvas").getContext("2d")!;
+      const twice = (colour: string) => {
+        context.fillStyle = "#010203";
+        context.fillStyle = colour;
+        const first = context.fillStyle;
+        context.fillStyle = "#040506";
+        context.fillStyle = colour;
+        return [first, context.fillStyle];
+      };
+
+      return {
+        token: twice("var(--ember)"),
+        mixed: twice("color-mix(in oklab, var(--ember) 35%, transparent)"),
+        // Any resolved colour: the point is the form, not this value.
+        resolved: twice("color-mix(in oklab, oklch(0.5 0.1 200) 35%, transparent)"),
+        supports: [
+          CSS.supports("color", "var(--ember)"),
+          CSS.supports("color", "color-mix(in oklab, var(--ember) 35%, transparent)"),
+        ],
+      };
+    });
+
+    expect(reads.token, "a canvas resolved var() - the palette can stop resolving tokens").toEqual([
+      "#010203",
+      "#040506",
+    ]);
+    expect(reads.mixed, "a canvas resolved var() inside color-mix").toEqual(["#010203", "#040506"]);
+    // The form the palette actually uses, proving the sentinels are not just
+    // reporting that nothing works.
+    expect(reads.resolved[0]).toBe(reads.resolved[1]);
+    expect(reads.resolved[0]).not.toBe("#010203");
+    // Why the check is a readback rather than a question to the CSS engine.
+    expect(reads.supports, "CSS.supports would be a usable guard after all").toEqual([true, true]);
+  });
+
+  test("a token the canvas will not paint fails the card rather than the colour", async ({
+    page,
+  }) => {
+    /*
+     * The end of the chain the check above starts. A custom property holds any
+     * token sequence at all, so a typo in the palette is a colour the canvas
+     * shrugs at - and every fill after it lands in the previous colour. The
+     * card would still render, still export, and still look almost right.
+     *
+     * Broken at the token rather than in the code, because that is the only way
+     * in from outside; what it proves is that an unpaintable palette member
+     * stops the card instead of quietly painting the wrong one.
+     */
+    await page.goto(SHOW);
+    await page.getByRole("heading", { level: 1 }).waitFor();
+    await page.addStyleTag({ content: ".dark { --ember: not-a-colour; }" });
+
+    await page.getByRole("button", { name: /^Share/ }).click();
+    const panel = page.getByRole("dialog", { name: /^Share / });
+    await expect(panel.getByText("Could not build the card.")).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator("img[alt^='Share card']")).toHaveCount(0);
   });
 });

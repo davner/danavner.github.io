@@ -1,9 +1,6 @@
 import {
   type Card,
-  DIM,
-  EMBER,
   HEIGHT,
-  INK,
   PAD,
   WIDTH,
   createCard,
@@ -34,7 +31,7 @@ const HORNS = "\u{1F918}\u{1F3FD}";
  * list already capped at three lines, so it has nothing to leave out.
  */
 export async function renderShowCard(show: Show, photoIndex = 0): Promise<Card> {
-  const { canvas, context } = await createCard();
+  const { canvas, context, palette } = await createCard();
 
   // Whichever photo was picked in the share panel. An out-of-range index falls
   // back to the first rather than rendering a photoless card, which would look
@@ -43,16 +40,16 @@ export async function renderShowCard(show: Show, photoIndex = 0): Promise<Card> 
   const photo = chosen ? await loadImage(chosen.src) : null;
 
   const photoHeight = photo ? 900 : 0;
-  if (photo) drawTopPhoto(context, photo, photoHeight);
+  if (photo) drawTopPhoto(context, photo, photoHeight, palette);
 
-  drawBloom(context, photoHeight + 40);
+  drawBloom(context, photoHeight + 40, palette);
 
   // With no photo the top of the card is just the ember bloom, so the block
   // starts lower and sits between the glow and the footer rule instead of
   // stranding itself at the top with 700px of empty space underneath.
   let y = photo ? photoHeight + 40 : 620;
 
-  drawReadout(context, "Show log", y, EMBER);
+  drawReadout(context, "Show log", y, palette.ember);
   y += 74;
 
   // Just the name. `showHeading` folds the subtitle in, which is right for a
@@ -67,7 +64,7 @@ export async function renderShowCard(show: Show, photoIndex = 0): Promise<Card> 
     if (lines.length <= 3) break;
   }
 
-  context.fillStyle = INK;
+  context.fillStyle = palette.ink;
   for (const line of lines) {
     y += size * 0.92;
     context.fillText(line, PAD, y);
@@ -79,7 +76,7 @@ export async function renderShowCard(show: Show, photoIndex = 0): Promise<Card> 
   if (show.subtitle) {
     context.font = '500 30px "JetBrains Mono Variable", ui-monospace, monospace';
     context.letterSpacing = "6px";
-    context.fillStyle = DIM;
+    context.fillStyle = palette.dim;
     for (const line of wrap(context, show.subtitle.toUpperCase(), WIDTH - PAD * 2).slice(0, 2)) {
       y += 46;
       context.fillText(line, PAD, y);
@@ -100,11 +97,11 @@ export async function renderShowCard(show: Show, photoIndex = 0): Promise<Card> 
 
     // The site prints `w/` in ember and the bands in muted grey. The card is
     // the same mark, so it gets the same two colours.
-    context.fillStyle = EMBER;
+    context.fillStyle = palette.ember;
     context.fillText(prefix.trimEnd(), PAD, y);
 
     body.forEach((line, index) => {
-      context.fillStyle = DIM;
+      context.fillStyle = palette.dim;
       context.fillText(line, index === 0 ? PAD + prefixWidth : PAD, y);
       y += 52;
     });
@@ -116,14 +113,14 @@ export async function renderShowCard(show: Show, photoIndex = 0): Promise<Card> 
     // value sits next to them, so a 4.5 is not misread as a 5.
     const horns = HORNS.repeat(Math.max(Math.round(show.rating), 1));
     context.font = "400 56px system-ui, sans-serif";
-    context.fillStyle = INK;
+    context.fillStyle = palette.ink;
     // Measured under the emoji font, not the mono one set below, or the value
     // lands on top of the horns.
     const hornsWidth = context.measureText(horns).width;
     context.fillText(horns, PAD, y + 44);
 
     context.font = '500 34px "JetBrains Mono Variable", ui-monospace, monospace';
-    context.fillStyle = EMBER;
+    context.fillStyle = palette.ember;
     context.fillText(
       `${Number(show.rating.toFixed(1))} / ${MAX_RATING}`,
       PAD + hornsWidth + 32,
@@ -134,20 +131,26 @@ export async function renderShowCard(show: Show, photoIndex = 0): Promise<Card> 
 
   // Venue, city, and date pinned to the bottom with a hairline over them.
   const footerTop = HEIGHT - 300;
-  drawHairline(context, footerTop);
+  drawHairline(context, footerTop, palette);
 
   y = footerTop + 66;
   context.font = '500 34px "JetBrains Mono Variable", ui-monospace, monospace';
-  context.fillStyle = INK;
+  context.fillStyle = palette.ink;
   const where = showLocationOf(show);
   if (where) {
     context.fillText(where, PAD, y);
     y += 52;
   }
-  context.fillStyle = DIM;
+  context.fillStyle = palette.dim;
   context.fillText(fullShowDate(show), PAD, y);
 
-  drawReadout(context, `${SITE_URL.replace(/^https?:\/\//, "")}/shows`, HEIGHT - 74, EMBER, 30);
+  drawReadout(
+    context,
+    `${SITE_URL.replace(/^https?:\/\//, "")}/shows`,
+    HEIGHT - 74,
+    palette.ember,
+    30,
+  );
 
   return { blob: await toBlob(canvas) };
 }

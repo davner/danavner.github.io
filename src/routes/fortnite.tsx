@@ -147,7 +147,7 @@ function MainPortrait({ season, className }: { season: SeasonEntry; className?: 
           className,
         )}
       >
-        <UserRound className="size-10 text-muted-foreground/40" aria-hidden />
+        <UserRound className="size-6 text-muted-foreground" aria-hidden />
         <span className="readout-dim text-pretty">
           {season.main ? season.main.name : "No main on record"}
         </span>

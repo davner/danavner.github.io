@@ -138,7 +138,7 @@ function ComicTile({ entry }: { entry: ComicEntry }) {
           />
         ) : (
           <div className="flex aspect-2/3 w-full items-center justify-center border-b border-border bg-card/40">
-            <BookOpen className="size-10 text-muted-foreground/40" aria-hidden />
+            <BookOpen className="size-6 text-muted-foreground" aria-hidden />
           </div>
         )}
 

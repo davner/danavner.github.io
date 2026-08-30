@@ -109,7 +109,7 @@ function RecordTile({ record }: { record: VinylRecord }) {
           />
         ) : (
           <div className="flex aspect-square w-full items-center justify-center border-b border-border bg-card/40">
-            <Disc3 className="size-10 text-muted-foreground/40" aria-hidden />
+            <Disc3 className="size-6 text-muted-foreground" aria-hidden />
           </div>
         )}
 

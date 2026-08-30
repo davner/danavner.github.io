@@ -2,6 +2,11 @@
 @import "tw-animate-css";
 @import "./fonts.css";
 
+/* The suite is not a source of the site's classes. Without this, a class name
+   written into a test - `tests/bundle.spec.ts` names the ones this site bans,
+   so it can check they are absent - is a class Tailwind generates. */
+@source not "../tests";
+
 @custom-variant dark (&:is(.dark *));
 
 /*

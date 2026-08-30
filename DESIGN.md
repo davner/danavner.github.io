@@ -205,9 +205,11 @@ value, and an alpha over either lands under 4.5:1 at readout sizes.
 It has shipped five times: the timeline's year label at 3.28:1, the mobile nav's
 group heading at 3.28/3.88:1, the solo badge's "1P" at 2.91:1, the duo badge's
 "2P" at 3.78/3.25:1, and its separator at 2.61/2.11:1. The alpha arrived three
-different ways - `text-muted-foreground/70`, `opacity-70` on a wrapper, and
-`text-ember/50` - so there is no single spelling to grep for, and a lint rule
-that matched the two most common would have missed the third.
+different ways - a `/70` alpha on the muted-foreground token, an `opacity-70`
+on a wrapper, and a `/50` alpha on ember - so there is no single spelling to
+grep for, and a lint rule that matched the two most common would have missed the
+third. The spellings are described rather than written out, because Tailwind
+scans this file and naming one puts its CSS back in the bundle.
 
 **There is deliberately no automated check for the mechanism.** What is worth
 catching is the consequence, and the consequence is a contrast number, which

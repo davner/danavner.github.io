@@ -144,6 +144,17 @@ export const OPEN_STATES: OpenState[] = [
 ];
 
 /**
+ * One state by name, for a test that is about that state rather than about all
+ * of them. Throws rather than skipping: a renamed entry would otherwise leave
+ * the test measuring a page that was never driven anywhere.
+ */
+export function openState(name: string): OpenState {
+  const state = OPEN_STATES.find((entry) => entry.name === name);
+  if (!state) throw new Error(`no open state named "${name}"`);
+  return state;
+}
+
+/**
  * Click a comic shelf pill and wait until the row has stopped moving.
  *
  * The pills cross-fade, and axe reads whatever colours are on screen when it

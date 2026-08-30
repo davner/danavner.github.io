@@ -200,7 +200,15 @@ export function Share({ subject, className }: { subject: Shareable; className?: 
                     if (value) build(Number(value));
                   }}
                   aria-label="Photo on the card"
-                  className="mt-2 w-full justify-start gap-2 overflow-x-auto pb-1"
+                  /* The padding is the focus ring's room. A scroller clips at
+                     its padding box, and `overflow-x: auto` forces the block
+                     axis to `auto` as well, so a thumbnail flush against the
+                     start of the strip loses the left and top of its ring with
+                     nothing there. Pulled back out by the negative margin, so
+                     the strip still lines up with the label over it. Outward
+                     rather than an inward stroke, which on a photograph has no
+                     contrast to guarantee. */
+                  className="-mx-2 -mb-2 w-auto justify-start gap-2 overflow-x-auto p-2"
                 >
                   {photos.map((photo, index) => (
                     <ToggleGroupItem

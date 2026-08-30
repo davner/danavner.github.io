@@ -2,7 +2,7 @@ import { type Page, expect, test } from "@playwright/test";
 
 import { readFileSync } from "node:fs";
 
-import { OPEN_STATES, reachOpenState } from "./open-states";
+import { OPEN_STATES, openState, reachOpenState } from "./open-states";
 import { PHOTO_GAP, nowEntriesWithPhotos } from "./now-photos";
 import { ROUTES } from "./routes";
 import { ALL_SECTIONS } from "../src/lib/site";
@@ -1990,6 +1990,127 @@ test.describe("focus indicators", () => {
       ).toBeGreaterThanOrEqual(live.indicator.best);
     }
   });
+
+  test("the cover picker keeps the whole of a thumbnail's ring", async ({ page }) => {
+    /*
+     * The strip scrolls, and a scroll container clips at its padding box. The
+     * first thumbnail sits hard against the start of the strip, so unless the
+     * strip reserves the room there is nothing on its left or its top for an
+     * outward ring to land in - `overflow-x` pulls the block axis to `auto`
+     * with it, which is why the top edge clips as well as the side.
+     *
+     * The room is the assertion rather than the padding: what has to be true is
+     * that the ring the thumbnail actually declares fits, so restyling the ring
+     * cannot leave this passing over a clipped one.
+     *
+     * An inward stroke is the other answer to a clipping container, and it is
+     * the wrong one here: the thumbnail is a photograph, so nothing about what
+     * the stroke would sit on can be guaranteed.
+     */
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await reachOpenState(page, openState("the share popover open"));
+    await freezeTransitions(page);
+
+    const thumbs = page.locator("[data-slot=toggle-group-item]");
+    const count = await thumbs.count();
+    expect(count, "this show offers no cover to pick").toBeGreaterThan(1);
+
+    const first = thumbs.first();
+    await first.focus();
+    // Away and back, so the return trip is a keypress and the ring is painted.
+    await page.keyboard.press("Shift+Tab");
+    await page.keyboard.press("Tab");
+    await expect(first).toBeFocused();
+
+    const measured = await first.evaluate((thumb) => {
+      const strip = thumb.parentElement!;
+      const scrollport = getComputedStyle(strip);
+      const style = getComputedStyle(thumb);
+      const box = thumb.getBoundingClientRect();
+      const port = strip.getBoundingClientRect();
+      const edge = (side: "Top" | "Left" | "Bottom") =>
+        parseFloat(scrollport[`border${side}Width` as "borderTopWidth"]);
+
+      return {
+        reach: parseFloat(style.outlineOffset) + parseFloat(style.outlineWidth),
+        clips: scrollport.overflowX !== "visible" || scrollport.overflowY !== "visible",
+        top: box.top - (port.top + edge("Top")),
+        left: box.left - (port.left + edge("Left")),
+        bottom: port.bottom - edge("Bottom") - box.bottom,
+      };
+    });
+
+    expect(measured.clips, "the strip no longer clips, so this measures nothing").toBe(true);
+    expect(measured.reach, "the focused thumbnail draws no ring to clear").toBeGreaterThan(0);
+    for (const side of ["top", "left", "bottom"] as const) {
+      expect(
+        measured[side],
+        `the strip clips the ${side} of the first thumbnail's focus ring`,
+      ).toBeGreaterThanOrEqual(measured.reach);
+    }
+  });
+
+  /*
+   * The other answer, for the case the cover picker cannot use. An option fills
+   * the listbox's width and the panel scrolls, so an outward ring is clipped -
+   * but what an option's ring sits on is `--accent`, a neutral, so a stroke
+   * just inside its own edge is safe to measure and safe to see.
+   *
+   * The listbox is opened from the keyboard end to end, for the reason the menu
+   * sweep gives: `:focus-visible` is what paints the ring, and a mouse-opened
+   * panel is entitled to paint nothing.
+   *
+   * This is the only measurement of an option's indicator anywhere: the route
+   * sweep reaches what Tab reaches from a page load, and a listbox that has to
+   * be opened first is not in it. Both themes for the same reason the sweeps
+   * below give - the palettes are independent.
+   */
+  for (const colorScheme of ["light", "dark"] as const) {
+    test(`a sort option paints its ring where nothing can clip it in ${colorScheme} mode`, async ({
+      page,
+    }) => {
+      await page.emulateMedia({ reducedMotion: "reduce", colorScheme });
+      await page.goto("/vinyl");
+      await page.getByRole("heading", { level: 1 }).waitFor();
+      await freezeTransitions(page);
+
+      await page.getByRole("combobox", { name: /sort records/i }).press("Enter");
+      await expect(page.getByRole("listbox")).toBeVisible();
+      await page.keyboard.press("ArrowDown");
+
+      const option = await page.evaluate(() => {
+        const el = document.activeElement;
+        if (!el) return null;
+        const style = getComputedStyle(el);
+        return {
+          slot: el.getAttribute("data-slot"),
+          visible: el.matches(":focus-visible"),
+          style: style.outlineStyle,
+          width: parseFloat(style.outlineWidth),
+          // At or below zero the whole stroke is inside the option's own border
+          // box, which is the only place the panel cannot reach it.
+          reach: parseFloat(style.outlineOffset) + parseFloat(style.outlineWidth),
+        };
+      });
+
+      expect(option?.slot, "arrowing down the listbox focused something else").toBe("select-item");
+      expect(
+        option!.visible,
+        "the option does not match :focus-visible, so it paints no ring",
+      ).toBe(true);
+      expect(option!.style, "the option suppresses the site's outline").not.toBe("none");
+      expect(option!.width, "the option's ring has no width").toBeGreaterThan(0);
+      expect(
+        option!.reach,
+        "the option's ring reaches outside the panel that clips it",
+      ).toBeLessThanOrEqual(0);
+
+      const indicator = await page.evaluate(measureFocusIndicator);
+      expect(indicator, "nothing is focused").not.toBeNull();
+      expectSettled(indicator!.transitionDuration);
+      expect(indicator!.best, describeFailure(indicator!)).toBeGreaterThanOrEqual(3);
+    });
+  }
 
   /* Both themes, for the reason `tests/a11y.spec.ts` gives: the palettes are
      independent and contrast is the most fragile thing in them. Separate tests

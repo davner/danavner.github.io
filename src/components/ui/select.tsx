@@ -98,7 +98,21 @@ function SelectItem({
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-muted-foreground *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
+        /*
+         * An item paints its focus ring inward. Upstream kills the outline here
+         * and leaves `--accent` behind the focused item as the only cue - a
+         * tint on a neutral panel, nowhere near the 3:1 that 1.4.11 asks, and
+         * `ui/navigation-menu.tsx` records that measurement on the same two
+         * tokens. (Do not write the kill utility out: Tailwind scans comments
+         * along with code, and naming a class puts its CSS back in the bundle.)
+         *
+         * Inward rather than outward because the item fills the panel's width
+         * and the panel scrolls: there is less room beside an item than the ring
+         * reaches, and none at all above one scrolled to the top edge. The
+         * stroke lands on `--accent` there, a neutral, which is what makes
+         * painting it inside the item safe to read.
+         */
+        "relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm select-none focus-visible:-outline-offset-2 focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-muted-foreground *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
         className,
       )}
       {...props}

@@ -90,7 +90,7 @@ function RecordTile({ record }: { record: VinylRecord }) {
         href={record.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex flex-1 flex-col focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember"
+        className="flex flex-1 flex-col"
       >
         {record.cover ? (
           <img

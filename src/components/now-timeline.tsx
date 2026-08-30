@@ -265,7 +265,10 @@ export function NowTimeline({
                       // place to change.
                       "px-3 py-2 text-sm whitespace-nowrap transition-colors",
                       "shadow-[0_0_0_1px_var(--color-border)]",
-                      "focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember",
+                      // The ring itself comes from `index.css`. This lifts the
+                      // focused pill over the seams its neighbours paint, which
+                      // otherwise sit on top of the stroke along both edges.
+                      "focus-visible:z-10",
                       "bg-background text-muted-foreground",
                       // Only while it is not the marked one, or hover would
                       // paint ember text onto the ember pill.

@@ -236,10 +236,7 @@ function InterestCard({
         <div>
           <h3 className="display flex items-center gap-2 text-title transition-colors group-hover:text-ember">
             {interest.to ? (
-              <Link
-                to={interest.to}
-                className="after:absolute after:inset-0 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
-              >
+              <Link to={interest.to} className="after:absolute after:inset-0">
                 {interest.name}
               </Link>
             ) : (

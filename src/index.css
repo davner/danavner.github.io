@@ -228,10 +228,18 @@
    *   `vinyl.tsx`'s search field uses it - it marks focus with
    *   `focus-visible:border-ember` instead - but it is also how the ring went
    *   missing before, so a new `outline-none` needs a reason.
-   * - An outward stroke is clipped by an ancestor's `overflow: hidden`. A
-   *   control inside a clipping container paints its ring inward instead, with
-   *   a negative offset: `fortnite.tsx`'s season cards and
-   *   `navigation-menu.tsx`'s panel links both do.
+   * - An outward stroke needs somewhere to land, and two things take that away.
+   *   An ancestor's `overflow: hidden` clips it - `navigation-menu.tsx`'s panel
+   *   links sit in one. And a control filling a cell of a `gap-px` grid has one
+   *   pixel of gap and its neighbour's seam within the ring's 2px reach, so an
+   *   outward stroke paints over the cell next to it - `fortnite.tsx`'s season
+   *   cards are that. Both paint the ring inward instead, with a negative
+   *   offset. Where the room can be given rather than the stroke moved inside,
+   *   that is the better answer, and on a photograph it is the only one:
+   *   `share.tsx`'s cover picker pads its scroller because an inward stroke on
+   *   a picture has no contrast to guarantee, and `now-timeline.tsx`'s rail
+   *   reserves `scroll-padding` so a pill can never come to rest against the
+   *   pane's edge in the first place.
    *
    * `tests/site.spec.ts` measures this for real on every route, in both
    * themes. axe has no focus-indicator rule, so that sweep is the only thing

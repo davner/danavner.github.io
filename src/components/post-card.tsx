@@ -8,9 +8,7 @@ export function PostCard({ post }: { post: Post }) {
   return (
     <article className="cut-corners group relative flex flex-col bg-background p-6 transition-colors hover:bg-card/60 sm:p-8">
       <div className="flex items-center justify-between gap-4">
-        <Badge variant={post.category === "work" ? "ember" : "ion"}>
-          {CATEGORY_LABEL[post.category]}
-        </Badge>
+        <Badge variant="outline">{CATEGORY_LABEL[post.category]}</Badge>
       </div>
 
       <h3 className="display mt-5 text-heading text-balance transition-colors group-hover:text-ember">

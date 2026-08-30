@@ -85,11 +85,10 @@ function ShowBody({ show }: { show: (typeof shows)[number] }) {
         <FactLine items={facts} className="mt-6" />
 
         <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2">
-          {show.type === "festival" ? <Badge variant="ion">Festival</Badge> : null}
-          {/* Outline rather than ion, so a measurement never reads as a label
-              someone chose to put on the night. A ticket, because the building
-              is the venue itself and the people icon means the people who
-              actually came. */}
+          {show.type === "festival" ? <Badge variant="outline">Festival</Badge> : null}
+          {/* A measurement, so it never reads as a label someone chose to put
+              on the night. A ticket, because the building is the venue itself
+              and the people icon means the people who actually came. */}
           {show.capacity ? (
             <Badge variant="outline" className="rounded-none border-border">
               <Ticket />

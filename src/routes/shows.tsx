@@ -86,7 +86,7 @@ function ShowRow({ show }: { show: Show }) {
 
         {show.type === "festival" || show.rating != null ? (
           <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
-            {show.type === "festival" ? <Badge variant="ion">Festival</Badge> : null}
+            {show.type === "festival" ? <Badge variant="outline">Festival</Badge> : null}
             {show.rating != null ? <Rating value={show.rating} /> : null}
           </div>
         ) : null}

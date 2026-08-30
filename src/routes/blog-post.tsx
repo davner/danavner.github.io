@@ -57,9 +57,7 @@ export function BlogPost() {
           />
 
           <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2">
-            <Badge variant={post.category === "work" ? "ember" : "ion"}>
-              {CATEGORY_LABEL[post.category]}
-            </Badge>
+            <Badge variant="outline">{CATEGORY_LABEL[post.category]}</Badge>
             {post.draft ? <Badge variant="ember">Draft</Badge> : null}
           </div>
 

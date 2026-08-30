@@ -53,6 +53,9 @@ export function FramedPhoto({
         decoding="async"
         className={cn("w-full object-cover", imageClassName)}
       />
+      {/* Stock black and white rather than the palette: this caption sits on a
+          photograph, so it has to hold in either theme, and every ink in the
+          system flips with the stock it is printed on. */}
       <figcaption className="readout absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-4 pt-10 pb-3 text-white">
         {caption}
       </figcaption>

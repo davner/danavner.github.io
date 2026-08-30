@@ -2302,7 +2302,66 @@ const blurredShadows = (surfaces: string) => {
   return found;
 };
 
+/**
+ * Corners rounded past what the radius tokens allow.
+ *
+ * `--radius` is the cap and every named step resolves to it or below, so a
+ * corner above it can only come from a hand-written value or a utility that
+ * derives from nothing, a full round being the one that matters. Read from the
+ * whole page rather than from the named surfaces: a scrollbar thumb is inside
+ * none of them, and a thumb is exactly what a component library rounds off.
+ *
+ * Handed to `page.evaluate`, so it closes over nothing in this file.
+ */
+const overRounded = (cap: number) => {
+  const corners = [
+    "borderTopLeftRadius",
+    "borderTopRightRadius",
+    "borderBottomLeftRadius",
+    "borderBottomRightRadius",
+  ] as const;
+  const found: string[] = [];
+
+  for (const el of document.querySelectorAll("*")) {
+    const style = getComputedStyle(el);
+    for (const corner of corners) {
+      // A percentage or a keyword parses as NaN, and neither is a radius this
+      // site declares - so an unreadable one is reported rather than skipped.
+      const radius = parseFloat(style[corner]);
+      if (Number.isFinite(radius) && radius <= cap + 0.01) continue;
+      const slot = el.getAttribute("data-slot");
+      found.push(`<${el.tagName.toLowerCase()}>${slot ? `[${slot}]` : ""} ${style[corner]}`);
+    }
+  }
+  return [...new Set(found)];
+};
+
 test.describe("surfaces", () => {
+  /** `--radius`, in pixels. Every named step resolves to this or below. */
+  const RADIUS = 4;
+
+  test("nothing on a route rounds a corner past the radius", async ({ page }) => {
+    for (const path of ROUTES) {
+      await page.goto(path);
+      await page.getByRole("heading", { level: 1 }).waitFor();
+      // The archive's scrollbar only exists where the pane overflows, which is
+      // a width the desktop project never reaches.
+      await page.waitForLoadState("networkidle");
+
+      expect(await page.evaluate(overRounded, RADIUS), path).toEqual([]);
+    }
+  });
+
+  test("nothing a panel opens rounds a corner past the radius", async ({ page }) => {
+    for (const state of OPEN_STATES) {
+      await reachOpenState(page, state);
+
+      expect(await page.evaluate(overRounded, RADIUS), `${state.path} with ${state.name}`).toEqual(
+        [],
+      );
+    }
+  });
+
   test("nothing on a route separates itself with a shadow", async ({ page }) => {
     for (const path of ROUTES) {
       await page.goto(path);

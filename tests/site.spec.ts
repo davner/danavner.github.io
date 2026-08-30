@@ -2385,6 +2385,94 @@ test.describe("surfaces", () => {
   });
 });
 
+/**
+ * Elements set in the readout style that do not compute the readout style.
+ *
+ * The utility is one rule in `index.css`, and the way it comes apart is a
+ * utility on the call site out-ranking it: a badge, a button variant or a
+ * dialog title arrives with a weight of its own and quietly wins. That is
+ * invisible to every other check here - the words are still there, still mono,
+ * still uppercase - and it is what happened when the last hand-rolled copy of
+ * the five declarations was deleted and a dialog title's own `font-semibold`
+ * stopped losing to it.
+ *
+ * The utility itself is the reference, read off a probe, so this cannot drift
+ * away from the rule it is checking. Four declarations rather than five:
+ * font-size is deliberately not one of them, because two call sites set the
+ * `sm` step on purpose and `responsive.spec.ts` already holds every rendered
+ * size to the scale. Tracking is checked as a ratio for the same reason - the
+ * utility declares it in `em`, so it follows whichever of the two sizes the
+ * element is set at.
+ *
+ * Handed to `page.evaluate`, so it closes over nothing in this file.
+ */
+const readoutFaults = (selector: string) => {
+  const holder = document.createElement("div");
+  holder.style.cssText = "position:absolute;visibility:hidden";
+  const probe = document.createElement("span");
+  probe.className = "readout";
+  holder.append(probe);
+  document.body.append(holder);
+
+  const model = getComputedStyle(probe);
+  const want = {
+    family: model.fontFamily,
+    weight: model.fontWeight,
+    transform: model.textTransform,
+    tracking: parseFloat(model.letterSpacing) / parseFloat(model.fontSize),
+  };
+  holder.remove();
+
+  const faults: string[] = [];
+  for (const el of document.querySelectorAll(selector)) {
+    const style = getComputedStyle(el);
+    const name = `<${el.tagName.toLowerCase()}> "${(el.textContent ?? "").trim().slice(0, 24)}"`;
+    const got = {
+      family: style.fontFamily,
+      weight: style.fontWeight,
+      transform: style.textTransform,
+      tracking: parseFloat(style.letterSpacing) / parseFloat(style.fontSize),
+    };
+
+    for (const key of ["family", "weight", "transform"] as const) {
+      if (got[key] !== want[key]) faults.push(`${name} ${key} is ${got[key]}, not ${want[key]}`);
+    }
+    if (!(Math.abs(got.tracking - want.tracking) < 0.001)) {
+      faults.push(`${name} tracking is ${got.tracking}em, not ${want.tracking}em`);
+    }
+  }
+  return [...new Set(faults)];
+};
+
+/** Everything the readout style reaches: the two utilities, and the badge. */
+const READOUTS = ".readout, .readout-dim, [data-slot=badge]";
+
+test.describe("the readout", () => {
+  test("every readout on a route computes the readout style", async ({ page }) => {
+    for (const path of ROUTES) {
+      await page.goto(path);
+      await page.getByRole("heading", { level: 1 }).waitFor();
+      await page.evaluate(() => document.fonts.ready);
+
+      expect(await page.evaluate(readoutFaults, READOUTS), path).toEqual([]);
+    }
+  });
+
+  test("every readout a panel opens computes the readout style", async ({ page }) => {
+    // A dialog title is exactly where a component's own weight beats the
+    // utility, and no route load puts one on screen.
+    for (const state of OPEN_STATES) {
+      await reachOpenState(page, state);
+      await page.evaluate(() => document.fonts.ready);
+
+      expect(
+        await page.evaluate(readoutFaults, READOUTS),
+        `${state.path} with ${state.name}`,
+      ).toEqual([]);
+    }
+  });
+});
+
 test.describe("chrome", () => {
   test("the skip link is the first stop for a keyboard", async ({ page }) => {
     /*

@@ -100,11 +100,11 @@ function NavigationMenuContent({
         /*
          * A panel link paints its focus ring inward. Upstream deletes the ring
          * here instead, with a pair of `**:` descendant utilities that zero the
-         * ring and the outline on every link in the panel - and that took away
-         * a keyboard user's only cue that they had arrived. What upstream leaves
+         * ring and the outline on every link in the panel - which takes away a
+         * keyboard user's only cue that they have arrived. What upstream leaves
          * behind is `focus:bg-accent`, a tint measuring 1.22:1 against the panel
          * where 1.4.11 asks 3:1, and `site-header.tsx` overrides even that to
-         * transparent, so there was nothing at all. Both kill utilities were
+         * transparent, so there is nothing at all. Both kill utilities were
          * written against `:focus`, which compiles to specificity (0,3,0), and
          * `:focus-visible` is a subset of `:focus` - so they beat the link's own
          * indicator for exactly the people who needed it.
@@ -114,7 +114,7 @@ function NavigationMenuContent({
          * in the bundle. It is inert while nothing carries the class, but it is
          * the first thing a reader greps for and finds still there.)
          *
-         * The reason the ring was suppressed rather than styled is real though:
+         * The reason to suppress the ring rather than style it is real, though:
          * this panel is `overflow-hidden` a few classes down, and the link fills
          * its width, so an outward ring is clipped to nothing. A negative offset
          * paints the same stroke just inside the link's own edge, where the

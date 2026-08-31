@@ -323,12 +323,9 @@ function shape(raw) {
   /*
    * No fixing up of the placement tiers across modes.
    *
-   * They used to be forced so that `overall` mirrored what Fortnite-API answers
-   * - solo's top 10 and top 25 carried up, zeroes everywhere else - which was
-   * only ever there to keep two writers agreeing on a figure. The page no
-   * longer shows placements for "all modes" at all, because a top-3 in squads
-   * and a top-10 in solos are not the same achievement and summing them says
-   * nothing. Each mode now carries its own tiers, straight from Epic.
+   * A top 3 in squads and a top 10 in solos are not the same achievement and
+   * summing them says nothing, so the page shows no placements for "all modes"
+   * and each mode carries its own tiers straight from Epic.
    */
 
   const finish = (sums) => {
@@ -460,11 +457,11 @@ async function main() {
    * The seasons have to add up to the lifetime figure, and this is the check
    * that has to pass before anything is written.
    *
-   * Every failure this script has had would have been caught here. Midnight
-   * window boundaries summed to 846 against 3765 - a 78% shortfall that looked
-   * entirely reasonable season by season, because each individual number was
-   * plausible. There is no reading of "these are the seasons" under which they
-   * do not reconstruct the lifetime total.
+   * A wrong window boundary is plausible season by season and only shows up in
+   * the total: midnight-bounded windows sum to a fraction of the lifetime figure
+   * while every individual number looks reasonable. There is no reading of
+   * "these are the seasons" under which they do not reconstruct the lifetime
+   * total.
    *
    * The tolerance is for matches played before the first season in the
    * calendar, which belong to no entry and are legitimately missing.
@@ -489,11 +486,11 @@ async function main() {
    * window is lifetime by definition, so it costs no extra request.
    *
    * The nightly job owns this figure and will overwrite it from Fortnite-API,
-   * which is fine because the two agree: Epic reproduces all 28 of the numbers
-   * Fortnite-API reports, give or take a hundredth on one K/D. It is written
-   * here so the file is consistent the moment this runs rather than the next
-   * time the job fires - otherwise lifetime would be the one window missing the
-   * placement tiers, and the squad board would read "Top 3: 0" until morning.
+   * which is fine because the two agree: Epic and Fortnite-API report the same
+   * figures. It is written here so the file is consistent the moment this runs
+   * rather than the next time the job fires - otherwise lifetime would be the
+   * one window missing the placement tiers, and the squad board would read
+   * "Top 3: 0" until morning.
    */
   const lifetimeStats = shape(cumulative[cumulative.length - 1]) ?? stats.lifetime;
 

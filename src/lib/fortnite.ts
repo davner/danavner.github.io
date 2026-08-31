@@ -177,8 +177,8 @@ export function isWindowKey(value: string | null): boolean {
  * lobby of 100 individuals. Duos play 50 teams and count top 5 and top 12;
  * squads play 25 and count top 3 and top 6. Epic tracks each playlist's own
  * pair and returns a flat 0 for the others, so a board hardcoded to top 10 and
- * top 25 told a squad player they had never once placed - the number was real
- * and the question was wrong.
+ * top 25 tells a squad player they have never once placed - the number is real
+ * and the question is wrong.
  *
  * `overall` gets none. A top 3 in squads and a top 10 in solos are different
  * achievements, and adding them together produces a figure that answers no

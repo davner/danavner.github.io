@@ -5,20 +5,18 @@ import { expect, test, type Page } from "@playwright/test";
  * `aria-hidden` package hid behind a modal, because `aria-hidden` alone leaves
  * every control in there tabbable, focusable and findable by find-in-page.
  *
- * Three commits on this branch are a history of that mirror silently breaking
- * and nothing noticing: it was added, then the `/vinyl` live region changed
- * which elements the library hides and the mirror stopped mirroring anything,
- * then it was rewritten to follow the library's marker instead of the app root.
- * CI could not see any of it. So this file is written against the ways it can
- * break rather than against the way it currently works.
+ * This file is written against the ways the mirror can break rather than against
+ * the way it currently works. It can stop mirroring anything - a change to which
+ * elements the library hides, or a marker rename - while every other check on
+ * the page still passes, so a green suite is not on its own evidence that the
+ * mirror ran.
  *
  * ## What each assertion here would and would not catch
  *
  * - **`aria-hidden-focus` in the open state**, in `tests/a11y.spec.ts`, is the
- *   outcome test and cares about no mechanism at all. Measured: strip the
- *   mirror and it reports seven violations with the listbox open. It is the
- *   strongest of the three and it lives there rather than here because it is
- *   an axe run.
+ *   outcome test and cares about no mechanism at all. Strip the mirror and it
+ *   reports violations with the listbox open. It is the strongest of the three
+ *   and it lives there rather than here because it is an axe run.
  * - **The marker canary and the mirror's completeness**, below. `MARKER` in the
  *   source hardcodes `"data-aria-hidden"`, which is the *default value* of
  *   `hideOthers(target, parentNode, markerName)` rather than an exported
@@ -27,11 +25,11 @@ import { expect, test, type Page } from "@playwright/test";
  *   marked is inert" alone would pass vacuously in that world, because nothing
  *   would be marked - so the count is asserted separately and first.
  * - **Tab containment**, below, is deliberately *not* a guard on the mirror.
- *   Measured: with every `inert` attribute stripped back off, Tab is still
- *   held inside the overlay, because Radix's focus scope holds the boundary
- *   itself. What it guards is the other direction - the mirror also marks
- *   Radix's own focus guards inert, and the source claims by hand that this
- *   costs nothing. This is that claim, checked.
+ *   With every `inert` attribute stripped back off, Tab is still held inside
+ *   the overlay, because Radix's focus scope holds the boundary itself. What it
+ *   guards is the other direction - the mirror also marks Radix's own focus
+ *   guards inert, and the source claims by hand that this costs nothing. This
+ *   is that claim, checked.
  *
  * A programmatic `focus()` on a control behind the overlay looks like the
  * obvious mechanism-independent test and is not one: measured, Radix's focus
@@ -124,9 +122,9 @@ test.describe("the phone menu", () => {
     /*
      * `aria-hidden` deliberately leaves a live region reachable so a status
      * message can still be announced from behind a modal, and the mirror has to
-     * leave it alone too. This is the exact regression that shipped once: a
-     * mirror pointed at the app root would make this subtree inert, and one
-     * axe violation on the root became seven on its children.
+     * leave it alone too. A mirror pointed at the app root would make this
+     * subtree inert instead - which is exactly what the library's per-child
+     * hiding produces once a live region is present.
      */
     const region = await page.evaluate(readLiveRegion);
     expect(region.present, "/vinyl lost its filtered-count live region").toBe(true);

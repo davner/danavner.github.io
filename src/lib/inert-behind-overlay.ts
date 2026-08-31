@@ -21,11 +21,10 @@
  * The obvious version of this watches the app root, because that is what gets
  * hidden - until it is not. `aria-hidden` deliberately leaves any subtree
  * containing a live region reachable, so that a status message can still be
- * announced from behind a modal. The moment `/vinyl` gained the live region that
- * announces its filtered count, the library stopped hiding the app root and
- * started hiding the root's children one at a time instead, and a mirror pointed
- * at the root had nothing to do. Measured: one violation on the root became
- * seven on its children.
+ * announced from behind a modal. A live region anywhere under the root makes
+ * the library hide the root's children one at a time instead of the root -
+ * `/vinyl`'s filtered-count region does exactly that - and a mirror pointed at
+ * the root then has nothing to do.
  *
  * So the mirror follows the library's own marker, `data-aria-hidden`, wherever
  * it lands and at whatever depth. Nothing has to be told about a new overlay,

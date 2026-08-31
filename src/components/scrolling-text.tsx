@@ -11,17 +11,17 @@ const MIN_DURATION = 1.2;
  * One line of tile text that slides to reveal its tail when there is more of it
  * than fits, and truncates when there is not.
  *
- * The alternative was what these tiles did before: cut the line off with an
- * ellipsis and put the rest in a `title`. That hides the half that varies - a
- * record's pressing is "Black With Pink & Cyan Swir…", a run is "2024 - PRESENT
- * · 6 IS…" - and a tooltip is not available on a phone at all.
+ * The alternative is an ellipsis with the rest in a `title`. That hides the
+ * half that varies - a record's pressing is "Black With Pink & Cyan Swir…", a
+ * run is "2024 - PRESENT · 6 IS…" - and a tooltip is not available on a phone
+ * at all.
  *
  * The measurement is the point. Nothing animates unless the text genuinely
  * overflows, so a tile of short lines is completely still, and the distance
  * travelled is exactly what is hidden rather than a guess.
  *
  * `title` is kept regardless. Hover is not a thing on a touchscreen, and there
- * the line still truncates the way it always did.
+ * the line still truncates.
  */
 export function ScrollingText({
   children,

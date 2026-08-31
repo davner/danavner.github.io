@@ -41,23 +41,21 @@ type FindingNode = Finding["nodes"][number];
  *
  * Keyed by rule and then decided per node, rather than as a set of rule ids,
  * because the same rule can be undecidable for a bounded reason in one place
- * and be sitting on a real defect in another. `aria-valid-attr-value` was both
- * on this site at once, in states a route load never reaches: on the share
- * popover's trigger it is axe declining to resolve an `aria-controls` that
- * points into a popup, and on the sort listbox it was a `role="group"` whose
- * `aria-labelledby` pointed at an id no label ever rendered. Allowing the rule
- * outright to excuse the first would have hidden the second, which this sweep
- * caught and `select-control.tsx` fixed by dropping the group. Only the popup
- * case is allowed, and only at the nodes that give that reason.
+ * and be sitting on a real defect in another. `aria-valid-attr-value` can be
+ * both at once, in states a route load never reaches: on the share popover's
+ * trigger it is axe declining to resolve an `aria-controls` that points into a
+ * popup, and on a `role="group"` whose `aria-labelledby` points at an id no
+ * label renders it is a real defect. Allowing the rule outright to excuse the
+ * first hides the second. Only the popup case is allowed, and only at the nodes
+ * that give that reason.
  *
  * `color-contrast` is allowed at every node, and only for part of the page:
  * the grain overlay in `backdrop.tsx` is a background image axe cannot
- * resolve, so nodes sitting over it come back undecided. Measured across all
- * 13 routes in both themes, it decides 1,896 of 2,292 contrast nodes and
- * leaves 396 - 17% - undecided, for six specific reasons `PRODUCT.md` lists.
- * That slice is bounded and is measured from painted pixels instead.
- * Everything else is gated, which is green today on every route in both
- * themes.
+ * resolve, so nodes sitting over it come back undecided. axe decides the large
+ * majority of contrast nodes here and leaves a bounded slice undecided, for the
+ * six specific reasons `PRODUCT.md` lists and counts. That slice is measured
+ * from painted pixels instead. Everything else is gated, which is green today
+ * on every route in both themes.
  *
  * Use `withTags` to change what runs. `disableRules` is not the way to widen
  * this allowlist, but not because it would misbehave: measured in

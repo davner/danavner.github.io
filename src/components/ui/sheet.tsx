@@ -69,8 +69,8 @@ function SheetContent({
         {/* Two local departures from the generated component.
          *
          * `cursor-pointer`: Tailwind's preflight sets `button { cursor: default }`
-         * and the generated component does not put it back, so this close button
-         * came out with an arrow while every other control shows a finger.
+         * and the generated component does not put it back, so without it this
+         * close button shows an arrow while every other control shows a finger.
          *
          * No focus ring of its own. Upstream ships four utilities here - a 2px
          * ring, its colour, a 2px offset, and an outline kill - which is
@@ -81,7 +81,7 @@ function SheetContent({
          * keyboard. (Do not write those four class names out. Tailwind scans
          * comments along with code, so naming one puts its CSS back in the
          * bundle, where `tests/bundle.spec.ts` finds it.) `index.css` supplies
-         * the indicator now, on the same terms as every other control. */}
+         * the indicator, on the same terms as every other control. */}
         {showCloseButton && (
           <SheetPrimitive.Close className="absolute top-4 right-4 cursor-pointer rounded-xs opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none data-[state=open]:bg-secondary">
             <XIcon className="size-4" />

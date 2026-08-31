@@ -139,10 +139,10 @@ export function App() {
               }
             />
 
-            {/* The sections were called Work and Writing before; keep both
-                resolving so nothing already linked breaks. Trips was a section
-                of its own until the travel writing moved into the blog, so its
-                paths land there rather than on the 404. */}
+            {/* Links in the wild still point at /work, /writing and /trips; keep
+                them resolving so nothing already linked breaks. The travel
+                writing lives in the blog, so /trips lands there rather than on
+                the 404. */}
             <Route path="/work" element={<Navigate to="/career" replace />} />
             <Route path="/writing" element={<Navigate to="/blog" replace />} />
             <Route path="/writing/:slug" element={<LegacyPostRedirect />} />

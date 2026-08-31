@@ -127,8 +127,7 @@ function ShowBody({ show }: { show: (typeof shows)[number] }) {
        * the same names twice down the page. A setlist is a fact about a band,
        * not a parallel collection, so it lives on that band's row.
        *
-       * The headliner is in here too, which it never was when this section was
-       * "Support" - so its own setlist finally has somewhere to go.
+       * The headliner is in here too, so its own setlist has somewhere to go.
        */}
       {show.lineup.length > 0 ? (
         <Section title="Lineup">

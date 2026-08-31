@@ -7,9 +7,7 @@ import { cn } from "@/lib/utils";
  * on one line where there is room, one fact per row on a phone where there is
  * not.
  *
- * Detail pages used to carry these on a small rail above the title. The rail is
- * gone, so anything a page states nowhere else is set here at reading size
- * instead.
+ * Anything a page states nowhere else is set here, at reading size.
  */
 export function FactLine({
   items,

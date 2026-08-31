@@ -171,8 +171,8 @@ test.describe("navigation", () => {
       ["/work", "**/career"],
       ["/writing", "**/blog"],
       ["/writing/welcome", "**/blog/welcome"],
-      // Trips was a section of its own until the travel writing moved into the
-      // blog. Anything already linking to it lands there rather than on a 404.
+      // The travel writing lives in the blog. Anything already linking to
+      // /trips lands there rather than on a 404.
       ["/trips", "**/blog"],
       ["/trips/spain-2026", "**/blog"],
     ] as const) {
@@ -473,8 +473,8 @@ test.describe("shows", () => {
   });
 
   test("the log lists no photos, notes, or share controls", async ({ page }) => {
-    // Those all live on the show's own page now. Putting them back here is what
-    // made the rows a screen tall each and left nothing to click through for.
+    // Those live on the show's own page. Here they would make each row a screen
+    // tall and leave nothing to click through for.
     await expect(page.locator("[data-slot=show] figure")).toHaveCount(0);
     await expect(page.locator("[data-slot=show] .prose-dan")).toHaveCount(0);
     await expect(page.getByRole("button", { name: /^Share/ })).toHaveCount(0);
@@ -583,10 +583,9 @@ test.describe("shows", () => {
   });
 
   test("a show page states its own date and room", async ({ page }) => {
-    // These used to sit on a rail above the title, and they are stated nowhere
-    // else on the page. A show page is the target of every share link, so if
-    // they stop rendering, someone arriving from a text message gets a band
-    // name and no way to tell which night it was.
+    // These are stated nowhere else on the page. A show page is the target of
+    // every share link, so if they stop rendering, someone arriving from a text
+    // message gets a band name and no way to tell which night it was.
     const hrefs: string[] = await page
       .locator('a[href^="/shows/"]')
       .evaluateAll((els) =>
@@ -729,12 +728,12 @@ test.describe("vinyl", () => {
       /*
        * Poll rather than read once: clicking sets the URL synchronously but the
        * grid redraws a tick later, so a bare `count()` here returns the
-       * previous owner's shelf. That is what made this test pass 42 twice and
-       * still add up to a plausible-looking number.
+       * previous owner's shelf, which still adds up to a plausible-looking
+       * number.
        *
-       * Asserting against the pill's own count also makes the filter prove it -
-       * a pill claiming 9 while the grid draws 42 is now a failure rather than
-       * something only a careful reader would spot.
+       * Asserting against the pill's own count makes the filter prove it: a pill
+       * whose figure disagrees with the grid is a failure rather than something
+       * only a careful reader would spot.
        */
       await expect.poll(() => tiles.count()).toBe(badge);
       expect(badge).toBeLessThan(everything);
@@ -934,11 +933,11 @@ test.describe("now", () => {
   });
 
   /*
-   * The staleness used to be counted against the UTC calendar day. Read at
-   * 17:00 in Los Angeles, an entry written that same morning said "yesterday",
-   * because UTC had already rolled over while the reader was still on the day
-   * the entry is dated. That is several hours every evening for every visitor
-   * in the Americas, so it is worth pinning a clock to.
+   * Staleness is counted against the reader's local calendar day, not UTC.
+   * Counted against UTC, an entry written that morning reads "yesterday" from
+   * 17:00 in Los Angeles, because UTC has already rolled over while the reader
+   * is still on the day the entry is dated. That is several hours every evening
+   * for every visitor in the Americas, so it is worth pinning a clock to.
    */
   test.describe("staleness counted in the reader's own days", () => {
     test.use({ timezoneId: "America/Los_Angeles" });
@@ -1024,8 +1023,7 @@ test.describe("now", () => {
      * accessible name has to contain the text it prints, so a reader saying
      * "Aug 10" reaches the control they are looking at. axe ships
      * `label-content-name-mismatch` disabled, so nothing else covers it. It
-     * fails against any hand-written `aria-label` that drifts from `railLabel`,
-     * which is exactly how it broke before.
+     * fails against any hand-written `aria-label` that drifts from `railLabel`.
      */
     for (const pill of await rail.getByRole("button").all()) {
       // The printed text, with the screen-reader-only year taken back out -
@@ -1076,9 +1074,7 @@ test.describe("now", () => {
      * into the pane's top band and files a record while the one above is still
      * in the band and files none - so a callback that reads only its own
      * records marks the arrival and leaves the entry the reader is actually
-     * looking at unmarked. Measured before the fix, with four entries filed:
-     * over an 80px stretch of scroll the rail named the second entry while the
-     * first still occupied the top of the pane.
+     * looking at unmarked.
      *
      * Swept in small steps rather than jumped to one offset. The window where
      * two entries share the band is only as wide as the gap between them, and a
@@ -1496,10 +1492,9 @@ test.describe("comics", () => {
 
 test.describe("controls", () => {
   // Every filter control on the site comes from `components/filter-toggle.tsx`
-  // and is measured there once. Before that existed each page spelled its own
-  // padding out, and /vinyl shipped two rows of pills a quarter-step out of
-  // line with each other. Height is the thing you actually see, so that is the
-  // thing asserted.
+  // and is measured there once, so two rows of pills cannot end up a
+  // quarter-step out of line. Height is the thing you actually see, so that is
+  // the thing asserted.
   for (const path of ["/vinyl", "/blog"]) {
     test(`${path} filter controls share one height`, async ({ page }) => {
       await page.goto(path);
@@ -1528,9 +1523,8 @@ test.describe("controls", () => {
        * shadcn puts `flex-1` on every ToggleGroupItem, which forces one width
        * across the row whatever the labels say. Combined with `min-w-0` and
        * `whitespace-nowrap`, the longest label spills through its own padding
-       * and sits against the pill's edge - "Everything 51" wanted 105px of
-       * text in the 72px its share of the row left inside the padding, while
-       * "Dan 42" wanted 46px and looked twice as roomy.
+       * and sits against the pill's edge, while a short one looks twice as
+       * roomy.
        */
       await page.goto(path);
       await page.getByRole("heading", { level: 1 }).waitFor();
@@ -1563,11 +1557,10 @@ test.describe("controls", () => {
      * not put it back, so anything clickable defaults to the wrong cursor until
      * someone remembers `cursor-pointer`.
      *
-     * This used to be a hand-written list of five page-and-selector pairs, and
-     * it passed while `/fortnite` shipped a grid of nine buttons with an arrow
-     * cursor - the page simply was not on the list. A check you have to
-     * remember to extend does not catch the thing it exists to catch, so this
-     * sweeps every route and every interactive element instead.
+     * A check scoped to a hand-written list of pages does not catch the thing it
+     * exists to catch: a page that is not on the list ships a grid of buttons
+     * with an arrow cursor and the check stays green. So this sweeps every route
+     * and every interactive element instead.
      */
     for (const path of ROUTES) {
       await page.goto(path);
@@ -1613,19 +1606,16 @@ test.describe("controls", () => {
  * proving that candidate appeared *because* of the focus - so an element with a
  * permanent 3:1 border and a broken focus ring passes.
  *
- * That second one is not hypothetical any more, so do not read it as a caveat.
- * The landing page's "Get to know me" is exactly that element: `border-ember`
- * over `bg-ember`, which scores 5.91:1 against the page behind it whether or not
- * the control has any focus indicator at all - and it had none. This sweep was
- * green on it. What failed the route once the `auto` branch below was tightened
- * was the skip link, which carries the same ember-on-ember ring and no border to
- * hide behind. Closing it properly means proving a candidate is focus-conditional
- * - by reading each element's resting style, or by looking for a matching rule
- * whose selector carries `:focus` - and that is a change to this file that has
- * not been made.
+ * That second one is not hypothetical. The landing page's "Get to know me" is
+ * exactly that element: `border-ember` over `bg-ember` scores 5.91:1 against the
+ * page behind it whether or not the control has any focus indicator, so this
+ * sweep cannot tell those two apart. Closing it properly means proving a
+ * candidate is focus-conditional - by reading each element's resting style, or
+ * by looking for a matching rule whose selector carries `:focus` - and that is a
+ * change to this file that has not been made.
  *
- * What it does catch, which is the trap that produced the ring commit, is a
- * `border-ring` with no width: a zero-width border is not a candidate at all.
+ * What it does catch is a `border-ring` with no width: a zero-width border is
+ * not a candidate at all.
  *
  * `opacity` is folded in, because it composites an element's whole rendering -
  * its outline along with it - over what is behind it, so the colour the computed
@@ -1727,9 +1717,9 @@ const measureFocusIndicator = async () => {
      * What the companion stroke cannot rescue is a ring drawn in the colour of
      * the fill it hugs. `auto` puts the stroke hard against the element's edge,
      * so `--ring` on a `bg-ember` control paints ember on ember and reads as
-     * the control having grown by a pixel - which is how the landing page's
-     * primary call to action shipped with no keyboard indicator at all while
-     * this sweep scored it `Infinity` and passed.
+     * the control having grown by a pixel - which is how a primary call to
+     * action ends up with no keyboard indicator at all while this sweep scores
+     * it `Infinity` and passes.
      *
      * So the browser's ring is credited only where the author's colour is
      * distinguishable from the element's own background. Where it is not, the
@@ -1781,8 +1771,7 @@ const measureFocusIndicator = async () => {
   }
 
   // Width first. `focus-visible:border-ring` sets a colour on a border
-  // Tailwind's preflight gave a width of 0, which paints nothing - the
-  // exact thing that made an earlier audit call buttons unaffected.
+  // Tailwind's preflight gave a width of 0, which paints nothing at all.
   if (parseFloat(style.borderTopWidth) > 0) {
     // A border runs along an edge with the element's own background on
     // one side and the page on the other. Contrast against either side
@@ -2583,7 +2572,7 @@ test.describe("chrome", () => {
    * Route chunks are content-hashed and a deploy deletes the old ones, so a tab
    * opened before a deploy asks for a file that is gone. Three nightly jobs
    * each trigger a deploy here, so this is a most-nights event rather than an
-   * edge case - and before `RouteBoundary` it rendered a blank page.
+   * edge case - and without a boundary it renders a blank page.
    */
   test.describe("a lazy route whose chunk went missing", () => {
     /** Serves the 404.html GitHub Pages returns for a file that is not there. */
@@ -2630,8 +2619,7 @@ test.describe("chrome", () => {
       await expect(page.getByRole("button", { name: "Reload" })).toBeVisible({
         timeout: 15_000,
       });
-      // One reload spent, not a loop. This asserted 19 before the guard was
-      // written the way it is now.
+      // One reload spent, not a loop.
       expect(navigations - before).toBeLessThanOrEqual(3);
       expect((await page.locator("body").textContent())?.trim()).not.toBe("");
     });
@@ -2763,8 +2751,8 @@ test.describe("chrome", () => {
    * without a warning.
    *
    * A sweep rather than a check on the pages known to render prose, for the
-   * reason the cursor sweep is one: the version of that test which named its
-   * pages passed while an entire route shipped the defect.
+   * reason the cursor sweep is one: a test that names its pages passes while a
+   * route that is not named ships the defect.
    */
   test("no markdown override leaks react-markdown's node prop into the DOM", async ({ page }) => {
     const leaked: string[] = [];

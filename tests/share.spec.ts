@@ -69,8 +69,9 @@ test.describe("link previews", () => {
       // An image path that 404s previews as a blank card, which is worse than
       // no image at all.
       expect(ogImage).toMatch(/^https:\/\/danavner\.com\//);
-      // A show with no photos used to fall back to the site portrait, so a
-      // festival link previewed in Messages as a headshot.
+      // A show with no photos takes the dedicated fallback rather than the site
+      // portrait: a festival link previewing as a headshot reads as the wrong
+      // link entirely.
       expect(ogImage, `${slug} previews as the portrait`).not.toContain("/img/me1.jpg");
 
       titles.add(title!);
@@ -204,16 +205,15 @@ test.describe("now link previews", () => {
  * description, and the poster's excerpt, which is three surfaces where the
  * mistake is only visible after it has been sent.
  *
- * These pin behaviour, not implementation, and they outlived the hand-rolled
- * stripper they were written against: the cases below are the three separate
- * ways it corrupted an entry, and the parser that replaced it has to keep
- * getting them right.
+ * These pin behaviour, not implementation. The cases below are three ways a
+ * hand-rolled markdown stripper corrupts an entry, and whatever reads the
+ * markdown has to keep getting them right.
  *
  * Playwright as the unit runner because the repo has no other one, and because
  * `links.spec.ts` and `site.spec.ts` already import out of `src/lib/` exactly
  * this way. These need no browser at all.
  *
- * The alternative was a fixture now entry carrying the awkward markdown, read
+ * The alternative is a fixture now entry carrying the awkward markdown, read
  * back out of its emitted description. That publishes a made-up entry to the
  * live site in order to test a function, and it can only ever see the first
  * paragraph.
@@ -221,10 +221,10 @@ test.describe("now link previews", () => {
 test.describe("reading a now entry's prose", () => {
   test("an inline link unwraps to its text, whatever the URL holds", () => {
     /*
-     * The first one that shipped: a `\([^)]*\)` destination stops at the first
-     * `)`, which drops the label and leaves the tail of the address in the
-     * prose. `…/Now_(album)` is what Wikipedia and GitHub hand you, so this is
-     * the ordinary case rather than the exotic one.
+     * A `\([^)]*\)` destination stops at the first `)`, which drops the label
+     * and leaves the tail of the address in the prose. `…/Now_(album)` is what
+     * Wikipedia and GitHub hand you, so this is the ordinary case rather than
+     * the exotic one.
      */
     expect(nowParagraphs("Check out [this link](http://example.com/a_(b)) for more.")).toEqual([
       "Check out this link for more.",
@@ -247,9 +247,9 @@ test.describe("reading a now entry's prose", () => {
 
   test("an unclosed bracket does not swallow the next link", () => {
     /*
-     * The third one that shipped. Scanning for `[` and then for the next `]`
-     * paired the stray bracket with the real link's label, so the destination
-     * was eaten and the link's text went with it: "Bought a new phone online."
+     * Scanning for `[` and then for the next `]` pairs the stray bracket with
+     * the real link's label, so the destination is eaten and the link's text
+     * goes with it: "Bought a new phone online."
      *
      * What is correct is what the page renders. The stray `[` is a character
      * the author typed and the reader sees, and the link after it is still a
@@ -263,9 +263,9 @@ test.describe("reading a now entry's prose", () => {
   });
 
   test("a reference link unwraps and its definition does not become a paragraph", () => {
-    // Both used to survive: `[text][ref]` printed its brackets, and the
-    // definition line was prose as far as the stripper was concerned - so an
-    // entry that opened with one shipped `[1]: https://…` as its description.
+    // Both are hazards for a hand-rolled stripper: `[text][ref]` keeps its
+    // brackets, and the definition line reads as prose - which ships
+    // `[1]: https://…` as an entry's description.
     expect(
       nowParagraphs("Read [the post][1] today.\n\n[1]: https://example.com/a_(b) 'Title'\n"),
     ).toEqual(["Read the post today."]);
@@ -278,12 +278,12 @@ test.describe("reading a now entry's prose", () => {
 
   test("a paragraph opening in brackets is prose, not a definition", () => {
     /*
-     * The second one that shipped, and the worst: `^\[[^\]]+\]:` deleted the
-     * whole line, so an entry opening `[Update]:` lost its first paragraph and,
-     * if that was the only one, previewed with an empty description. `[Update]`,
-     * `[Edit]` and `[Note]` are ordinary things to write at the head of a
-     * journal paragraph. A reference definition is a line whose target is a
-     * link destination; this one's is a sentence.
+     * The worst of the three: `^\[[^\]]+\]:` deletes the whole line, so an entry
+     * opening `[Update]:` loses its first paragraph and, if that is the only
+     * one, previews with an empty description. `[Update]`, `[Edit]` and `[Note]`
+     * are ordinary things to write at the head of a journal paragraph. A
+     * reference definition is a line whose target is a link destination; this
+     * one's is a sentence.
      */
     expect(
       nowParagraphs("[Update]: I finished the project a day early, which felt great.\n\nMore."),
@@ -411,11 +411,11 @@ test.describe("reading a now entry's prose", () => {
  * The description against the page, from one markdown source.
  *
  * `now-summary.ts` reads an entry with `mdast-util-from-markdown`; `NowProse`
- * renders it with `react-markdown`. Two parsers, kept in step by hand, and the
- * whole reason the module was rewritten is that they drifted once - so what is
- * asserted here is the property rather than a table of outputs: the paragraphs
- * the description is built from are the paragraphs a reader sees, in order, in
- * the same words. A hand-written expectation for each construct would go on
+ * renders it with `react-markdown`. Two parsers, kept in step by hand, and
+ * nothing stops them drifting - so what is asserted here is the property rather
+ * than a table of outputs: the paragraphs the description is built from are the
+ * paragraphs a reader sees, in order, in the same words. A hand-written
+ * expectation for each construct would go on
  * passing through a drift that changed both sides' meaning; this cannot.
  *
  * The page side is rendered rather than fetched, because a fixture only reaches
@@ -446,13 +446,13 @@ test.describe("the description and the page read the same markdown", () => {
    *   word of the entry.
    *
    * A hard break needs no third rule, which is worth writing down because it
-   * looks like it should. `.text()` concatenates across a `<br>` exactly the
-   * way `mdast-util-to-string` did before `phrasingText` - but
-   * `mdast-util-to-hast` emits a `\n` text node directly after every `br` it
-   * writes, so the collapse below turns the pair into the one space the reader
-   * sees. Checked in `node_modules/mdast-util-to-hast/lib/handlers/break.js`
-   * rather than assumed. If that ever stops being true this reports a
-   * disagreement over a hard break, and this side is the half to fix.
+   * looks like it should. `.text()` concatenates across a `<br>` with nothing
+   * between - but `mdast-util-to-hast` emits a `\n` text node directly after
+   * every `br` it writes, so the collapse below turns the pair into the one
+   * space the reader sees. Checked in
+   * `node_modules/mdast-util-to-hast/lib/handlers/break.js` rather than assumed.
+   * If that ever stops being true this reports a disagreement over a hard break,
+   * and this side is the half to fix.
    */
   function readParagraphs(html: string): string[] {
     const $ = cheerio.load(html);
@@ -786,11 +786,11 @@ test.describe("share", () => {
 
   test("a card that cannot be drawn still offers the link", async ({ page }) => {
     /*
-     * The failed branch had no coverage at all before this, and it was hard to
-     * reach on purpose: `loadImage` resolves null on error so a missing photo
-     * costs the card its picture rather than the whole share, and the render
-     * only rejects when `toBlob` hands back nothing. So force exactly that, the
-     * same way the share test above stands in for a phone's `navigator.share`.
+     * The failed branch is hard to reach on purpose: `loadImage` resolves null
+     * on error so a missing photo costs the card its picture rather than the
+     * whole share, and the render only rejects when `toBlob` hands back nothing.
+     * So force exactly that, the same way the share test above stands in for a
+     * phone's `navigator.share`.
      */
     await page.addInitScript(() => {
       HTMLCanvasElement.prototype.toBlob = function (callback: BlobCallback) {
@@ -827,10 +827,10 @@ test.describe("share", () => {
 
   test("a card still being drawn does not withhold the link", async ({ page }) => {
     /*
-     * The other state the link actions had to move out of the `card ?` branch
-     * for. The failure test above never observably sits in `working` - its stub
-     * calls back at once, so the panel goes straight to `failed` - which left
-     * the state a slow render actually spends its time in unasserted.
+     * The state a slow render actually spends its time in. The failure test
+     * above never observably sits in `working` - its stub calls back at once,
+     * so the panel goes straight to `failed` - which leaves this state
+     * unasserted otherwise.
      *
      * Hold the callback rather than delaying it. A timer would make this a race
      * against the render on whatever machine is running it; parking the
@@ -951,8 +951,8 @@ test.describe("share", () => {
     await expect(covers.nth(2)).toHaveAttribute("aria-checked", "true");
     await expect.poll(cardHash, { timeout: 15_000 }).not.toBe(before);
 
-    // The panel survives the redraw - it used to render only in the "ready"
-    // state, so switching cover made it vanish mid-render.
+    // The panel survives the redraw: rendered only in the "ready" state it
+    // would vanish mid-render when the cover is switched.
     await expect(page.getByRole("radiogroup", { name: /Photo on the card/ })).toBeVisible();
 
     // And focus stays on the cover you pressed rather than being yanked back
@@ -1191,9 +1191,8 @@ test.describe("share a now entry", () => {
      * unlike `renderShowCard` above: strip the picture from a now card and what
      * is left is a date set large on an empty canvas, which is a screenshot of
      * a calendar rather than something worth sending. So the panel is expected
-     * to degrade all the way to the link - which is the whole reason the link
-     * actions were moved out of the `card` branch, and nothing exercised the
-     * now half of it.
+     * to degrade all the way to the link - which is why the link actions live
+     * outside the `card` branch.
      */
     test.skip(withPhotos.length === 0, PHOTO_GAP);
 

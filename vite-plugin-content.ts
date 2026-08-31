@@ -961,12 +961,12 @@ function readFortnite(root: string, publicDir: string) {
     /*
      * Numbers that cannot happen, whatever produced them.
      *
-     * "Is it a number" turned out to be too weak a question. An attempt to
-     * backfill past seasons out of Epic's stats service wrote a season with 64
-     * matches and 113 wins - a -49 death count and a 176.6% win rate - and
-     * every one of those was a finite number, so this reader passed it straight
-     * through and the page rendered it. A stat board is only worth anything if
-     * it refuses to show figures that are arithmetically impossible.
+     * "Is it a number" is too weak a question. A half-broken backfill can write
+     * a season with more wins than matches - a negative death count and a win
+     * rate over 100% - and every one of those is a finite number that this
+     * reader would pass straight through for the page to render. A stat board is
+     * only worth anything if it refuses to show figures that are arithmetically
+     * impossible.
      */
     const wins = num("wins");
     if (wins > matches) {

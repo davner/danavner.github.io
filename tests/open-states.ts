@@ -3,11 +3,10 @@ import { expect, type Page } from "@playwright/test";
 /**
  * A state the page only reaches because someone did something.
  *
- * A sweep over `ROUTES` sees each page exactly as it loads, and that is where
- * two of the six failures the 2026-08 audit found were hiding: a navigation
- * label at 3.28:1 that axe reports the moment the sheet is open, and focusable
- * content inside an `aria-hidden` subtree with the sort listbox open. Nothing
- * had ever asked.
+ * A sweep over `ROUTES` sees each page exactly as it loads, and two real
+ * failures hide outside that: a navigation label at 3.28:1 that axe reports the
+ * moment the sheet is open, and focusable content inside an `aria-hidden`
+ * subtree with the sort listbox open.
  *
  * Shared rather than owned by one suite, because more than one thing is only
  * true in these states: the axe and heading-order sweeps in `a11y.spec.ts`, and

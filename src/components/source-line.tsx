@@ -7,11 +7,10 @@ import type { ReactNode } from "react";
  * what you are looking at, where it came from, and when it was last read. A
  * stale figure is then visibly stale rather than quietly wrong.
  *
- * One component rather than three, because there were three and they had
- * already drifted: comics wrote the date as "August 10, 2026" and the record
- * shelf as "Aug 10, 2026", each from its own copy of a `formatFetched` that
- * differed by one word of config. Same reasoning as `CONTROL_CLASS` - the
- * measurements of a shared thing live in one place or they diverge.
+ * One component rather than one per page, so "August 10, 2026" and
+ * "Aug 10, 2026" cannot end up on two pages of the same site. Same reasoning as
+ * `CONTROL_CLASS` - the measurements of a shared thing live in one place or
+ * they diverge.
  */
 export function SourceLine({
   count,

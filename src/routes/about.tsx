@@ -218,11 +218,11 @@ function InterestCard({
    * the heading and stretched over the card with `after:inset-0` rather than
    * wrapped around it.
    *
-   * Wrapping is what this used to do, and it only worked while no interest had
-   * both a page and an account. Vinyl and Comics now have both, and an anchor
-   * inside an anchor is invalid HTML that browsers repair by closing the outer
-   * one early - which quietly drops half the card out of the link. Stretching
-   * keeps one tab stop for the page, one for the account, and no nesting.
+   * Wrapping the card in an anchor is not available: an interest with both a
+   * page and an account - Vinyl and Comics - would put an anchor inside an
+   * anchor, which is invalid HTML that browsers repair by closing the outer one
+   * early, quietly dropping half the card out of the link. Stretching keeps one
+   * tab stop for the page, one for the account, and no nesting.
    */
   const body = (
     <>

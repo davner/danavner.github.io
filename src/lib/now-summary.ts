@@ -55,7 +55,7 @@ type MdastNode = ReturnType<typeof fromMarkdown>["children"][number];
  * milk", and `[^1]: A note.` is not a footnote at all but an ordinary second
  * paragraph - so an entry's description can quote a sentence that appears
  * nowhere in the prose the reader sees. That last one is the failure this
- * module was rewritten to end, arriving by a different door.
+ * module exists to prevent, arriving by a different door.
  *
  * `remark-gfm` does exactly these two registrations on the parse side, with no
  * options, which is how `NowProse` passes it. The invariant is therefore
@@ -162,20 +162,20 @@ function collectParagraphs(nodes: readonly MdastNode[], into: string[]): void {
 /**
  * The body as plain paragraphs, markdown taken off.
  *
- * Parsed rather than stripped by hand. The hand-rolled version shipped three
- * separate content-corruption bugs - a destination containing `)` took the
- * label with it, a paragraph opening `[Update]:` was deleted whole as a
- * reference definition, and an unclosed `[` earlier in a paragraph swallowed
- * the next real link - and each fix was another rule about brackets. Markdown's
- * grammar is not a set of rules about brackets, so the parser that already
- * ships in this repo reads it instead.
+ * Parsed rather than stripped by hand. Stripping markdown by hand is a set of
+ * rules about brackets, and it corrupts content three ways: a destination
+ * containing `)` takes the label with it, a paragraph opening `[Update]:` is
+ * deleted whole as a reference definition, and an unclosed `[` earlier in a
+ * paragraph swallows the next real link. Markdown's grammar is not a set of
+ * rules about brackets, so the parser that already ships in this repo reads it
+ * instead.
  *
  * `mdast-util-from-markdown` is what `react-markdown` parses with, by way of
  * `remark-parse`, and `GFM` above carries over the one plugin `NowProse` adds,
  * so the browser bundle gains nothing it was not already carrying and this
  * reads the entry as the same syntax the page renders. These packages are
- * synchronous and none of them needs a unified pipeline, which is what made a
- * parser look too heavy for the Node side the first time round.
+ * synchronous and none of them needs a unified pipeline, which is what makes a
+ * parser look heavier for the Node side than it is.
  *
  * One reader with two consumers, deliberately - the card wants the paragraph
  * breaks and the meta description wants one line, and deriving both from the

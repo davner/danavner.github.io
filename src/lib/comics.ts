@@ -67,7 +67,7 @@ export const SHELVES = [
    * things that phrase means. This is the issues shipping this Wednesday that
    * are pulled for me - not the standing list of series I am subscribed to.
    * That second list lives behind a login and cannot be read; see the note in
-   * `scripts/update-comics.mjs`. Calling this one "Pull list" invited exactly
+   * `scripts/update-comics.mjs`. Calling this one "Pull list" invites exactly
    * the wrong reading.
    */
   { id: "pullList", label: "This week", note: "Pulled for me at the shop this Wednesday." },

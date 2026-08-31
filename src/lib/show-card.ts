@@ -53,7 +53,7 @@ export async function renderShowCard(show: Show, photoIndex = 0): Promise<Card> 
   y += 74;
 
   // Just the name. `showHeading` folds the subtitle in, which is right for a
-  // link-preview title but would print the tour twice here now that it is set
+  // link-preview title but would print the tour twice here, since it is set
   // as its own line underneath.
   const heading = show.title.toUpperCase();
   let size = 132;

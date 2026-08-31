@@ -9,12 +9,11 @@ const KEY = "route-chunk-reloaded-at";
 /**
  * How long a reload counts as "just tried".
  *
- * A plain "have we reloaded yet" flag does not work, and failing to see why
- * cost a round of reload-loop: the flag has to be cleared at some point or the
- * next genuine stale chunk never gets its reload, and the only obvious place to
- * clear it - the app mounting - happens *before* the chunk fails again. So
- * every reload cleared the flag that was supposed to stop the next one, and the
- * page bounced forever.
+ * A plain "have we reloaded yet" flag does not work: it has to be cleared at
+ * some point or the next genuine stale chunk never gets its reload, and the only
+ * obvious place to clear it - the app mounting - happens *before* the chunk
+ * fails again. So every reload clears the flag that was supposed to stop the
+ * next one, and the page bounces forever.
  *
  * A timestamp has no such gap. A second failure moments after a reload is the
  * same failure and gets the error page; one an hour later is a fresh deploy and
@@ -40,7 +39,7 @@ export function looksLikeStaleChunk(error: unknown): boolean {
  * Whether to spend a reload on this failure, recording it if so.
  *
  * Reads and writes in one call on purpose. Two calls would be two chances to
- * check without recording, which is the shape the loop had.
+ * check without recording, which is the shape that loops.
  */
 export function shouldReloadForStaleChunk(): boolean {
   let last: number;

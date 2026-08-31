@@ -16,7 +16,7 @@
  *   3. Discogs rate-limits per IP and the cover CDN is theirs, not ours.
  *
  * So this runs nightly in CI (`.github/workflows/vinyl.yml`), the same shape as
- * `update-visitor-count.mjs`, and commits what it read.
+ * `update-comics.mjs` and `update-fortnite.mjs`, and commits what it read.
  *
  * Failure is quiet on purpose. A failed collection read writes NOTHING, so the
  * previously committed payload stays and the page keeps showing the collection
@@ -371,11 +371,10 @@ try {
   /*
    * Loud, and a non-zero exit, the same way the comics and Fortnite jobs fail.
    *
-   * These used to warn and return 0, which made a run that read nothing look
-   * exactly like a run where the shelf had not changed: a green tick, no commit,
-   * and a page quietly getting older. Committing the data is what makes
-   * staleness visible, and it is not visible if the job reports success either
-   * way. The comics job was found doing precisely this.
+   * Warning and returning 0 makes a run that read nothing look exactly like a
+   * run where the shelf had not changed: a green tick, no commit, and a page
+   * quietly getting older. Committing the data is what makes staleness visible,
+   * and it is not visible if the job reports success either way.
    */
   console.error(`vinyl: ${error.message}`);
   process.exit(1);

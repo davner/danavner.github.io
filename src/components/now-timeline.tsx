@@ -122,13 +122,13 @@ export function NowTimeline({
          * `entries` is newest-first and rendered in that order, so the first of
          * them in the set is the highest in the pane - no measuring needed, and
          * none wanted: `boundingClientRect` on a record is a snapshot from when
-         * that record fired, so sorting on it was reading stale geometry.
+         * that record fired, so sorting on it reads stale geometry.
          *
-         * The old code took the topmost of `records` instead, which is only the
-         * entries that changed. Scrolling down through a long entry, the one
+         * Taking the topmost of `records` instead is wrong: `records` holds only
+         * the entries that changed. Scrolling down through a long entry, the one
          * below it enters the band and files a record while the one above is
-         * still there and files none - so the marker moved on while the entry
-         * the reader was looking at was still at the top of the pane.
+         * still there and files none - so the marker moves on while the entry
+         * the reader is looking at is still at the top of the pane.
          */
         const top = entries.find((entry) => inBand.current.has(entry.updated));
         if (top) setActive(top.updated);
@@ -249,8 +249,7 @@ export function NowTimeline({
                 <RovingFocus.Item asChild active={marked} focusable>
                   {/* No `aria-label`. The name is computed from the content
                       below, which is the only form of it that cannot drift out
-                      of step with what the pill prints (WCAG 2.5.3) - drift is
-                      exactly what the label it used to carry had done. */}
+                      of step with what the pill prints (WCAG 2.5.3). */}
                   <button
                     type="button"
                     data-rail-date={entry.updated}
@@ -258,11 +257,8 @@ export function NowTimeline({
                     onClick={() => jumpTo(entry.updated)}
                     className={cn(
                       "readout inline-flex h-9 flex-none cursor-pointer items-center justify-center",
-                      // `text-sm` rather than `readout`'s own 0.68rem. It is
-                      // what `toggleVariants` was supplying here before this
-                      // component stopped going through it, and dropping it
-                      // would shrink the pill - a look this commit is not the
-                      // place to change.
+                      // `text-sm` rather than `readout`'s own 0.68rem, which
+                      // would shrink the pill.
                       "px-3 py-2 text-sm whitespace-nowrap transition-colors",
                       "shadow-[0_0_0_1px_var(--color-border)]",
                       // The ring itself comes from `index.css`. This lifts the
@@ -295,10 +291,8 @@ export function NowTimeline({
        * Chrome only scrolls a newly focused element into view when its border
        * box is not already fully inside the scrollport - a ring bleeding past
        * that box does not count - so a link sitting flush against an edge keeps
-       * its position and loses the stroke on that side. Measured: the archived
-       * date link's ring reaches 6.2px past its box, and tabbing to a link,
-       * arrow-scrolling to read, then tabbing on lands one 3.1px from the top
-       * edge with its top stroke clipped away entirely. `scroll-padding` is
+       * its position and loses the stroke on that side. The archived date link's
+       * ring reaches several pixels past its border box. `scroll-padding` is
        * what that test measures against, so 8px here is a floor on the
        * clearance every focusable in the pane gets, rather than an antidote
        * this one link carries and the next one added forgets.
@@ -341,10 +335,8 @@ export function NowTimeline({
                    * UA sheet, so it needs nothing added for the cursor sweep.
                    *
                    * `readout-link` carries the resting underline and the pushed
-                   * focus offset. The reasoning and the measurements that used
-                   * to sit here moved to `src/index.css` beside the class, once
-                   * the footer's `/admin/` link and `source-line.tsx` turned out
-                   * to be the same construction.
+                   * focus offset; the reasoning is in `src/index.css` beside the
+                   * class.
                    */}
                   <Link
                     to={`/now/${entry.updated}`}

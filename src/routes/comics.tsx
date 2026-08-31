@@ -109,9 +109,9 @@ function ComicTile({ entry }: { entry: ComicEntry }) {
        * shadow takes no layout space, so with the grid's `gap-px` a tile's
        * shadow lands on the exact pixel its neighbour's does - one hairline
        * between them, and nothing painted where there is no tile. Painting the
-       * container instead works only while the last row happens to be full: 16
-       * comics across five columns leaves four empty cells, which rendered as a
-       * solid grey block. Same fix as the filter pills.
+       * container instead works only while the last row happens to be full: a
+       * part-filled row leaves empty cells, which render as a solid grey block.
+       * Same fix as the filter pills.
        */
       className="group relative flex flex-col bg-background shadow-[0_0_0_1px_var(--color-border)]"
     >

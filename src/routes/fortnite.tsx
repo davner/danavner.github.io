@@ -183,13 +183,12 @@ function SeasonHistory({ active, onSelect }: { active: string; onSelect: (key: s
       <p className="readout-dim mt-2">The outfit I mained each season, oldest at the end.</p>
 
       {/*
-        No `bg-border` behind this grid. Nine seasons in a four-wide grid leaves
-        three empty cells on the last row, and a grid container is as tall and
-        wide as its rows whether or not anything is in them - so the seam colour
-        showing through `gap-px` painted a grey rectangle over the gap where the
-        tenth, eleventh and twelfth cards would have been. The seams are drawn
-        per card instead, by a 1px spread shadow that takes no layout space and
-        lands on the same pixel its neighbour's does.
+        No `bg-border` behind this grid. A last row that is not full leaves empty
+        cells, and a grid container is as tall and wide as its rows whether or
+        not anything is in them - so the seam colour showing through `gap-px`
+        paints a grey rectangle over the gap where the missing cards would be.
+        The seams are drawn per card instead, by a 1px spread shadow that takes
+        no layout space and lands on the same pixel its neighbour's does.
       */}
       <ul className="mt-6 grid grid-cols-2 gap-px sm:grid-cols-3 lg:grid-cols-4">
         {seasons.map((season) => {
@@ -356,9 +355,9 @@ export function Fortnite() {
         />
       ) : null}
 
-      {/* What the numbers below cover. A line rather than the panel that used
-          to appear and disappear as seasons were picked: it is always here, it
-          always says something, and it does not move the page around. */}
+      {/* What the numbers below cover. A line rather than a panel that appears
+          and disappears as seasons are picked: it is always here, it always says
+          something, and it does not move the page around. */}
       {active ? (
         <p data-slot="window-dates" className="readout-dim mb-6">
           {active.season ? dateRange(active.season) : "All time"}

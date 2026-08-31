@@ -27,14 +27,13 @@ export interface SectionGroup {
 /**
  * The site's sections, in nav order.
  *
- * One list because the header and the footer both render it, and they drifted
- * when they each kept their own - a section added to one is a section half the
- * site cannot reach.
+ * One list because the header and the footer both render it; two lists drift,
+ * and a section added to one is a section half the site cannot reach.
  *
  * The collections are grouped rather than sitting alongside About and Career,
  * because they are not the same kind of thing: Shows, Vinyl and Comics are all
- * "what I am into", and listing them flat made a seven-item bar where four of
- * the entries answered the same question. Grouping also stops the bar growing
+ * "what I am into", and listing them flat makes a seven-item bar where four of
+ * the entries answer the same question. Grouping also stops the bar growing
  * every time another shelf gets a page.
  */
 export const SECTIONS: (Section | SectionGroup)[] = [

@@ -27,8 +27,8 @@ export interface Post {
 }
 
 /**
- * Parsed, validated, and sorted newest-first by the blog plugin in
- * `vite-plugin-blog.ts`. Drafts are present under `npm run dev` and absent
+ * Parsed, validated, and sorted newest-first by the content plugin in
+ * `vite-plugin-content.ts`. Drafts are present under `npm run dev` and absent
  * from production builds.
  */
 export const posts: Post[] = rawPosts;

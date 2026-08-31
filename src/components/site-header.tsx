@@ -58,9 +58,9 @@ function ActiveRule({ on }: { on: boolean }) {
 export function SiteHeader() {
   /*
    * Below `sm` the sections collapse into a menu rather than being squeezed:
-   * seven of them do not fit a 320px phone, and that is also why the wordmark
-   * used to contract to "DA". Above `sm` they sit in a bar, with the collections
-   * behind one trigger so the bar stops growing every time a shelf gets a page.
+   * seven of them do not fit a 320px phone. Above `sm` they sit in a bar, with
+   * the collections behind one trigger so the bar stops growing every time a
+   * shelf gets a page.
    */
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();

@@ -4,9 +4,8 @@ import { cn } from "@/lib/utils";
  * A photo in the site's frame, with its caption printed over the bottom of the
  * image.
  *
- * The show carousel established this treatment and every other photo on the
- * site now uses it, so a caption always sits on the picture it belongs to
- * rather than floating under it in a different style.
+ * Every photo on the site uses this, so a caption always sits on the picture it
+ * belongs to rather than floating under it in a different style.
  */
 export function FramedPhoto({
   src,

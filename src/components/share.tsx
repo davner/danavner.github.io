@@ -234,12 +234,10 @@ export function Share({ subject, className }: { subject: Shareable; className?: 
         )}
 
         {/*
-         * The link actions render in every state, and that is the point of this
-         * block being out here rather than inside the `card` branch it used to
-         * live in. A card that cannot be drawn is still a page worth sending,
-         * and the failed state used to offer nothing but "Try again" - so the
-         * one thing the panel can always do was the one thing it withheld
-         * exactly when it was needed.
+         * The link actions render in every state, which is why this block is out
+         * here rather than inside the `card` branch. A card that cannot be drawn
+         * is still a page worth sending, so the one thing the panel can always
+         * do must not be withheld exactly when it is needed.
          *
          * The card actions stay conditional on there being a card, because
          * there is nothing to save or send without one.

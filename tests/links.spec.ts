@@ -46,8 +46,7 @@ test.describe("internal links", () => {
       // GoatCounter is excluded on purpose. It is a third party the site does
       // not need in order to work - a content blocker, a sandboxed network, or
       // an outage takes it out and nothing on the page changes. Scoring it as a
-      // broken asset makes this test fail on the network it happens to run on,
-      // which it did.
+      // broken asset makes this test fail on the network it happens to run on.
       if (ANALYTICS_HOSTS.includes(new URL(response.url()).host)) return;
       if (response.status() >= 400) failed.push(`${response.status()} ${response.url()}`);
     });

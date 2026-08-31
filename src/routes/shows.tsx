@@ -80,8 +80,8 @@ function ShowRow({ show }: { show: Show }) {
         </h3>
 
         {/* The tour, or which day of the festival - a subtitle to the name
-            above it rather than a badge. It also wraps, which a badge did not:
-            a 42-character tour name used to push the row off a 320px screen. */}
+            above it rather than a badge. It also wraps, which a badge does not:
+            a long tour name would push the row off a 320px screen. */}
         {show.subtitle ? <p className="readout-dim mt-2 text-pretty">{show.subtitle}</p> : null}
 
         {show.type === "festival" || show.rating != null ? (

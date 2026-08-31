@@ -4,13 +4,11 @@
  * site code, which is the subdomain of the goatcounter.com account
  * (`CODE.goatcounter.com`). Change the code here and the whole thing follows.
  *
- * This records visits and nothing more. Reading the total back and showing it on
- * the landing page used to live here too, and was removed: ad blockers and DNS
- * blocklists match on domain rather than on what a service does, so the read was
- * dead for anyone running one, and a counter that shows a number to some
- * visitors and an error to others is worse than no counter. The stats are still
- * collected - they are just read in the GoatCounter dashboard rather than
- * printed on the site.
+ * This records visits and nothing more. The total is never read back and printed
+ * on the site: ad blockers and DNS blocklists match on domain rather than on
+ * what a service does, so the read is dead for anyone running one, and a counter
+ * that shows a number to some visitors and an error to others is worse than no
+ * counter. The stats are read in the GoatCounter dashboard instead.
  *
  * The recording beat is blocked for those same visitors, so the dashboard sees
  * less traffic than actually arrives. GoatCounter's own author puts the

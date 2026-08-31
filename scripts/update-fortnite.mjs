@@ -26,12 +26,11 @@
  * current season and writes it into `seasons` - and it files by identity, not
  * by date. A second, keyless endpoint says which season is live right now,
  * down to Epic's own sequential season number (`detectSeason` below), and that
- * number picks the calendar entry the snapshot is written under. Dates used to
- * decide, and the 2026-08 rollover showed why they cannot: the calendar had
- * not heard of the new season yet, so a night of Season 4 numbers was filed
- * over the finished Season 3 archive. When detection cannot say what season it
- * is, the job writes the lifetime numbers only and leaves every season bucket
- * alone - "not sure" never files.
+ * number picks the calendar entry the snapshot is written under. Dates cannot
+ * decide: at a rollover the calendar has not heard of the new season yet, so a
+ * night of the new season's numbers lands on the finished season's archive.
+ * When detection cannot say what season it is, the job writes the lifetime
+ * numbers only and leaves every season bucket alone - "not sure" never files.
  *
  * Seasons that ended before this job existed came from Epic's own service,
  * which does take an arbitrary window, via `scripts/backfill-fortnite.mjs`.
@@ -73,9 +72,9 @@ const FILE = new URL("../src/content/fortnite.json", import.meta.url);
  * the name and the main outfit later; `key` and `backendValue` are the
  * identity the stats are filed under and never change. For the first two days
  * of a new season the job also holds off writing season stats at all, because
- * the stats vendor was observed still serving the OLD season's window 25+
- * hours after the 2026-08 rollover - exactly the mix-up that corrupted the
- * ch7-s3 archive.
+ * the stats vendor can still serve the previous season's window more than a day
+ * after a rollover, which files new-season numbers over the finished season's
+ * archive.
  */
 const SEASONS_FILE = new URL("../src/content/fortnite-seasons.json", import.meta.url);
 
@@ -255,11 +254,11 @@ export function fileSeason(seasons, detection, today) {
 
   /*
    * Rollover cool-down: for the first two days of a season, do not write
-   * season stats at all. The window covers the observed +25h lag from the
-   * 2026-08 incident, when the stats vendor kept serving the OLD season's
-   * window after detection already said the new one. It is anchored to the
-   * season's start, not the build date, because build dates move with every
-   * mid-season patch. A hand-mistyped EARLY start can let one night of lagged
+   * season stats at all. The window covers a stats vendor that keeps serving
+   * the OLD season's window for more than a day after detection has already
+   * said the new one. It is anchored to the season's start, not the build date,
+   * because build dates move with every mid-season patch. A hand-mistyped EARLY
+   * start can let one night of lagged
    * old-season numbers land in the new bucket; that self-heals the next night,
    * because every write replaces the whole cumulative bucket.
    */

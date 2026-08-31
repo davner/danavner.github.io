@@ -6,10 +6,8 @@ import { cn } from "@/lib/utils";
 /**
  * The "nothing here" panel, in the house style.
  *
- * Three pages had spelled the same dashed box out for themselves, which is
- * exactly the drift the seams and the nav lists have already been through: the
- * padding was `p-16` in all three only by coincidence, and the next one would
- * have picked its own.
+ * One component, so the dashed box cannot drift page to page - three pages
+ * render it, and the next one would otherwise pick its own padding.
  *
  * Square corners rather than the component's default `rounded-lg`, because
  * nothing else on this site is rounded.

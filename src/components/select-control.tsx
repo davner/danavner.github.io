@@ -46,9 +46,9 @@ export function SelectControl<T extends string>({
           /*
            * The height has to be written as the same variant shadcn uses.
            * `SelectTrigger` sets `data-[size=default]:h-9`, and an attribute
-           * variant outranks the plain `h-11` in `CONTROL_CLASS`, so the
-           * trigger came out 36px in a row of 44px controls - which is the
-           * exact drift `CONTROL_CLASS` exists to prevent.
+           * variant outranks the plain `h-11` in `CONTROL_CLASS`, so a plain
+           * `h-11` leaves the trigger at 36px in a row of 44px controls - which
+           * is the exact drift `CONTROL_CLASS` exists to prevent.
            */
           "data-[size=default]:h-11",
           // Square, hairline, and the page's own background - the shadcn
@@ -56,8 +56,8 @@ export function SelectControl<T extends string>({
           "cursor-pointer rounded-none border-border bg-background text-sm",
           /*
            * No focus styling here on purpose. `focus-visible:border-ember`
-           * painted an ember border underneath the site's ember outline, so a
-           * focused trigger showed two ember strokes 2px apart where every
+           * paints an ember border underneath the site's ember outline, so a
+           * focused trigger shows two ember strokes 2px apart where every
            * other control shows one. DESIGN.md's One Ring Rule: the indicator
            * is defined once, in `index.css`.
            */
@@ -72,7 +72,7 @@ export function SelectControl<T extends string>({
       {/*
        * No `SelectGroup` around the options. A group exists to separate
        * several labelled sections, and there is one section here - so it
-       * carried no information, and Radix gives every group an
+       * carries no information, and Radix gives every group an
        * `aria-labelledby` pointing at the id `SelectLabel` would have used.
        * With no label that id is never in the document, which axe rates
        * critical under `aria-valid-attr-value` and reports only while the

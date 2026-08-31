@@ -25,7 +25,7 @@ const buttonVariants = cva(
         // The wash is 5% and not more. Ember on `--background` is 5.32:1 in the
         // light theme, so there is only 0.82 of headroom over the 4.5:1 that
         // 1.4.3 asks, and an ember wash spends it: at 10% the label measured
-        // 4.32:1 from painted pixels on all six controls that use this pattern.
+        // 4.32:1 from painted pixels on every control that uses this pattern.
         // 5% measures 4.77:1, 4.72 at its worst pixel. Anything darker fails
         // the light theme again.
         outline:

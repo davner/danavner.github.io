@@ -4,10 +4,8 @@ import { cn } from "@/lib/utils";
 /**
  * The one place a filter control's measurements are written down.
  *
- * Every page used to spell its own out, which is how `/vinyl` shipped with two
- * rows of pills that did not line up - `px-5 py-3` on the owner row and
- * `px-4 py-2.5` on the sort row, a quarter-step apart and immediately visible
- * once they sat above each other.
+ * One place, so pill rows cannot drift apart: two rows a quarter-step out of
+ * step are immediately visible once they sit above each other.
  *
  * A fixed height rather than vertical padding, because these sit in a row with
  * the search field, whose border and larger text would otherwise make it a
@@ -54,12 +52,12 @@ export function FilterToggle<T extends string>({
       }}
       aria-label={label}
       /*
-       * No background here. The seams between pills used to be `bg-border` on
-       * this element showing through `gap-px`, which works only while the row
-       * fits on one line: a flex container that wraps takes the full width
-       * available rather than the width of its longest line, so on a phone the
-       * leftover space beside the last pill of each row painted itself grey.
-       * The seams are drawn by the pills instead - see below.
+       * No background here. Painting the seams as `bg-border` on this element
+       * showing through `gap-px` works only while the row fits on one line: a
+       * flex container that wraps takes the full width available rather than the
+       * width of its longest line, so on a phone the leftover space beside the
+       * last pill of each row paints itself grey. The seams are drawn by the
+       * pills instead - see below.
        */
       className={cn("max-w-full flex-wrap", className)}
     >
@@ -75,10 +73,8 @@ export function FilterToggle<T extends string>({
              * row are all forced to one width no matter what is written on
              * them - and with `min-w-0` and `whitespace-nowrap`, the longest
              * label then spills straight through its own padding and touches
-             * the edges. "Everything 51" wanted 105px of text in the 72px its
-             * share of the row left inside the padding, while "Dan 42" wanted
-             * 46px and looked twice as roomy. Sized to content, every pill
-             * keeps the same 20px either side.
+             * the edges, while a short one looks twice as roomy. Sized to
+             * content, every pill keeps the same 20px either side.
              */
             "flex-none",
             /*

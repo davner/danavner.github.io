@@ -78,11 +78,10 @@ function RecordTile({ record }: { record: VinylRecord }) {
       /*
        * The seam, drawn per sleeve rather than by the grid behind it. Painting
        * the container and letting `gap-px` show it through works only while the
-       * last row is full - 51 records across four columns leaves three empty
-       * cells, which rendered as a solid grey block. A 1px spread shadow takes
-       * no layout space, so neighbouring tiles land their hairline on the same
-       * pixel and nothing is painted where there is no tile. Same fix as the
-       * filter pills.
+       * last row is full - a part-filled row leaves empty cells, which render as
+       * a solid grey block. A 1px spread shadow takes no layout space, so
+       * neighbouring tiles land their hairline on the same pixel and nothing is
+       * painted where there is no tile. Same fix as the filter pills.
        */
       className="group relative flex flex-col bg-background shadow-[0_0_0_1px_var(--color-border)]"
     >
@@ -241,9 +240,9 @@ export function Vinyl() {
     stats.oldest && stats.newest && stats.oldest !== stats.newest
       ? `Pressings ${stats.oldest}–${stats.newest}`
       : "",
-    // Only worth saying when it is not just the record count again - the whole
-    // collection was catalogued in one year, so "51 added this year" sitting
-    // under "RECORDS 51" states the same fact twice.
+    // Only worth saying when it is not just the record count again - a
+    // collection catalogued in one year makes "added this year" the same
+    // figure, stated twice.
     stats.addedThisYear > 0 && stats.addedThisYear < stats.total
       ? `${stats.addedThisYear} added this year`
       : "",
@@ -255,9 +254,9 @@ export function Vinyl() {
    * Each control sits with the thing it changes.
    *
    * Whose records it is scopes the entire page, counts included, so it goes in
-   * the header under the sentence that offers it. It used to sit below the
-   * stats, which meant picking "Alexis" changed four numbers you had already
-   * scrolled past - on a phone the whole board was off screen by then.
+   * the header under the sentence that offers it. Below the stats it would
+   * change four numbers the reader has already scrolled past - on a phone the
+   * whole board is off screen by then.
    *
    * Sort and search only touch the list, so they sit directly on top of it.
    */

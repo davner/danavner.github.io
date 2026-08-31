@@ -24,9 +24,19 @@ interface Frontmatter {
 }
 
 /**
- * `where` defaults to the path a collection entry sits at, since almost every
- * caller is one. The single-file pages live directly under `src/content/` and
- * pass their own, so an error names the file you actually have to open.
+ * Every build-time rejection in this file, in one shape: what is wrong, the file
+ * to open, and why. One owner, because an error message that is spelled out
+ * twice is one that ends up spelled two ways.
+ */
+function invalid(what: string, where: string, message: string): never {
+  throw new Error(`Invalid ${what} - ${where}: ${message}`);
+}
+
+/**
+ * The collection-shaped caller, which is almost all of them. `where` defaults to
+ * the path a collection entry sits at; the single-file pages live directly under
+ * `src/content/` and pass their own, so an error names the file you actually
+ * have to open.
  */
 function fail(
   collection: string,
@@ -34,7 +44,7 @@ function fail(
   message: string,
   where = `src/content/${collection}/${file}`,
 ): never {
-  throw new Error(`Invalid ${collection} entry - ${where}: ${message}`);
+  return invalid(`${collection} entry`, where, message);
 }
 
 function asStringArray(value: unknown): string[] {
@@ -1202,6 +1212,80 @@ export function readShows(root: string, publicDir: string) {
 }
 
 /**
+ * A path under `public/img/` as the source writes one.
+ *
+ * Anchored on the delimiter that opens it, which is what tells a reference from
+ * a mention: an attribute value, a string literal, and the space between two
+ * `srcset` candidates all start one, while `public/img/...` in a sentence does
+ * not.
+ *
+ * The run is captured whole, punctuation and interpolations alike; the class
+ * simply stops at `$`, and `checkablePath` below decides how much of what it
+ * captured names something. This check is a build gate, so a false
+ * positive costs as much as a miss - it fails everybody's build over a sentence
+ * nobody can rewrite their way out of.
+ */
+export const SOURCE_IMAGE = /(?<=["'`\s(])\/img\/[\w./-]*/g;
+
+/**
+ * How much of a matched run names something `public/` can be asked for, or null
+ * where none of it does.
+ *
+ * A dot is a separator that owes an extension, so a run ending on one with
+ * nothing after it has met a sentence's full stop rather than a name - the
+ * pattern is greedy, so anything path-shaped would already be part of the run.
+ * The stop is dropped and the name underneath it is checked, which is the point:
+ * `/img/me1.webp.` in a comment still names a file that can go missing.
+ *
+ * A run stopping mid-token is the other thing, and it is not checkable at all.
+ * `/img/me1-` is how a joined string and the fixed half of a template both look,
+ * and `/img/me1` is not a file anybody meant. The folder around it is all that
+ * is knowable, and it is worth keeping - `/img/vinyl/${id}.webp` names the
+ * folder every cover in that grid comes from, and a rename there loses the lot.
+ *
+ * A run ending at a slash is neither. It is the folder, and it is checked as
+ * one.
+ */
+function checkablePath(run: string, rest: string): string | null {
+  if (!rest.startsWith("${")) {
+    const name = run.replace(/\.$/, "");
+    if (!name.endsWith("-")) return name;
+  }
+
+  const folder = run.slice(0, run.lastIndexOf("/") + 1);
+  return folder === "/img/" ? null : folder;
+}
+
+/**
+ * Fails the build for an image the source names and `public/` does not have.
+ *
+ * Every collection's photos are checked as they are parsed, but the hero and its
+ * preload, the about and career photos, and the share cards are written straight
+ * into JSX and `index.html`, where no parser sees them. Without this a deleted
+ * file ships as a broken image with its alt text showing, and the build says
+ * nothing.
+ */
+export function checkSourceImages(root: string, publicDir: string) {
+  const src = path.resolve(root, "src");
+  const files = [
+    path.resolve(root, "index.html"),
+    ...readdirSync(src, { recursive: true, encoding: "utf8" })
+      .filter((name) => name.endsWith(".ts") || name.endsWith(".tsx"))
+      .map((name) => path.join(src, name)),
+  ];
+
+  for (const file of files) {
+    const text = readFileSync(file, "utf8");
+
+    for (const match of text.matchAll(SOURCE_IMAGE)) {
+      const image = checkablePath(match[0], text.slice(match.index + match[0].length));
+      if (image === null || existsSync(path.join(publicDir, image))) continue;
+      invalid("image path", path.relative(root, file), `does not exist: public${image}`);
+    }
+  }
+}
+
+/**
  * Reads and validates everything under `src/content/` at build time and exposes
  * each collection as a virtual module: the markdown ones as `virtual:blog` and
  * `virtual:shows`, and the generated record collection as `virtual:vinyl`.
@@ -1211,6 +1295,10 @@ export function readShows(root: string, publicDir: string) {
  * page, `draft: true` entries are genuinely absent from the production bundle
  * rather than merely filtered out after shipping, and the YAML parser never
  * reaches the client.
+ *
+ * The image paths written into the source rather than into content are checked
+ * here too, so one file answers whether every picture the site names is a
+ * picture it ships.
  */
 export function contentPlugin(): Plugin {
   const dirs = new Map<string, string>();
@@ -1256,6 +1344,13 @@ export function contentPlugin(): Plugin {
       root = config.root;
       publicDir = config.publicDir;
       includeDrafts = config.command === "serve";
+    },
+
+    // Once per build and once per dev server start, rather than inside `load`:
+    // nothing imports `index.html` or `about.tsx` as content, so no virtual
+    // module's graph would ever reach them.
+    buildStart() {
+      checkSourceImages(root, publicDir);
     },
 
     resolveId(id) {

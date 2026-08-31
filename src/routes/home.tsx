@@ -1,11 +1,9 @@
-import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight, CheckIcon } from "lucide-react";
 import { Link } from "react-router";
 
 import { BandList } from "@/components/band-list";
 import { FramedPhoto } from "@/components/framed-photo";
 import { Marquee } from "@/components/marquee";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { Section } from "@/components/page";
 import { SocialLinks } from "@/components/social-links";
 import { profile } from "@/content/profile";
@@ -103,22 +101,34 @@ export function Home() {
             </p>
 
             {/* The side quests, as a box that was ticked a long time ago and is
-                not getting unticked. `disabled` rather than wired to state -
-                there is nothing to toggle, and a checkbox that moves invites
-                someone to find out what it does. `readOnly`-style intent, kept
-                legible: the label still reads at full contrast rather than the
-                50% a disabled control usually drops to. */}
+                not getting unticked. Drawn rather than built out of a checkbox:
+                there is nothing here to toggle, so it takes no focus, carries no
+                control semantics, and stays out of the accessibility tree. A
+                checkbox here would offer a state change the page cannot make,
+                and announce itself as a control nobody can operate.
+
+                The tick is the only thing saying the box is ticked, so the word
+                it stands for is spoken in its place. Without that, the line is
+                an instruction rather than something already done, and the joke
+                reaches whoever can see the mark and nobody else.
+
+                Just under full strength. Solid ember carries as much weight
+                as the page's primary button, which is more than a 16px mark
+                that does nothing should take from the greeting under it. The
+                faint end of the scale overshoots the other way: a ticked box
+                that looks switched off says the opposite of what it means. */}
             <p className="readout-dim mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
               <span>{profile.quest.sideQuests}:</span>
-              <Label className="flex items-center gap-2 font-normal opacity-100">
-                <Checkbox
-                  checked
-                  disabled
-                  aria-label={`${profile.quest.sideQuestsLabel} ${profile.quest.sideQuests.toLowerCase()}`}
-                  className="opacity-100 data-[state=checked]:border-ember data-[state=checked]:bg-ember"
-                />
+              <span className="flex items-center gap-2 leading-none">
+                <span
+                  aria-hidden
+                  className="grid size-4 shrink-0 place-content-center rounded-[4px] border border-ember bg-ember text-primary-foreground opacity-80"
+                >
+                  <CheckIcon className="size-3.5" />
+                </span>
                 <span className="readout-dim">{profile.quest.sideQuestsLabel}</span>
-              </Label>
+                <span className="sr-only">, accepted</span>
+              </span>
             </p>
 
             <p className="mt-4 max-w-xl text-title leading-snug text-pretty">

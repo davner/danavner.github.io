@@ -2889,3 +2889,76 @@ test.describe("fortnite", () => {
     await expect(page.locator('a[href="/fortnite"]').first()).toBeAttached();
   });
 });
+
+/**
+ * The landing page's side quests: a box that was ticked a long time ago, drawn
+ * rather than built out of a checkbox.
+ *
+ * Nothing else in the suite can see this one. The repo's cursor sweep reads
+ * interactive elements, and the whole point here is that there is no longer an
+ * interactive element to read - so a checkbox coming back, or a `not-allowed`
+ * cursor coming back with it, is a change that passes every existing check.
+ */
+test.describe("home", () => {
+  /** The side quests line, found the way a reader finds it. */
+  function questLine(page: Page) {
+    return page.locator("main p").filter({ hasText: /^Side quests:/ });
+  }
+
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("heading", { level: 1 }).waitFor();
+  });
+
+  test("the ticked side quest reads as a sentence rather than a control", async ({ page }) => {
+    /*
+     * What the line is announced as, which is the whole argument for drawing
+     * the tick rather than building it out of a checkbox: a checkbox offers a
+     * state change the page cannot make and announces itself as a control
+     * nobody can operate.
+     *
+     * A paragraph and its words, then - on one line, because a role appearing
+     * inside it would nest and this would not match. And the tick is spoken as
+     * the word it stands for, since a mark nobody can see leaves the line
+     * reading as an instruction rather than as something already done.
+     */
+    const spoken = await questLine(page).ariaSnapshot();
+
+    expect(spoken).toMatch(/^- paragraph: "Side quests: Accept all\s*, accepted"$/);
+    await expect(page.getByRole("checkbox")).toHaveCount(0);
+  });
+
+  test("nothing in the side quests line takes focus", async ({ page }) => {
+    /*
+     * Asked of every element rather than of a list of the ones that usually
+     * take focus: `focus()` moves focus only to something that can hold it,
+     * whatever made it focusable - a control, a `tabindex`, an editable host.
+     */
+    const takesFocus = await questLine(page).evaluate(
+      (line) =>
+        [...line.querySelectorAll("*")].filter((el) => {
+          (el as HTMLElement).focus();
+          return document.activeElement === el;
+        }).length,
+    );
+
+    expect(takesFocus, "a keyboard can land on a line with nothing to do").toBe(0);
+  });
+
+  test("the ticked box shows no cursor that makes it look interactive", async ({ page }) => {
+    /*
+     * The inverse of the rule the rest of the site is held to. `pointer` says
+     * this does something; `not-allowed` says it is a control that is switched
+     * off, which is the opposite of what a ticked box means. A mark says
+     * neither.
+     */
+    const cursors = await questLine(page).evaluate((line) => [
+      ...new Set(
+        [line, ...line.querySelectorAll("*")].map((el) => getComputedStyle(el as Element).cursor),
+      ),
+    ]);
+
+    expect(cursors).not.toContain("pointer");
+    expect(cursors).not.toContain("not-allowed");
+  });
+});

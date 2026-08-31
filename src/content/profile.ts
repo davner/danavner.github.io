@@ -74,8 +74,8 @@ export const profile = {
   quest: {
     label: "Main quest",
     main: "Livin' ✨ Laughin' ✨ Lovin'",
-    /* The line under it is a checkbox, ticked and going nowhere - see
-       `<Quest />` in src/routes/home.tsx. */
+    /* The line under it renders as a ticked box that goes nowhere, drawn in
+       src/routes/home.tsx. */
     sideQuests: "Side quests",
     sideQuestsLabel: "Accept all",
   },

@@ -220,11 +220,11 @@ export function NowTimeline({
                 {marksYear ? (
                   /*
                    * `text-muted-foreground` undimmed. It is already this site's
-                   * dim token, so an alpha on top of it dims twice: `/70` reads
-                   * 3.28:1 in the light theme and 3.88:1 in the dark, against
-                   * the 4.5:1 WCAG 1.4.3 asks of 10.88px text. Undimmed is
-                   * 6.42:1 and 7.05:1. The label stays subordinate to the pills
-                   * anyway - they carry a border and a background it does not.
+                   * dim token, so an alpha on top of it dims twice and drops the
+                   * label under the 4.5:1 WCAG 1.4.3 asks of text, which
+                   * undimmed clears in both themes. The label stays subordinate
+                   * to the pills anyway - they carry a border and a background
+                   * it does not.
                    *
                    * Hidden from the accessibility tree because every pill now
                    * carries its own year: without it a reader hears "2026" and
@@ -257,7 +257,7 @@ export function NowTimeline({
                     onClick={() => jumpTo(entry.updated)}
                     className={cn(
                       "readout inline-flex h-9 flex-none cursor-pointer items-center justify-center",
-                      // `text-sm` rather than `readout`'s own 0.68rem, which
+                      // `text-sm` rather than `readout`'s own smaller size, which
                       // would shrink the pill.
                       "px-3 py-2 text-sm whitespace-nowrap transition-colors",
                       "shadow-[0_0_0_1px_var(--color-border)]",

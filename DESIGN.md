@@ -75,7 +75,7 @@ typography:
     letterSpacing: "normal"
   label:
     fontFamily: "JetBrains Mono Variable, JetBrains Mono Fallback, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
-    fontSize: "0.68rem"
+    fontSize: "0.6875rem"
     fontWeight: 500
     lineHeight: 1.4
     letterSpacing: "0.18em"
@@ -136,7 +136,7 @@ components:
 Two things Dan cares about share a visual language. The tour poster and the star
 chart are both stark, both mostly black, and both put enormous type next to
 small, precise data. That collision is the whole system: an Anton headline set
-at nine rems of screen width, with a 0.68rem monospace readout sitting under it
+at nine rems of screen width, with a 0.6875rem monospace readout sitting under it
 spelling out a venue, a catalogue number, or a date. Neither element apologises
 for the other.
 
@@ -289,7 +289,7 @@ generates no CSS at all, which is louder than rendering at a size nobody chose.
   set on `body`, never on `html`, because a root font-size rescales every `rem`
   in the spacing scale along with the type.
 - **Small** (400, `0.875rem`, 1.4286): a secondary line, and the controls.
-- **Label** (500, `0.68rem`, `0.18em`, uppercase, mono): section labels, dates,
+- **Label** (500, `0.6875rem`, `0.18em`, uppercase, mono): section labels, dates,
   venue lines, catalogue numbers, telescope names. The instrument scale.
 
 ### Named Rules
@@ -332,10 +332,13 @@ in the test suite.
 **The Two Steps Rule.** The design has two structural breakpoints and no more:
 `sm` (640px) turns the phone menu into a bar and a single column into two, and
 `lg` (1024px) brings in the paired-column layouts. `md` (768px) is sanctioned for
-grid column counts only. Nothing uses `xl` or `2xl`, because the shell caps at
-`max-w-6xl` and every width past about 1200px draws the same column. The display
-face takes no breakpoint at all - a size that steps where a grid also steps is
-how a figure ends up wider than the cell holding it.
+a grid that splits there, and for the alignment utilities inside that grid - a
+block right-aligned while it is still a full-width stack reads as a mistake, so
+text and content alignment step with the grid they belong to or not at all.
+Nothing uses `xl` or `2xl`, because the shell caps at `max-w-6xl` and every width
+past about 1200px draws the same column. The display face takes no breakpoint at
+all - a size that steps where a grid also steps is how a figure ends up wider
+than the cell holding it.
 
 **The Type Scales, The Layout Steps Rule.** Prefer `clamp()` on the display face
 over a new breakpoint. The grid changes rarely and the type changes constantly.

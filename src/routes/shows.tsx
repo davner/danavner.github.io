@@ -46,9 +46,16 @@ function ShowRow({ show }: { show: Show }) {
   ].filter(Boolean);
 
   return (
+    /* Three columns at `md` rather than `sm`, which is the one thing `md` is
+       sanctioned for. At 640 the card has 568px inside it, and the date column,
+       the gaps and the duo chip claim 373 of that - so a venue column wide
+       enough to hold "Riyadh Air Metropolitano" and a chip wide enough to name
+       a partner cannot both fit, and the chip is the one that overhangs into the
+       venue's band. Stacked until 768, where the middle column opens to 312px
+       and the chip clears it by 82. */
     <li
       data-slot="show"
-      className="cut-corners group relative grid gap-x-6 gap-y-3 border-b border-border px-3 py-7 transition-colors hover:bg-card/60 sm:grid-cols-[6rem_minmax(0,1fr)_minmax(0,15rem)]"
+      className="cut-corners group relative grid gap-x-6 gap-y-3 border-b border-border px-3 py-7 transition-colors hover:bg-card/60 md:grid-cols-[6rem_minmax(0,1fr)_minmax(0,15rem)]"
     >
       {/* A year-only entry has no day label; the grid column keeps the
           alignment, so nothing needs to stand in for it.
@@ -132,21 +139,21 @@ function ShowRow({ show }: { show: Show }) {
       {/* One glyph, one meaning, everywhere: calendar is when, building is the
           room, pin is where on a map, ticket is how many the room holds, and
           people means the people who actually came. */}
-      <div className="space-y-1.5 sm:text-right">
+      <div className="space-y-1.5 md:text-right">
         {show.venue ? (
-          <p className="flex items-center gap-1.5 font-mono text-sm sm:justify-end">
+          <p className="flex items-center gap-1.5 font-mono text-sm md:justify-end">
             <Building2 className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
             {show.venue}
           </p>
         ) : null}
-        <p className="readout-dim flex items-center gap-1.5 sm:justify-end">
+        <p className="readout-dim flex items-center gap-1.5 md:justify-end">
           <MapPin className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
           {show.city}
         </p>
         {/* Capacity only means anything next to another capacity, so it lives
             in the list rather than only on the show's own page. */}
         {show.capacity ? (
-          <p className="readout-dim flex items-center gap-1.5 sm:justify-end">
+          <p className="readout-dim flex items-center gap-1.5 md:justify-end">
             <Ticket className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
             {show.capacity.toLocaleString("en-US")} cap
           </p>

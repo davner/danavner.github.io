@@ -6,8 +6,15 @@ import { cn } from "@/lib/utils";
 
 // A badge is a readout with a border round it, so the mono label comes from the
 // `readout` utility rather than from a second spelling of its five declarations.
+//
+// No `whitespace-nowrap`, which is what lets `w-fit` mean what it says.
+// `fit-content` is "as wide as the text, but no wider than the room available",
+// and holding the text on one line makes those two the same number, so a chip
+// too long for its column pushes the column instead of fitting inside it. A
+// flex item still takes a new line before it shrinks and only shrinks alone on
+// one, so a chip wraps where it could not have fitted anyway and nowhere else.
 const badgeVariants = cva(
-  "readout inline-flex w-fit shrink-0 items-center justify-center gap-1.5 overflow-hidden border px-2 py-0.5 whitespace-nowrap transition-[color,box-shadow] [&>svg]:pointer-events-none [&>svg]:size-3",
+  "readout inline-flex w-fit shrink-0 items-center justify-center gap-1.5 overflow-hidden border px-2 py-0.5 transition-[color,box-shadow] [&>svg]:pointer-events-none [&>svg]:size-3",
   {
     variants: {
       variant: {

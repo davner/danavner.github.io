@@ -14,8 +14,8 @@ export function SoloBadge({ className }: { className?: string }) {
       <Sparkles aria-hidden />
       Solo run
       {/* The hairline does the separating. No opacity on top of `text-ion` -
-          that is the second dimming DESIGN.md forbids, and at 10.88px it took
-          this to 2.91:1 against the 4.5:1 that 1.4.3 asks of it. */}
+          that is the second dimming DESIGN.md forbids, and it drops this under
+          the 4.5:1 WCAG 1.4.3 asks of text. */}
       <span aria-hidden className="border-l border-ion/30 pl-2">
         1P
       </span>

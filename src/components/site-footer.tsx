@@ -7,7 +7,7 @@ import { ALL_SECTIONS } from "@/lib/site";
 
 const LINKS = ALL_SECTIONS;
 
-/** Last-commit date (UTC), already formatted like "Aug 4, 2026" in `vite.config.ts`. */
+/** Last-commit date, already formatted like "Aug 4, 2026" in `vite.config.ts`. */
 const LAST_UPDATED = __LAST_UPDATED__;
 
 export function SiteFooter() {

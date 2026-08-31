@@ -10,15 +10,23 @@ import { coverVariantsPlugin } from "./vite-plugin-cover-variants";
 import { pagesPlugin } from "./vite-plugin-pages";
 
 /**
+ * The zone the site reads a timestamp in. Fixed, so the value is the same on
+ * every build machine and the same for every visitor rather than shifting with
+ * whoever's clock happens to render it - and the site's own rather than UTC,
+ * because the author writes from Pacific and UTC files an evening commit, or the
+ * nightly jobs that commit in UTC, under tomorrow's date. A footer claiming a
+ * date the reader has not reached yet reads as broken.
+ */
+const SITE_TIME_ZONE = "America/Los_Angeles";
+
+/**
  * The date of the last commit, formatted for the footer's "last updated" line.
  * Since the site deploys on push to main, the last commit is the last change
  * that reached the live site.
  *
  * `%ct` is the committer date as a Unix timestamp, which carries no timezone of
- * its own, and it is formatted in UTC. So the value is the same on every build
- * machine and the same for every visitor, rather than shifting with whoever's
- * clock happens to render it. Falls back to the build time if git is unavailable
- * (e.g. a source tarball with no history).
+ * its own, so the zone is the site's. Falls back to the build time if git is
+ * unavailable (e.g. a source tarball with no history).
  */
 function lastUpdated(): string {
   const format = (date: Date) =>
@@ -26,7 +34,7 @@ function lastUpdated(): string {
       year: "numeric",
       month: "short",
       day: "numeric",
-      timeZone: "UTC",
+      timeZone: SITE_TIME_ZONE,
     }).format(date);
 
   try {

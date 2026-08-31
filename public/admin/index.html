@@ -1,11 +1,118 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
+    <!-- The CMS injects its own once its script has run, and that one wins for
+         everything it draws. This one covers the window before then, where the
+         bar below is the whole page and a 980px fallback layout would scale it
+         down to a few pixels of type. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
     <title>Sveltia CMS</title>
+    <style>
+      /*
+       * The site's readout label, in the site's colours, spelled out literally.
+       * This file is served from `public/` exactly as written, so it reaches
+       * neither Tailwind nor the self-hosted fonts - those are content-hashed
+       * bundle assets with no stable URL to link, and a font CDN would break the
+       * site's one-outbound-request rule. The values below are the tokens
+       * `src/index.css` defines; the mono stack is the site's own minus the two
+       * webfonts.
+       */
+      :root {
+        --page: oklch(0.965 0.008 85);
+        --dim: oklch(0.46 0.014 268);
+        --rule: oklch(0.85 0.01 85);
+        --ember: oklch(0.53 0.22 30);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --page: oklch(0.115 0.014 268);
+          --dim: oklch(0.68 0.016 268);
+          --rule: oklch(0.26 0.018 268);
+          --ember: oklch(0.66 0.225 32);
+        }
+      }
+
+      body {
+        margin: 0;
+      }
+
+      .way-back {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--rule);
+        background-color: var(--page);
+      }
+
+      @media (min-width: 640px) {
+        .way-back {
+          padding-inline: 1.5rem;
+        }
+      }
+
+      .way-back a {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--dim);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.6875rem;
+        font-weight: 500;
+        letter-spacing: 0.18em;
+        line-height: 1;
+        text-transform: uppercase;
+        text-decoration: none;
+        transition: color 150ms;
+      }
+
+      .way-back a:hover {
+        color: var(--ember);
+      }
+
+      /* The site's one focus ring: 2px ember, held 2px clear so the gap shows
+         the surface behind and the stroke reads against both its edges. The
+         bar's padding is what leaves room for it. */
+      .way-back a:focus-visible {
+        outline: 2px solid var(--ember);
+        outline-offset: 2px;
+      }
+    </style>
   </head>
   <body>
+    <!-- Nothing else on this page leads anywhere. Without this, a visitor who
+         followed the footer link meets a sign-in prompt naming a repository,
+         with the browser's back button as the only way out. -->
+    <div class="way-back">
+      <a href="/">
+        <!-- lucide `arrow-left`, drawn here because the icon set ships with the
+             bundle this page does not load. -->
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="m12 19-7-7 7-7" />
+          <path d="M19 12H5" />
+        </svg>
+        Back to danavner.com
+      </a>
+    </div>
+
+    <!-- Sveltia mounts into `#nc-root` when the page offers one and covers the
+         whole viewport when it does not, which would paint over the bar. Left
+         empty and unstyled on purpose: it measures itself on mount, finds no
+         height, and fixes the app to everything below the bar. Giving it a
+         height of its own takes that measurement away and the app renders into
+         nothing. -->
+    <div id="nc-root"></div>
+
     <!-- Pinned + SRI on purpose: this page handles a GitHub token, so the
          script that runs here is fixed by commit, not by whatever unpkg
          serves today. To update: bump the version, recompute the hash with

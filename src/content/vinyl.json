@@ -1,10 +1,10 @@
 {
   "user": "dnafam",
   "url": "https://www.discogs.com/user/dnafam/collection",
-  "fetched": "2026-08-30",
+  "fetched": "2026-08-31",
   "value": {
-    "minimum": "$1,229.86",
-    "median": "$1,971.56",
+    "minimum": "$1,229.81",
+    "median": "$1,972.07",
     "maximum": "$3,038.44"
   },
   "owners": [

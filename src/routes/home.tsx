@@ -83,7 +83,18 @@ export function Home() {
       {/* Matches PageShell's `pt-12 sm:pt-16` so the landing page starts at the
           same height off the nav as every other page. */}
       <section className="mx-auto max-w-6xl px-4 pt-12 pb-14 sm:px-6 sm:pt-16">
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start lg:gap-12">
+        {/* The photo sits beside the name from `md` up, not from `lg`. Stacked,
+            it is as wide as the shell, which puts a 912px portrait between the
+            buttons and the rest of the page and runs the hero to three screens
+            on a tablet.
+
+            Two column widths rather than one, because the left column has to
+            hold two things at once. The wordmark is set in `vw`, so it wants a
+            fixed share of the viewport however narrow its column gets, and the
+            button row needs about 360px before it breaks into three lines. A
+            column split that satisfies the wordmark alone still breaks the
+            buttons. */}
+        <div className="grid gap-10 md:grid-cols-[minmax(0,1fr)_18rem] md:items-start md:gap-12 lg:grid-cols-[minmax(0,1fr)_24rem]">
           <div>
             <h1 className="display text-hero">
               <span className="block">Dan</span>
@@ -159,12 +170,13 @@ export function Home() {
             {/* WebP, and two widths. The JPEG is half the size again as WebP
                 at the same quality, and the small screens that need the least
                 of it were being sent all 1067px of it. `sizes` describes what
-                the layout actually does: a fixed column beside the wordmark on
-                a wide screen, full width below that. */}
+                the layout actually does: a column beside the wordmark that
+                widens once, and full width below the split. Each value tracks a
+                grid track above, so a change to one is a change to both. */}
             <FramedPhoto
               src="/img/me1.webp"
               srcSet="/img/me1-768.webp 768w, /img/me1.webp 1067w"
-              sizes="(min-width: 1024px) 400px, 100vw"
+              sizes="(min-width: 1024px) 384px, (min-width: 768px) 288px, 100vw"
               alt={`${profile.name}, smiling, in a patterned shirt`}
               caption="Subject, smiling"
               width={1067}

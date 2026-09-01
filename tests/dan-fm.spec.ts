@@ -22,8 +22,8 @@ import type { Album, DanFmPayload } from "../src/lib/dan-fm";
  *
  * What the page does with these answers is `tests/dan-fm-page.spec.ts`, which
  * costs a browser and covers what a pure function cannot: that the station
- * light on screen is wired to `station()` below, and that the sentence under
- * the album agrees with it.
+ * light on screen is wired to `station()` below, and that the line under the
+ * album names the album the lamp was lit for.
  */
 
 /** What the throwaway `public/` holds, for the one row that names a cover. */
@@ -659,6 +659,46 @@ test.describe("what the build derives rather than trusts", () => {
 
     expect(log.albums[0].standout).toEqual({ name: "Harbour Lights", id: "" });
   });
+
+  test("a row that wrote no review is blank rather than absent", () => {
+    /*
+     * `/dan-fm` splits the review into paragraphs the moment it draws an album,
+     * so `review` has to be a string on every row or the page throws on the
+     * first one where it is not - and it throws while rendering, which takes
+     * the whole route down rather than leaving a gap on it.
+     *
+     * All three reach the page. A payload written before the sheet grew the
+     * column carries no field at all, `null` is what a job passing an empty
+     * cell straight through writes, and a number is what a half-succeeded fetch
+     * leaves behind.
+     */
+    for (const review of [undefined, null, 42]) {
+      const written = review === undefined ? row() : row({ review });
+
+      expect(loadLog({ log: doc([written]) }).albums[0].review, JSON.stringify(review)).toBe("");
+    }
+  });
+
+  test("a review keeps the blank lines its paragraphs are split on", () => {
+    /*
+     * The one field the build must not tidy. The cell behind it is text typed
+     * into a spreadsheet, where a newline is a break somebody meant, and the
+     * page turns every line with something on it into a paragraph. A reader
+     * that collapsed whitespace here - the way it collapses a tag two fields
+     * up - would hand the page one wall of text and lose the shape of
+     * everything ever written in that column, silently and for every album at
+     * once.
+     *
+     * Trimmed at the ends is the other half, and the pair has to be asserted
+     * together: a trim that reached inside would pass an assertion on the ends
+     * alone.
+     */
+    const log = loadLog({
+      log: doc([row({ review: "  First paragraph.\n\nSecond paragraph.\n\nThird.  " })]),
+    });
+
+    expect(log.albums[0].review).toBe("First paragraph.\n\nSecond paragraph.\n\nThird.");
+  });
 });
 
 test.describe("editing the log while the dev server runs", () => {
@@ -1011,19 +1051,8 @@ test.describe("what is playing", () => {
   });
 });
 
-/**
- * Late morning in the station's timezone on `date`.
- *
- * 18:00 UTC is 10:00 or 11:00 there depending on the season and never near a
- * midnight in it, so the instant lands on the date asked for without a test
- * having to know whether daylight saving is in force.
- */
-function middayOn(date: string): Date {
-  return new Date(`${date}T18:00:00Z`);
-}
-
 test.describe("the station light", () => {
-  test("an empty log is dead air with nothing to feature", async () => {
+  test("an empty log has nothing to feature and an unlit lamp", async () => {
     /*
      * Launch day, and every day after it until the job commits its first row -
      * the state the site actually ships in. Nothing here may throw, and
@@ -1032,90 +1061,30 @@ test.describe("the station light", () => {
      */
     const { station } = await danFm();
 
-    expect(station([], middayOn("2026-08-30"))).toEqual({
-      lamp: "dead-air",
-      featured: undefined,
-      silentDays: 0,
-    });
+    expect(station([])).toEqual({ lamp: "off-air", featured: undefined });
   });
 
-  test("the day's own album is on air", async () => {
+  test("an album in the log lights the lamp", async () => {
     const { station } = await danFm();
 
-    expect(station(dated("2026-08-30"), middayOn("2026-08-30"))).toMatchObject({
-      lamp: "on-air",
-      silentDays: 0,
-    });
+    expect(station(dated("2026-08-30"))).toMatchObject({ lamp: "on-air" });
   });
 
-  test("the morning after is standing by rather than dead air", async () => {
+  test("the lamp is decided by the log rather than by a clock", async () => {
     /*
-     * The ordinary state of the station every morning: a day's album is logged
-     * in the evening, so from midnight until then the newest row is
-     * yesterday's. Reading that as dead air would put the page's one alarming
-     * state on screen daily until it stopped meaning anything.
+     * An album logged one evening is what is playing the next day, so age is
+     * not currently what the light follows - having anything in the log is.
+     *
+     * Named for what it checks rather than for what it forbids. A rule about
+     * how stale the newest album may be would narrow this, and a case called
+     * "no elapsed time takes it off air" would have to be deleted to allow
+     * that, which reads as removing a guarantee rather than tightening one.
      */
     const { station } = await danFm();
 
-    expect(station(dated("2026-08-29"), middayOn("2026-08-30"))).toMatchObject({
-      lamp: "standing-by",
-      silentDays: 1,
-    });
-  });
-
-  test("a second silent day is dead air", async () => {
-    // The same boundary from the other side, and the point at which the lamp
-    // starts saying something rather than describing a normal morning.
-    const { station } = await danFm();
-
-    expect(station(dated("2026-08-28"), middayOn("2026-08-30"))).toMatchObject({
-      lamp: "dead-air",
-      silentDays: 2,
-    });
-  });
-
-  test("the silent days are counted rather than capped", async () => {
-    // `/dan-fm` prints this number in "Off air N days", so it is copy and not a
-    // flag: a count that saturated would say the same thing in week one as in
-    // month three.
-    const { station } = await danFm();
-
-    expect(station(dated("2026-08-20"), middayOn("2026-09-01")).silentDays).toBe(12);
-  });
-
-  test("the lamp turns over at the station's midnight, not the visitor's", async () => {
-    /*
-     * 04:00 UTC is 21:00 the evening before in California and 08:00 UTC is the
-     * small hours that follow, so a reader in London opening the page after
-     * their own midnight is still on the station's yesterday. Reading the
-     * visitor's clock would tell half the world the log had lapsed while that
-     * evening's album was on.
-     */
-    const { station } = await danFm();
-    const log = dated("2026-08-30");
-
-    expect(station(log, new Date("2026-08-31T04:00:00Z"))).toMatchObject({
+    expect(station(dated("2026-08-20"))).toMatchObject({
       lamp: "on-air",
-      silentDays: 0,
-    });
-    expect(station(log, new Date("2026-08-31T08:00:00Z"))).toMatchObject({
-      lamp: "standing-by",
-      silentDays: 1,
-    });
-  });
-
-  test("an album dated ahead of the station reads as on air rather than as dark", async () => {
-    /*
-     * The job holds a future row back rather than publishing it, so only a
-     * payload that got past it lands here. A station calling itself off air
-     * while a card sits under the lamp saying otherwise is the worse of the two
-     * wrong answers, and a negative distance is what produces it.
-     */
-    const { station } = await danFm();
-
-    expect(station(dated("2026-09-05"), middayOn("2026-08-30"))).toMatchObject({
-      lamp: "on-air",
-      silentDays: 0,
+      featured: expect.objectContaining({ date: "2026-08-20" }),
     });
   });
 
@@ -1128,7 +1097,7 @@ test.describe("the station light", () => {
      */
     const { station } = await danFm();
 
-    const now = station(dated("2026-08-25", "2026-08-30", "2026-08-20"), middayOn("2026-08-30"));
+    const now = station(dated("2026-08-25", "2026-08-30", "2026-08-20"));
 
     expect(now.featured?.date).toBe("2026-08-30");
     expect(now.lamp).toBe("on-air");
@@ -1145,25 +1114,7 @@ test.describe("the station light", () => {
 
     expect(albums.length, "no albums in the log - nothing below is being asked").toBeGreaterThan(0);
 
-    const when = middayOn("2026-08-30");
-
-    expect(station(undefined, when)).toEqual(station(albums, when));
-    expect(station(undefined, when).featured).toBeDefined();
-  });
-
-  test("a date the station cannot read leaves no NaN on the page", async () => {
-    /*
-     * The distance is absent rather than zero for a string that is not a date,
-     * and the station's stated fallback for that is nought days. Dropping the
-     * fallback subtracts its way to `NaN`, `Math.max` carries it through
-     * untouched, and the page prints "Off air NaN days" in the one line a
-     * reader checks to find out whether the station is working at all.
-     *
-     * The validator keeps such a row out of a build, so what is being asked
-     * here is what the fallback is worth, not whether anyone will file one.
-     */
-    const { station } = await danFm();
-
-    expect(station(dated("not a date"), middayOn("2026-08-30")).silentDays).toBe(0);
+    expect(station()).toEqual(station(albums));
+    expect(station().featured).toBeDefined();
   });
 });

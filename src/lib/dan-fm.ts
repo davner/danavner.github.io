@@ -53,6 +53,19 @@ export interface Album {
   skip: Track;
   /** The written review. May be empty; not every album gets a sentence. */
   take: string;
+  /**
+   * The long piece about the record. Every line with anything on it renders as
+   * its own paragraph, so a hard return inside one thought makes two. May be
+   * empty: a `take` is the sentence every album can carry, and this is the one
+   * some of them earn.
+   *
+   * Only the album being reviewed shows it. The front page's featured card
+   * renders it and a list of albums must not, because a page of them would be
+   * a page of essays rather than an archive. The album's own permalink is
+   * assumed to render it too, on the grounds that the permalink exists to be
+   * that album's full record - decide that there rather than inheriting it.
+   */
+  review: string;
   /** Up to three, blanks dropped. */
   tags: string[];
   /** A second score after living with it. `null` means the first one stands. */
@@ -112,40 +125,44 @@ export function mixtape(list: Album[] = albums): Album[] {
 }
 
 /**
- * How the log is running right now, and it is not a clock reading: what "lapsed"
- * means here is whether *yesterday* has an entry.
+ * Whether the station has anything on.
  *
- * Standing by is the ordinary state every morning - the day's album is logged in
- * the evening - so it is kept apart from dead air, which is the one that means
- * something.
+ * What currently lights it is having anything in the log at all. The newest
+ * album keeps the front page and keeps the light, because one logged at eleven
+ * at night is still what is playing the next day - a lamp reading the calendar
+ * would take it off the air at midnight while it was the only thing on.
+ *
+ * That is the present rule rather than a promise: what counts as too long since
+ * the last album is a question this deliberately does not ask yet, and a state
+ * added for it belongs here beside the two.
+ *
+ * The empty log is unlit. There is no album to be on air with, and a lit lamp
+ * over the launch-day panel would have the badge and the page under it saying
+ * opposite things.
  */
-export type Lamp = "on-air" | "standing-by" | "dead-air";
+export type Lamp = "on-air" | "off-air";
 
 export interface Station {
   lamp: Lamp;
-  /** The album on the front page: today's, or the last one to air. */
+  /** The newest album in the log, and the one the front page shows. */
   featured: Album | undefined;
-  /** Whole days from the last entry to today. 0 while on air. */
-  silentDays: number;
 }
 
-export function station(list: Album[] = albums, now?: Date): Station {
-  const today = stationDate(now);
+/**
+ * Takes no clock, because nothing it currently decides needs one: the featured
+ * album is the newest row, and the lamp follows whether there is one. A rule
+ * about how stale the newest album may be would need today's date passed in,
+ * and this is the one place that would change.
+ */
+export function station(list: Album[] = albums): Station {
   // Read off the dates rather than taking the head of the list, for the reason
   // `statsFor` does: the payload is newest-first, a caller's list need not be.
   const featured = list.reduce<Album | undefined>(
     (latest, entry) => (!latest || entry.date > latest.date ? entry : latest),
     undefined,
   );
-  if (!featured) return { lamp: "dead-air", featured: undefined, silentDays: 0 };
 
-  // Clamped at zero so a date ahead of the station's day still reads as on air.
-  // The job holds a future row back rather than publishing it, so this only
-  // catches a payload that got past it - and dark is the wrong answer there.
-  const silentDays = Math.max(daysApart(featured.date, today) ?? 0, 0);
-  const lamp: Lamp = silentDays === 0 ? "on-air" : silentDays === 1 ? "standing-by" : "dead-air";
-
-  return { lamp, featured, silentDays };
+  return { lamp: featured ? "on-air" : "off-air", featured };
 }
 
 /**

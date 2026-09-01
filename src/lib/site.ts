@@ -13,10 +13,11 @@ export const SITE_NAME = "Dan Avner";
  * reads as broken.
  *
  * It is the station's day on `/dan-fm` as well. "Today's album" has to mean the
- * same album everywhere, or a reader in Tokyo is told the station is off air
- * while it is playing - so the footer's date and the lamp measure a day the
- * same way, from here. Vite's config reads it too, which is why it lives beside
- * the nav rather than in the route that lights the lamp.
+ * same album everywhere rather than whichever one the reader's own clock lands
+ * on, so `stationDate` in `lib/dan-fm.ts` reads its day from here, and
+ * `scripts/update-dan-fm.mjs` mirrors the zone to decide which rows are dated
+ * far enough ahead to hold back. Vite's config reads it too, which is why it
+ * lives beside the nav rather than inside a route.
  */
 export const SITE_TIME_ZONE = "America/Los_Angeles";
 

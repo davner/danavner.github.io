@@ -83,6 +83,7 @@ const COLUMNS = [
   "Standout",
   "Skip",
   "Take",
+  "Review",
   "Tag1",
   "Tag2",
   "Tag3",
@@ -441,6 +442,11 @@ function collectAlbums(rows, today) {
       standout: { name: cell(record, "Standout"), id: "" },
       skip: { name: cell(record, "Skip"), id: "" },
       take: cell(record, "Take"),
+      // The long piece, and free text like `take`. A cell holding several
+      // paragraphs is the ordinary case, so `cell`'s trim at the ends is
+      // deliberately all that happens to it - the newlines inside are what the
+      // page splits on.
+      review: cell(record, "Review"),
       tags: [
         ...new Set(["Tag1", "Tag2", "Tag3"].map((column) => cell(record, column)).filter(Boolean)),
       ],

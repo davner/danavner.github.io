@@ -136,6 +136,7 @@ const COLUMNS = [
   "Standout",
   "Skip",
   "Take",
+  "Review",
   "Tag1",
   "Tag2",
   "Tag3",
@@ -185,6 +186,7 @@ function blankAlbum(date: string): Record<string, unknown> {
     standout: { name: "", id: "" },
     skip: { name: "", id: "" },
     take: "",
+    review: "",
     tags: [],
     later: null,
     spotifyId: "",
@@ -523,6 +525,44 @@ test.describe("reading the header", () => {
     expect(payload.albums).toHaveLength(1);
   });
 
+  test("a review written in paragraphs survives a published export", async () => {
+    /*
+     * The routine shape of the sheet now that a row carries a long piece, and
+     * the combination nothing else here covers: a cell with newlines inside it,
+     * in a body whose own lines end CRLF, with another row under it.
+     *
+     * A reader that took the wrong thing for the end of a record either stops
+     * the row inside the review or files everything below it one row late, and
+     * both of those arrive as albums rather than as anything anyone would see.
+     * The second row is the whole point of the second row.
+     *
+     * Compared as the lines with something on them rather than byte for byte,
+     * because that is what the page draws: an export writes the newlines inside
+     * a cell the way it writes the ones between rows, and `/dan-fm` trims each
+     * line before it makes a paragraph of it.
+     */
+    const older = addDays(TODAY, -1);
+    const payload = await wrote({
+      body: `\uFEFF${bodyUnder(
+        COLUMNS,
+        [
+          row({ Review: "First paragraph.\r\n\r\nSecond paragraph.\r\n\r\nThird." }),
+          row({ Date: older, Album: "Second Listen" }),
+        ],
+        "\r\n",
+      )}`,
+    });
+
+    expect(payload.albums.map((album) => album.date)).toEqual([TODAY, older]);
+
+    const paragraphs = payload.albums[0].review
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    expect(paragraphs).toEqual(["First paragraph.", "Second paragraph.", "Third."]);
+  });
+
   test("a blank line between rows is not a row", async () => {
     /*
      * A sheet with a gap left in it. Read as a record, a blank line is a row
@@ -589,30 +629,20 @@ test.describe("reading the header", () => {
      * Asserted against the whole album, so a surplus cell arriving under a
      * position rather than a name fails here rather than being committed.
      */
+    /*
+     * Padded out to the header's own width rather than by hand. A column added
+     * to the sheet slides a hand-counted row's surplus back under a name, and
+     * the case then passes while asking nothing at all - the two cells below
+     * have to start past the last column that has one, or this is a test about
+     * `Streak`.
+     */
+    const named: string[] = COLUMNS.map((column) => (column === "Score" ? "4" : ""));
+    named[COLUMNS.indexOf("Date")] = TODAY;
+    named[COLUMNS.indexOf("Artist")] = "The Standing Wave";
+    named[COLUMNS.indexOf("Album")] = "Low Tide Signals";
+
     const payload = await wrote({
-      body: `${sheet()}${ragged(
-        TODAY,
-        "The Standing Wave",
-        "Low Tide Signals",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "4",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "a note to self",
-        "and another",
-      )}`,
+      body: `${sheet()}${ragged(...named, "a note to self", "and another")}`,
     });
 
     expect(payload.albums).toEqual([blankAlbum(TODAY)]);
@@ -949,6 +979,7 @@ test.describe("what the job writes", () => {
           Standout: "Low Tide",
           Skip: "Interlude",
           Take: "Holds up, quietly",
+          Review: "Two paragraphs of it.\n\nAnd the second one.",
           Tag1: "loud",
           Tag2: "warm",
           Later: "5",
@@ -973,6 +1004,7 @@ test.describe("what the job writes", () => {
         standout: { name: "Low Tide", id: "" },
         skip: { name: "Interlude", id: "" },
         take: "Holds up, quietly",
+        review: "Two paragraphs of it.\n\nAnd the second one.",
         tags: ["loud", "warm"],
         later: 5,
         spotifyId: "1A2b3C4d5E6f7G8h9I0jKl",

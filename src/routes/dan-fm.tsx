@@ -17,7 +17,6 @@ import {
   station,
   statsFor,
   type Album,
-  type Station,
 } from "@/lib/dan-fm";
 import { longDate } from "@/lib/dates";
 import { PAGE_META } from "@/lib/routes";
@@ -42,26 +41,6 @@ const STAR = "★";
 const COVER_SIZES =
   "(min-width: 1024px) 352px, (min-width: 768px) 288px, (min-width: 640px) 384px, 100vw";
 
-/** A station with an album to show, which is every state but launch day. */
-type Playing = Station & { featured: Album };
-
-/**
- * The line above the album, saying which album this is and why it is the one on
- * screen. It is the only place the lamp's three states differ in words, so the
- * copy and the light cannot drift apart.
- *
- * Standing by gets a sentence rather than a count, because a day's album is
- * logged in the evening and every morning would otherwise open on what reads
- * like a failure. Dead air is the one that means something, so it counts.
- */
-function statusLine({ lamp, featured, silentDays }: Playing): string {
-  const when = longDate(featured.date);
-
-  if (lamp === "on-air") return `${when} · Day ${featured.ordinal}`;
-  if (lamp === "standing-by") return `Today's album is not logged yet · Last on air ${when}`;
-  return `Off air ${silentDays} days · Last spin ${when}`;
-}
-
 /** "1998 pressing" rather than "1998" where the year came off a reissue. */
 function yearLabel(album: Album): string {
   if (album.year === null) return "";
@@ -69,8 +48,7 @@ function yearLabel(album: Album): string {
 }
 
 /** One album, at the size the front page gives the current one. */
-function TodayCard({ playing }: { playing: Playing }) {
-  const album = playing.featured;
+function TodayCard({ album }: { album: Album }) {
   const attribution = album.from ? `From ${album.from}` : "Own pick";
 
   return (
@@ -97,7 +75,12 @@ function TodayCard({ playing }: { playing: Playing }) {
       </div>
 
       <div>
-        <p className="readout-dim">{statusLine(playing)}</p>
+        {/* Which day of the log this is, and which day it was heard. The date
+            carries the freshness on its own, which matters while the lamp does
+            not: it currently lights for the newest album however old that is. */}
+        <p className="readout-dim">
+          {longDate(album.date)} · Day {album.ordinal}
+        </p>
 
         <h3 className="display mt-4 text-feature text-balance">{album.album}</h3>
 
@@ -140,6 +123,12 @@ function TodayCard({ playing }: { playing: Playing }) {
         ) : null}
 
         <Tracks album={album} />
+
+        {/* Last of the writing, under the spec block rather than over it: the
+            score, the tags and the two tracks are scanned in a second, and a
+            reader who wants them should not have to pass a thousand words to
+            reach them. The Spotify link then sits where the reading ends. */}
+        <AlbumReview review={album.review} />
 
         {album.url ? (
           <a
@@ -224,6 +213,40 @@ function Tracks({ album }: { album: Album }) {
   );
 }
 
+/**
+ * The long piece about the record, set as prose rather than as a readout.
+ *
+ * Local to this route the way `Tracks` is, and for the same reason: the front
+ * page is the only thing rendering an album in full today. The album's own
+ * permalink is the second one, and the moment it exists this is what it lifts
+ * out - the way `NowProse` was lifted the day a second route needed the same
+ * writing to look like the same writing.
+ *
+ * `prose-dan` at `max-w-2xl` is how `/now` and `/blog` set body copy, so the
+ * measure and the leading a review is read at are the site's, not this page's.
+ *
+ * Split rather than parsed. The cell behind it is text somebody typed into a
+ * spreadsheet, where a newline is a deliberate break and there is no soft wrap
+ * to undo - so every line that has anything on it is a paragraph, and a stray
+ * `#` or `*` stays the character it was typed as instead of becoming markup.
+ */
+function AlbumReview({ review }: { review: string }) {
+  const paragraphs = review
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (paragraphs.length === 0) return null;
+
+  return (
+    <div className="prose-dan mt-10 max-w-2xl">
+      {paragraphs.map((paragraph, index) => (
+        <p key={index}>{paragraph}</p>
+      ))}
+    </div>
+  );
+}
+
 export function DanFm() {
   useDocumentMeta(META.title, META.description);
 
@@ -247,7 +270,7 @@ export function DanFm() {
 
       <Section title="Today">
         {now.featured ? (
-          <TodayCard playing={{ ...now, featured: now.featured }} />
+          <TodayCard album={now.featured} />
         ) : (
           <div className="max-w-xl">
             <h3 className="display text-feature">Nothing on yet</h3>

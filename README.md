@@ -948,18 +948,23 @@ reason the sheet holds nothing that is not meant to be published.
 ### The columns
 
 Read by name, never by position, so inserting a column in the sheet cannot shift
-every field one to the left. All nineteen have to be present or the run fails
+every field one to the left. All twenty have to be present or the run fails
 before a single row is trusted:
 
 ```
 Date, Artist, Album, Link, Year, Genre, Source, From, Score, Stars, Shelf,
-Standout, Skip, Take, Tag1, Tag2, Tag3, Later, Streak
+Standout, Skip, Take, Review, Tag1, Tag2, Tag3, Later, Streak
 ```
 
 `Stars` and `Streak` are read and thrown away - the score is the number that
 counts, and the streak is a spreadsheet helper - but their absence means the
 header is not this log's, so they are still required. Any column beyond these
-nineteen is ignored, so adding a working column to the sheet is safe.
+twenty is ignored, so adding a working column to the sheet is safe.
+
+`Take` and `Review` are both free text, at two different lengths. `Take` is the
+verdict in a sentence or two. `Review` is the long piece, and only the album
+being reviewed shows it: the front page renders the featured album's, and a list
+of albums does not render any. Either may be blank.
 
 That header check is also what catches a sheet that is no longer published,
 because Google answers that with 200 and a page of HTML rather than an error.
@@ -1051,9 +1056,9 @@ time.
 
 Six runs a day at `7 6,10,14,18,22,2 * * *`, which is 03:07 to 23:07 in
 California and an hour earlier in winter. The hours are listed rather than
-written `*/4` for a reason the workflow header spells out: `*/4` puts the last
-run of the station day at 21:07 local, and an album logged after that is dated
-yesterday by the time anything reads it.
+written `*/4` for a reason the workflow header spells out: an album is typed in
+the evening, and `*/4` puts the last evening run at 21:07 local, so anything
+logged after that waits until 01:07 to reach the page.
 
 ---
 

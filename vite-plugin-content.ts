@@ -603,6 +603,7 @@ interface DanFmAlbumJson {
   standout: DanFmTrackJson;
   skip: DanFmTrackJson;
   take: string;
+  review: string;
   tags: string[];
   later: number | null;
   spotifyId: string;
@@ -832,6 +833,10 @@ function readDanFm(root: string, publicDir: string, seed: boolean) {
       standout: danFmTrack(entry.standout),
       skip: danFmTrack(entry.skip),
       take: asTrimmedString(entry.take),
+      // Free text like `take`, and tolerated blank for the same reason: not
+      // every album gets a piece written about it. Trimmed at the ends only -
+      // the newlines inside are what the page splits into paragraphs.
+      review: asTrimmedString(entry.review),
       tags: asStringArray(entry.tags)
         .map((tag) => tag.trim())
         .filter(Boolean),

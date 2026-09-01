@@ -16,14 +16,17 @@ on:
   schedule:
     # 03:07 / 07:07 / 11:07 / 15:07 / 19:07 / 23:07 station-local in PDT.
     #
-    # The hours are listed rather than written `*/4` on purpose. The point of
-    # six runs is that ON AIR is reachable at all: the lamp reads today's album
-    # only while a row dated today is deployed, so the last run has to land
-    # after he logs. `*/4` puts that run at 21:07 PDT, and anything logged later
-    # is dated yesterday by the time it is read. Do not tidy this back to `*/4`.
+    # The hours are listed rather than written `*/4` on purpose. What the
+    # schedule buys is how soon a newly logged album is on the page, and the
+    # albums are typed in the evening: a run at 23:07 local catches the evening
+    # it was logged, so a row added at eleven is deployed that night. `*/4` puts
+    # the last evening run at 21:07 and leaves anything after it waiting for
+    # 01:07. Both are four-hourly, so the worst case is the same four hours
+    # either way - what differs is whether a run lands at the end of the day the
+    # logging actually happens on. Do not tidy this back to `*/4`.
     #
     # These are UTC, so the station-local times shift an hour in PST: 02:07 /
-    # 06:07 / 10:07 / 14:07 / 18:07 / 22:07, and the evening cutoff moves back
+    # 06:07 / 10:07 / 14:07 / 18:07 / 22:07, and the last evening run moves back
     # with them. Both are clear of vinyl (08:42), fortnite (09:17) and comics
     # (Mon 09:42) by at least 25 minutes. Scheduled runs drift under GitHub's
     # load, so that spacing is hygiene and the rebase below is the real

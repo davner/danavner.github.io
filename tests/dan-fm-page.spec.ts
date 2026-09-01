@@ -5,28 +5,18 @@ import { MAX_SCORE } from "../src/lib/dan-fm-summary";
 import { albumsOnDisk } from "./dan-fm";
 
 /**
- * What `/dan-fm` puts on screen, at four different todays.
+ * What `/dan-fm` puts on screen.
  *
- * The station light is a reading of the calendar, so a test that asserted one
- * of its states without owning the clock would mean something different
- * tomorrow and nothing at all next month. Every case here fixes the browser's
- * clock before the bundle runs and asserts against a day it chose.
- *
- * `station()` takes its today from `new Date()` through an `Intl` formatter
- * rather than from `Date.now()`, so whether a fake clock reaches it is a
- * question rather than an assumption - and the on-air case answers it, because
- * the day it fixes is in the past and the page cannot produce that state
- * without the fake clock having got through.
- *
- * `page.clock.setFixedTime` rather than `install`: only `Date` needs faking.
- * The lamp is decided once while React renders, and freezing the timers React
- * schedules on would be a second thing to go wrong for no coverage.
+ * Nothing here fixes a clock, and that is the point rather than an omission:
+ * what the lamp currently reads is the log rather than the calendar, so the
+ * page renders the same way at any hour and a case owning the browser's clock
+ * would be paying for a variable not in today's answer. Give the lamp a rule
+ * about staleness and the clock comes back here with it.
  *
  * What the states mean is settled without a browser in `tests/dan-fm.spec.ts`,
  * over `station()` and a handful of dated rows. These exist for the half that
  * cannot answer: that the lamp on the page is wired to that function at all,
- * that the sentence under the album is the one its state calls for, and that
- * the two cannot drift apart.
+ * and that the line under the album names the album it is drawn from.
  */
 
 /**
@@ -43,7 +33,7 @@ const NEWEST = [...LOGGED].sort((a, b) => a.date.localeCompare(b.date)).at(-1);
  * What that album is, defaulted rather than asserted.
  *
  * A run with no log on disk at all - someone has deleted the committed fixture
- * - is answered in `openOn` below, and these are what let it get that far: an
+ * - is answered in `openDanFm` below, and these are what let it get that far: an
  * argument is evaluated before the function that would have stood the test
  * down, so reading the date straight off an absent album throws on the way in
  * and reports a `TypeError` instead of the reason.
@@ -51,6 +41,35 @@ const NEWEST = [...LOGGED].sort((a, b) => a.date.localeCompare(b.date)).at(-1);
 const NEWEST_DATE = NEWEST?.date ?? "1970-01-01";
 const NEWEST_TITLE = NEWEST?.album ?? "";
 const NEWEST_SCORE = NEWEST?.score ?? 0;
+const NEWEST_REVIEW = NEWEST?.review ?? "";
+
+/**
+ * The paragraphs a review is meant to become: every line with something on it,
+ * trimmed.
+ *
+ * Spelled out here rather than imported, because the split is the rule the page
+ * is being held to rather than a helper it offers. A cell somebody typed into a
+ * spreadsheet has no soft wrap to undo, so a newline in it is a break that was
+ * meant.
+ */
+function paragraphsOf(review: string): string[] {
+  return review
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+/**
+ * The reviews the log holds against albums that are not the featured one.
+ *
+ * These are the whole of the negative case: the review belongs to the album
+ * being reviewed, and the front page is a page about one album. The committed
+ * fixture carries more than one review, so this is reachable without anything
+ * being added to it.
+ */
+const OTHER_REVIEWS = LOGGED.filter((album) => album.date !== NEWEST_DATE && album.review).map(
+  (album) => album.review,
+);
 
 /**
  * "August 28, 2026" from a `YYYY-MM-DD` date, spelled by ICU rather than by
@@ -68,21 +87,8 @@ function spelled(date: string): string {
   return SPELLED.format(new Date(`${date}T00:00:00Z`));
 }
 
-/** The station day `days` on from `date`, counted here rather than by the page. */
-function daysAfter(date: string, days: number): string {
-  const at = new Date(`${date}T00:00:00Z`);
-  at.setUTCDate(at.getUTCDate() + days);
-  return at.toISOString().slice(0, 10);
-}
-
-/**
- * Opens `/dan-fm` with the station's day set to `on`.
- *
- * 18:00 UTC is late morning in the station's timezone in either half of the
- * year and never near a midnight in it, so the instant lands on the date asked
- * for without the test having to know whether daylight saving is in force.
- */
-async function openOn(page: Page, on: string) {
+/** Opens `/dan-fm` on a build that has a log to show. */
+async function openDanFm(page: Page) {
   /*
    * Standing down for a missing log is a local courtesy and nothing more: the
    * fixture is committed, so a CI checkout without one has had it deleted. A
@@ -95,7 +101,6 @@ async function openOn(page: Page, on: string) {
   );
   expect(NEWEST, "the committed album log is not on disk").toBeDefined();
 
-  await page.clock.setFixedTime(new Date(`${on}T18:00:00Z`));
   await page.goto("/dan-fm");
   await page.getByRole("heading", { level: 1, name: "dan.fm" }).waitFor();
 
@@ -115,21 +120,21 @@ async function openOn(page: Page, on: string) {
 
 /**
  * What the badge says before its label, for a screen reader that would
- * otherwise meet three radio terms with nothing saying what they are about.
- * Visually hidden but part of the badge's text, so every assertion on what the
- * lamp reads has to carry it.
+ * otherwise meet radio terms with nothing saying what they are about. Visually
+ * hidden but part of the badge's text, so every assertion on what the lamp
+ * reads has to carry it.
  */
 const LAMP_PREFIX = "Station status: ";
 
 /**
  * The station badge.
  *
- * One locator for all three labels rather than one per state, so a page
- * rendering two lamps at once fails on the count instead of passing on
- * whichever one was found first.
+ * One locator for every label rather than one per state, so a page rendering
+ * two lamps at once fails on the count instead of passing on whichever one was
+ * found first.
  */
 function lamp(page: Page): Locator {
-  return page.getByText(new RegExp(`^${LAMP_PREFIX}(On air|Standing by|Dead air)$`));
+  return page.getByText(new RegExp(`^${LAMP_PREFIX}(On air|Off air)$`));
 }
 
 /** The section under `heading`, which is how the page is divided. */
@@ -142,6 +147,20 @@ function section(page: Page, heading: string): Locator {
 /** The Today section, which is where the status line and the album card are. */
 function today(page: Page): Locator {
   return section(page, "Today");
+}
+
+/**
+ * The long piece about the record.
+ *
+ * Found by the class rather than by its words, because `prose-dan` is the
+ * site's body-copy contract and not this page's private detail: `/now` and
+ * `/blog` set their writing in it, and a review that arrived outside it would
+ * be read at a measure and a leading nothing else on the site uses. Locating on
+ * the text instead would find the paragraphs of a review set as anything at
+ * all.
+ */
+function review(scope: Locator | Page): Locator {
+  return scope.locator(".prose-dan");
 }
 
 /**
@@ -209,8 +228,10 @@ async function tokens(page: Page) {
 }
 
 test.describe("the station light", () => {
-  test("the newest album's own day reads on air", async ({ page }) => {
-    await openOn(page, NEWEST_DATE);
+  test("the log's newest album is on air, and the line under it says which day it is", async ({
+    page,
+  }) => {
+    await openDanFm(page);
 
     await expect(lamp(page)).toHaveText(`${LAMP_PREFIX}On air`);
 
@@ -218,56 +239,51 @@ test.describe("the station light", () => {
      * The ordinal is the album's position counted from the oldest, so the
      * newest one is the last day of the log. `tests/dan-fm.spec.ts` is what
      * holds the numbering to positions rather than to days.
+     *
+     * The date is the whole of what a reader judges the log's freshness by now
+     * that the lamp does not, so a card that lost it would leave the page
+     * claiming to be on air with nothing saying since when.
      */
-    await expect(today(page)).toContainText(`${spelled(NEWEST_DATE)} · Day ${LOGGED.length}`);
-    await expect(today(page)).not.toContainText("Last on air");
-    await expect(today(page)).not.toContainText("Off air");
-  });
-
-  test("the morning after reads standing by, and says so rather than counting", async ({
-    page,
-  }) => {
-    await openOn(page, daysAfter(NEWEST_DATE, 1));
-
-    await expect(lamp(page)).toHaveText(`${LAMP_PREFIX}Standing by`);
-
-    /*
-     * A sentence and not a number, because the day's album is logged in the
-     * evening: every morning would otherwise open on "Off air 1 days" and read
-     * like a failure of the thing rather than the ordinary shape of it.
-     */
-    await expect(today(page)).toContainText(
-      `Today's album is not logged yet · Last on air ${spelled(NEWEST_DATE)}`,
-    );
-    await expect(today(page)).not.toContainText("Off air");
-  });
-
-  test("a second silent day reads dead air, and counts the days", async ({ page }) => {
-    await openOn(page, daysAfter(NEWEST_DATE, 2));
-
-    await expect(lamp(page)).toHaveText(`${LAMP_PREFIX}Dead air`);
-    await expect(today(page)).toContainText(`Off air 2 days · Last spin ${spelled(NEWEST_DATE)}`);
-    await expect(today(page)).not.toContainText("Last on air");
-  });
-
-  test("an album dated ahead of the station still reads on air", async ({ page }) => {
-    /*
-     * The station a day behind its own newest row, which is what a payload that
-     * got past the job's future-row guard looks like from the page. Clamped, so
-     * the lamp lights and the line above the album is the on-air one - a badge
-     * saying the station is off while the card under it shows an album is the
-     * worse of the two wrong answers.
-     */
-    await openOn(page, daysAfter(NEWEST_DATE, -1));
-
-    await expect(lamp(page)).toHaveText(`${LAMP_PREFIX}On air`);
     await expect(today(page)).toContainText(`${spelled(NEWEST_DATE)} · Day ${LOGGED.length}`);
   });
 });
 
+/**
+ * Where the lit halo's right edge falls, and where the label's first character
+ * starts, in page coordinates.
+ *
+ * The glow is a pseudo-element and has no node to measure, so its box is
+ * computed from the dot it hangs off plus the offsets `::before` resolves to -
+ * which is the whole of what decides where it lands. The label is a bare text
+ * node between the two spans, so a range over it is the only handle on it.
+ */
+async function haloAndLabel(page: Page) {
+  return lamp(page).evaluate((badge) => {
+    const dot = badge.querySelector("[aria-hidden]");
+    if (!dot) return null;
+
+    const words = Array.from(badge.childNodes).find(
+      (node) => node.nodeType === Node.TEXT_NODE && (node.textContent ?? "").trim(),
+    );
+    if (!words) return null;
+
+    const glow = getComputedStyle(dot, "::before");
+    const range = document.createRange();
+    range.selectNodeContents(words);
+
+    return {
+      halo:
+        dot.getBoundingClientRect().left +
+        Number.parseFloat(glow.left) +
+        Number.parseFloat(glow.width),
+      label: range.getBoundingClientRect().left,
+    };
+  });
+}
+
 test.describe("how the lamp is painted", () => {
   test("the lit lamp is the ember token, and carries the halo", async ({ page }) => {
-    await openOn(page, NEWEST_DATE);
+    await openDanFm(page);
     await expect(lamp(page)).toHaveText(`${LAMP_PREFIX}On air`);
 
     const ink = await tokens(page);
@@ -279,29 +295,109 @@ test.describe("how the lamp is painted", () => {
     expect(lit.halo, "the on-air halo is not being drawn").toContain("radial-gradient");
   });
 
-  /*
-   * Both unlit states, because they are one treatment by design and only a test
-   * that measures both can say so. Lighting standing by would claim the station
-   * is on when it is not; dimming dead air below it would rank "not logged yet"
-   * under "nothing has aired in a week".
-   */
-  for (const [state, label, days] of [
-    ["standing by", "Standing by", 1],
-    ["dead air", "Dead air", 2],
-  ] as const) {
-    test(`${state} is unlit: the border and muted tokens, and no halo`, async ({ page }) => {
-      await openOn(page, daysAfter(NEWEST_DATE, days));
-      await expect(lamp(page)).toHaveText(`${LAMP_PREFIX}${label}`);
+  test("the halo dies in the gap rather than reaching under the label", async ({ page }) => {
+    /*
+     * The reason the glow is on the dot at all, and the failure the case above
+     * cannot see: it asks whether the dot is glowing, which stays true of a
+     * halo widened until it laps under the text. Ember behind ember-coloured
+     * words is a contrast ratio axe reports as indeterminate rather than as a
+     * violation, so nothing else in the suite would say a word about it.
+     *
+     * Two numbers rather than a screenshot, because the distance is small on
+     * purpose: the glow reaches eight of the ten pixels between the dot and
+     * the first character, and every pixel of that margin is deliberate.
+     */
+    await openDanFm(page);
+    await expect(lamp(page)).toHaveText(`${LAMP_PREFIX}On air`);
 
-      const ink = await tokens(page);
-      const unlit = await paint(page);
+    const box = await haloAndLabel(page);
+    expect(box, "the badge no longer has a dot and a label to measure").not.toBeNull();
 
-      expect(unlit.ink).toBe(ink.muted);
-      expect(unlit.border).toBe(ink.border);
-      expect(unlit.dot).toBe(ink.border);
-      expect(unlit.halo, "an unlit lamp is glowing").toBe("none");
-    });
-  }
+    expect(
+      box!.halo,
+      "the on-air halo reaches the label, which puts ember behind ember text",
+    ).toBeLessThanOrEqual(box!.label);
+  });
+
+  test("nothing paints a second glow behind the badge", async ({ page }) => {
+    /*
+     * The other way the same ember lands on the label. The check above measures
+     * the dot's own halo and would go on passing beside a glow added to the
+     * badge, which is where this treatment started and where it must not go
+     * back to - the badge has text on it and the dot has nothing to read.
+     */
+    await openDanFm(page);
+    await expect(lamp(page)).toHaveText(`${LAMP_PREFIX}On air`);
+
+    const behind = await lamp(page).evaluate((badge) => [
+      getComputedStyle(badge, "::before").backgroundImage,
+      getComputedStyle(badge, "::after").backgroundImage,
+    ]);
+
+    expect(behind, "the badge is painting something behind its own text").toEqual(["none", "none"]);
+  });
+});
+
+test.describe("the album's review", () => {
+  test("the featured album's review is on the page, one paragraph per written line", async ({
+    page,
+  }) => {
+    /*
+     * Element by element rather than as one blob of text. A review handed over
+     * whole - or run through a markdown parser, which the cell behind it was
+     * never written for - puts every word on the page and would satisfy any
+     * assertion that stopped at whether the words were there.
+     */
+    await openDanFm(page);
+
+    expect(
+      NEWEST_REVIEW,
+      "the newest album in the log carries no review - nothing below is being asked",
+    ).not.toBe("");
+
+    await expect(review(today(page))).toHaveCount(1);
+
+    const written = await review(today(page)).evaluate((block) =>
+      Array.from(block.children).map((child) => ({ tag: child.tagName, text: child.textContent })),
+    );
+
+    expect(written.map((child) => child.text)).toEqual(paragraphsOf(NEWEST_REVIEW));
+    expect(
+      [...new Set(written.map((child) => child.tag))],
+      "the review is being rendered as something other than paragraphs",
+    ).toEqual(["P"]);
+  });
+
+  test("no other album's review reaches the front page", async ({ page }) => {
+    /*
+     * The owner's rule, and the half the case above cannot see: the review
+     * belongs to the album being reviewed. A card reaching for the log rather
+     * than for the album it was handed, or a section that started printing the
+     * writing beside the rows it lists, turns the front page into a stack of
+     * essays and passes every assertion about the featured one on the way.
+     *
+     * Asserted twice over, because the two failures look nothing alike: a
+     * second block of prose anywhere on the page, and another album's words
+     * rendered without one.
+     */
+    await openDanFm(page);
+
+    expect(
+      OTHER_REVIEWS.length,
+      "no album but the featured one has a review - nothing below is being asked",
+    ).toBeGreaterThan(0);
+
+    await expect(review(page)).toHaveCount(1);
+
+    for (const other of OTHER_REVIEWS) {
+      const opening = paragraphsOf(other)[0];
+
+      await expect(
+        page.getByText(opening),
+        `an album that is not the featured one has its review on the front page: "${opening.slice(0, 60)}..."`,
+      ).toHaveCount(0);
+    }
+  });
 });
 
 test.describe("the rating mark", () => {
@@ -317,7 +413,7 @@ test.describe("the rating mark", () => {
      * them drift and the page names a score out of a number the log cannot
      * reach.
      */
-    await openOn(page, NEWEST_DATE);
+    await openDanFm(page);
 
     await expect(today(page).getByRole("img", { name: /^Rated / })).toHaveAttribute(
       "aria-label",
@@ -332,7 +428,7 @@ test.describe("the rating mark", () => {
      * icon. A mark reaching only one of them draws either an empty track under
      * a partial row or a full row over nothing.
      */
-    await openOn(page, NEWEST_DATE);
+    await openDanFm(page);
 
     const rows = await today(page)
       .getByRole("img", { name: /^Rated / })
@@ -354,7 +450,7 @@ test.describe("the rating mark", () => {
      * percentage of a row of glyphs, which is exactly the thing a different
      * glyph could break.
      */
-    await openOn(page, NEWEST_DATE);
+    await openDanFm(page);
 
     const width = await today(page)
       .getByRole("img", { name: /^Rated / })
@@ -449,7 +545,7 @@ test.describe("what the page claims about the log", () => {
      * Asserted while the station is on air, because that is the state a reader
      * arrives in the moment the log starts working.
      */
-    await openOn(page, NEWEST_DATE);
+    await openDanFm(page);
 
     // Named, not just present: the launch-day panel is an `h3` in the same
     // place, so a build with no albums would otherwise satisfy this line and

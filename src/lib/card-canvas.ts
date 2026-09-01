@@ -158,10 +158,33 @@ export async function createCard(): Promise<{
 }
 
 /**
+ * The longest run of `word` that fits `maxWidth`, and never fewer than one
+ * character: a limit too narrow for a single glyph still has to end the line
+ * somewhere, or the caller asks again for a piece of the same string forever.
+ *
+ * Stepped in code points rather than UTF-16 units, so a surrogate pair is not
+ * halved into two replacement characters.
+ */
+function cut(context: CanvasRenderingContext2D, word: string, maxWidth: number): string {
+  let head = "";
+  for (const character of word) {
+    if (head && context.measureText(head + character).width > maxWidth) break;
+    head += character;
+  }
+  return head;
+}
+
+/**
  * Wraps text to `maxWidth`, returning the lines. Assumes the font is set.
  *
  * `firstWidth` narrows the first line only, which is how the band list leaves
  * room for the `w/` drawn beside it.
+ *
+ * Whitespace is the only seam a line breaks on, so a token carrying none - a
+ * pasted URL, an id, a hashtag - is broken mid-token where it stops fitting.
+ * A canvas clips nothing: left whole, such a token is drawn straight off the
+ * sheet and the card is ruined without anything reporting it. This is
+ * `overflow-wrap: anywhere`, for the same reason a browser offers it.
  */
 export function wrap(
   context: CanvasRenderingContext2D,
@@ -171,15 +194,29 @@ export function wrap(
 ): string[] {
   const lines: string[] = [];
   let line = "";
+  const limit = () => (lines.length === 0 ? firstWidth : maxWidth);
 
   for (const word of text.split(/\s+/).filter(Boolean)) {
-    const candidate = line ? `${line} ${word}` : word;
-    const limit = lines.length === 0 ? firstWidth : maxWidth;
-    if (line && context.measureText(candidate).width > limit) {
-      lines.push(line);
-      line = word;
-    } else {
-      line = candidate;
+    let rest = word;
+
+    while (rest) {
+      const candidate = line ? `${line} ${rest}` : rest;
+      if (context.measureText(candidate).width <= limit()) {
+        line = candidate;
+        break;
+      }
+
+      // A line with something on it gives way first, so a token is only ever
+      // broken where the whole line is the token and it still does not fit.
+      if (line) {
+        lines.push(line);
+        line = "";
+        continue;
+      }
+
+      const head = cut(context, rest, limit());
+      lines.push(head);
+      rest = rest.slice(head.length);
     }
   }
 

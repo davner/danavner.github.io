@@ -963,7 +963,9 @@ twenty is ignored, so adding a working column to the sheet is safe.
 `Take` and `Review` are both free text, at two different lengths. `Take` is the
 verdict in a sentence or two. `Review` is the long piece, and only the album
 being reviewed shows it: the front page renders the featured album's, and a list
-of albums does not render any. Either may be blank.
+of albums does not render any. The share poster is the one place it is cut
+rather than withheld, setting up to two lines of its opening under the take.
+Either may be blank.
 
 That header check is also what catches a sheet that is no longer published,
 because Google answers that with 200 and a page of HTML rather than an error.

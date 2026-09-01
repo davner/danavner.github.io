@@ -7,13 +7,16 @@ import { DanFmCharts } from "@/components/dan-fm-charts";
 import { DanFmMixtape } from "@/components/dan-fm-mixtape";
 import { OnAir } from "@/components/on-air";
 import { PageHeader, PageShell, Section } from "@/components/page";
+import { ShareAlbum } from "@/components/share-album";
 import { SourceLine } from "@/components/source-line";
 import { SpotifyCredit } from "@/components/spotify-credit";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { albums, log, station, statsFor, yearLabel, type Album } from "@/lib/dan-fm";
 import { albumUrl } from "@/lib/dan-fm-summary";
 import { longDate } from "@/lib/dates";
 import { PAGE_META } from "@/lib/routes";
+import { SITE_URL } from "@/lib/site";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
 const META = PAGE_META["/dan-fm"];
@@ -94,20 +97,40 @@ function TodayCard({ album }: { album: Album }) {
         {/* Last of the writing, under the spec block rather than over it: the
             score, the tags and the two tracks are scanned in a second, and a
             reader who wants them should not have to pass a thousand words to
-            reach them. The Spotify link then sits where the reading ends. */}
+            reach them. The actions then sit where the reading ends. */}
         <AlbumReview review={album.review} className="mt-10" />
 
-        {album.url ? (
-          <a
-            href={album.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="readout mt-8 inline-flex items-center gap-2 border border-border px-5 py-3 text-muted-foreground transition-colors hover:border-ember hover:bg-ember/5 hover:text-ember"
-          >
-            Open on Spotify
-            <ArrowUpRight className="size-3.5" />
-          </a>
-        ) : null}
+        {/* The same pair the album's own page carries under its badges, in the
+            same order and at the same size, so the two surfaces do not offer
+            one album two sets of controls. The row owns the margin rather than
+            either control: the Spotify link is only there on the days the log
+            has an address for the record, and the space under the review is
+            not.
+
+            The share button carries the station's address rather than this
+            album's, because someone sharing the front page is sharing what is
+            on and tomorrow that is a different record. The poster is still this
+            album - it is what is on air at the moment the link is sent. */}
+        <div className="mt-8 flex flex-wrap items-center gap-3">
+          <ShareAlbum album={album} url={`${SITE_URL}/dan-fm`} />
+
+          {/* A plain anchor behind the button styling, and it stays one. An
+              embed or a play button would have this page reach Spotify on load,
+              which `tests/links.spec.ts` fails the build over. */}
+          {album.url ? (
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="readout rounded-none text-muted-foreground hover:border-ember hover:text-ember"
+            >
+              <a href={album.url} target="_blank" rel="noopener noreferrer">
+                Open on Spotify
+                <ArrowUpRight />
+              </a>
+            </Button>
+          ) : null}
+        </div>
       </div>
     </div>
   );

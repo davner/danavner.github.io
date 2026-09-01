@@ -31,37 +31,107 @@ const SLEEVE_HEIGHT = 760;
 const LINE = 56;
 const BODY_FONT = '400 40px "Inter Variable", system-ui, sans-serif';
 
-/** The rule over the footer, and the last line the take may reach. */
+/**
+ * The excerpt of the long review under the take: smaller and set in the dim
+ * ink, so the take stays the sentence the card is read for and this reads as
+ * the paragraph it was lifted from rather than as a second verdict.
+ */
+const MAX_REVIEW_LINES = 2;
+const REVIEW_LINE = 46;
+const REVIEW_FONT = '400 34px "Inter Variable", system-ui, sans-serif';
+
+/** The air between the take's last line and the excerpt's first. */
+const REVIEW_GAP = 36;
+
+/** The rule over the footer, and the last line the body may reach. */
 const FOOTER_TOP = HEIGHT - 300;
 const BODY_BOTTOM = FOOTER_TOP - 64;
 
 const MAX_WIDTH = WIDTH - PAD * 2;
 
 /**
- * As much of the take as the card holds, and whether anything was left out.
+ * `lines` cut to `capacity`, the last one marked where anything was left out.
  *
- * A take is one written sentence or three, so there are no paragraphs to cut
- * between the way a now entry has - the lines that fit are taken and the last
- * one carries an ellipsis. Assumes `context.font` is already `BODY_FONT`.
+ * Neither block has paragraphs to cut between the way a now entry has: a take
+ * is one written sentence or three, and the excerpt is up to two lines off the
+ * front of the review whatever it is made of. So the lines that fit are taken
+ * and the last one carries an ellipsis.
+ *
+ * The trailing full stop goes with it, or a line that already ended a sentence
+ * reads as "shot...." - four dots, which looks like a typo rather than like a
+ * cut. A `?` or `!` is kept, since the ellipsis stands in for neither.
+ *
+ * A capacity under zero is a block measured out of a sheet with nothing left,
+ * and it means the same as zero. Clamped here rather than at either caller,
+ * because an empty block against a negative capacity otherwise reports
+ * `truncated` having cut nothing, and that flag is a claim about the subject.
  */
-function fitTake(
-  context: CanvasRenderingContext2D,
-  take: string,
-  top: number,
-): { lines: string[]; truncated: boolean } {
-  const capacity = Math.max(Math.floor((BODY_BOTTOM - top) / LINE), 0);
-  const lines = wrap(context, take, MAX_WIDTH);
-  if (lines.length <= capacity) return { lines, truncated: false };
+function fit(lines: string[], capacity: number): { lines: string[]; truncated: boolean } {
+  const room = Math.max(capacity, 0);
+  if (lines.length <= room) return { lines, truncated: false };
 
-  const kept = lines.slice(0, capacity);
+  const kept = lines.slice(0, room);
   if (kept.length === 0) return { lines: [], truncated: true };
 
-  // The trailing full stop goes with it, or a line that already ended a
-  // sentence reads as "shot...." - four dots, which looks like a typo rather
-  // than like a cut. A `?` or `!` is kept, since the ellipsis stands in for
-  // neither.
   kept[kept.length - 1] = `${kept[kept.length - 1].replace(/\.\s*$/, "")}…`;
   return { lines: kept, truncated: true };
+}
+
+/**
+ * The block under the score: the verdict, and as much of the opening of the
+ * long review as is left under it.
+ *
+ * Both are set out of one budget that ends at `BODY_BOTTOM`, and the order they
+ * are measured in is the whole of the layout. The take is measured against the
+ * whole budget and keeps every line it wants; the excerpt is then cut from what
+ * the take left, and the take is fitted into everything the excerpt did not
+ * reserve - which is at least the lines it claimed, since the excerpt can only
+ * reserve room the take had no use for. So the verdict has first claim on a
+ * sheet this tight: it is never shortened to make room for two dim lines, and a
+ * verdict that fills the sheet leaves nothing for an excerpt to sit in.
+ *
+ * Measuring the excerpt against a floor on the take instead hands it room the
+ * take is using: every take longer than the floor loses lines it would have
+ * been drawn with, which is the opposite of first claim.
+ *
+ * `truncated` is the take's alone. A cut review is what an excerpt is, not a
+ * card that failed to say something, and the share sheet turns that flag into a
+ * claim about the whole subject.
+ *
+ * The review's paragraph breaks collapse into the flow, because `wrap` splits
+ * on whitespace: two lines has no room to show a break as anything but a hole,
+ * and the excerpt is drawn from the opening either way. Sets `context.font`,
+ * and leaves it on `REVIEW_FONT`, since lines are measured in the face they are
+ * drawn in.
+ */
+function fitBody(
+  context: CanvasRenderingContext2D,
+  take: string,
+  review: string,
+  top: number,
+): { take: string[]; truncated: boolean; review: string[] } {
+  const budget = BODY_BOTTOM - top;
+
+  context.font = BODY_FONT;
+  const wrapped = wrap(context, take, MAX_WIDTH);
+  // What the take draws with nothing under it, which is what it wants rather
+  // than what it would settle for.
+  const claimed = Math.min(wrapped.length, Math.floor(budget / LINE));
+  // The gap spaces the excerpt off a take line, so it costs nothing where there
+  // is no take to space it from.
+  const gap = claimed > 0 ? REVIEW_GAP : 0;
+  const spare = budget - claimed * LINE - gap;
+
+  context.font = REVIEW_FONT;
+  const excerpt = fit(
+    wrap(context, review, MAX_WIDTH),
+    Math.min(Math.floor(spare / REVIEW_LINE), MAX_REVIEW_LINES),
+  ).lines;
+
+  const reserved = excerpt.length > 0 ? gap + excerpt.length * REVIEW_LINE : 0;
+  const { lines, truncated } = fit(wrapped, Math.floor((budget - reserved) / LINE));
+
+  return { take: lines, truncated, review: excerpt };
 }
 
 /**
@@ -69,7 +139,8 @@ function fitTake(
  *
  * The sheet, the palette and the marks that are not an album's own come from
  * `lib/card-canvas.ts`; what is left here is the layout only an album has - the
- * record, who made it, what it scored, and the one-line verdict.
+ * record, who made it, what it scored, the verdict, and the front of the long
+ * review under it.
  *
  * Drawn without a sleeve as readily as with one. The log carries a cover path
  * only where art was saved, and unlike a now entry there is plenty left when
@@ -81,8 +152,9 @@ function fitTake(
  * The address printed at the foot is the station rather than the album. A
  * slug-length URL set in the readout face runs half again as wide as the card
  * and shrinking it to fit puts it under the size anyone can read off a story.
- * The album's own address travels with the link action beside this one in the
- * share panel.
+ * Whichever address a reader should land on travels with the link action beside
+ * this one in the share panel: the album's on the permalink, the station's on
+ * the station.
  */
 export async function renderAlbumCard(album: Album): Promise<Card> {
   const { canvas, context, palette } = await createCard();
@@ -169,15 +241,27 @@ export async function renderAlbumCard(album: Album): Promise<Card> {
   context.fillText(`${album.score} / ${MAX_SCORE}`, PAD + rowWidth + 32, y + 40);
   y += 108;
 
-  // The verdict, which is the sentence worth sending. The long review is the
-  // album's page rather than its poster: a thousand words set at story scale
-  // is a screenshot of an essay.
+  // The verdict, which is the sentence worth sending, and the front of the long
+  // review under it. Two lines of it at most: a thousand words set at story
+  // scale is a screenshot of an essay, and the page it is excerpted from is
+  // where the rest is.
+  const { take, truncated, review } = fitBody(context, album.take, album.review, y);
+
   context.font = BODY_FONT;
-  const { lines: take, truncated } = fitTake(context, album.take, y);
   context.fillStyle = palette.ink;
   for (const line of take) {
     y += LINE;
     context.fillText(line, PAD, y);
+  }
+
+  if (review.length > 0) {
+    context.font = REVIEW_FONT;
+    context.fillStyle = palette.dim;
+    if (take.length > 0) y += REVIEW_GAP;
+    for (const line of review) {
+      y += REVIEW_LINE;
+      context.fillText(line, PAD, y);
+    }
   }
 
   drawHairline(context, FOOTER_TOP, palette);

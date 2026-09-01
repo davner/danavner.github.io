@@ -65,6 +65,11 @@ export interface Album {
    * a page of essays rather than an archive. The album's own permalink is
    * assumed to render it too, on the grounds that the permalink exists to be
    * that album's full record - decide that there rather than inheriting it.
+   *
+   * The share poster is the one place it is cut rather than withheld: up to two
+   * lines off the front of it under the take, marked as the excerpt they are. A
+   * poster has a footer rule to stay above, and the page it links to is where
+   * the rest is.
    */
   review: string;
   /** Up to three, blanks dropped. */

@@ -15,14 +15,28 @@ import { SITE_URL } from "@/lib/site";
  * which is a choice an album does not have - it has one sleeve or none - and
  * the renderer draws a card either way, unlike a now entry whose poster is the
  * photo.
+ *
+ * `url` overrides where the link actions send someone, and the station passes
+ * its own: sharing from the front page is sharing the station, which tomorrow
+ * is a different album. The poster is the on-air album either way, because that
+ * is what is on air when the link is sent. Everywhere else the album's own
+ * permalink is the address, which is the page the poster was built from.
  */
-export function ShareAlbum({ album, className }: { album: Album; className?: string }) {
+export function ShareAlbum({
+  album,
+  url,
+  className,
+}: {
+  album: Album;
+  url?: string;
+  className?: string;
+}) {
   return (
     <Share
       className={className}
       subject={{
         heading: albumTitle(album),
-        url: `${SITE_URL}${albumUrl(album)}`,
+        url: url ?? `${SITE_URL}${albumUrl(album)}`,
         filename: album.slug,
         photos: [],
         renderCard: () => renderAlbumCard(album),

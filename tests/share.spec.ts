@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSyn
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-import { type Page, expect, test } from "@playwright/test";
+import { type Locator, type Page, expect, test } from "@playwright/test";
 import * as cheerio from "cheerio";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -12,6 +12,7 @@ import remarkGfm from "remark-gfm";
 import { longDate } from "../src/lib/dates";
 import { nowParagraphs, nowSummary } from "../src/lib/now-summary";
 import { readNow } from "../vite-plugin-content";
+import { type LoggedAlbum, albumsOnDisk } from "./dan-fm";
 import { PHOTO_GAP, nowEntriesWithPhotos } from "./now-photos";
 
 const SHOWS_DIR = path.resolve("src/content/shows");
@@ -1416,5 +1417,333 @@ test.describe("the card's palette", () => {
     const panel = page.getByRole("dialog", { name: /^Share / });
     await expect(panel.getByText("Could not build the card.")).toBeVisible({ timeout: 15_000 });
     await expect(page.locator("img[alt^='Share card']")).toHaveCount(0);
+  });
+});
+
+/**
+ * The album sheet, on the two surfaces that open it.
+ *
+ * `/dan-fm` and `/dan-fm/<slug>` render the same panel and differ in one prop,
+ * so both are opened here: the address a panel sends is the whole of what the
+ * prop decides, and a prop that stopped being passed would leave both surfaces
+ * still building a card and still offering a link.
+ *
+ * The albums are picked off the log the build read rather than named, because
+ * `dan-fm.json` is rewritten by the nightly job and the seed is a different log
+ * again. A case with no album to run against skips with a reason - a skip
+ * prints on every run, where an absent test leaves the suite green over a path
+ * nothing entered.
+ */
+test.describe("share an album", () => {
+  const ALBUMS = albumsOnDisk();
+
+  /** What `/dan-fm` puts on the card: `station()`'s newest row by date. */
+  const FEATURED = ALBUMS.reduce<LoggedAlbum | undefined>(
+    (latest, album) => (!latest || album.date > latest.date ? album : latest),
+    undefined,
+  );
+
+  /*
+   * Bounds on the body block, not predictions of it. The take is set at 40px
+   * over 888px, which is around 45 characters a line, and the sheet holds six
+   * 56px lines under even the tallest heading it can carry - a two-line title
+   * over a two-line credit, with no sleeve above them.
+   *
+   * So a take under `WHOLE_TAKE` fits the card whole with lines to spare, and
+   * one over `CUT_TAKE` needs more than the two the excerpt may reserve while
+   * still fitting whole. A review over `LONG_REVIEW` is several times the two
+   * 46px lines the excerpt is cut to, so a card carrying one is drawing an
+   * excerpt rather than a review that happened to fit. Move the block or shrink
+   * the sheet far enough for any of that to stop holding and these fail and say
+   * so.
+   */
+  const WHOLE_TAKE = 140;
+  const CUT_TAKE = 150;
+  const LONG_REVIEW = 400;
+
+  /** The card's footer rule, 300px off the foot of a 1920px sheet. */
+  const FOOTER_RULE = 1620;
+
+  const reviewed = ALBUMS.find(
+    (album) =>
+      album.review.trim().length >= LONG_REVIEW &&
+      album.take.trim() !== "" &&
+      album.take.length <= WHOLE_TAKE,
+  );
+  const unreviewed = ALBUMS.find((album) => album.review.trim() === "" && album.take.trim() !== "");
+  const longTake = ALBUMS.find(
+    (album) => album.take.length >= CUT_TAKE && album.review.trim().length >= LONG_REVIEW,
+  );
+
+  /** Opens the sheet on one page and hands back the card once it is drawn. */
+  async function openCard(page: Page, path: string): Promise<Locator> {
+    await page.goto(path);
+    await page.getByRole("heading", { level: 1 }).waitFor();
+    await page.getByRole("button", { name: /^Share/ }).click();
+
+    const card = page.locator("img[alt^='Share card']");
+    await expect(card).toBeVisible({ timeout: 15_000 });
+    return card;
+  }
+
+  /** Records what the panel's link actions hand the OS, before the page loads. */
+  async function stubClipboard(page: Page) {
+    await page.addInitScript(() => {
+      const copied: string[] = [];
+      (window as unknown as { __copied: string[] }).__copied = copied;
+      Object.defineProperty(navigator, "clipboard", {
+        configurable: true,
+        value: { writeText: async (text: string) => void copied.push(text) },
+      });
+    });
+  }
+
+  /** What `Copy the link` put on the clipboard. */
+  async function copyLink(page: Page): Promise<string[]> {
+    const panel = page.getByRole("dialog", { name: /^Share / });
+    const copy = panel.getByRole("button", { name: /Copy the link/ });
+    await copy.scrollIntoViewIfNeeded();
+    await copy.click();
+    await expect(panel.getByRole("button", { name: /Link copied/ })).toBeVisible();
+    return page.evaluate(() => (window as unknown as { __copied: string[] }).__copied);
+  }
+
+  /**
+   * The runs of rows the card laid ink down on, each named by the palette
+   * colour it was painted in.
+   *
+   * The words on a poster are pixels, so what a test can read off one is where
+   * a mark was made and what colour it was. Every fill a card makes is one of
+   * three resolved tokens, and the brightest pixel of a run of text is that
+   * fill at full opacity - so the brightest pixel names the run, and it names
+   * it exactly rather than within a tolerance. The tokens are read off the page
+   * the way `palette()` reads them, so this compares the card against the site
+   * rather than against numbers written down here.
+   *
+   * Rows carrying nothing but the ember bloom stay under the threshold: the
+   * glow is a 900px radius from a centre well above the body, so it is under a
+   * tenth of the ember by the time it reaches the block the take is set in.
+   *
+   * Runs are left unmerged, and the cases below read the last of them rather
+   * than counting them: a line whose glyphs happen not to touch the line under
+   * it splits a block in two, which changes how many runs there are and not
+   * which colour the block ends in.
+   */
+  async function marks(card: Locator) {
+    return card.evaluate(async (img) => {
+      const bitmap = new Image();
+      bitmap.src = (img as HTMLImageElement).src;
+      await bitmap.decode();
+
+      const sheet = document.createElement("canvas");
+      sheet.width = bitmap.naturalWidth;
+      sheet.height = bitmap.naturalHeight;
+      const context = sheet.getContext("2d", { willReadFrequently: true })!;
+      context.drawImage(bitmap, 0, 0);
+
+      const probe = document.createElement("div");
+      probe.className = "dark";
+      probe.style.display = "none";
+      document.body.append(probe);
+      const style = getComputedStyle(probe);
+      const tokens = {
+        ink: style.getPropertyValue("--foreground").trim(),
+        dim: style.getPropertyValue("--muted-foreground").trim(),
+        ember: style.getPropertyValue("--ember").trim(),
+      };
+      probe.remove();
+
+      const swatch = document.createElement("canvas");
+      swatch.width = swatch.height = 1;
+      const paint = swatch.getContext("2d", { willReadFrequently: true })!;
+      const resolved = Object.entries(tokens).map(([name, colour]) => {
+        paint.clearRect(0, 0, 1, 1);
+        paint.fillStyle = colour;
+        paint.fillRect(0, 0, 1, 1);
+        return [name, [...paint.getImageData(0, 0, 1, 1).data].slice(0, 3)] as const;
+      });
+
+      const pixels = context.getImageData(0, 0, sheet.width, sheet.height).data;
+      const luma = ([r, g, b]: number[]) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+      // Half of the dimmest thing a card writes with, which is the muted ink.
+      const MARK = 90;
+
+      const runs: { top: number; bottom: number; colour: string }[] = [];
+      let run: { top: number; bottom: number; brightest: number[] } | null = null;
+
+      for (let y = 0; y < sheet.height; y++) {
+        let brightest = [0, 0, 0];
+        for (let x = 0; x < sheet.width; x++) {
+          const at = (y * sheet.width + x) * 4;
+          const pixel = [pixels[at], pixels[at + 1], pixels[at + 2]];
+          if (luma(pixel) > luma(brightest)) brightest = pixel;
+        }
+
+        if (luma(brightest) >= MARK) {
+          run ??= { top: y, bottom: y, brightest };
+          run.bottom = y;
+          if (luma(brightest) > luma(run.brightest)) run.brightest = brightest;
+        } else if (run) {
+          const [colour] = resolved
+            .map(
+              ([name, rgb]) =>
+                [name, rgb.reduce((d, c, i) => d + (c - run!.brightest[i]) ** 2, 0)] as const,
+            )
+            .sort((a, b) => a[1] - b[1])[0];
+          runs.push({ top: run.top, bottom: run.bottom, colour });
+          run = null;
+        }
+      }
+
+      return { size: [sheet.width, sheet.height], runs };
+    });
+  }
+
+  /** The marks above the footer rule, which is everything the body drew. */
+  async function body(card: Locator) {
+    const { size, runs } = await marks(card);
+    expect(size, "the card is not the sheet these coordinates were read from").toEqual([
+      1080, 1920,
+    ]);
+    return runs.filter((run) => run.top < FOOTER_RULE);
+  }
+
+  test("sharing from the station sends the station, not the album on it", async ({ page }) => {
+    /*
+     * The whole of the `url` prop. Tomorrow the front page is a different
+     * record, so a link sent from it has to land on the station rather than on
+     * the album that happened to be on when it was sent.
+     */
+    test.skip(FEATURED === undefined, "the log the build read is empty - the station has no panel");
+
+    await stubClipboard(page);
+    await openCard(page, "/dan-fm");
+
+    expect(await copyLink(page)).toEqual(["https://danavner.com/dan-fm"]);
+  });
+
+  test("the station's poster is still the album that is on air", async ({ page }) => {
+    // The other half of the same decision: the address changes and the subject
+    // does not. A panel that took the station as its subject as well as its
+    // address would draw a poster of the page rather than of the record.
+    test.skip(FEATURED === undefined, "the log the build read is empty - the station has no panel");
+
+    await openCard(page, "/dan-fm");
+
+    await expect(page.getByRole("dialog", { name: /^Share / })).toHaveAccessibleName(
+      `Share ${FEATURED!.artist} - ${FEATURED!.album}`,
+    );
+    await expect(page.getByRole("link", { name: /Save the card/ })).toHaveAttribute(
+      "download",
+      `${FEATURED!.slug}.png`,
+    );
+  });
+
+  test("sharing from an album's own page sends that album", async ({ page }) => {
+    // The default the prop falls back to, which is every surface but the
+    // station: the poster was built from this page, so this page is where the
+    // link lands.
+    test.skip(FEATURED === undefined, "the log the build read is empty - there are no album pages");
+
+    await stubClipboard(page);
+    await openCard(page, `/dan-fm/${FEATURED!.slug}`);
+
+    expect(await copyLink(page)).toEqual([`https://danavner.com/dan-fm/${FEATURED!.slug}`]);
+  });
+
+  test("the front of the review is drawn under the take, in the dim ink", async ({ page }) => {
+    /*
+     * What the excerpt is for, and the one thing about it a test can see: it is
+     * below the verdict and it is not painted in the verdict's ink. Set in the
+     * ink and it reads as a second verdict rather than as the paragraph it was
+     * lifted from, and nothing about the code would look wrong.
+     */
+    test.skip(
+      reviewed === undefined,
+      `no album has a take under ${WHOLE_TAKE} characters and a review over ${LONG_REVIEW} - the excerpt is undrawn`,
+    );
+
+    const card = await openCard(page, `/dan-fm/${reviewed!.slug}`);
+    const runs = await body(card);
+
+    expect(runs.at(-1)?.colour, "the last thing the body drew is not the muted ink").toBe("dim");
+    const take = runs.filter((run) => run.colour === "ink").at(-1);
+    expect(take, "nothing was drawn in the ink at all").toBeDefined();
+    expect(take!.bottom, "the excerpt is not under the take").toBeLessThan(runs.at(-1)!.top);
+  });
+
+  test("an album with no review draws nothing under its take", async ({ page }) => {
+    /*
+     * The other half. Without it a renderer that reserved the gap and the two
+     * lines whatever the review held would pass the case above and hand every
+     * album without one a band of empty sheet under the verdict.
+     */
+    test.skip(
+      unreviewed === undefined,
+      "every album in the log the build read has a review - the empty-review card is unverified",
+    );
+
+    const card = await openCard(page, `/dan-fm/${unreviewed!.slug}`);
+    const runs = await body(card);
+
+    expect(
+      runs.at(-1)?.colour,
+      "something was drawn under the take on an album with no review",
+    ).toBe("ink");
+  });
+
+  test("the review stops above the footer rule", async ({ page }) => {
+    // The excerpt is fitted out of the same budget as the take and drawn after
+    // it, so an excerpt measured against the wrong top would run into the rule
+    // and land on the date under it.
+    test.skip(
+      reviewed === undefined,
+      `no album has a take under ${WHOLE_TAKE} characters and a review over ${LONG_REVIEW} - the excerpt is undrawn`,
+    );
+
+    const card = await openCard(page, `/dan-fm/${reviewed!.slug}`);
+    const runs = await body(card);
+
+    expect(runs.at(-1)!.bottom, "the body ran into the footer rule").toBeLessThan(FOOTER_RULE - 8);
+  });
+
+  test("a cut review does not mark the card as a cut take", async ({ page }) => {
+    /*
+     * `truncated` is the take's alone. The share sheet turns it into READ THE
+     * REST AT, which is a claim about the whole subject - and an excerpt is a
+     * cut review by definition, so a card that flagged one would say every
+     * album with a review was only half said.
+     */
+    test.skip(
+      reviewed === undefined,
+      `no album has a take under ${WHOLE_TAKE} characters and a review over ${LONG_REVIEW} - the excerpt is undrawn`,
+    );
+
+    const card = await openCard(page, `/dan-fm/${reviewed!.slug}`);
+    await expect(card).toHaveAttribute("data-truncated", "false");
+  });
+
+  test("a take that fits the card whole is not cut to make room for the review", async ({
+    page,
+  }) => {
+    /*
+     * The verdict has first claim on the sheet. A take of this length fits the
+     * card whole on its own, so it still has to fit whole beside a review: the
+     * excerpt is what is left over, and what is left over is measured after the
+     * take has taken what it wants rather than after it has been held to a
+     * floor.
+     *
+     * Read off `truncated` because that is where the consequence lands - a card
+     * that cut the take says READ THE REST AT under a sentence that was going
+     * to finish anyway.
+     */
+    test.skip(
+      longTake === undefined,
+      `no album has a take over ${CUT_TAKE} characters and a review over ${LONG_REVIEW} - the take's claim on the sheet is unverified`,
+    );
+
+    const card = await openCard(page, `/dan-fm/${longTake!.slug}`);
+    await expect(card).toHaveAttribute("data-truncated", "false");
   });
 });

@@ -20,10 +20,6 @@ professionally is one of the site's success conditions - but it is not the
 reader the site is designed around, and a decision that improves the career page
 at the expense of the now page is the wrong trade.
 
-Developers who find the repository and consider forking it are served by the
-README's "Making it yours" section. They are a real audience and not a target
-one; nothing in the site's design owes them anything.
-
 ## Product Purpose
 
 A personal site that says what Dan is doing right now and keeps a running record

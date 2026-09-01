@@ -9,7 +9,6 @@ and one TypeScript file, read and validated at build time. The markdown can be
 edited by hand or through [the admin page](#editing-from-the-browser) at
 `/admin/`, which commits to this repo on your behalf - there is still no
 server and no database behind any of it.
-If you want to fork it and make it yours, see [Making it yours](#making-it-yours).
 
 ---
 
@@ -1252,29 +1251,9 @@ Things that were not obvious, in case you hit them too:
 
 ---
 
-## Making it yours
-
-Fork it, then:
-
-1. Replace `src/content/profile.ts` with your details.
-2. Delete `src/content/blog/*.md` and `src/content/shows/*.md`, or replace them.
-   Both pages handle being empty.
-3. Swap the photos in `public/img/` and the favicon in `public/favicon.svg`.
-4. Put your domain in `public/CNAME`, or delete it and use `<user>.github.io`.
-   If you deploy to a project page rather than a user page, set `base` in
-   `vite.config.ts` to `/<repo>/`.
-5. Retheme via the token blocks at the top of `src/index.css`. Change the fonts
-   in `src/fonts.css` and the `--font-*` values in the `@theme` block.
-6. Update `.github/workflows/deploy.yml` if your default branch is not `main`,
-   and `.github/workflows/links.yml` with the hosts that wall off _your_ links.
-
-The `/shows` section is the most reusable piece if you keep any kind of log -
-it is a markdown collection, a validator, and a stats derivation, and none of it
-is specific to gigs.
-
 ## License
 
 MIT - see [LICENSE](LICENSE). Use whatever is useful.
 
 The photographs of me in `public/img/` and the writing under
-`src/content/blog/` are not covered; please swap those out.
+`src/content/blog/` are not covered by it.

@@ -5,6 +5,7 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  readdirSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -15,6 +16,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { expect, test } from "@playwright/test";
+import sharp from "sharp";
 
 import { MAX_SCORE } from "../src/lib/dan-fm-summary";
 import { contentPlugin } from "../vite-plugin-content";
@@ -46,11 +48,12 @@ const SOURCE = readFileSync(SCRIPT, "utf8");
 /**
  * A policy constant, read from the script rather than copied into this file.
  *
- * Both of them are documented as movable: `LOG_EPOCH` is meant to be dragged
- * forward to the first row's date once the log has one, and the horizon is a
- * judgement about how far ahead a plan is still a plan. A suite that spelled
- * either out would go red on a deliberate edit and say nothing about it, so the
- * cases below assert what happens *at* the boundary and let the boundary move.
+ * Every one of them is documented as movable: `LOG_EPOCH` is meant to be
+ * dragged forward to the first row's date once the log has one, the horizon is
+ * a judgement about how far ahead a plan is still a plan, and the cover size is
+ * read off what the page lays a sleeve out at. A suite that spelled any of them
+ * out would go red on a deliberate edit and say nothing about it, so the cases
+ * below assert what happens *at* the boundary and let the boundary move.
  */
 function policy(name: string, shape: RegExp): string {
   const found = shape.exec(SOURCE);
@@ -63,6 +66,7 @@ function policy(name: string, shape: RegExp): string {
 
 const LOG_EPOCH = policy("LOG_EPOCH", /^const LOG_EPOCH = "(\d{4}-\d{2}-\d{2})";$/m);
 const FUTURE_DAYS = Number(policy("FUTURE_DAYS", /^const FUTURE_DAYS = (\d+);$/m));
+const COVER_PX = Number(policy("COVER_PX", /^const COVER_PX = (\d+);$/m));
 
 /** A day some number of days after another, for building fixtures around today. */
 function addDays(date: string, days: number): string {
@@ -112,6 +116,124 @@ globalThis.Date = class extends Real {
   }
 };
 `;
+
+/**
+ * Spotify, answered in the child for the hosts it owns and left alone for
+ * every other host.
+ *
+ * The sheet is a loopback server this file runs, so a stub that swallowed every
+ * request would have to serve that as well and the cases about a sheet that
+ * drops mid-read would stop meaning anything. Two hosts are taken and nothing
+ * else is.
+ *
+ * Every intercepted address is appended to a file the run reports back. That is
+ * what makes "this run asked Spotify for nothing" a claim a case can hold: it
+ * is read off the requests that were made, not inferred from a payload that
+ * would look identical either way.
+ */
+const SPOTIFY = `
+import { appendFileSync, readFileSync } from "node:fs";
+
+const plan = JSON.parse(readFileSync(process.env.DAN_FM_SPOTIFY, "utf8"));
+const CALLS = process.env.DAN_FM_SPOTIFY_CALLS;
+
+/** Spotify's own hosts and its image CDN, and deliberately nothing else. */
+const THEIRS = /^(?:[a-z0-9-]+\\.)*(?:spotify\\.com|scdn\\.co)$/;
+
+/** The two sleeves a stubbed album offers, told apart by which one is fetched. */
+const WIDE = "https://i.scdn.co/image/wide";
+const NARROW = "https://i.scdn.co/image/narrow";
+
+const real = globalThis.fetch;
+
+function json(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "content-type": "application/json" },
+  });
+}
+
+globalThis.fetch = async (input, init) => {
+  const url = typeof input === "string" ? input : input.url;
+  if (!THEIRS.test(new URL(url).host)) return real(input, init);
+
+  appendFileSync(CALLS, url + "\\n");
+
+  if (url.startsWith("https://accounts.spotify.com/api/token")) {
+    if (plan.token === "unreachable") throw new TypeError("fetch failed");
+    if (plan.token === "refused") return json({ error: "invalid_client" }, 401);
+    if (plan.token === "empty") return json({ token_type: "Bearer" });
+    return json({ access_token: "a-token", token_type: "Bearer", expires_in: 3600 });
+  }
+
+  const album = /\\/v1\\/albums\\/([^\\/?]+)/.exec(url);
+  if (album) {
+    const how = (plan.albums || {})[album[1]] || "art";
+    if (how === "missing") return json({ error: { status: 404, message: "non existing id" } }, 404);
+    if (how === "no-art") return json({ id: album[1], images: [] });
+    if (how === "no-widths") return json({ id: album[1], images: [{ url: WIDE }, { url: NARROW }] });
+    if (how === "widest-last") {
+      return json({
+        id: album[1],
+        images: [
+          { url: NARROW, width: 300, height: 300 },
+          { url: WIDE, width: 640, height: 640 },
+        ],
+      });
+    }
+
+    return json({
+      id: album[1],
+      images: [
+        { url: WIDE, width: 640, height: 640 },
+        { url: NARROW, width: 300, height: 300 },
+      ],
+    });
+  }
+
+  if (plan.image === "missing") return new Response("", { status: 404 });
+  if (plan.image === "undecodable") return new Response("this is not a picture", { status: 200 });
+
+  return new Response(readFileSync(plan.source), {
+    status: 200,
+    headers: { "content-type": "image/png" },
+  });
+};
+`;
+
+/** An album id: the 22 characters a Spotify link carries, and a saved sleeve's name. */
+const ID = "1A2b3C4d5E6f7G8h9I0jKl";
+const OTHER_ID = "9Z8y7X6w5V4u3T2s1R0qPo";
+
+/** The Link cell for one album, which is the only place an id ever comes from. */
+function link(id: string): string {
+  return `https://open.spotify.com/album/${id}`;
+}
+
+/**
+ * A square PNG at `px`, kept per size because sharp costs more to draw one than
+ * a case costs to run.
+ *
+ * Flat ember rather than anything with a picture in it: what the cases read off
+ * a saved sleeve is its dimensions and its format, and a source that encodes to
+ * a handful of bytes keeps the stub's answer small.
+ */
+const SOURCES = new Map<number, Buffer>();
+
+async function sourcePng(px: number): Promise<Buffer> {
+  let bytes = SOURCES.get(px);
+
+  if (!bytes) {
+    bytes = await sharp({
+      create: { width: px, height: px, channels: 3, background: { r: 230, g: 67, b: 26 } },
+    })
+      .png()
+      .toBuffer();
+    SOURCES.set(px, bytes);
+  }
+
+  return bytes;
+}
 
 /**
  * Every column the sheet has to carry, spelled out rather than read from the
@@ -217,6 +339,20 @@ function sheet(...rows: Row[]): string {
   return bodyUnder(COLUMNS, rows);
 }
 
+/** Spotify, as one run finds it. */
+interface Spotify {
+  /** How the token exchange answers. Absent is a token granted. */
+  token?: "refused" | "empty" | "unreachable";
+  /** How `GET /v1/albums/{id}` answers, by id. An id not named here has art. */
+  albums?: Record<string, "missing" | "no-art" | "no-widths" | "widest-last">;
+  /** How the sleeve download answers. Absent is the picture. */
+  image?: "missing" | "undecodable";
+  /** The side of the square Spotify serves, for the cases about resizing. */
+  sourcePx?: number;
+  /** False for a run with no `SPOTIFY_CLIENT_ID` / `SPOTIFY_CLIENT_SECRET` at all. */
+  credentials?: boolean;
+}
+
 /** How a case answers, and what the tree it runs against already holds. */
 interface How {
   /** The CSV the published sheet answers with. */
@@ -233,6 +369,13 @@ interface How {
   committed?: string;
   /** `src/content/accounts.json`, for the cases about the sheet's address. */
   accounts?: string;
+  /**
+   * Spotify, stubbed. Absent leaves the child with no credentials and no stub,
+   * which is the shape every case above this feature ran in.
+   */
+  spotify?: Spotify;
+  /** What `public/img/dan-fm/` already holds, by filename. */
+  covers?: string[];
 }
 
 /** What one run of the job did. */
@@ -242,6 +385,15 @@ interface Ran {
   stderr: string;
   /** `src/content/dan-fm.json` as the job left it, or `null` when it wrote none. */
   written: string | null;
+  /** Every address the run asked Spotify or its CDN for, in the order it asked. */
+  calls: string[];
+  /** `public/img/dan-fm/` as the run left it, by filename. */
+  covers: Record<string, Buffer>;
+}
+
+/** What a case seeds a cover file with, so an untouched one can be told from a rewritten one. */
+function seededCover(name: string): string {
+  return `already on disk: ${name}`;
 }
 
 /** The published sheet's address, carrying the export parameter a real one carries. */
@@ -282,6 +434,14 @@ async function run(how: How = {}): Promise<Ran> {
     copyFileSync(SCRIPT, path.join(root, "scripts", "update-dan-fm.mjs"));
     writeFileSync(path.join(root, "clock.mjs"), CLOCK);
 
+    const coverDir = path.join(root, "public", "img", "dan-fm");
+    if (how.covers) {
+      mkdirSync(coverDir, { recursive: true });
+      for (const name of how.covers) {
+        writeFileSync(path.join(coverDir, name), seededCover(name));
+      }
+    }
+
     const content = path.join(root, "src", "content");
     mkdirSync(content, { recursive: true });
     writeFileSync(
@@ -293,24 +453,56 @@ async function run(how: How = {}): Promise<Ran> {
       writeFileSync(path.join(content, "dan-fm.json"), how.committed);
     }
 
+    /*
+     * UTC, which is the runner's zone and is deliberately not the station's.
+     * The job names `America/Los_Angeles` outright, so nothing correct here
+     * reads the ambient zone - and a job that started reading it would agree
+     * with the station on a laptop in California and disagree with it in CI,
+     * which is the one place nobody is watching.
+     */
+    const env: Record<string, string | undefined> = {
+      ...process.env,
+      TZ: "UTC",
+      DAN_FM_NOW: how.now ?? at(TODAY),
+    };
+
+    /*
+     * Credentials reach the child only from a case that asked for them. A pair
+     * exported in whoever's shell is running the suite would otherwise send
+     * every case in this file at the real Spotify, and a suite that fetches
+     * album art over the network is one that goes red when Spotify does.
+     */
+    delete env.SPOTIFY_CLIENT_ID;
+    delete env.SPOTIFY_CLIENT_SECRET;
+
+    const preloads = [path.join(root, "clock.mjs")];
+    const calls = path.join(root, "spotify-calls.log");
+
+    if (how.spotify) {
+      const spotify = path.join(root, "spotify.mjs");
+      const source = path.join(root, "source.png");
+      writeFileSync(source, await sourcePng(how.spotify.sourcePx ?? 1000));
+      writeFileSync(path.join(root, "spotify.json"), JSON.stringify({ ...how.spotify, source }));
+      writeFileSync(spotify, SPOTIFY);
+      writeFileSync(calls, "");
+      preloads.push(spotify);
+
+      env.DAN_FM_SPOTIFY = path.join(root, "spotify.json");
+      env.DAN_FM_SPOTIFY_CALLS = calls;
+
+      if (how.spotify.credentials !== false) {
+        env.SPOTIFY_CLIENT_ID = "a-client";
+        env.SPOTIFY_CLIENT_SECRET = "a-secret";
+      }
+    }
+
     const child = spawn(
       process.execPath,
       [
-        "--import",
-        pathToFileURL(path.join(root, "clock.mjs")).href,
+        ...preloads.flatMap((file) => ["--import", pathToFileURL(file).href]),
         path.join(root, "scripts", "update-dan-fm.mjs"),
       ],
-      {
-        /*
-         * UTC, which is the runner's zone and is deliberately not the
-         * station's. The job names `America/Los_Angeles` outright, so nothing
-         * correct here reads the ambient zone - and a job that started reading
-         * it would agree with the station on a laptop in California and
-         * disagree with it in CI, which is the one place nobody is watching.
-         */
-        env: { ...process.env, TZ: "UTC", DAN_FM_NOW: how.now ?? at(TODAY) },
-        stdio: ["ignore", "pipe", "pipe"],
-      },
+      { env, stdio: ["ignore", "pipe", "pipe"] },
     );
 
     let stdout = "";
@@ -321,11 +513,21 @@ async function run(how: How = {}): Promise<Ran> {
     const code = await new Promise<number | null>((resolve) => void child.on("close", resolve));
     const out = path.join(content, "dan-fm.json");
 
+    const covers: Record<string, Buffer> = {};
+    if (existsSync(coverDir)) {
+      for (const name of readdirSync(coverDir)) {
+        covers[name] = readFileSync(path.join(coverDir, name));
+      }
+    }
+
     return {
       code,
       stdout,
       stderr,
       written: existsSync(out) ? readFileSync(out, "utf8") : null,
+      // Read back before the tree goes, since nothing outside this survives it.
+      calls: existsSync(calls) ? readFileSync(calls, "utf8").split("\n").filter(Boolean) : [],
+      covers,
     };
   } finally {
     server.closeAllConnections();
@@ -360,6 +562,26 @@ async function refusal(how: How = {}): Promise<string> {
   expect(ran.code, "the job exited clean on a sheet it should have refused").toBe(1);
 
   return ran.stderr;
+}
+
+/**
+ * A run of the cover half, having asserted the three things every one of them
+ * has to be true of at once.
+ *
+ * Silence on stderr is the load-bearing one, and it is asserted on the failure
+ * paths as hard as on the happy one. A cover is an enhancement: a missing
+ * secret, a 404 and a download that will not decode are all ordinary states of
+ * a working run, and a job that coloured any of them red would train everyone
+ * to ignore a job that is right to be red about the log itself.
+ */
+async function sleeves(how: How): Promise<Ran & { payload: DanFmPayload }> {
+  const ran = await run(how);
+
+  expect(ran.stderr, "a cover the job could not save was reported as a failure").toBe("");
+  expect(ran.code, "the job did not exit clean over a cover it could not save").toBe(0);
+  expect(ran.written, "the job wrote no log because it could not save a cover").not.toBeNull();
+
+  return { ...ran, payload: JSON.parse(ran.written!) as DanFmPayload };
 }
 
 test.describe("reaching the sheet", () => {
@@ -1122,6 +1344,360 @@ test.describe("what the job writes", () => {
     const ran = await run({ body: sheet(row(), row({ Date: addDays(TODAY, -1) })) });
 
     expect(ran.stdout).toContain("wrote 2 albums to src/content/dan-fm.json");
+  });
+});
+
+/**
+ * The album art half of the job.
+ *
+ * Every case here reads what the run *asked Spotify for* as well as what it
+ * wrote, because the guarantee the whole design is arranged around is invisible
+ * in the payload: a log where every sleeve is already saved and a log where
+ * every sleeve was fetched again are the same file.
+ */
+test.describe("the sleeves the job saves", () => {
+  /** Spotify's token exchange, at the address the job posts to. */
+  const TOKEN = "https://accounts.spotify.com/api/token";
+
+  /** A sleeve saved by a run this suite never saw, for the cases about the prune. */
+  const STALE = "0Q1w2E3r4T5y6U7i8O9p0A";
+
+  /** The album lookups one run made, which is the request no `existsSync` should reach. */
+  function lookups(ran: Ran): string[] {
+    return ran.calls.filter((url) => url.includes("/v1/albums/"));
+  }
+
+  /** The sleeves one run downloaded, by the address it took them from. */
+  function downloads(ran: Ran): string[] {
+    return ran.calls.filter((url) => url.startsWith("https://i.scdn.co/"));
+  }
+
+  test("a run where every sleeve is already saved asks Spotify for nothing", async () => {
+    /*
+     * The guarantee the order inside `saveCover` exists for, and the reason it
+     * cannot be read off the file the run wrote. Both sleeves are on disk, so
+     * a credential is never read and a token never asked for - which is what
+     * makes an outage or a secret that went missing cost new covers only.
+     *
+     * Asserted on the requests rather than on the covers: a run that fetched
+     * both again would leave exactly the same log behind.
+     */
+    const ran = await sleeves({
+      body: sheet(row({ Link: link(ID) }), row({ Date: addDays(TODAY, -1), Link: link(OTHER_ID) })),
+      covers: [`${ID}.webp`, `${OTHER_ID}.webp`],
+      spotify: {},
+    });
+
+    expect(ran.calls, "a sleeve already on disk was fetched all over again").toEqual([]);
+    expect(ran.payload.albums.map((album) => album.cover)).toEqual([
+      `/img/dan-fm/${ID}.webp`,
+      `/img/dan-fm/${OTHER_ID}.webp`,
+    ]);
+  });
+
+  test("a sleeve already on disk is left exactly as it was", async () => {
+    // The other half of the same promise. A run that re-encoded a saved sleeve
+    // would rewrite it every four hours and commit the churn.
+    const name = `${ID}.webp`;
+    const ran = await sleeves({
+      body: sheet(row({ Link: link(ID) })),
+      covers: [name],
+      spotify: {},
+    });
+
+    expect(ran.covers[name].toString()).toBe(seededCover(name));
+  });
+
+  test("a run with no credentials writes the log and asks for nothing", async () => {
+    /*
+     * Covers are an enhancement and never a precondition. A fork of this repo,
+     * or a secret somebody rotated and forgot to paste back, has to leave a
+     * green run and a written log behind - `sleeves` is what asserts those two.
+     */
+    const ran = await sleeves({
+      body: sheet(row({ Link: link(ID) })),
+      spotify: { credentials: false },
+    });
+
+    expect(ran.calls, "a run with no credentials still reached for a token").toEqual([]);
+    expect(ran.payload.albums[0].cover).toBe("");
+    expect(ran.stdout).toContain("no SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET");
+  });
+
+  test("two missing sleeves cost one token request between them", async () => {
+    // The whole of what memoising the token buys. Asked for per album instead,
+    // a backfill of a year's log opens three hundred token exchanges.
+    const ran = await sleeves({
+      body: sheet(row({ Link: link(ID) }), row({ Date: addDays(TODAY, -1), Link: link(OTHER_ID) })),
+      spotify: {},
+    });
+
+    expect(ran.calls.filter((url) => url === TOKEN)).toHaveLength(1);
+    expect(lookups(ran)).toHaveLength(2);
+    expect(Object.keys(ran.covers).sort()).toEqual([`${ID}.webp`, `${OTHER_ID}.webp`]);
+  });
+
+  test("one album logged on two days is looked up once", async () => {
+    /*
+     * A relisten, filed under its own date. The second row finds the sleeve the
+     * first one just saved, which is the same `existsSync` the case above runs
+     * against a committed file - and the only way to see it is that the second
+     * album costs no lookup.
+     */
+    const ran = await sleeves({
+      body: sheet(row({ Link: link(ID) }), row({ Date: addDays(TODAY, -1), Link: link(ID) })),
+      spotify: {},
+    });
+
+    expect(lookups(ran), "the same sleeve was fetched once per album that names it").toHaveLength(
+      1,
+    );
+    expect(ran.payload.albums.map((album) => album.cover)).toEqual([
+      `/img/dan-fm/${ID}.webp`,
+      `/img/dan-fm/${ID}.webp`,
+    ]);
+  });
+
+  test("a token Spotify refuses stops the run before any album is looked up", async () => {
+    // A lookup with no token is a request that can only ever answer 401, and a
+    // log of a hundred albums would send a hundred of them.
+    const ran = await sleeves({
+      body: sheet(row({ Link: link(ID) })),
+      spotify: { token: "refused" },
+    });
+
+    expect(ran.calls).toEqual([TOKEN]);
+    expect(ran.payload.albums[0].cover).toBe("");
+    expect(ran.stdout).toContain("Spotify answered 401 to the token request");
+  });
+
+  test("a token exchange nobody can reach costs the cover and nothing else", async () => {
+    // The throw rather than the status. Left uncaught it takes down a run that
+    // had already read the sheet and had a log to write.
+    const ran = await sleeves({
+      body: sheet(row({ Link: link(ID) })),
+      spotify: { token: "unreachable" },
+    });
+
+    expect(ran.calls).toEqual([TOKEN]);
+    expect(ran.payload.albums[0].cover).toBe("");
+    expect(ran.stdout).toContain("could not reach Spotify for a token");
+  });
+
+  test("a token response carrying no token is no token", async () => {
+    /*
+     * A 200 with the wrong body in it, which is the one token failure that
+     * looks like success. Taken at face value the run goes on to authorise
+     * every lookup with `Bearer undefined`.
+     */
+    const ran = await sleeves({
+      body: sheet(row({ Link: link(ID) })),
+      spotify: { token: "empty" },
+    });
+
+    expect(ran.calls).toEqual([TOKEN]);
+    expect(ran.stdout).toContain("token response carried no access_token");
+  });
+
+  test("an album Spotify does not have leaves the cover blank", async () => {
+    const ran = await sleeves({
+      body: sheet(row({ Link: link(ID) })),
+      spotify: { albums: { [ID]: "missing" } },
+    });
+
+    expect(ran.payload.albums[0].cover).toBe("");
+    expect(Object.keys(ran.covers)).toEqual([]);
+    expect(ran.stdout).toContain(`Spotify answered 404 for album ${ID}`);
+  });
+
+  test("an album Spotify holds no art for leaves the cover blank", async () => {
+    // A real album with an empty `images`, which is not the same failure as an
+    // album that does not exist and is reported as its own line.
+    const ran = await sleeves({
+      body: sheet(row({ Link: link(ID) })),
+      spotify: { albums: { [ID]: "no-art" } },
+    });
+
+    expect(ran.payload.albums[0].cover).toBe("");
+    expect(Object.keys(ran.covers)).toEqual([]);
+    expect(ran.stdout).toContain(`Spotify has no cover art for album ${ID}`);
+  });
+
+  test("a sleeve the CDN will not serve leaves the cover blank", async () => {
+    const ran = await sleeves({
+      body: sheet(row({ Link: link(ID) })),
+      spotify: { image: "missing" },
+    });
+
+    expect(ran.payload.albums[0].cover).toBe("");
+    expect(Object.keys(ran.covers)).toEqual([]);
+    expect(ran.stdout).toContain(`the sleeve for ${ID} answered 404`);
+  });
+
+  test("a sleeve that will not decode leaves no file at all", async () => {
+    /*
+     * The failure that could poison the directory rather than skip a run. The
+     * bytes arrive and sharp refuses them, and anything written before that
+     * point is a file the build's existence gate takes for a saved sleeve -
+     * so the next run skips it, and the page ships a broken tile forever.
+     *
+     * Both halves are asserted: no file, and no path in the log claiming one.
+     */
+    const ran = await sleeves({
+      body: sheet(row({ Link: link(ID) })),
+      spotify: { image: "undecodable" },
+    });
+
+    expect(Object.keys(ran.covers), "a sleeve that would not decode was written anyway").toEqual(
+      [],
+    );
+    expect(ran.payload.albums[0].cover, "the log points at a sleeve that was never saved").toBe("");
+    expect(ran.stdout).toContain(`could not save the sleeve for ${ID}`);
+  });
+
+  test("a row with no link asks for nothing and gets no cover", async () => {
+    /*
+     * Permanently, and on purpose. There is no search to fall back on: a search
+     * matches artist and album as free text and answers confidently with the
+     * wrong record, and a card printing somebody else's sleeve states something
+     * untrue about the album rather than admitting it has no picture.
+     */
+    const ran = await sleeves({ body: sheet(row()), spotify: {} });
+
+    expect(ran.calls, "an album with no link was looked up anyway").toEqual([]);
+    expect(ran.payload.albums[0].cover).toBe("");
+    expect(Object.keys(ran.covers)).toEqual([]);
+  });
+
+  test("the widest sleeve is chosen by width rather than by the order it arrived", async () => {
+    // Spotify documents widest first and the widths are nullable in the same
+    // response, so an order taken on trust is one a missing number reverses.
+    const ran = await sleeves({
+      body: sheet(row({ Link: link(ID) })),
+      spotify: { albums: { [ID]: "widest-last" } },
+    });
+
+    expect(downloads(ran)).toEqual(["https://i.scdn.co/image/wide"]);
+  });
+
+  test("a response with no widths at all falls back to the image listed first", async () => {
+    // Nothing to compare, so the documented order is what is left. Picking
+    // none instead would cost the cover on a response that carried one.
+    const ran = await sleeves({
+      body: sheet(row({ Link: link(ID) })),
+      spotify: { albums: { [ID]: "no-widths" } },
+    });
+
+    expect(downloads(ran)).toEqual(["https://i.scdn.co/image/wide"]);
+  });
+
+  test("a sleeve is saved as a webp at the cover size", async () => {
+    const ran = await sleeves({
+      body: sheet(row({ Link: link(ID) })),
+      spotify: { sourcePx: COVER_PX * 2 },
+    });
+
+    const saved = await sharp(ran.covers[`${ID}.webp`]).metadata();
+
+    expect(saved.format).toBe("webp");
+    expect([saved.width, saved.height]).toEqual([COVER_PX, COVER_PX]);
+  });
+
+  test("a sleeve smaller than the cover size is saved at the size it came at", async () => {
+    // Enlarging buys nothing but bytes: the pixels are not there, so the tile
+    // is drawn the same size and softer, and the file is several times bigger.
+    const small = Math.round(COVER_PX / 2);
+    const ran = await sleeves({
+      body: sheet(row({ Link: link(ID) })),
+      spotify: { sourcePx: small },
+    });
+
+    const saved = await sharp(ran.covers[`${ID}.webp`]).metadata();
+
+    expect([saved.width, saved.height], "a small sleeve was blown up to fill the box").toEqual([
+      small,
+      small,
+    ]);
+  });
+
+  test("a sleeve the log no longer names is deleted", async () => {
+    // An album taken out of the sheet, or one whose link was corrected. Left
+    // behind, its art is a file nothing on the site ever points at again.
+    const ran = await sleeves({
+      body: sheet(row({ Link: link(ID) })),
+      covers: [`${ID}.webp`, `${STALE}.webp`],
+      spotify: {},
+    });
+
+    expect(Object.keys(ran.covers)).toEqual([`${ID}.webp`]);
+    expect(ran.stdout).toContain(`pruned ${STALE}.webp`);
+  });
+
+  test("a sleeve the log still names survives the prune", async () => {
+    const name = `${ID}.webp`;
+    const ran = await sleeves({
+      body: sheet(row({ Link: link(ID) })),
+      covers: [name],
+      spotify: {},
+    });
+
+    expect(Object.keys(ran.covers)).toEqual([name]);
+    expect(ran.stdout, "a sleeve the sheet still names was pruned").not.toContain("pruned");
+  });
+
+  test("everything in the directory that is not a saved sleeve is left alone", async () => {
+    /*
+     * What the 22-character shape is for. The logo is committed by hand and the
+     * two fixture sleeves are drawn by `make-seed-sleeve.mjs`, and the log will
+     * never name any of the three - so a prune that recognised a cover by its
+     * extension, or by living in this directory, would delete all of them on
+     * its first run and commit the deletion.
+     *
+     * Their bytes are compared rather than just their names: a run that
+     * rewrote one has taken it as its own as surely as one that deleted it.
+     */
+    const kept = ["spotify-logo.svg", "seed-sleeve-a.webp", "seed-sleeve-b.webp"];
+    const ran = await sleeves({
+      body: sheet(row({ Link: link(ID) })),
+      covers: kept,
+      spotify: {},
+    });
+
+    expect(Object.keys(ran.covers).sort()).toEqual([`${ID}.webp`, ...kept].sort());
+    for (const name of kept) {
+      expect(ran.covers[name].toString(), `${name} was rewritten by the job`).toBe(
+        seededCover(name),
+      );
+    }
+  });
+
+  test("a run that refuses the sheet deletes no sleeve", async () => {
+    /*
+     * The prune runs alongside a write and nowhere else. A sheet with a typo in
+     * it leaves the committed log standing, so the art that log points at has
+     * to stand with it - pruned against a sheet that was never accepted, every
+     * cover on the page would go at once.
+     */
+    const ran = await run({
+      body: sheet(row({ Link: link(ID), Score: "9" })),
+      covers: [`${ID}.webp`],
+      spotify: {},
+    });
+
+    expect(ran.code).toBe(1);
+    expect(Object.keys(ran.covers), "art was pruned by a run that wrote no log").toEqual([
+      `${ID}.webp`,
+    ]);
+  });
+
+  test("a run that writes nothing deletes no sleeve", async () => {
+    // The other way a run ends without writing: a sheet with nothing on or
+    // before today, against a repo with no committed log to shrink.
+    const ran = await run({ body: sheet(), covers: [`${STALE}.webp`], spotify: {} });
+
+    expect(ran.code).toBe(0);
+    expect(ran.written).toBeNull();
+    expect(Object.keys(ran.covers)).toEqual([`${STALE}.webp`]);
   });
 });
 

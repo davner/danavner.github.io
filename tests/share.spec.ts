@@ -1445,21 +1445,39 @@ test.describe("share an album", () => {
 
   /*
    * Bounds on the body block, not predictions of it. The take is set at 40px
-   * over 888px, which is around 45 characters a line, and the sheet holds six
-   * 56px lines under even the tallest heading it can carry - a two-line title
-   * over a two-line credit, with no sleeve above them.
+   * over 888px, which is around 43 characters a line, and the block runs from
+   * under the score down to 1556.
    *
-   * So a take under `WHOLE_TAKE` fits the card whole with lines to spare, and
-   * one over `CUT_TAKE` needs more than the two the excerpt may reserve while
-   * still fitting whole. A review over `LONG_REVIEW` is several times the two
-   * 46px lines the excerpt is cut to, so a card carrying one is drawing an
-   * excerpt rather than a review that happened to fit. Move the block or shrink
-   * the sheet far enough for any of that to stop holding and these fail and say
-   * so.
+   * The sleeve is what makes that budget tight. A 760px band and the 40px of
+   * air under it start the type at 800 where a card with no picture starts it
+   * at 620, so an album with art has 180px less to set a verdict and an
+   * excerpt in - and the excerpt is measured out of what the take leaves, so
+   * it is the half that goes first. Two 56px lines of take is what still
+   * leaves a 46px line for the excerpt to be drawn on under the headings the
+   * log carries; three does not.
+   *
+   * So a take under `WHOLE_TAKE` is those two lines, and one over `CUT_TAKE`
+   * is more lines than the excerpt could ever have reserved - which is what
+   * makes a take that survives whole beside a review one that had first claim
+   * on the sheet rather than one that was short enough not to matter. A review
+   * over `LONG_REVIEW` is several times the two 46px lines the excerpt is cut
+   * to, so a card carrying one is drawing an excerpt rather than a review that
+   * happened to fit. Move the block or shrink the sheet far enough for any of
+   * that to stop holding and these fail and say so.
    */
-  const WHOLE_TAKE = 140;
+  const WHOLE_TAKE = 80;
   const CUT_TAKE = 150;
   const LONG_REVIEW = 400;
+
+  /**
+   * The sleeve band, and the rows of it the 420px fade into the sheet has not
+   * reached - which is the part of a picture that arrives at full strength.
+   */
+  const SLEEVE_HEIGHT = 760;
+  const SLEEVE_CLEAR = SLEEVE_HEIGHT - 420;
+
+  /** How far a sleeve pushes the type down: the band and its air, against the 620 without. */
+  const BAND_DROP = SLEEVE_HEIGHT + 40 - 620;
 
   /** The card's footer rule, 300px off the foot of a 1920px sheet. */
   const FOOTER_RULE = 1620;
@@ -1474,6 +1492,9 @@ test.describe("share an album", () => {
   const longTake = ALBUMS.find(
     (album) => album.take.length >= CUT_TAKE && album.review.trim().length >= LONG_REVIEW,
   );
+
+  /** The newest album the log gives a sleeve, which is the only card that draws one. */
+  const covered = ALBUMS.find((album) => album.cover !== "");
 
   /** Opens the sheet on one page and hands back the card once it is drawn. */
   async function openCard(page: Page, path: string): Promise<Locator> {
@@ -1607,6 +1628,67 @@ test.describe("share an album", () => {
       1080, 1920,
     ]);
     return runs.filter((run) => run.top < FOOTER_RULE);
+  }
+
+  /**
+   * The brightest pixel in each row of the sleeve band, down to where the fade
+   * into the sheet begins.
+   *
+   * Measured rather than classified, because a picture is not type: `marks`
+   * finds a run only where a row clears the threshold a line of ink sets, and a
+   * sleeve can sit under that for its whole height without being any less
+   * drawn. What a case does with this is compare two renders of one album, so
+   * nothing here has to decide how light a sleeve ought to be.
+   */
+  async function bandRows(card: Locator): Promise<number[]> {
+    return card.evaluate(async (img, clear) => {
+      const bitmap = new Image();
+      bitmap.src = (img as HTMLImageElement).src;
+      await bitmap.decode();
+
+      const sheet = document.createElement("canvas");
+      sheet.width = bitmap.naturalWidth;
+      sheet.height = clear;
+      const context = sheet.getContext("2d", { willReadFrequently: true })!;
+      context.drawImage(bitmap, 0, 0);
+
+      const pixels = context.getImageData(0, 0, sheet.width, clear).data;
+      const rows: number[] = [];
+
+      for (let y = 0; y < clear; y++) {
+        let brightest = 0;
+        for (let x = 0; x < sheet.width; x++) {
+          const at = (y * sheet.width + x) * 4;
+          const luma = 0.2126 * pixels[at] + 0.7152 * pixels[at + 1] + 0.0722 * pixels[at + 2];
+          if (luma > brightest) brightest = luma;
+        }
+        rows.push(brightest);
+      }
+
+      return rows;
+    }, SLEEVE_CLEAR);
+  }
+
+  /** One card, read as the runs of type on it and as the light in its sleeve band. */
+  async function sheetOf(page: Page, slug: string) {
+    const card = await openCard(page, `/dan-fm/${slug}`);
+    return { card, runs: await body(card), band: await bandRows(card) };
+  }
+
+  /**
+   * One album drawn twice: with its sleeve, and with the sleeve refused.
+   *
+   * A blocked request is what `loadImage`'s null actually looks like from
+   * outside - a cover the deploy has not caught up with, a file the prune took,
+   * a reader on a connection that dropped the image and kept the page. It is
+   * also the only way to hold everything but the picture still, which is what
+   * lets a case ask what the sleeve alone was worth.
+   */
+  async function litAndBare(page: Page, slug: string) {
+    const lit = await sheetOf(page, slug);
+    await page.route("**/img/dan-fm/**", (route) => route.abort());
+
+    return { lit, bare: await sheetOf(page, slug) };
   }
 
   test("sharing from the station sends the station, not the album on it", async ({ page }) => {
@@ -1744,6 +1826,76 @@ test.describe("share an album", () => {
     );
 
     const card = await openCard(page, `/dan-fm/${longTake!.slug}`);
+    await expect(card).toHaveAttribute("data-truncated", "false");
+  });
+
+  test("an album with a sleeve starts its type a whole band lower", async ({ page }) => {
+    /*
+     * The layout half of what a cover changes, and the half a screenshot of a
+     * finished card cannot argue with. A renderer that drew the sleeve and then
+     * laid the readout out where a sleeveless card puts it would print the
+     * station's name across the record.
+     *
+     * The lit card is read from the first run at or under the band rather than
+     * from its first run outright, because a bright enough sleeve is a mark in
+     * its own right and this is a question about where the type went.
+     */
+    test.skip(covered === undefined, "no album in the log the build read has a sleeve");
+
+    const { lit, bare } = await litAndBare(page, covered!.slug);
+    const under = lit.runs.find((run) => run.top >= SLEEVE_HEIGHT);
+
+    expect(under, "nothing at all was drawn under the sleeve band").toBeDefined();
+    expect(under!.top - bare.runs[0].top, "the sleeve did not move the type").toBe(BAND_DROP);
+  });
+
+  test("the sleeve band carries the picture rather than the bare sheet", async ({ page }) => {
+    /*
+     * Room made for a sleeve and a sleeve drawn into that room look identical
+     * to every assertion about where the type sits, and a card that reserved
+     * 760px and painted nothing into it is a poster with a black bar across the
+     * top of it.
+     *
+     * Compared row for row against the same album with the sleeve refused, so
+     * the ember bloom - which is painted over the band either way - cancels,
+     * and what is left is whatever the picture added.
+     */
+    test.skip(covered === undefined, "no album in the log the build read has a sleeve");
+
+    const { lit, bare } = await litAndBare(page, covered!.slug);
+
+    expect(lit.band).toHaveLength(SLEEVE_CLEAR);
+    expect(
+      lit.band.filter((row, index) => row > bare.band[index]).length,
+      "the band is no lighter with a sleeve in it than with none",
+    ).toBe(SLEEVE_CLEAR);
+  });
+
+  test("a sleeve that will not load costs the card its picture and nothing else", async ({
+    page,
+  }) => {
+    /*
+     * `loadImage` resolves null rather than throwing, and this card is what
+     * takes that bargain: a share that failed outright over a sleeve would cost
+     * the reader the poster as well as the picture. So the band closes up, the
+     * type moves back to where an album with no art sets it, and every other
+     * mark on the sheet is made exactly as it would have been.
+     */
+    test.skip(covered === undefined, "no album in the log the build read has a sleeve");
+
+    await page.route("**/img/dan-fm/**", (route) => route.abort());
+    const card = await openCard(page, `/dan-fm/${covered!.slug}`);
+    const runs = await body(card);
+
+    expect(runs[0].top, "the type stayed under a band with nothing in it").toBeLessThan(
+      SLEEVE_HEIGHT,
+    );
+    expect(
+      runs.some((run) => run.colour === "ink"),
+      "the card lost its type along with its picture",
+    ).toBe(true);
+    expect(runs.at(-1)!.bottom, "the body ran into the footer rule").toBeLessThan(FOOTER_RULE - 8);
+    // The flag is a claim about the verdict, and a missing picture is not one.
     await expect(card).toHaveAttribute("data-truncated", "false");
   });
 });

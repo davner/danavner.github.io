@@ -1091,6 +1091,10 @@ Things that were not obvious, in case you hit them too:
   either summary. The rule is enforced rather than remembered:
   `tsconfig.node.json` lists exactly these files and defines no `@` path, so an
   aliased import fails `tsc -b` before the build reaches Vite.
+  `dan-fm-summary.ts` is on that list from the day it was written rather than
+  from the day Node first reaches it: the constraint is invisible until an
+  aliased import is already there, and by then honouring it is a refactor
+  rather than a rule.
 
 ---
 

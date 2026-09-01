@@ -16,6 +16,9 @@ const MAX_RATING = 5;
 /** `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` - you remember some nights better than others. */
 const DATE = /^\d{4}(-\d{2}(-\d{2})?)?$/;
 
+/** A whole date and nothing shorter, for the collections a job writes. */
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
 interface Frontmatter {
   file: string;
   meta: Record<string, unknown>;
@@ -577,6 +580,283 @@ function readVinyl(root: string, publicDir: string) {
   };
 }
 
+/** One album's standout or skip. Mirrors `Track` in `src/lib/dan-fm.ts`. */
+interface DanFmTrackJson {
+  name: string;
+  id: string;
+}
+
+/** One day's listen. Mirrors `Album` in `src/lib/dan-fm.ts`. */
+interface DanFmAlbumJson {
+  date: string;
+  slug: string;
+  ordinal: number;
+  artist: string;
+  album: string;
+  year: number | null;
+  yearIsPressing: boolean;
+  genre: string;
+  source: string;
+  from: string;
+  score: number;
+  shelf: string;
+  standout: DanFmTrackJson;
+  skip: DanFmTrackJson;
+  take: string;
+  tags: string[];
+  later: number | null;
+  spotifyId: string;
+  url: string;
+  cover: string;
+}
+
+/**
+ * A JSON object, narrowed rather than merely tested. Every reader here indexes
+ * a field off a row the moment it has one, and `null` is a row shape a fetch
+ * script produces by accident, so the alternative to narrowing is a
+ * `TypeError` that names neither the file nor the row.
+ */
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/**
+ * The day a row is filed under, or `null` for anything that is not one: a
+ * `YYYY-MM-DD` string naming a date that exists.
+ *
+ * Shape is not enough. `2026-09-31` is a date no calendar has, and nothing
+ * downstream would say so - it spells out as "September 31, 2026", the day
+ * count reads it as October 1, and the station clock can never equal it, so
+ * that album silently never airs. Round-tripped through `Date` rather than
+ * range-checked by hand, which gets leap years right for free.
+ */
+function asLogDate(value: unknown): string | null {
+  const date = asTrimmedString(value);
+  if (!ISO_DATE.test(date)) return null;
+
+  // A month of 13 parses to `NaN`, where `toISOString` throws rather than
+  // returning something that fails the comparison.
+  const parsed = new Date(`${date}T00:00:00Z`);
+  if (Number.isNaN(parsed.getTime())) return null;
+
+  return parsed.toISOString().slice(0, 10) === date ? date : null;
+}
+
+/**
+ * The year on a row, or `null` - which is the ordinary case, because the year
+ * is hand-typed and often left out.
+ *
+ * Unreadable values are `null` too, and that is the deliberate difference from
+ * `asHalfStep`, which fails the build on the same input. A score is what the
+ * entry is for and a wrong one is worth stopping the build over; a year is a
+ * detail the log routinely omits, so one cell nobody can read drops out rather
+ * than holding the site at its last payload until someone edits a sheet. What
+ * it will not do either way is coerce: `true` reaches `Number` as a clean 1,
+ * and a year nobody typed prints beside the genre as though it were one.
+ */
+function asYear(value: unknown): number | null {
+  if (typeof value !== "number" && typeof value !== "string") return null;
+
+  const year = Number(value);
+  return Number.isInteger(year) && year > 0 ? year : null;
+}
+
+/**
+ * A slug the static host can actually serve. It is a URL path segment and a
+ * file name at once, so `a/b` would be published as a nested path that answers
+ * 404 rather than as one album, and a capital or a space would answer
+ * differently depending on the host.
+ */
+const DAN_FM_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+/**
+ * A score the log can hold, or `null` for anything else: a half step from 1 to
+ * `MAX_RATING`, written as a number or as the digits of one. The page draws the
+ * score as a fractional fill, so a 3.7 would settle silently at a position the
+ * scale does not offer rather than say anything about itself.
+ *
+ * The type check is not ceremony in front of `Number`. `true` and `[1]` both
+ * coerce to a clean 1, and a payload holding either is a write that went wrong
+ * rather than a record anyone scored - which is the whole class of damage this
+ * guard exists to catch.
+ */
+function asHalfStep(value: unknown): number | null {
+  if (typeof value !== "number" && typeof value !== "string") return null;
+
+  const score = Number(value);
+  if (!Number.isFinite(score) || score < 1 || score > MAX_RATING) return null;
+
+  return (score * 2) % 1 === 0 ? score : null;
+}
+
+/**
+ * A track name and the Spotify id it matched, both empty when the row left it
+ * blank or nothing matched. Neither is required: an album with no favourite is
+ * a real thing to have listened to.
+ */
+function danFmTrack(value: unknown): DanFmTrackJson {
+  const raw = (value ?? {}) as Record<string, unknown>;
+  return { name: asTrimmedString(raw.name), id: asTrimmedString(raw.id) };
+}
+
+/**
+ * The album log - one album a day, read from `src/content/dan-fm.json`, which
+ * the scheduled job writes from a published sheet rather than anyone typing by
+ * hand.
+ *
+ * Generated, so the validation here guards the failure `readVinyl` guards: a
+ * fetch that half-succeeded and committed rows with no artist, an unscorable
+ * score, or a cover pointing at a file that was never written.
+ *
+ * Three sources, in this order. A real payload always wins. Failing that,
+ * `dan-fm.seed.json` stands in when `seed` is set - a hand-written fixture, so
+ * that a build can be asked for a populated log instead of an empty one. An
+ * empty log draws none of the controls a browser sweep would otherwise have to
+ * find, which is the whole reason the fixture is here. Failing both, an empty
+ * log, which is what the repo builds before the first fetch has ever run and
+ * what the page renders its own empty state for.
+ *
+ * Two separate things keep the fixture off the live site: `deploy.yml` sets no
+ * seed, and the precedence above retires the fixture on its own the day a real
+ * payload lands.
+ *
+ * Blank cells are the job's to normalise, not this reader's. A published sheet
+ * exports an empty cell as "", so a job that passes cells through verbatim
+ * writes `later: ""` and fails here rather than reading as absent. That is the
+ * intended split: the payload is machine-written, and a reader that quietly
+ * accepted "" as "no number" would accept it for `score` too, where there is no
+ * absent to fall back on. The job writes `null`.
+ */
+function readDanFm(root: string, publicDir: string, seed: boolean) {
+  const empty = { url: "", fetched: "", albums: [] as DanFmAlbumJson[] };
+
+  const real = "src/content/dan-fm.json";
+  const fixture = "src/content/dan-fm.seed.json";
+
+  let where = "";
+  if (existsSync(path.resolve(root, real))) where = real;
+  else if (seed && existsSync(path.resolve(root, fixture))) where = fixture;
+  else return empty;
+
+  const fail = (message: string): never => invalid("dan.fm payload", where, message);
+
+  let payload: Record<string, unknown>;
+  try {
+    payload = JSON.parse(readFileSync(path.resolve(root, where), "utf8"));
+  } catch (error) {
+    return fail(`could not be parsed as JSON (${(error as Error).message})`);
+  }
+
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    fail("must be a JSON object");
+  }
+
+  const raw = Array.isArray(payload.albums)
+    ? (payload.albums as unknown[])
+    : fail("`albums` must be an array");
+
+  const seenDates = new Set<string>();
+  const seenSlugs = new Set<string>();
+
+  const albums = raw.map((row, index) => {
+    const at = `\`albums[${index}]\``;
+    const entry = isRecord(row) ? row : fail(`${at} must be a JSON object`);
+
+    const date =
+      asLogDate(entry.date) ??
+      fail(
+        `${at} needs a \`date\` that is a real \`YYYY-MM-DD\` day, not ${JSON.stringify(entry.date)}`,
+      );
+    // The date is the log's key: one album a day is the whole format. Two rows
+    // on one day would number every later album wrong and leave the page
+    // showing one of them with no way to tell which.
+    if (seenDates.has(date)) fail(`${at} repeats \`date\` ${date}`);
+    seenDates.add(date);
+
+    // The permalink and the React key both. A blank one collapses every album
+    // onto the same address, and a repeated one collapses two of them.
+    const slug = asTrimmedString(entry.slug);
+    if (!slug) fail(`${at} has no \`slug\``);
+    if (!DAN_FM_SLUG.test(slug)) fail(`${at} has a \`slug\` that is not a URL segment: "${slug}"`);
+    // A slug opens with the date that was just proved unique, so a collision
+    // means the job derived the slug wrongly rather than two albums clashing.
+    // That is the failure worth catching, and the reason this check is not the
+    // unreachable duplicate of the one above that it looks like.
+    if (seenSlugs.has(slug)) fail(`${at} repeats \`slug\` "${slug}"`);
+    seenSlugs.add(slug);
+
+    const artist = asTrimmedString(entry.artist);
+    const album = asTrimmedString(entry.album);
+    if (!artist) fail(`${at} has no \`artist\``);
+    if (!album) fail(`${at} has no \`album\``);
+
+    const score =
+      asHalfStep(entry.score) ??
+      fail(
+        `${at} needs a \`score\` of 1 to ${MAX_RATING} in half steps, not ${JSON.stringify(entry.score)}`,
+      );
+
+    // A second score after living with the record for a while. Absent is the
+    // normal case and means "the first reading still stands".
+    const later =
+      entry.later == null
+        ? null
+        : (asHalfStep(entry.later) ??
+          fail(
+            `${at} needs a \`later\` of 1 to ${MAX_RATING} in half steps, not ${JSON.stringify(entry.later)}`,
+          ));
+
+    // A cover path pointing at nothing would ship as a broken tile, exactly
+    // like a mistyped photo path in a show.
+    const cover = asTrimmedString(entry.cover);
+    if (cover && !existsSync(path.join(publicDir, cover))) {
+      fail(`${at}.cover does not exist: public/${cover.replace(/^\/+/, "")}`);
+    }
+
+    const year = asYear(entry.year);
+
+    return {
+      date,
+      slug,
+      artist,
+      album,
+      year,
+      // A pressing year is a claim about where the number came from, so it
+      // cannot outlive the number itself.
+      yearIsPressing: year != null && entry.yearIsPressing === true,
+      genre: asTrimmedString(entry.genre),
+      source: asTrimmedString(entry.source),
+      from: asTrimmedString(entry.from),
+      score,
+      shelf: asTrimmedString(entry.shelf),
+      standout: danFmTrack(entry.standout),
+      skip: danFmTrack(entry.skip),
+      take: asTrimmedString(entry.take),
+      tags: asStringArray(entry.tags)
+        .map((tag) => tag.trim())
+        .filter(Boolean),
+      later,
+      spotifyId: asTrimmedString(entry.spotifyId),
+      url: asTrimmedString(entry.url),
+      cover,
+    };
+  });
+
+  return {
+    url: asTrimmedString(payload.url),
+    fetched: asTrimmedString(payload.fetched),
+    // Numbered oldest-first and handed over newest-first: "day 1" counts up
+    // from the first album, and every list on the page reads down from the most
+    // recent. The ordinal is a position in the log rather than a field the file
+    // carries, so a stale number can never disagree with the albums it counts -
+    // the rule the vinyl payload's owner counts already follow.
+    albums: [...albums]
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .map((entry, index) => ({ ...entry, ordinal: index + 1 }))
+      .reverse(),
+  };
+}
+
 /**
  * The comics, read from `src/content/comics.json` - written nightly from League
  * of Comic Geeks by `scripts/update-comics.mjs` rather than typed by hand.
@@ -740,8 +1020,6 @@ interface FortniteSeasonJson {
   backendValue: number | null;
   main: { name: string; id: string; image: string; style: string } | null;
 }
-
-const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
  * The season calendar, from `src/content/fortnite-seasons.json`.
@@ -1305,6 +1583,7 @@ export function contentPlugin(): Plugin {
   let root = "";
   let publicDir = "";
   let includeDrafts = false;
+  let seedDanFm = false;
 
   /**
    * Pages with their own virtual module rather than the `Collection` shape.
@@ -1316,6 +1595,7 @@ export function contentPlugin(): Plugin {
   const NOW = "now";
   const COMICS = "comics";
   const FORTNITE = "fortnite";
+  const DAN_FM = "dan-fm";
 
   function virtualId(name: string) {
     return `virtual:${name}`;
@@ -1344,6 +1624,15 @@ export function contentPlugin(): Plugin {
       root = config.root;
       publicDir = config.publicDir;
       includeDrafts = config.command === "serve";
+      /*
+       * Whether the album log may fall back to its fixture: always in dev, and
+       * in a build that asks for it by name. `DANFM_SEED` is how a build gets a
+       * populated log to render, because an empty one draws none of the
+       * controls a browser sweep would have to find. `deploy.yml` sets nothing,
+       * and `readDanFm` prefers a real payload regardless, so the fixture
+       * reaches neither production nor any build made after the first fetch.
+       */
+      seedDanFm = config.command === "serve" || process.env.DANFM_SEED === "1";
     },
 
     // Once per build and once per dev server start, rather than inside `load`:
@@ -1354,7 +1643,7 @@ export function contentPlugin(): Plugin {
     },
 
     resolveId(id) {
-      for (const single of [VINYL, NOW, COMICS, FORTNITE]) {
+      for (const single of [VINYL, NOW, COMICS, FORTNITE, DAN_FM]) {
         if (id === virtualId(single)) return resolvedId(single);
       }
       const collection = COLLECTIONS.find((entry) => id === virtualId(entry.name));
@@ -1373,6 +1662,9 @@ export function contentPlugin(): Plugin {
       }
       if (id === resolvedId(FORTNITE)) {
         return `export const fortnite = ${JSON.stringify(readFortnite(root, publicDir))};`;
+      }
+      if (id === resolvedId(DAN_FM)) {
+        return `export const danFm = ${JSON.stringify(readDanFm(root, publicDir, seedDanFm))};`;
       }
 
       const collection = COLLECTIONS.find((entry) => id === resolvedId(entry.name));
@@ -1399,6 +1691,13 @@ export function contentPlugin(): Plugin {
           file === path.resolve(root, "src/content/fortnite-seasons.json")
         )
           return reload(FORTNITE);
+        // The album log, and the fixture standing in for it until the first
+        // fetch - editing either in dev should show up without a restart.
+        if (
+          file === path.resolve(root, "src/content/dan-fm.json") ||
+          file === path.resolve(root, "src/content/dan-fm.seed.json")
+        )
+          return reload(DAN_FM);
 
         if (!file.endsWith(".md")) return;
 

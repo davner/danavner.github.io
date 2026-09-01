@@ -1,0 +1,222 @@
+{
+  "url": "https://docs.google.com/spreadsheets/d/e/2PACX-dan-fm-seed-fixture/pubhtml",
+  "fetched": "2026-08-29",
+  "albums": [
+    {
+      "date": "2026-08-28",
+      "slug": "2026-08-28-ivy-bellweather-small-hours-large-rooms",
+      "artist": "Ivy Bellweather",
+      "album": "Small Hours, Large Rooms",
+      "year": 2026,
+      "yearIsPressing": false,
+      "genre": "Jazz",
+      "source": "A live set I could not stop thinking about",
+      "from": "Alexis",
+      "score": 4,
+      "shelf": "Keeping",
+      "standout": {
+        "name": "Large Rooms",
+        "id": ""
+      },
+      "skip": {
+        "name": "Small Hours",
+        "id": ""
+      },
+      "take": "Recorded live and it sounds like it, in the way that is a compliment.",
+      "tags": ["piano", "late night"],
+      "later": null,
+      "spotifyId": "0DqYrWmKtXbNzLpVcHsFj3",
+      "url": "https://open.spotify.com/album/0DqYrWmKtXbNzLpVcHsFj3",
+      "cover": ""
+    },
+    {
+      "date": "2026-08-27",
+      "slug": "2026-08-27-the-nightporter-room-service",
+      "artist": "The Nightporter",
+      "album": "Room Service",
+      "year": 1983,
+      "yearIsPressing": false,
+      "genre": "Sophisti-pop",
+      "source": "A crate dig",
+      "from": "Dad",
+      "score": 3.5,
+      "shelf": "Undecided",
+      "standout": {
+        "name": "Front Desk",
+        "id": ""
+      },
+      "skip": {
+        "name": "Checkout",
+        "id": ""
+      },
+      "take": "Immaculate production doing a lot of work for songs that are mostly fine.",
+      "tags": ["smooth", "eighties"],
+      "later": null,
+      "spotifyId": "4TnXsMbQpLzVrKwHcYdJg9",
+      "url": "https://open.spotify.com/album/4TnXsMbQpLzVrKwHcYdJg9",
+      "cover": ""
+    },
+    {
+      "date": "2026-08-26",
+      "slug": "2026-08-26-cassette-sunday-two-weeks-in-the-hills",
+      "artist": "Cassette Sunday",
+      "album": "Two Weeks in the Hills",
+      "year": 2022,
+      "yearIsPressing": false,
+      "genre": "Bedroom pop",
+      "source": "The algorithm, for once",
+      "from": "Alexis",
+      "score": 5,
+      "shelf": "Keeping",
+      "standout": {
+        "name": "Two Weeks",
+        "id": ""
+      },
+      "skip": {
+        "name": "",
+        "id": ""
+      },
+      "take": "The best thing I have heard all month and it was recorded in somebody's kitchen.",
+      "tags": ["warm", "summer", "repeat"],
+      "later": null,
+      "spotifyId": "6JhBtLqXnWvRcYmKzPdSf2",
+      "url": "https://open.spotify.com/album/6JhBtLqXnWvRcYmKzPdSf2",
+      "cover": ""
+    },
+    {
+      "date": "2026-08-25",
+      "slug": "2026-08-25-pale-gymnasium-tinnitus-bells",
+      "artist": "Pale Gymnasium",
+      "album": "Tinnitus Bells",
+      "year": 2011,
+      "yearIsPressing": false,
+      "genre": "Noise rock",
+      "source": "A zine I found in a box",
+      "from": "Sam",
+      "score": 2.5,
+      "shelf": "Passing it on",
+      "standout": {
+        "name": "Gymnasium",
+        "id": ""
+      },
+      "skip": {
+        "name": "Bells",
+        "id": ""
+      },
+      "take": "",
+      "tags": [],
+      "later": null,
+      "spotifyId": "",
+      "url": "",
+      "cover": ""
+    },
+    {
+      "date": "2026-08-23",
+      "slug": "2026-08-23-nell-ardito-second-person",
+      "artist": "Nell Ardito",
+      "album": "Second Person",
+      "year": 2024,
+      "yearIsPressing": false,
+      "genre": "Singer-songwriter",
+      "source": "The radio, driving home",
+      "from": "Mom",
+      "score": 4.5,
+      "shelf": "Keeping",
+      "standout": {
+        "name": "Anyone Else",
+        "id": ""
+      },
+      "skip": {
+        "name": "Postcard",
+        "id": ""
+      },
+      "take": "Four songs in I stopped doing anything else. Track seven is the one I keep going back for.",
+      "tags": ["voice", "sad", "repeat"],
+      "later": 3.5,
+      "spotifyId": "1KcVpRnT8mZqYbWxLfDgHu",
+      "url": "https://open.spotify.com/album/1KcVpRnT8mZqYbWxLfDgHu",
+      "cover": ""
+    },
+    {
+      "date": "2026-08-22",
+      "slug": "2026-08-22-hollow-coast-brine",
+      "artist": "Hollow Coast",
+      "album": "Brine",
+      "year": 1998,
+      "yearIsPressing": true,
+      "genre": "Hardcore",
+      "source": "A playlist that got away from me",
+      "from": "",
+      "score": 1.5,
+      "shelf": "Not for me",
+      "standout": {
+        "name": "",
+        "id": ""
+      },
+      "skip": {
+        "name": "Salt Flat",
+        "id": ""
+      },
+      "take": "Forty minutes of a band shouting \"we are not for you\", which I believe, and yet here we are.",
+      "tags": ["loud"],
+      "later": null,
+      "spotifyId": "7WgQxNbYr3TfKmVzHdLp0s",
+      "url": "https://open.spotify.com/album/7WgQxNbYr3TfKmVzHdLp0s",
+      "cover": ""
+    },
+    {
+      "date": "2026-08-21",
+      "slug": "2026-08-21-marguerite-ko-everything-we-meant-to-say-before-the-tape-ran",
+      "artist": "Marguerite Ko",
+      "album": "Everything We Meant to Say Before the Tape Ran Out",
+      "year": null,
+      "yearIsPressing": false,
+      "genre": "Ambient folk",
+      "source": "A friend's story about it",
+      "from": "Devon",
+      "score": 3,
+      "shelf": "Undecided",
+      "standout": {
+        "name": "Winter Count",
+        "id": ""
+      },
+      "skip": {
+        "name": "",
+        "id": ""
+      },
+      "take": "Slid past me on the first pass. Came back to it on a walk and half of it landed.",
+      "tags": ["quiet", "headphones"],
+      "later": 4.5,
+      "spotifyId": "2FpTdZq9BvNs4kXhLmRcJw",
+      "url": "https://open.spotify.com/album/2FpTdZq9BvNs4kXhLmRcJw",
+      "cover": ""
+    },
+    {
+      "date": "2026-08-20",
+      "slug": "2026-08-20-the-standing-wave-low-tide-signals",
+      "artist": "The Standing Wave",
+      "album": "Low Tide Signals",
+      "year": 2019,
+      "yearIsPressing": false,
+      "genre": "Post-punk",
+      "source": "A listening post at the record store",
+      "from": "Alexis",
+      "score": 4,
+      "shelf": "Keeping",
+      "standout": {
+        "name": "Harbour Lights",
+        "id": ""
+      },
+      "skip": {
+        "name": "Second Sitting",
+        "id": ""
+      },
+      "take": "Cold guitars and a drummer who refuses to hurry. The back half is where it finally opens up.",
+      "tags": ["moody", "guitars", "late night"],
+      "later": null,
+      "spotifyId": "5aMbLtQm5Yx1nCq7vTzKwR",
+      "url": "https://open.spotify.com/album/5aMbLtQm5Yx1nCq7vTzKwR",
+      "cover": ""
+    }
+  ]
+}

@@ -56,3 +56,13 @@ declare module "virtual:vinyl" {
    */
   export const vinyl: VinylPayload;
 }
+
+declare module "virtual:dan-fm" {
+  import type { DanFmPayload } from "@/lib/dan-fm";
+
+  /**
+   * The album log, read from a published sheet and validated at build time.
+   * Supplied by `contentPlugin()` in `vite-plugin-content.ts`.
+   */
+  export const danFm: DanFmPayload;
+}

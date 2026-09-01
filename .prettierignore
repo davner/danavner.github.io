@@ -15,6 +15,10 @@ src/content/comics.json
 src/content/fortnite.json
 src/content/fortnite-seasons.json
 
+# Only the fetched half of the album log. The seed fixture beside it,
+# `dan-fm.seed.json`, is written by hand and formatted like any other source.
+src/content/dan-fm.json
+
 # CMS-authored content. Sveltia writes these collections through the GitHub
 # API, where no pre-commit hook runs, and it preserves exactly what was typed
 # (a trailing space on a phone once turned CI red). Same reasoning as the JSON

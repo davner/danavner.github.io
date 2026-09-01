@@ -1,5 +1,6 @@
 import { danFm as payload } from "virtual:dan-fm";
 
+import { MAX_SCORE } from "./dan-fm-summary";
 import { SITE_TIME_ZONE } from "./site";
 
 /**
@@ -193,14 +194,20 @@ export function station(list: Album[] = albums, now?: Date): Station {
 }
 
 /**
- * How many albums the charts need before they say anything.
+ * How many albums the section needs before it draws any board at all.
  *
- * Averages over a handful of records describe the handful rather than the taste,
- * and a board that swings a whole point because one album landed is a board
- * nobody should read. The empty state counts down to this rather than naming a
- * month, since the log misses days and a date would drift off the count.
+ * Not what keeps the figures honest - each board refuses what it cannot
+ * support, so an average never stands on one album and a spread never draws a
+ * lone bar at full width. What is left for this gate is whether the section is
+ * worth opening at all: a log this short rarely holds the spread any board
+ * needs, and a grid of panels all saying "not yet" is worse than one sentence
+ * admitting the same thing. A longer log can still starve every board, and
+ * there each board's own sentence is the right place to say so.
+ *
+ * The empty state counts down to this rather than naming a month, since the log
+ * misses days and a date would drift off the count.
  */
-export const CHART_MINIMUM = 30;
+export const CHART_MINIMUM = 7;
 
 export interface DanFmStats {
   /** Albums logged. */
@@ -229,6 +236,273 @@ export function statsFor(list: Album[]): DanFmStats {
     days: first && latest ? spanInDays(first.date, latest.date) : 0,
     first,
     latest,
+  };
+}
+
+/*
+ * The charts.
+ *
+ * Four boards of bars and one line, every one of them read off the same
+ * committed payload the archive filters.
+ *
+ * All of them count `score` and none of them counts `later`. A row can carry a
+ * second score, and a board that quietly preferred it would be averaging one
+ * number for those albums and a different one for the rest. What living with a
+ * record did to it is printed beside the record, where both figures are shown.
+ */
+
+/**
+ * How many albums a name needs behind it before a board averages them.
+ *
+ * One of something is not a pattern, the rule `vinyl.ts` applies to its
+ * collected-most boards. An average over one album is that album rather than a
+ * track record, and a single lucky 5 would otherwise top a leaderboard on it.
+ */
+export const RECOMMENDER_MINIMUM = 2;
+
+/**
+ * The scale's floor, `MAX_SCORE` being its top.
+ *
+ * The score line is drawn over the whole scale rather than over the range the
+ * log happens to hold, so a day that logs a new low does not silently redraw
+ * every album before it at a different height.
+ */
+export const MIN_SCORE = 1;
+
+/** How many rows a ranked board draws before the tail is left to a line of text. */
+const BOARD_ROWS = 8;
+
+export interface BoardRow {
+  /** What the row is filed under, spelled as the sheet spells it. */
+  name: string;
+  /** Albums behind it: what a share counts, and what an average is over. */
+  count: number;
+  /** The figure the row prints, and the length the bar is drawn to. */
+  value: number;
+}
+
+/**
+ * What a board's figures are, which is the whole of what differs between them.
+ *
+ * A `share` counts albums and draws every row against the log, so two share
+ * boards side by side are read at one scale. An `average` scores them and draws
+ * every row against the top of the rating scale.
+ */
+export type BoardKind = "share" | "average";
+
+export interface Board {
+  id: string;
+  /** Names the board over its rows. */
+  title: string;
+  kind: BoardKind;
+  /** Empty until the log has earned them, which is what `empty` is for. */
+  rows: BoardRow[];
+  /** The value a full-length bar stands for. */
+  top: number;
+  /** One line under the rows, where the board owes the reader its rule. */
+  note?: string;
+  /** What the board says in place of rows. */
+  empty: string;
+}
+
+/** The albums under each distinct value of one field, blanks dropped. */
+function groupBy(list: Album[], pick: (album: Album) => string): Map<string, Album[]> {
+  const held = new Map<string, Album[]>();
+
+  for (const album of list) {
+    const key = pick(album);
+    if (!key) continue;
+
+    const group = held.get(key);
+    if (group) group.push(album);
+    else held.set(key, [album]);
+  }
+
+  return held;
+}
+
+/**
+ * The mean of a list's scores to one decimal, or null for a list with nothing
+ * to average.
+ *
+ * Null rather than a zero, which would be a score outside the scale printed as
+ * though it were one. Trailing zeros are dropped for the reason `Rating` drops
+ * them: 4, not 4.0, on a log somebody keeps by hand.
+ */
+function averageScore(list: Album[]): number | null {
+  if (list.length === 0) return null;
+
+  const mean = list.reduce((sum, album) => sum + album.score, 0) / list.length;
+  return Number(mean.toFixed(1));
+}
+
+/**
+ * What the log is made of, biggest share first.
+ *
+ * A board of one row is a full-width bar claiming the log is all one thing,
+ * which the sentence in its place says better - the rule `facetsFor` applies to
+ * a control every row answers the same way.
+ */
+function genreBoard(list: Album[]): Board {
+  const held = [...groupBy(list, (album) => album.genre)]
+    .map(([name, group]) => ({ name, count: group.length, value: group.length }))
+    .sort((first, second) => second.count - first.count || first.name.localeCompare(second.name));
+
+  const rows = held.length > 1 ? held.slice(0, BOARD_ROWS) : [];
+
+  return {
+    id: "genre",
+    title: "What it is",
+    kind: "share",
+    rows,
+    top: list.length,
+    note:
+      rows.length > 0 && held.length > rows.length
+        ? `Top ${rows.length} of ${held.length} genres`
+        : undefined,
+    empty: "Not enough genres in the log to set against each other yet.",
+  };
+}
+
+/** "1990s" for a year, and "" for a row that never said one. */
+function decadeOf(year: number | null): string {
+  return year === null ? "" : `${Math.floor(year / 10) * 10}s`;
+}
+
+/**
+ * When the records came out, oldest decade first.
+ *
+ * Chronological rather than ranked, because a run of decades is read as a
+ * timeline and ranking it would file the 1970s between the 2010s and the 1990s.
+ * Sorted as strings, which is chronological order while a decade label is four
+ * digits and an "s" - the same thing that makes `YYYY-MM-DD` sortable.
+ *
+ * Uncapped, unlike the ranked boards: the number of decades a record can come
+ * from is bounded by how long records have existed.
+ *
+ * A row with no year is not a point in time and gets no bar. How many there are
+ * is said underneath, so the bars stay readable as shares of the log without a
+ * bucket that is not a decade absorbing the difference. That count answers for
+ * the bars and is printed only where there are bars: with none drawn there is
+ * no share for it to reconcile, and the sentence standing in for them is the
+ * whole of what the board claims.
+ */
+function decadeBoard(list: Album[]): Board {
+  const held = [...groupBy(list, (album) => decadeOf(album.year))]
+    .map(([name, group]) => ({ name, count: group.length, value: group.length }))
+    .sort((first, second) => first.name.localeCompare(second.name));
+
+  const rows = held.length > 1 ? held : [];
+  const undated = list.filter((album) => album.year === null).length;
+
+  return {
+    id: "decade",
+    title: "When it came out",
+    kind: "share",
+    rows,
+    top: list.length,
+    note: rows.length > 0 && undated > 0 ? `${undated} with no year` : undefined,
+    empty: "Not enough release years in the log to set against each other yet.",
+  };
+}
+
+/** The parts of an averaging board that are not the arithmetic. */
+interface AverageBoard {
+  id: string;
+  title: string;
+  /** The field the albums are grouped by. */
+  pick: (album: Album) => string;
+  /**
+   * What one row stands for, in the plural, for the note a cut board prints.
+   * Written out rather than derived from `id`, which names the column the rows
+   * are grouped by and not the things standing in them.
+   */
+  plural: string;
+  /** What a row's albums are called on this board, in the plural. */
+  counted: string;
+  note: string;
+  empty: string;
+}
+
+/**
+ * How well one column's values scored, best first.
+ *
+ * One qualifying row still draws, unlike a share board: a share means nothing
+ * without the shares beside it, and an average is a number on a scale the
+ * reader already knows the ends of.
+ */
+function averageBoard(list: Album[], board: AverageBoard): Board {
+  const held = [...groupBy(list, board.pick)]
+    .filter(([, group]) => group.length >= RECOMMENDER_MINIMUM)
+    .flatMap(([name, group]) => {
+      const value = averageScore(group);
+      return value === null ? [] : [{ name, count: group.length, value }];
+    })
+    .sort((first, second) => second.value - first.value || first.name.localeCompare(second.name));
+
+  const rows = held.slice(0, BOARD_ROWS);
+
+  // A cut ranking reads as the whole field, which the share boards' tail note
+  // answers - and in their shape, so two boards side by side are read the same
+  // way. It counts only the rows that cleared the minimum and names that bar in
+  // the same breath, rather than leaving a count and a rule to be reconciled.
+  const note =
+    held.length > rows.length
+      ? `Top ${rows.length} of ${held.length} ${board.plural} with ` +
+        `${RECOMMENDER_MINIMUM} ${board.counted} or more`
+      : board.note;
+
+  return {
+    id: board.id,
+    title: board.title,
+    kind: "average",
+    rows,
+    top: MAX_SCORE,
+    note: rows.length > 0 ? note : undefined,
+    empty: board.empty,
+  };
+}
+
+export interface DanFmCharts {
+  /** The log's mean score, or null for a log with nothing to average. */
+  average: number | null;
+  /** Every album's score, oldest first - the one board with time on an axis. */
+  line: number[];
+  boards: Board[];
+}
+
+/** Every board the log can support, and the ones it cannot, each saying so. */
+export function chartsFor(list: Album[]): DanFmCharts {
+  // Ordered off the dates rather than by reversing the payload, for the reason
+  // `statsFor` reads them: newest-first is how the build writes the file, not
+  // something a caller's list is bound by.
+  const oldestFirst = [...list].sort((first, second) => first.date.localeCompare(second.date));
+
+  return {
+    average: averageScore(list),
+    line: oldestFirst.map((album) => album.score),
+    boards: [
+      genreBoard(list),
+      decadeBoard(list),
+      averageBoard(list, {
+        id: "source",
+        title: "How it was found",
+        pick: (album) => album.source,
+        plural: "sources",
+        counted: "albums",
+        note: `${RECOMMENDER_MINIMUM} albums from a source before it appears.`,
+        empty: `No way of finding a record has ${RECOMMENDER_MINIMUM} albums behind it yet.`,
+      }),
+      averageBoard(list, {
+        id: "from",
+        title: "Whose recommendations land",
+        pick: (album) => album.from,
+        plural: "names",
+        counted: "recommendations",
+        note: `${RECOMMENDER_MINIMUM} recommendations before a name appears.`,
+        empty: `Nobody has recommended ${RECOMMENDER_MINIMUM} albums yet.`,
+      }),
+    ],
   };
 }
 

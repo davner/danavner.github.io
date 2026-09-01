@@ -527,16 +527,13 @@ function reported(text: string, pattern: RegExp): number | null {
 }
 
 /*
- * The three sentences, matched without regard to case: a section hands back the
+ * The two sentences, matched without regard to case: a section hands back the
  * text as rendered, and the `readout` treatment the tape's bar is set in
  * uppercases it.
  */
 
 /** "8 albums · 9 days", the archive's head, counting the whole log. */
 const ARCHIVE_COUNT = /(\d+) albums? · \d+ days?/i;
-
-/** "4 albums have scored", the tape's count of what cleared its bar. */
-const MIXTAPE_COUNT = /(\d+) albums? (?:has|have) scored/i;
 
 /**
  * "Standouts from everything 4 and up", the bar itself.
@@ -549,14 +546,18 @@ const MIXTAPE_COUNT = /(\d+) albums? (?:has|have) scored/i;
  */
 const MIXTAPE_BAR = /everything (\d+(?:\.\d+)?) and up/i;
 
+/** One per track on the tape. */
+function tapeRows(page: Page): Locator {
+  return section(page, "Mixtape").getByRole("listitem");
+}
+
 test.describe("what the page claims about the log", () => {
   test("no section calls the log empty while an album is on the page", async ({ page }) => {
     /*
-     * The four sections stand from day one, each with copy written for a log
-     * that has nothing in it. Three of them fill in later, but the copy ships
-     * now - and the first row the scheduled job commits puts every one of those
-     * sentences on a page that is simultaneously showing an album, a score and
-     * a review.
+     * The four sections stand from day one, each with an empty state written
+     * for a log that has nothing in it - and the first row the scheduled job
+     * commits puts every one of those on a page that is simultaneously showing
+     * an album, a score and a review.
      *
      * Asserted as the count each section owes rather than as the absence of the
      * sentence it must not be saying, because an absence is only ever worth the
@@ -602,7 +603,7 @@ test.describe("what the page claims about the log", () => {
       "no album in the log clears the mixtape's bar - nothing below is being asked",
     ).toBeGreaterThan(0);
 
-    // Soft, so a run reports both sentences rather than stopping at the first
+    // Soft, so a run reports both sections rather than stopping at the first
     // and leaving the second to be found again after it is fixed.
     expect
       .soft(
@@ -611,10 +612,12 @@ test.describe("what the page claims about the log", () => {
       )
       .toBe(LOGGED.length);
 
+    // The tape lists what cleared its bar rather than counting it in a
+    // sentence, so its half of this is the rows on screen.
     expect
       .soft(
-        reported(tape, MIXTAPE_COUNT),
-        "the mixtape is not counting what cleared its bar while a scored album is on the page",
+        await tapeRows(page).count(),
+        "the mixtape is not listing what cleared its bar while a scored album is on the page",
       )
       .toBe(keepers);
   });
@@ -1038,5 +1041,299 @@ test.describe("the archive", () => {
       clear,
       "the archive still offers to clear filters it has already cleared",
     ).toHaveCount(0);
+  });
+});
+
+/*
+ * The charts.
+ *
+ * Every figure on every board is settled without a browser in
+ * `tests/dan-fm.spec.ts`, and the states the committed log cannot reach - a log
+ * under the minimum, a board with nothing to draw - are rendered directly in
+ * `tests/dan-fm-sections.spec.ts`. These exist for the third thing, which
+ * neither of those can see: that the section on the page is drawing the log it
+ * was built from, at the lengths the figures beside the bars claim.
+ */
+
+/** The Charts section. */
+function charts(page: Page): Locator {
+  return section(page, "Charts");
+}
+
+/** One per board, and one more for the score line, which shares their panel. */
+function panels(page: Page): Locator {
+  return charts(page).locator("[data-slot='chart-board']");
+}
+
+/** Every bar on every board, across all four. */
+function bars(page: Page): Locator {
+  return panels(page).locator("li");
+}
+
+/** The line beside the Charts heading, which is where the whole log is scored. */
+function chartsHead(page: Page): Locator {
+  return charts(page).locator("h2 + p");
+}
+
+/** The album log oldest first, which is the axis the score line is drawn on. */
+const OLDEST_FIRST = [...LOGGED].sort((first, second) => first.date.localeCompare(second.date));
+
+/**
+ * Stands the case down where the log on disk has not reached the chart
+ * minimum, and refuses to under CI.
+ *
+ * This is also the one assertion holding `CHART_MINIMUM` against the fixture.
+ * `ci.yml` builds the fixture and nothing else, so a minimum raised past the
+ * number of albums in it would leave the section counting down under CI - and
+ * every case below would go quiet without a single one of them going red. Here
+ * they fail instead, which is the whole reason the skip is local only.
+ */
+async function needsTheCharts(page: Page) {
+  const drawn = await panels(page).count();
+
+  test.skip(!process.env.CI && drawn === 0, "the album log on disk is short of the chart minimum");
+  expect(
+    drawn,
+    "the Charts section is counting down rather than drawing - the log is short of `CHART_MINIMUM`",
+  ).toBeGreaterThan(0);
+}
+
+test.describe("the charts", () => {
+  test("the section scores the whole log", async ({ page }) => {
+    /*
+     * The one figure on the section that is not a board, and the only place the
+     * log is reduced to a single number. Computed here rather than read off the
+     * page, so a readout that started averaging the boards, or the rows it drew
+     * rather than the albums behind them, fails instead of agreeing with
+     * itself.
+     */
+    await openDanFm(page);
+    await needsTheCharts(page);
+
+    const mean = Number(
+      (LOGGED.reduce((running, album) => running + album.score, 0) / LOGGED.length).toFixed(1),
+    );
+
+    await expect(chartsHead(page)).toHaveText(`Average ${mean} across ${LOGGED.length}`);
+  });
+
+  test("no panel on the section is a title over nothing", async ({ page }) => {
+    /*
+     * A board with nothing to draw keeps its panel and prints a sentence, so
+     * every panel on screen is rows or a reason and never a titled box with
+     * neither - which is what a board that lost its empty state leaves behind,
+     * and it looks like a chart that failed to load.
+     *
+     * That a board keeps its panel *at all* rather than dropping out of the
+     * grid is asked in `tests/dan-fm-sections.spec.ts`, where the count of
+     * boards owed is knowable. Here the section is only ever asked about the
+     * panels it did draw.
+     */
+    await openDanFm(page);
+    await needsTheCharts(page);
+
+    const filled = await panels(page).evaluateAll((boards) =>
+      boards.map((board) => ({
+        title: board.querySelector("h3")?.textContent ?? "",
+        rows: board.querySelectorAll("li").length,
+        // The line's panel holds an `svg` and its scale, which is neither a
+        // row nor an empty state, so it is counted as having drawn something.
+        said:
+          (board.querySelector("p")?.textContent ?? "") !== "" ||
+          Boolean(board.querySelector("svg")),
+      })),
+    );
+
+    expect(filled.length, "the Charts section drew no panels at all").toBeGreaterThan(0);
+    for (const board of filled) {
+      expect(board.title, "a chart panel is not naming itself").not.toBe("");
+      expect(
+        board.rows > 0 || board.said,
+        `the ${board.title} panel drew neither rows nor a reason`,
+      ).toBe(true);
+    }
+  });
+
+  test("every bar is as long as the figure printed beside it", async ({ page }) => {
+    /*
+     * The bar is a shape for reading a board at a glance and the figure is the
+     * value; a bar drawn against the wrong scale is the two disagreeing, and
+     * only one of them is checkable by reading the page.
+     *
+     * Which scale a row is drawn against is read off what it prints: an average
+     * says what it is over, a share is a count on its own. That is the whole of
+     * the difference between the two kinds of board, so a share board handed
+     * the rating scale - every bar a fifth of the length it owes - fails here
+     * with every number on screen still correct.
+     */
+    await openDanFm(page);
+    await needsTheCharts(page);
+
+    const drawn = await bars(page).evaluateAll((rows) =>
+      rows.map((row) => {
+        const fill = row.querySelector<HTMLElement>("[style*='width']");
+        const track = fill?.parentElement ?? null;
+
+        return {
+          // The second of the row's two spans: the name, then the figure.
+          figure: row.querySelector("span + span")?.textContent ?? "",
+          share:
+            fill && track
+              ? fill.getBoundingClientRect().width / track.getBoundingClientRect().width
+              : null,
+        };
+      }),
+    );
+
+    expect(drawn.length, "no bars on any board - nothing below is being measured").toBeGreaterThan(
+      0,
+    );
+
+    for (const bar of drawn) {
+      const average = /^(\d+(?:\.\d+)?) from \d+$/.exec(bar.figure);
+      const share = /^(\d+)$/.exec(bar.figure);
+
+      expect(
+        average ?? share,
+        `a bar is labelled "${bar.figure}", which is neither`,
+      ).not.toBeNull();
+      expect(bar.share, `the bar beside "${bar.figure}" has no length to measure`).not.toBeNull();
+
+      const owed = average ? Number(average[1]) / MAX_SCORE : Number(share![1]) / LOGGED.length;
+
+      expect(bar.share, `the bar beside "${bar.figure}" is not drawn to it`).toBeCloseTo(owed, 2);
+    }
+  });
+
+  test("the score line plots every album in the log, oldest first", async ({ page }) => {
+    /*
+     * The one board with time on an axis. A line drawn from the payload as it
+     * arrives runs newest to oldest - every score on it correct, every rise
+     * drawn as a fall - and nothing on the page says which way it reads.
+     *
+     * Compared as an ordering rather than as coordinates, because the geometry
+     * is the component's own: the box is in its own units and the line is
+     * stretched to whatever width the panel is. What has to hold is that the
+     * points run left to right, and that the highest one is the best album.
+     */
+    await openDanFm(page);
+    await needsTheCharts(page);
+
+    const points = (await charts(page).locator("polyline").getAttribute("points")) ?? "";
+    const plotted = points
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((point) => point.split(",").map(Number));
+
+    expect(plotted, "the score line is not plotting one point per album").toHaveLength(
+      OLDEST_FIRST.length,
+    );
+
+    expect(
+      plotted.map(([x]) => x),
+      "the score line does not run left to right",
+    ).toEqual([...plotted.map(([x]) => x)].sort((first, second) => first - second));
+
+    /*
+     * A point sits higher the better the album scored, so ranking the albums by
+     * score and the points by height has to hand back the same order. Ties are
+     * broken by position in both, which is what makes a reversed line disagree
+     * rather than merely reorder its ties.
+     */
+    const byScore = [...OLDEST_FIRST.keys()].sort(
+      (first, second) => OLDEST_FIRST[first].score - OLDEST_FIRST[second].score || first - second,
+    );
+    const byHeight = [...plotted.keys()].sort(
+      (first, second) => plotted[second][1] - plotted[first][1] || first - second,
+    );
+
+    expect(byHeight, "the score line is not drawn in the order the log was heard").toEqual(byScore);
+  });
+});
+
+test.describe("the mixtape", () => {
+  test("the tape lists every keeper newest first, and every row leads to the album", async ({
+    page,
+  }) => {
+    /*
+     * The archive's rule, on the section beside it. `mixtape()` keeps the order
+     * it is handed and the page hands it the payload, which the build fixes
+     * newest-first - so a section that sorted for itself, or reversed what it
+     * was given, buries this week's records at the bottom with every row on
+     * screen still correct.
+     *
+     * The destinations are the second half: the row is a track name over an
+     * artist, and neither of them says which album page it goes to.
+     */
+    await openDanFm(page);
+
+    const bar = reported(await section(page, "Mixtape").innerText(), MIXTAPE_BAR);
+    expect(bar, "the mixtape no longer says what score it takes").not.toBeNull();
+
+    const keepers = NEWEST_FIRST.filter((album) => album.score >= bar!);
+
+    // Stood down where the log on disk has nothing over the bar, in the shape
+    // and for the reason `openDanFm` stands down on launch day. `ci.yml` builds
+    // the fixture, which carries four keepers.
+    test.skip(
+      !process.env.CI && keepers.length === 0,
+      "no album in the log on disk clears the mixtape's bar",
+    );
+    expect(keepers.length, "no album in the log clears the mixtape's bar").toBeGreaterThan(0);
+
+    const led = await tapeRows(page)
+      .locator("a[href^='/dan-fm/']")
+      .evaluateAll((links) => links.map((link) => (link as HTMLAnchorElement).pathname));
+
+    expect(led).toEqual(keepers.map((album) => albumUrl(album)));
+  });
+
+  test("the page links out to Spotify rather than embedding any of it", async ({ page }) => {
+    /*
+     * The tape is a tracklist and not a player, and the reason is the whole
+     * page rather than the section: `tests/links.spec.ts` fails the build if
+     * any request leaves the origin, and an embed would be that request.
+     *
+     * That sweep watches requests, which is the half a resource hint slips
+     * past - a `preconnect` opens a socket to Spotify without fetching
+     * anything, and it is exactly what someone reaches for on the way to an
+     * embed. So this reads the document instead: no frame of any kind, no hint
+     * pointing at Spotify, and every mention of it an ordinary link out.
+     */
+    await openDanFm(page);
+
+    const outward = await page.evaluate(() => ({
+      framed: document.querySelectorAll("iframe, embed, object").length,
+      /*
+       * Matched on the host, because the site's own chunk for the credit line
+       * is named `spotify-credit-<hash>.js` and every page that carries it
+       * ships a `modulepreload` for it. A substring match reads that as a
+       * connection to Spotify and fails on the build being correct.
+       */
+      hinted: [...document.querySelectorAll("link")]
+        .filter((tag) => new URL(tag.href).host.endsWith("spotify.com"))
+        .map((tag) => tag.rel),
+      links: [...document.querySelectorAll("a")]
+        .filter((anchor) => anchor.href.includes("open.spotify.com"))
+        .map((anchor) => ({ target: anchor.target, rel: anchor.rel })),
+    }));
+
+    expect(outward.framed, "something on the page is embedding a frame").toBe(0);
+    expect(
+      outward.hinted,
+      "the page is opening a connection to Spotify before it is asked",
+    ).toEqual([]);
+
+    expect(
+      outward.links.length,
+      "nothing on the page links to Spotify - nothing below is being asked",
+    ).toBeGreaterThan(0);
+    for (const link of outward.links) {
+      expect(link.target, "a Spotify link opens over the page").toBe("_blank");
+      expect(link.rel, "a Spotify link hands the new tab a handle on this one").toContain(
+        "noopener",
+      );
+      expect(link.rel).toContain("noreferrer");
+    }
   });
 });

@@ -8,7 +8,7 @@ import { createServer } from "vite";
 import { MAX_SCORE, albumSummary, albumTitle, albumUrl } from "../src/lib/dan-fm-summary";
 import { contentPlugin } from "../vite-plugin-content";
 
-import type { Album, DanFmPayload, Selection } from "../src/lib/dan-fm";
+import type { Album, Board, DanFmCharts, DanFmPayload, Selection } from "../src/lib/dan-fm";
 
 /**
  * The album log, checked where it is actually decided: in Node, at build time.
@@ -1532,5 +1532,615 @@ test.describe("narrowing the archive", () => {
         `a ${key} on its own does not count as filtering`,
       ).toBe(true);
     }
+  });
+});
+
+/*
+ * The charts.
+ *
+ * Four boards and a line, and every figure on any of them is decided here.
+ * `tests/dan-fm-page.spec.ts` covers the half that needs a browser: that the
+ * section on screen is drawing these answers, and that a bar is as long as the
+ * number printed beside it.
+ */
+
+/**
+ * An album carrying the five fields a board reads, and nothing else.
+ *
+ * Cast rather than filled out, for the reason `dated` and `filed` are: the
+ * boards read five fields and eighteen more would hide which. Every one of them
+ * is always set rather than left to the caller, because a board decides what to
+ * draw on what the *whole* list holds - one row accidentally missing a genre
+ * changes whether the genre board draws at all.
+ */
+function heard(over: Partial<Album> = {}): Album {
+  return {
+    date: "2026-08-20",
+    genre: "",
+    source: "",
+    from: "",
+    year: null,
+    score: 3,
+    ...over,
+  } as Album;
+}
+
+/** One board out of a set, by the id it is filed under. */
+function board(charts: DanFmCharts, id: string): Board {
+  const found = charts.boards.find((one) => one.id === id);
+
+  expect(found, `the charts no longer hold a \`${id}\` board`).toBeDefined();
+  return found!;
+}
+
+/** `count` albums filed the same way, which is how a board earns a row. */
+function repeated(count: number, over: Partial<Album>): Album[] {
+  return Array.from({ length: count }, () => heard(over));
+}
+
+/**
+ * `names` distinct values in one column, `each` albums behind every one of
+ * them, labelled `<prefix> 0` upwards.
+ *
+ * The prefix is what lets one log hold two sets of names in the same column,
+ * which is how a board is given more names than it can draw and more again
+ * that never clear the minimum.
+ */
+function grouped(field: "from" | "source", prefix: string, names: number, each: number): Album[] {
+  return Array.from({ length: names }, (_, index) =>
+    repeated(each, { [field]: `${prefix} ${index}` }),
+  ).flat();
+}
+
+/**
+ * How many rows a ranked board draws, read off the genre board.
+ *
+ * `BOARD_ROWS` is private to the module, and reading the cap off the board
+ * under test would let a dropped `slice` carry the expected size along with it
+ * instead of failing. The genre board slices the same constant, and its own cut
+ * is pinned above against a written-out count.
+ */
+async function boardRows(): Promise<number> {
+  const { chartsFor } = await danFm();
+
+  const pool = 40;
+  const genres = Array.from({ length: pool }, (_, index) => heard({ genre: `Genre ${index}` }));
+  const drawn = board(chartsFor(genres), "genre").rows.length;
+
+  expect(drawn, "the ranked boards no longer cut a tail at all").toBeLessThan(pool);
+  return drawn;
+}
+
+test.describe("what the whole log adds up to", () => {
+  test("an empty log averages nothing rather than zero", async () => {
+    /*
+     * The state the site ships in, and the one number on the section that is
+     * not a board. Zero is a score outside the scale, so a page printing it
+     * would be claiming the log averages worse than its worst possible album.
+     */
+    const { chartsFor } = await danFm();
+
+    expect(chartsFor([]).average).toBeNull();
+  });
+
+  test("an empty log draws no line and no rows, and every board still says why", async () => {
+    // Nothing here may throw and nothing may come back as a figure the page
+    // would draw a bar to.
+    const { chartsFor } = await danFm();
+
+    const charts = chartsFor([]);
+
+    expect(charts.line).toEqual([]);
+    for (const one of charts.boards) {
+      expect(one.rows, `the ${one.id} board drew rows off an empty log`).toEqual([]);
+      expect(one.empty, `the ${one.id} board has nothing to say for an empty log`).not.toBe("");
+      expect(one.title, `the ${one.id} board no longer names itself`).not.toBe("");
+    }
+  });
+
+  test("the average is over every album, to one decimal", async () => {
+    const { chartsFor } = await danFm();
+
+    // 13 over three, which is 4.333... - a mean the scale cannot hold and the
+    // page has to round before it prints.
+    expect(chartsFor([heard({ score: 4 }), heard({ score: 5 }), heard({ score: 4 })]).average).toBe(
+      4.3,
+    );
+  });
+
+  test("an average that lands on a whole number is printed as one", async () => {
+    /*
+     * `Rating`'s rule, on a log somebody keeps by hand: 4, not 4.0. The
+     * rounding is a `toFixed`, which hands back a string, and a board that
+     * printed that string would read "4.0" everywhere the arithmetic came out
+     * even.
+     */
+    const { chartsFor } = await danFm();
+
+    expect(chartsFor([heard({ score: 3.5 }), heard({ score: 4.5 })]).average).toBe(4);
+  });
+
+  test("the score line reads oldest first however the log arrives", async () => {
+    /*
+     * The one board with time on an axis, and the only place the log's order
+     * is visible as a shape rather than as a list. The payload arrives
+     * newest-first, so a line that trusted position would draw every run
+     * backwards - rising where the log fell - with every score on it correct.
+     */
+    const { chartsFor } = await danFm();
+
+    const charts = chartsFor([
+      heard({ date: "2026-08-26", score: 5 }),
+      heard({ date: "2026-08-20", score: 2 }),
+      heard({ date: "2026-08-22", score: 4 }),
+    ]);
+
+    expect(charts.line).toEqual([2, 4, 5]);
+  });
+
+  test("the boards come back in the order the section draws them", async () => {
+    // Written out rather than read off the boards, which would agree with
+    // itself however they had been scrambled. This is the reading order of the
+    // grid on screen.
+    const { chartsFor } = await danFm();
+
+    expect(chartsFor([]).boards.map((one) => one.id)).toEqual([
+      "genre",
+      "decade",
+      "source",
+      "from",
+    ]);
+  });
+
+  test("a share board is drawn against the log and an average against the scale", async () => {
+    /*
+     * What `top` is for, and the two boards read it for opposite reasons. A
+     * share board given the rating scale draws every bar at a fifth of the
+     * length it owes; an average board given the log's size draws a 5 as a
+     * sliver on any log longer than five albums. Neither reports itself - both
+     * are bars of the wrong length beside figures that are still right.
+     */
+    const { chartsFor } = await danFm();
+
+    const list = [
+      ...repeated(2, { genre: "Jazz", from: "Alexis", score: 4 }),
+      ...repeated(2, { genre: "Post-punk", source: "A crate dig", score: 5 }),
+    ];
+    const charts = chartsFor(list);
+
+    expect(board(charts, "genre").top).toBe(list.length);
+    expect(board(charts, "decade").top).toBe(list.length);
+    expect(board(charts, "source").top).toBe(MAX_SCORE);
+    expect(board(charts, "from").top).toBe(MAX_SCORE);
+  });
+});
+
+test.describe("the boards that count what the log is made of", () => {
+  test("one genre is not something to set against anything", async () => {
+    /*
+     * `facetsFor`'s rule, applied to a board instead of a control: a single row
+     * draws one bar at full width, which claims the log is all one thing. The
+     * sentence in its place says that better, and says it without a chart that
+     * looks like a measurement.
+     */
+    const { chartsFor } = await danFm();
+
+    expect(board(chartsFor(repeated(3, { genre: "Jazz" })), "genre").rows).toEqual([]);
+  });
+
+  test("two genres are", async () => {
+    // The other side of the same boundary. One is furniture and two is a
+    // comparison, and nothing between them exists.
+    const { chartsFor } = await danFm();
+
+    const charts = chartsFor([
+      ...repeated(2, { genre: "Jazz" }),
+      ...repeated(1, { genre: "Post-punk" }),
+    ]);
+
+    expect(board(charts, "genre").rows).toEqual([
+      { name: "Jazz", count: 2, value: 2 },
+      { name: "Post-punk", count: 1, value: 1 },
+    ]);
+  });
+
+  test("a genre the log never named is not a genre", async () => {
+    /*
+     * A row may leave the cell empty and the fetched log does. A blank arriving
+     * as a name puts a bar on the board labelled with nothing - and it counts
+     * as the second genre that lets the board draw at all, so a log of one
+     * genre and one blank would draw the comparison this board refuses.
+     */
+    const { chartsFor } = await danFm();
+
+    const charts = chartsFor([...repeated(2, { genre: "Jazz" }), ...repeated(2, { genre: "" })]);
+
+    expect(board(charts, "genre").rows).toEqual([]);
+  });
+
+  test("genres are ranked by share, and ties broken alphabetically", async () => {
+    /*
+     * These three arrive in one order, rank in a second and sort into a third,
+     * so neither of the other two can satisfy this. The tie is the second half:
+     * two genres level on count have to come back in an order that does not
+     * depend on which was logged first, or the board reshuffles itself every
+     * time a record lands.
+     */
+    const { chartsFor } = await danFm();
+
+    const charts = chartsFor([
+      ...repeated(1, { genre: "Post-punk" }),
+      ...repeated(2, { genre: "Noise rock" }),
+      ...repeated(3, { genre: "Jazz" }),
+      ...repeated(2, { genre: "Ambient folk" }),
+    ]);
+
+    expect(board(charts, "genre").rows.map((row) => row.name)).toEqual([
+      "Jazz",
+      "Ambient folk",
+      "Noise rock",
+      "Post-punk",
+    ]);
+  });
+
+  test("a ranked board leaves its tail to a line of text", async () => {
+    /*
+     * Nine genres into eight rows. "Aardvark" is the one that has to go, and it
+     * sorts first alphabetically - so a board that cut the tail off the wrong
+     * ordering keeps it and drops a genre the log holds twice as much of.
+     *
+     * The note is the other half: eight bars off a log of nine genres is a
+     * board that reads as the whole log unless it says otherwise.
+     */
+    const { chartsFor } = await danFm();
+
+    const many = "BCDEFGHI"
+      .split("")
+      .flatMap((letter) => repeated(2, { genre: `${letter} genre` }));
+    const charts = chartsFor([...repeated(1, { genre: "Aardvark" }), ...many]);
+
+    const rows = board(charts, "genre").rows;
+
+    expect(rows).toHaveLength(8);
+    expect(rows.map((row) => row.name)).not.toContain("Aardvark");
+    expect(board(charts, "genre").note).toBe("Top 8 of 9 genres");
+  });
+
+  test("a board that fits says nothing about a tail", async () => {
+    // Exactly the eight it draws. A note counting "Top 8 of 8" is a footnote
+    // about nothing, and it reads as though something were missing.
+    const { chartsFor } = await danFm();
+
+    const charts = chartsFor(
+      "ABCDEFGH".split("").flatMap((letter) => repeated(1, { genre: `${letter} genre` })),
+    );
+
+    expect(board(charts, "genre").rows).toHaveLength(8);
+    expect(board(charts, "genre").note).toBeUndefined();
+  });
+
+  test("decades come back chronological rather than ranked", async () => {
+    /*
+     * A run of decades is read as a timeline. Ranking it files the 1970s
+     * between the 2010s and the 1990s, which is not a mistake anybody makes
+     * twice and is exactly what sharing one sort with the genre board would do.
+     */
+    const { chartsFor } = await danFm();
+
+    const charts = chartsFor([
+      ...repeated(3, { year: 2019 }),
+      ...repeated(1, { year: 1975 }),
+      ...repeated(2, { year: 1998 }),
+    ]);
+
+    expect(board(charts, "decade").rows).toEqual([
+      { name: "1970s", count: 1, value: 1 },
+      { name: "1990s", count: 2, value: 2 },
+      { name: "2010s", count: 3, value: 3 },
+    ]);
+  });
+
+  test("a record with no year gets no bar and is counted underneath", async () => {
+    /*
+     * A row the log could not date is not a point in time, and a bucket for
+     * them would sit in the timeline as though it were one. Leaving them out
+     * silently is the other failure: the bars are shares of the whole log, so
+     * the missing ones have to be accounted for somewhere or the board is
+     * quietly drawn against a number it never names.
+     */
+    const { chartsFor } = await danFm();
+
+    const charts = chartsFor([
+      ...repeated(1, { year: 2019 }),
+      ...repeated(1, { year: 1998 }),
+      ...repeated(2, { year: null }),
+    ]);
+
+    expect(board(charts, "decade").rows.map((row) => row.name)).toEqual(["1990s", "2010s"]);
+    expect(board(charts, "decade").note).toBe("2 with no year");
+  });
+
+  test("a log the whole of one decade draws no decade board", async () => {
+    // The share rule again, and the undated rows cannot make up the second row
+    // it needs - they are not a decade.
+    const { chartsFor } = await danFm();
+
+    const charts = chartsFor([...repeated(3, { year: 2019 }), ...repeated(2, { year: null })]);
+
+    expect(board(charts, "decade").rows).toEqual([]);
+  });
+
+  test("the decade board is not capped where the ranked boards are", async () => {
+    /*
+     * Uncapped on purpose: how many decades a record can come from is bounded
+     * by how long records have existed, and a timeline with its oldest end cut
+     * off is a different claim about the log rather than a shorter one.
+     */
+    const { chartsFor } = await danFm();
+
+    const century = Array.from({ length: 12 }, (_, step) => heard({ year: 1900 + step * 10 }));
+
+    expect(board(chartsFor(century), "decade").rows).toHaveLength(12);
+  });
+});
+
+test.describe("the boards that score what the log came from", () => {
+  test("one album behind a name is not a track record on either board", async () => {
+    /*
+     * The rule `vinyl.ts` applies to its collected-most boards. An average over
+     * one album is that album, and a single lucky 5 would otherwise top a
+     * leaderboard on it - on both of these boards, which are the same
+     * arithmetic over two different columns and are exactly the pair a later
+     * refactor flattens into one.
+     */
+    const { chartsFor, RECOMMENDER_MINIMUM } = await danFm();
+
+    expect(RECOMMENDER_MINIMUM).toBeGreaterThan(1);
+
+    const charts = chartsFor([
+      heard({ source: "A crate dig", from: "Sam", score: 5 }),
+      heard({ source: "The radio", from: "Alexis", score: 5 }),
+    ]);
+
+    expect(board(charts, "source").rows, "a source with one album behind it scored").toEqual([]);
+    expect(board(charts, "from").rows, "a name with one album behind it scored").toEqual([]);
+  });
+
+  test("one qualifying row is a board where one genre is not", async () => {
+    /*
+     * The asymmetry, in one log. A count of one is a fact and an average of one
+     * is not: the share boards refuse a lone row because a share means nothing
+     * without the shares beside it, and an averaging board draws one because an
+     * average is a number on a scale the reader already knows the ends of.
+     *
+     * Two rules, and they are not in the plan. Flattening them into one takes
+     * out either the lone bar at full width or the only row a young log can
+     * earn, and whichever goes, the other board still looks right.
+     */
+    const { chartsFor } = await danFm();
+
+    const charts = chartsFor(repeated(2, { genre: "Jazz", year: 2019, from: "Alexis", score: 4 }));
+
+    expect(board(charts, "genre").rows, "one genre drew a board").toEqual([]);
+    expect(board(charts, "decade").rows, "one decade drew a board").toEqual([]);
+    expect(board(charts, "from").rows).toEqual([{ name: "Alexis", count: 2, value: 4 }]);
+  });
+
+  test("a recommendation nobody signed is not somebody's track record", async () => {
+    /*
+     * "" is how the log records my own pick, and there are more of those than
+     * of anyone else's. Grouped as a name they add up to a row on the board
+     * with no label, sitting among people.
+     */
+    const { chartsFor } = await danFm();
+
+    const charts = chartsFor(repeated(3, { from: "", score: 5 }));
+
+    expect(board(charts, "from").rows).toEqual([]);
+  });
+
+  test("an averaging board is ranked best first, and ties broken alphabetically", async () => {
+    const { chartsFor } = await danFm();
+
+    const charts = chartsFor([
+      ...repeated(2, { from: "Zoe", score: 5 }),
+      ...repeated(2, { from: "Sam", score: 4 }),
+      ...repeated(2, { from: "Alexis", score: 5 }),
+    ]);
+
+    expect(board(charts, "from").rows.map((row) => row.name)).toEqual(["Alexis", "Zoe", "Sam"]);
+  });
+
+  test("a row says what its average is over as well as what it is", async () => {
+    /*
+     * Two people at 4.5 off two albums and off eight are not the same claim,
+     * and the board is read as a leaderboard either way. The count is what
+     * stops the second one being taken for the first.
+     */
+    const { chartsFor } = await danFm();
+
+    const charts = chartsFor([
+      ...repeated(1, { from: "Alexis", score: 4 }),
+      ...repeated(1, { from: "Alexis", score: 5 }),
+      ...repeated(1, { from: "Alexis", score: 4 }),
+      ...repeated(2, { from: "Sam", score: 4 }),
+    ]);
+
+    expect(board(charts, "from").rows).toEqual([
+      { name: "Alexis", count: 3, value: 4.3 },
+      { name: "Sam", count: 2, value: 4 },
+    ]);
+  });
+
+  test("a board that drew nothing keeps its rule to itself", async () => {
+    /*
+     * The note under an averaging board states the minimum a name has to clear.
+     * On a board with no rows the sentence in place of them already says it,
+     * and printing both leaves the reader with the rule twice and the reason
+     * once.
+     */
+    const { chartsFor } = await danFm();
+
+    const empty = board(chartsFor(repeated(2, { from: "Alexis", score: 4 })), "source");
+
+    expect(empty.rows).toEqual([]);
+    expect(empty.note).toBeUndefined();
+    expect(empty.empty).not.toBe("");
+  });
+
+  test("a board that drew something owes the reader its rule", async () => {
+    // The other side: a leaderboard that silently drops everyone with one
+    // album behind them reads as everyone.
+    const { chartsFor } = await danFm();
+
+    const drawn = board(chartsFor(repeated(2, { from: "Alexis", score: 4 })), "from");
+
+    expect(drawn.rows).toHaveLength(1);
+    expect(drawn.note, "a board that filtered its names does not say so").toBeTruthy();
+  });
+
+  test("a cut board of names says in one sentence how many cleared the bar", async () => {
+    /*
+     * A ranked board that dropped names reads as the whole field, which is what
+     * the genre board's tail note answers - and this says it in that shape, so
+     * two boards side by side are read the same way.
+     *
+     * The count and the rule are one sentence rather than two, because a "Top 8
+     * of 12 names" over a separate "2 recommendations before a name appears."
+     * leaves the reader working out whether the 12 already had the bar applied
+     * to it. No full stop on it: this is a label over the rows, like "Top 8 of
+     * 9 genres", and not the sentence the untruncated board prints.
+     */
+    const { chartsFor, RECOMMENDER_MINIMUM } = await danFm();
+    const rows = await boardRows();
+    const names = rows + 4;
+
+    const charts = chartsFor(grouped("from", "Name", names, RECOMMENDER_MINIMUM));
+
+    expect(board(charts, "from").rows).toHaveLength(rows);
+    expect(board(charts, "from").note).toBe(
+      `Top ${rows} of ${names} names with ${RECOMMENDER_MINIMUM} recommendations or more`,
+    );
+  });
+
+  test("a cut board of sources counts albums, not recommendations", async () => {
+    /*
+     * The same sentence over the other column, and the two nouns are the whole
+     * of what differs between them. Both boards are one piece of arithmetic
+     * filed under two fields, so a pair of notes worded the same way is a
+     * source board crediting recommendations nobody made - with every figure
+     * on it still correct.
+     */
+    const { chartsFor, RECOMMENDER_MINIMUM } = await danFm();
+    const rows = await boardRows();
+    const sources = rows + 2;
+
+    const charts = chartsFor(grouped("source", "Source", sources, RECOMMENDER_MINIMUM));
+
+    expect(board(charts, "source").rows).toHaveLength(rows);
+    expect(board(charts, "source").note).toBe(
+      `Top ${rows} of ${sources} sources with ${RECOMMENDER_MINIMUM} albums or more`,
+    );
+  });
+
+  test("the count in a cut note is of the names that cleared the bar", async () => {
+    /*
+     * As many one-off names in the log as there are names on the board. Counted
+     * before the minimum is applied, the sentence is false in its own terms: it
+     * would claim a field of eighteen names with two recommendations or more
+     * while half of them have one, and the reader has no way to see it.
+     *
+     * One name over the cap as well, which is the smallest board that gets a
+     * tail note at all.
+     */
+    const { chartsFor, RECOMMENDER_MINIMUM } = await danFm();
+    const rows = await boardRows();
+    const names = rows + 1;
+
+    const charts = chartsFor([
+      ...grouped("from", "Name", names, RECOMMENDER_MINIMUM),
+      ...grouped("from", "One-off", names, 1),
+    ]);
+
+    expect(board(charts, "from").rows).toHaveLength(rows);
+    expect(board(charts, "from").rows.map((row) => row.name)).not.toContain("One-off 0");
+    expect(board(charts, "from").note).toBe(
+      `Top ${rows} of ${names} names with ${RECOMMENDER_MINIMUM} recommendations or more`,
+    );
+  });
+
+  test("a board that fits keeps the plain rule, full stop and all", async () => {
+    /*
+     * Exactly the rows it draws, which is the other side of the boundary the
+     * cut note reads. A `>=` there prints "Top 8 of 8 names with 2
+     * recommendations or more" - a footnote about nothing, which reads as
+     * though a name had been left off.
+     *
+     * The full stop is the tell that the two notes are different kinds of
+     * thing: a sentence stating the board's rule, against a label counting its
+     * rows.
+     */
+    const { chartsFor, RECOMMENDER_MINIMUM } = await danFm();
+    const rows = await boardRows();
+
+    const charts = chartsFor(grouped("from", "Name", rows, RECOMMENDER_MINIMUM));
+
+    expect(board(charts, "from").rows).toHaveLength(rows);
+    expect(board(charts, "from").note).toBe(
+      `${RECOMMENDER_MINIMUM} recommendations before a name appears.`,
+    );
+  });
+
+  test("a board whose names all fall under the bar prints no note at all", async () => {
+    /*
+     * Not the same emptiness as a column nobody filled: every one of these
+     * names is in the log, and the minimum is what leaves the board with
+     * nothing to draw. The sentence standing in for the rows already states the
+     * rule, so a note under it hands the reader the rule twice and the reason
+     * once.
+     */
+    const { chartsFor, RECOMMENDER_MINIMUM } = await danFm();
+    const rows = await boardRows();
+
+    const charts = chartsFor(grouped("from", "Name", rows + 4, RECOMMENDER_MINIMUM - 1));
+
+    expect(board(charts, "from").rows).toEqual([]);
+    expect(board(charts, "from").note).toBeUndefined();
+    expect(board(charts, "from").empty).not.toBe("");
+  });
+
+  test("the two averaging boards score their own column", async () => {
+    /*
+     * One `pick` swapped for the other is a pair of boards that agree with each
+     * other and describe one column twice - and the titles above them would
+     * still read correctly.
+     */
+    const { chartsFor } = await danFm();
+
+    const charts = chartsFor([
+      ...repeated(2, { source: "A crate dig", from: "Alexis", score: 5 }),
+      ...repeated(2, { source: "The radio", from: "Sam", score: 2 }),
+    ]);
+
+    expect(board(charts, "source").rows.map((row) => row.name)).toEqual([
+      "A crate dig",
+      "The radio",
+    ]);
+    expect(board(charts, "from").rows.map((row) => row.name)).toEqual(["Alexis", "Sam"]);
+  });
+
+  test("a board counts the score given on the day rather than the second reading", async () => {
+    /*
+     * A row can carry a `later` score, and a board that quietly preferred it
+     * would be averaging one number for those albums and a different one for
+     * the rest. What living with a record did to it is printed beside the
+     * record, where both figures are shown.
+     */
+    const { chartsFor } = await danFm();
+
+    const charts = chartsFor(repeated(2, { from: "Alexis", score: 5, later: 1 }));
+
+    expect(board(charts, "from").rows).toEqual([{ name: "Alexis", count: 2, value: 5 }]);
+    expect(chartsFor(repeated(2, { score: 5, later: 1 })).average).toBe(5);
   });
 });

@@ -3,23 +3,14 @@ import { Link } from "react-router";
 
 import { AlbumCover, AlbumReview, AlbumScore, AlbumTracks } from "@/components/album-record";
 import { DanFmArchive } from "@/components/dan-fm-archive";
-import { EmptyState } from "@/components/empty-state";
+import { DanFmCharts } from "@/components/dan-fm-charts";
+import { DanFmMixtape } from "@/components/dan-fm-mixtape";
 import { OnAir } from "@/components/on-air";
 import { PageHeader, PageShell, Section } from "@/components/page";
 import { SourceLine } from "@/components/source-line";
 import { SpotifyCredit } from "@/components/spotify-credit";
 import { Badge } from "@/components/ui/badge";
-import {
-  CHART_MINIMUM,
-  MIXTAPE_SCORE,
-  albums,
-  log,
-  mixtape,
-  station,
-  statsFor,
-  yearLabel,
-  type Album,
-} from "@/lib/dan-fm";
+import { albums, log, station, statsFor, yearLabel, type Album } from "@/lib/dan-fm";
 import { albumUrl } from "@/lib/dan-fm-summary";
 import { longDate } from "@/lib/dates";
 import { PAGE_META } from "@/lib/routes";
@@ -62,9 +53,10 @@ function TodayCard({ album }: { album: Album }) {
           {longDate(album.date)} · Day {album.ordinal}
         </p>
 
-        {/* The album's own address, and the only way onto it from the site
-            while the archive is unbuilt - the title is what a reader would
-            click to go from the card to the record. */}
+        {/* The album's own address. The title is what a reader reaches for to
+            go from the card to the record, and it is the shortest way there:
+            the archive below holds the same link, a scroll and a scan further
+            down. */}
         <h3 className="display mt-4 text-feature text-balance">
           <Link to={albumUrl(album)} className="transition-colors hover:text-ember">
             {album.album}
@@ -121,45 +113,11 @@ function TodayCard({ album }: { album: Album }) {
   );
 }
 
-/*
- * The two sections that stand on the page before they are built.
- *
- * Each sentence says what the log holds for that section and admits the section
- * itself is not there, and both halves have to stay true as the log fills: the
- * page shows an album and a score the moment the first row is committed, so
- * copy written only for an empty log would sit on screen contradicting it.
- * Every one of these goes when the section it stands in is built.
- */
-
-/**
- * Below the minimum the wait is counted down from the constant rather than
- * named as a month, since the log misses days and a date would drift off the
- * count the first time one is skipped. Above it there is nothing left to count.
- */
-function chartsCopy(total: number): string {
-  if (total >= CHART_MINIMUM) return "Enough albums to chart now. I have not drawn the charts yet.";
-
-  return `Not enough albums to chart anything honest. ${CHART_MINIMUM - total} to go.`;
-}
-
-/**
- * Counted off the keepers rather than the log, because the tape's bar is a score
- * and not a row: a log of nothing but 3s has plenty in it and still nothing to
- * play.
- */
-function mixtapeCopy(keepers: number): string {
-  if (keepers === 0) return `Nothing has scored a ${MIXTAPE_SCORE} yet.`;
-
-  const many = keepers === 1 ? "1 album has" : `${keepers} albums have`;
-  return `${many} scored a ${MIXTAPE_SCORE} or better. I have not made the tape yet.`;
-}
-
 export function DanFm() {
   useDocumentMeta(META.title, META.description);
 
   const now = station();
   const stats = statsFor(albums);
-  const keepers = mixtape(albums).length;
 
   return (
     <PageShell>
@@ -189,20 +147,12 @@ export function DanFm() {
         )}
       </Section>
 
-      {/* All four sections stand from the first day, each with its own copy, so
-          the page's shape never changes under someone who comes back. */}
+      {/* All four sections stand from the first day, each with its own empty
+          state, so the page's shape never changes under someone who comes
+          back. */}
       <DanFmArchive albums={albums} />
-
-      <Section title="Charts">
-        <EmptyState>{chartsCopy(stats.total)}</EmptyState>
-      </Section>
-
-      <Section
-        title="Mixtape"
-        action={<p className="readout-dim">Standouts from everything {MIXTAPE_SCORE} and up</p>}
-      >
-        <EmptyState>{mixtapeCopy(keepers)}</EmptyState>
-      </Section>
+      <DanFmCharts albums={albums} />
+      <DanFmMixtape albums={albums} />
 
       {/* The gate is whether cover art is on screen, which is the featured
           album's and nothing else: `TodayCard` paints the only sleeve, so a

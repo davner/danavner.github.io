@@ -56,21 +56,37 @@ jobs:
       # the bare Node runtime.
       - run: npm ci
 
-      # No secret to guard on: the sheet is published to the web. Its URL comes
-      # from `src/content/accounts.json`, so re-publishing it is one edit there.
+      # The sheet is published to the web, so reading the log needs no secret.
+      # Its URL comes from `src/content/accounts.json`, so re-publishing it is
+      # one edit there.
+      #
+      # The Spotify pair buys the sleeves, and this step is deliberately not
+      # guarded on it the way the vinyl job guards on its token. There, a
+      # missing secret means a payload with half its fields stripped out, so
+      # skipping is the safe read. Here it means the log is written with no new
+      # cover art and every saved sleeve untouched, which is a working run - and
+      # a guard would stop the log being read at all over an enhancement.
       - name: Read the album log from the sheet
         run: node scripts/update-dan-fm.mjs
+        env:
+          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+          SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
 
+      # `git status --porcelain` rather than `git diff`, and the cover directory
+      # named beside the log: a newly saved sleeve arrives as an untracked file,
+      # which `git diff` does not see at all - so a run whose only change was
+      # cover art would skip its own commit and fetch the same sleeves again
+      # four hours later, forever.
       - name: Commit if the log moved
         run: |
-          if [ -z "$(git status --porcelain -- src/content/dan-fm.json)" ]; then
+          if [ -z "$(git status --porcelain -- src/content/dan-fm.json public/img/dan-fm)" ]; then
             echo "dan-fm: unchanged, nothing to commit"
             exit 0
           fi
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/content/dan-fm.json
+          git add -A -- src/content/dan-fm.json public/img/dan-fm
           git commit -m "chore(dan-fm): refresh the album log"
 
           # Eight scheduled pushes a day - vinyl, fortnite and this job's six -

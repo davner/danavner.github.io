@@ -48,19 +48,64 @@
  * for `score`, where there is no absent to fall back on. Absent is `null` or
  * "" as the payload's own shape requires, decided here.
  *
+ * ## Cover art
+ *
+ * A sleeve is fetched from Spotify once and kept in `public/img/dan-fm/`, keyed
+ * by the album id the Link column already carries. An album whose sleeve is
+ * already on disk costs no request at all, and that check runs before a
+ * credential is so much as read: an outage, a fork of this repo, or a secret
+ * that went missing can therefore never take a cover away from an album that
+ * has one.
+ *
+ * The id is looked up directly and nothing is ever searched for. A search
+ * matches artist and album as free text and answers confidently with the wrong
+ * record, and a wrong sleeve is worse than none: the page would be stating
+ * something untrue about the album rather than admitting it has no picture. So
+ * a row with no Link gets no cover, permanently, and that is the right answer.
+ *
+ * Covers are an enhancement and never a precondition, which is why every way
+ * this half can fail - no credential, a token refused, a 404, a fetch that dies
+ * - is a line on stdout and a blank `cover` rather than anything louder. The
+ * log is written either way.
+ *
  * Run it the way CI does:
  *
  *   node scripts/update-dan-fm.mjs
  *
- * No credential. The sheet is published to the web, so this is a public read.
+ * The sheet is published to the web, so reading the log needs no credential.
+ * `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET` are what buy the sleeves, and
+ * a run without them writes the same log with whatever sleeves are already
+ * saved. Get a pair at https://developer.spotify.com/dashboard - the album
+ * endpoint is a public read, so the app needs no scopes and no redirect URI.
  */
 import { existsSync } from "node:fs";
-import { readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, unlink, writeFile } from "node:fs/promises";
 
 import { parse } from "csv-parse/sync";
+import sharp from "sharp";
 
 const ACCOUNTS = new URL("../src/content/accounts.json", import.meta.url);
 const OUT_JSON = new URL("../src/content/dan-fm.json", import.meta.url);
+const COVER_DIR = new URL("../public/img/dan-fm/", import.meta.url);
+/** Where the site serves what `COVER_DIR` holds. */
+const COVER_PATH = "/img/dan-fm";
+
+/** Spotify's token exchange and its Web API, as their documentation names them. */
+const TOKEN_URL = "https://accounts.spotify.com/api/token";
+const API_URL = "https://api.spotify.com/v1";
+
+/**
+ * The widest sleeve Spotify offers. The front page lays one out at 352 CSS px,
+ * so this covers a 2x screen with a little to spare, and nothing is ever
+ * enlarged past the size that actually came back.
+ */
+const COVER_PX = 640;
+
+/**
+ * Matching what the vinyl and comics grids write theirs at, so a sleeve on this
+ * page is not visibly softer or crisper than a sleeve on those.
+ */
+const COVER_QUALITY = 82;
 
 /**
  * Every column the job needs to find. `Stars` and `Streak` are read and thrown
@@ -137,14 +182,30 @@ const STATION_DAY = new Intl.DateTimeFormat("en-CA", {
 const SLUG_NAME_MAX = 60;
 
 /**
+ * A Spotify album id: exactly 22 characters, pinned rather than matched
+ * loosely.
+ *
+ * Spelled once because two things have to agree on it. It is what a link is
+ * read for, and it is the name a saved sleeve takes - so the prune below can
+ * recognise a file this job wrote by its shape alone, and a shape that had
+ * drifted between the two would leave sleeves nothing ever clears.
+ */
+const ALBUM_ID = "[A-Za-z0-9]{22}";
+
+/**
  * A Spotify album link, and the id inside it. `intl-de` and friends appear in a
  * share link copied from a localised client and address the same album.
- *
- * The id is exactly 22 characters, which is worth pinning rather than matching
- * loosely: it is the name a saved cover file takes, and the prune that clears
- * covers the log does not name recognises them by that shape alone.
  */
-const ALBUM_LINK = /^https:\/\/open\.spotify\.com\/(?:intl-[a-z-]+\/)?album\/([A-Za-z0-9]{22})$/;
+const ALBUM_LINK = new RegExp(
+  `^https://open\\.spotify\\.com/(?:intl-[a-z-]+/)?album/(${ALBUM_ID})$`,
+);
+
+/**
+ * A sleeve this job saved. The prune deletes what matches this and nothing
+ * else, so `spotify-logo.svg` and the fixture sleeves a seeded build draws are
+ * not files a run that has never heard of them can remove.
+ */
+const COVER_FILE = new RegExp(`^${ALBUM_ID}\\.webp$`);
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -460,6 +521,184 @@ function collectAlbums(rows, today) {
   return { albums, problems, warnings, held };
 }
 
+/**
+ * The Spotify token this run uses, as a promise so it is asked for at most
+ * once. Two albums missing a sleeve would otherwise each open their own token
+ * exchange, and the second buys nothing the first did not already have.
+ *
+ * `null` is "not asked yet". An empty string is the settled answer "no token
+ * this run", which every caller reads as "no cover today" rather than as a
+ * failure.
+ */
+let tokenRequest = null;
+
+function accessToken() {
+  tokenRequest ??= requestToken();
+  return tokenRequest;
+}
+
+/**
+ * One Client Credentials exchange: the pair as HTTP Basic, the grant in the
+ * body, which is the shape Spotify's own tutorial documents.
+ *
+ * Everything is reported on stdout rather than stderr. A run with no covers is
+ * a working run - it reads the sheet and writes the log exactly as it always
+ * did - and colouring it red would train everyone to ignore a job that is right
+ * to be red about the log itself.
+ */
+async function requestToken() {
+  const id = process.env.SPOTIFY_CLIENT_ID?.trim();
+  const secret = process.env.SPOTIFY_CLIENT_SECRET?.trim();
+
+  if (!id || !secret) {
+    console.log(
+      "dan-fm: no SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET, so no sleeve is fetched. " +
+        "Saved ones are untouched.",
+    );
+    return "";
+  }
+
+  try {
+    const response = await fetch(TOKEN_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${id}:${secret}`).toString("base64")}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: "grant_type=client_credentials",
+    });
+
+    if (!response.ok) {
+      console.log(`dan-fm: Spotify answered ${response.status} to the token request`);
+      return "";
+    }
+
+    const payload = await response.json();
+    const granted = typeof payload.access_token === "string" ? payload.access_token : "";
+    if (!granted) console.log("dan-fm: Spotify's token response carried no access_token");
+
+    return granted;
+  } catch (error) {
+    console.log(`dan-fm: could not reach Spotify for a token (${error.message})`);
+    return "";
+  }
+}
+
+/**
+ * The widest image Spotify holds for one album, or "" for an album it will not
+ * answer for.
+ *
+ * By id, never by search. A search matches artist and album as free text and
+ * answers confidently with the wrong record, which would print a false claim
+ * about the album rather than leave a square empty.
+ */
+async function coverSource(spotifyId, token) {
+  let payload;
+
+  try {
+    const response = await fetch(`${API_URL}/albums/${spotifyId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!response.ok) {
+      console.log(`dan-fm: Spotify answered ${response.status} for album ${spotifyId}`);
+      return "";
+    }
+
+    payload = await response.json();
+  } catch (error) {
+    console.log(`dan-fm: could not reach Spotify for album ${spotifyId} (${error.message})`);
+    return "";
+  }
+
+  // Documented as widest first, and compared by width anyway: the widths are
+  // nullable in the same response, so an order taken on trust is one a missing
+  // number quietly reverses. The documented first entry is the fallback for a
+  // response that gives no widths at all.
+  const images = Array.isArray(payload.images) ? payload.images : [];
+  const widest = images.reduce(
+    (best, image) => ((image?.width ?? 0) > (best?.width ?? 0) ? image : best),
+    images[0] ?? null,
+  );
+
+  if (typeof widest?.url !== "string" || !widest.url) {
+    console.log(`dan-fm: Spotify has no cover art for album ${spotifyId}`);
+    return "";
+  }
+
+  return widest.url;
+}
+
+/**
+ * The sleeve for one album, fetched once and kept.
+ *
+ * The file on disk is checked first and answers on its own, before a credential
+ * is read or a token asked for. That order is the whole guarantee: a run where
+ * every album already has its sleeve makes no Spotify request at all, so no
+ * outage and no missing secret can cost an album a cover it already has.
+ *
+ * Anything that goes wrong returns "", which draws the placeholder the card
+ * already has for an album with no link, and the next run tries again.
+ */
+async function saveCover(spotifyId) {
+  const name = `${spotifyId}.webp`;
+  const file = new URL(name, COVER_DIR);
+  if (existsSync(file)) return `${COVER_PATH}/${name}`;
+
+  // Neither of the two returns below says anything of its own: each has
+  // already put its reason on stdout, once for the token and once for the
+  // album, and repeating it here would say it twice per missing sleeve.
+  const token = await accessToken();
+  if (!token) return "";
+
+  const source = await coverSource(spotifyId, token);
+  if (!source) return "";
+
+  try {
+    const response = await fetch(source);
+    if (!response.ok) {
+      console.log(`dan-fm: the sleeve for ${spotifyId} answered ${response.status}`);
+      return "";
+    }
+
+    const encoded = await sharp(Buffer.from(await response.arrayBuffer()))
+      // Sleeves are square already, and `cover` is what holds that true for one
+      // that is not, rather than letterboxing it into a grid of squares.
+      .resize(COVER_PX, COVER_PX, { fit: "cover", position: "centre", withoutEnlargement: true })
+      .webp({ quality: COVER_QUALITY })
+      // Encoded whole before anything is written, so a download that will not
+      // decode leaves no file at all. Half a file would pass the build's
+      // existence gate and ship as a broken tile that nothing ever retries.
+      .toBuffer();
+
+    await writeFile(file, encoded);
+    console.log(`dan-fm: saved the sleeve for ${spotifyId}`);
+
+    return `${COVER_PATH}/${name}`;
+  } catch (error) {
+    console.log(`dan-fm: could not save the sleeve for ${spotifyId} (${error.message})`);
+    return "";
+  }
+}
+
+/**
+ * Sleeves for albums the sheet no longer carries.
+ *
+ * Only a file named the way this job names one is ever deleted, which is what
+ * lets the directory hold anything else: Spotify's mark, and the fixture
+ * sleeves a seeded build draws, neither of which the log will ever name.
+ */
+async function pruneCovers(albums) {
+  const wanted = new Set(albums.map((album) => `${album.spotifyId}.webp`));
+
+  for (const name of await readdir(COVER_DIR)) {
+    if (COVER_FILE.test(name) && !wanted.has(name)) {
+      await unlink(new URL(name, COVER_DIR));
+      console.log(`dan-fm: pruned ${name}`);
+    }
+  }
+}
+
 async function main() {
   const accounts = JSON.parse(await readFile(ACCOUNTS, "utf8"));
   const sheet = accounts.danFmSheet?.trim();
@@ -513,6 +752,19 @@ async function main() {
   // written: the build derives it from position, so a number in the file could
   // only ever disagree with the albums it counts.
   albums.sort((a, b) => b.date.localeCompare(a.date));
+
+  await mkdir(COVER_DIR, { recursive: true });
+
+  // Serially, because the first missing sleeve is what buys the token every
+  // later one spends, and firing them together would open a token exchange per
+  // album instead.
+  for (const album of albums) {
+    if (album.spotifyId) album.cover = await saveCover(album.spotifyId);
+  }
+
+  // Only ever alongside a write. A run that decided to leave the committed log
+  // alone has no business deleting the art that log points at.
+  await pruneCovers(albums);
 
   const payload = {
     // The same sheet asked for as a page rather than as a CSV, which is where

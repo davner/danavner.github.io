@@ -55,6 +55,11 @@ const INDEX = [
     title: "Fortnite",
     blurb: "Wins, kills and K/D, read nightly and kept season by season.",
   },
+  {
+    to: "/dan-fm",
+    title: "dan.fm",
+    blurb: "One album a day, with a review, a favourite track, and a score out of five.",
+  },
 ];
 
 const TICKER = [

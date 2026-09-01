@@ -1031,6 +1031,22 @@ node scripts/update-dan-fm.mjs
 No token, no login. The one thing to know is that it writes into the repo, so
 run it where a stray `src/content/dan-fm.json` will not surprise you.
 
+### The seeded build
+
+`src/content/dan-fm.json` is not committed, so a build made before the first
+successful run has an empty log and `/dan-fm` renders four empty boxes. That is
+the right answer for the live site and the wrong one for the test suite, which
+sweeps every route for cursors, contrast, overflow and readout drift and can
+only see what is rendered.
+
+So `DANFM_SEED=1` makes the build fall back to `src/content/dan-fm.seed.json`, a
+hand-written log that nothing generates. The dev server seeds itself for the same
+reason; `ci.yml`'s build job sets the variable and uploads that `dist` for the
+Playwright job to sweep. `deploy.yml` builds without it, so the fixture never
+reaches the site. A real `src/content/dan-fm.json` wins over the seed wherever
+both exist, which makes the fixture dead the moment the job writes for the first
+time.
+
 ### The schedule
 
 Six runs a day at `7 6,10,14,18,22,2 * * *`, which is 03:07 to 23:07 in
@@ -1070,9 +1086,10 @@ carries exactly three font files rather than every subset Fontsource ships.
 **Primitives.** `.display` for poster type, `.display-outline` /
 `.display-outline-ember` for the stroked variants, `.readout` / `.readout-dim`
 for the mono labels, `.rule-ticks` for the ruler edge, `.cut-corners` for
-registration marks on hover, `.solo-badge` for the shimmer. Grain and the
-starfield live in `components/backdrop.tsx`. Panels are plain `gap-px` grids
-over a `bg-border` parent, which is what produces the hairline seams.
+registration marks on hover, `.solo-badge` for the shimmer, `.on-air-lamp` for the
+glow on dan.fm's station dot. Grain and the starfield live in
+`components/backdrop.tsx`. Panels are plain `gap-px` grids over a `bg-border`
+parent, which is what produces the hairline seams.
 
 **Motion** is minimal and all of it respects `prefers-reduced-motion`.
 

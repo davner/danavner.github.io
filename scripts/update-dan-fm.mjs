@@ -117,7 +117,7 @@ const LOG_EPOCH = "2026-08-31";
 const FUTURE_DAYS = 7;
 
 /**
- * The station's clock, mirroring `SITE_TIME_ZONE` in `src/lib/dan-fm.ts`.
+ * The station's clock, mirroring `SITE_TIME_ZONE` in `src/lib/site.ts`.
  *
  * The runner's day is UTC, which is already tomorrow through the whole
  * California evening. Measuring "ahead of today" against that would publish a

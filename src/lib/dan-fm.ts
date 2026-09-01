@@ -1,5 +1,7 @@
 import { danFm as payload } from "virtual:dan-fm";
 
+import { SITE_TIME_ZONE } from "./site";
+
 /**
  * A track named on a row - the one worth keeping, or the one worth skipping.
  *
@@ -74,15 +76,6 @@ export interface DanFmPayload {
 export const log: DanFmPayload = payload;
 export const albums: Album[] = payload.albums;
 
-/**
- * The station runs on one clock, and it is not the visitor's.
- *
- * "Today's album" has to mean the same album everywhere, or a reader in Tokyo
- * is told the station is off air while it is playing. Every day boundary the
- * page reasons about - what is on now, when it last aired - is measured here.
- */
-export const SITE_TIME_ZONE = "America/Los_Angeles";
-
 const STATION_DAY = new Intl.DateTimeFormat("en-CA", {
   timeZone: SITE_TIME_ZONE,
   year: "numeric",
@@ -118,6 +111,53 @@ export function mixtape(list: Album[] = albums): Album[] {
   return list.filter((entry) => entry.score >= MIXTAPE_SCORE);
 }
 
+/**
+ * How the log is running right now, and it is not a clock reading: what "lapsed"
+ * means here is whether *yesterday* has an entry.
+ *
+ * Standing by is the ordinary state every morning - the day's album is logged in
+ * the evening - so it is kept apart from dead air, which is the one that means
+ * something.
+ */
+export type Lamp = "on-air" | "standing-by" | "dead-air";
+
+export interface Station {
+  lamp: Lamp;
+  /** The album on the front page: today's, or the last one to air. */
+  featured: Album | undefined;
+  /** Whole days from the last entry to today. 0 while on air. */
+  silentDays: number;
+}
+
+export function station(list: Album[] = albums, now?: Date): Station {
+  const today = stationDate(now);
+  // Read off the dates rather than taking the head of the list, for the reason
+  // `statsFor` does: the payload is newest-first, a caller's list need not be.
+  const featured = list.reduce<Album | undefined>(
+    (latest, entry) => (!latest || entry.date > latest.date ? entry : latest),
+    undefined,
+  );
+  if (!featured) return { lamp: "dead-air", featured: undefined, silentDays: 0 };
+
+  // Clamped at zero so a date ahead of the station's day still reads as on air.
+  // The job holds a future row back rather than publishing it, so this only
+  // catches a payload that got past it - and dark is the wrong answer there.
+  const silentDays = Math.max(daysApart(featured.date, today) ?? 0, 0);
+  const lamp: Lamp = silentDays === 0 ? "on-air" : silentDays === 1 ? "standing-by" : "dead-air";
+
+  return { lamp, featured, silentDays };
+}
+
+/**
+ * How many albums the charts need before they say anything.
+ *
+ * Averages over a handful of records describe the handful rather than the taste,
+ * and a board that swings a whole point because one album landed is a board
+ * nobody should read. The empty state counts down to this rather than naming a
+ * month, since the log misses days and a date would drift off the count.
+ */
+export const CHART_MINIMUM = 30;
+
 export interface DanFmStats {
   /** Albums logged. */
   total: number;
@@ -149,14 +189,24 @@ export function statsFor(list: Album[]): DanFmStats {
 }
 
 /**
- * Whole days from one `YYYY-MM-DD` to another, counting both ends. Parsed at
- * UTC midnight so the arithmetic is a subtraction rather than a question about
- * daylight saving, which cannot change how many dates are on a calendar.
+ * Whole days from one `YYYY-MM-DD` date to another, or null for a string that is
+ * not one. Parsed at UTC midnight so the arithmetic is a subtraction rather than
+ * a question about daylight saving, which cannot change how many dates are on a
+ * calendar.
+ *
+ * Null rather than a number, so each caller states its own fallback instead of
+ * inheriting a zero that reads as "the same day".
  */
-function spanInDays(first: string, last: string): number {
+function daysApart(first: string, last: string): number | null {
   const from = Date.parse(`${first}T00:00:00Z`);
   const to = Date.parse(`${last}T00:00:00Z`);
-  if (Number.isNaN(from) || Number.isNaN(to)) return 0;
+  if (Number.isNaN(from) || Number.isNaN(to)) return null;
 
-  return Math.round((to - from) / DAY) + 1;
+  return Math.round((to - from) / DAY);
+}
+
+/** The same distance counting both ends, which is what a span of days means. */
+function spanInDays(first: string, last: string): number {
+  const days = daysApart(first, last);
+  return days === null ? 0 : days + 1;
 }

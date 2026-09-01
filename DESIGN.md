@@ -352,8 +352,27 @@ from the page by a single step of lightness, not by lifting off it.
 Depth comes from two fixed layers behind everything: a radial ember bloom in the
 top `80vh` of the viewport, and a film-grain texture generated as an SVG
 turbulence filter at 3.5% opacity in the light theme and 5% in the dark. Their
-job is to stop flat colour reading as flat. Nothing else is doing depth work, and
-the grain is the mechanism rather than the mood.
+job is to stop flat colour reading as flat, and the grain is the mechanism rather
+than the mood.
+
+A third layer exists, and exactly one: `.on-air-lamp`, the glow on the dot in
+dan.fm's station badge. It is named here rather than left to be found, because a
+page carrying an undocumented glow is a page the next reader reverts. What bounds
+it is that it says something no border could - one element, one state, derived
+from `--ember` through `color-mix`.
+
+It sits on the dot rather than behind the badge, and that is a contrast decision
+before it is a visual one. Sized to the badge, the same glow puts ember under an
+11px mono label at `0.18em`, which measured 3.44:1 at the animation's peak
+against the 4.5 AA needs - and axe returns a node with a pseudo-element under its
+text as `incomplete` rather than failing it, so no sweep would have caught that.
+On the dot there is nothing to read underneath: it is `aria-hidden` decoration,
+the label starts a `gap-2.5` away, and the falloff ends inside that gap. Keep it
+there. A glow moved back behind the text is a contrast problem again, and the
+build will not say so.
+
+It is not a general-purpose glow. A second call site turns it into a scale, and
+this system has no depth scale on purpose.
 
 The one exception in the codebase is `shadow-xs` on filled buttons, inherited
 from shadcn. It is small enough not to break the rule and not worth a special
@@ -490,7 +509,13 @@ without one.
   colour and returns "incomplete" for the rest, so a green run proves a lot and
   not everything.
 - **Do** tie any motion to the reader. The marquee pauses on hover and
-  overflowing text scrolls only while hovered or focused.
+  overflowing text scrolls only while hovered or focused. `.on-air-lamp` is the
+  one loop that runs on its own, because there the motion is the meaning: a lamp that
+  breathes is what says the station is live, the same way the grain is mechanism
+  rather than mood. It pays for the exception by staying small - one element, one
+  state, seven seconds, opacity only, never a transform - and by answering
+  `prefers-reduced-motion` with the glow held still rather than taken away, since
+  a request about movement is not a request to lose the signal.
 
 ### Don't:
 

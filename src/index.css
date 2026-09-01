@@ -562,6 +562,67 @@
     }
   }
 
+  /* ---- Station light ------------------------------------------------ */
+
+  /*
+   * The lamp on dan.fm's on-air badge - the one piece of depth work outside the
+   * two fixed layers in `components/backdrop.tsx`, and bounded to that.
+   *
+   * The glow is on the dot rather than behind the whole badge. A halo sized to
+   * the badge puts ember under the label, and 11px mono at `0.18em` cannot
+   * afford it: that arrangement measured 3.44:1 at the animation's peak against
+   * the 4.5 AA needs, on the one word saying whether the station is live. axe
+   * returns the badge `incomplete` rather than failing it, because a
+   * pseudo-element under the text defeats its background detection - so no
+   * sweep catches that, and the only guard is where the light is put.
+   *
+   * On the dot there is nothing to put it behind. The dot is `aria-hidden`
+   * decoration, the nearest text starts a `gap-2.5` away, and the glow's own
+   * falloff dies inside that gap - so the label's ground is page colour, the
+   * ratio is whatever `--ember` on `--background` already is, and moving the
+   * stops cannot spend a contrast budget the light never touches.
+   *
+   * The resting opacity is between the two keyframes, so a reader who asks for
+   * less motion gets the glow standing still rather than losing it: here the
+   * motion is the meaning - a lamp that breathes is what says the station is on
+   * - and taking it away would answer the wrong request. The explicit
+   * `animation: none` follows `.marquee-track` above.
+   */
+  .on-air-lamp {
+    position: relative;
+  }
+
+  .on-air-lamp::before {
+    content: "";
+    position: absolute;
+    inset: -0.5rem;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(
+      closest-side,
+      color-mix(in oklab, var(--ember) 55%, transparent),
+      transparent 100%
+    );
+    opacity: 0.75;
+    animation: on-air-warm 7s ease-in-out infinite;
+  }
+
+  @keyframes on-air-warm {
+    0%,
+    100% {
+      opacity: 0.5;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .on-air-lamp::before {
+      animation: none;
+    }
+  }
+
   /* ---- Long-form -------------------------------------------------------- */
 
   .prose-dan {

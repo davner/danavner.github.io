@@ -5,19 +5,10 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
 
+import { SITE_TIME_ZONE } from "./src/lib/site";
 import { contentPlugin } from "./vite-plugin-content";
 import { coverVariantsPlugin } from "./vite-plugin-cover-variants";
 import { pagesPlugin } from "./vite-plugin-pages";
-
-/**
- * The zone the site reads a timestamp in. Fixed, so the value is the same on
- * every build machine and the same for every visitor rather than shifting with
- * whoever's clock happens to render it - and the site's own rather than UTC,
- * because the author writes from Pacific and UTC files an evening commit, or the
- * nightly jobs that commit in UTC, under tomorrow's date. A footer claiming a
- * date the reader has not reached yet reads as broken.
- */
-const SITE_TIME_ZONE = "America/Los_Angeles";
 
 /**
  * The date of the last commit, formatted for the footer's "last updated" line.

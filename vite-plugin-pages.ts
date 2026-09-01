@@ -37,6 +37,7 @@ const LAZY_MODULE = {
   "/now/:date": "src/routes/now.tsx",
   "/comics": "src/routes/comics.tsx",
   "/fortnite": "src/routes/fortnite.tsx",
+  "/dan-fm": "src/routes/dan-fm.tsx",
 } as const satisfies Record<string, string>;
 
 /**

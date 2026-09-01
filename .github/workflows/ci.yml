@@ -74,8 +74,15 @@ jobs:
 
       # Content lives in markdown and is validated in Node at build time, so a
       # malformed post or show fails right here rather than on the live site.
+      #
+      # `DANFM_SEED=1` builds `/dan-fm` from `src/content/dan-fm.seed.json` when
+      # no fetched log is committed, so the suite below meets a populated page
+      # instead of four empty boxes - the cursor, contrast, overflow and readout
+      # sweeps all walk that route and none of them can see what is not rendered.
+      # `deploy.yml` builds unseeded, so the fixture never reaches the live site,
+      # and a real `dan-fm.json` wins over the seed wherever both exist.
       - name: Build
-        run: npm run build
+        run: DANFM_SEED=1 npm run build
 
       - uses: actions/upload-artifact@v7
         with:

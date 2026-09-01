@@ -44,6 +44,10 @@ const Fortnite = lazy(() =>
   import("@/routes/fortnite").then((module) => ({ default: module.Fortnite })),
 );
 
+// The album log is a page of its own with a cover and a score board, loaded on
+// demand like the rest of the collections.
+const DanFm = lazy(() => import("@/routes/dan-fm").then((module) => ({ default: module.DanFm })));
+
 export function App() {
   // Hoisted so both now routes share one element, and with it one lazy
   // identity - see the `Now` import above.
@@ -134,6 +138,16 @@ export function App() {
                 <RouteBoundary>
                   <Suspense fallback={<PostSkeleton />}>
                     <Fortnite />
+                  </Suspense>
+                </RouteBoundary>
+              }
+            />
+            <Route
+              path="/dan-fm"
+              element={
+                <RouteBoundary>
+                  <Suspense fallback={<PostSkeleton />}>
+                    <DanFm />
                   </Suspense>
                 </RouteBoundary>
               }

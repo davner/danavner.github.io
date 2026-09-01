@@ -73,6 +73,11 @@ export const PAGE_META = {
     title: "Fortnite",
     description: "Wins, kills, and how good I am. 1v1 me.",
   },
+  "/dan-fm": {
+    title: "dan.fm",
+    description:
+      "One album a day, logged and rated: a review, a favourite track, a least favourite, and a score out of five.",
+  },
 } as const satisfies Record<string, PageMeta>;
 
 /**

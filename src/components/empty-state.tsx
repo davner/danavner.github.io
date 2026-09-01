@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils";
 /**
  * The "nothing here" panel, in the house style.
  *
- * One component, so the dashed box cannot drift page to page - three pages
- * render it, and the next one would otherwise pick its own padding.
+ * One component, so the dashed box cannot drift page to page - the next page to
+ * need one would otherwise pick its own padding.
  *
  * Square corners rather than the component's default `rounded-lg`, because
  * nothing else on this site is rounded.

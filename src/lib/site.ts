@@ -4,6 +4,23 @@ export const SITE_URL = "https://danavner.com";
 export const SITE_NAME = "Dan Avner";
 
 /**
+ * The one clock the site reads a date on.
+ *
+ * Fixed rather than the machine's, so every build stamps the same date whoever
+ * makes it, and Pacific rather than UTC because the author writes from Pacific:
+ * UTC files an evening commit, or a data job that commits in UTC, under
+ * tomorrow's date, and a footer claiming a day the reader has not reached yet
+ * reads as broken.
+ *
+ * It is the station's day on `/dan-fm` as well. "Today's album" has to mean the
+ * same album everywhere, or a reader in Tokyo is told the station is off air
+ * while it is playing - so the footer's date and the lamp measure a day the
+ * same way, from here. Vite's config reads it too, which is why it lives beside
+ * the nav rather than in the route that lights the lamp.
+ */
+export const SITE_TIME_ZONE = "America/Los_Angeles";
+
+/**
  * How the now page describes itself, in one place.
  *
  * It is the page's lede, its meta description, and its blurb in the home index.
@@ -48,6 +65,7 @@ export const SECTIONS: (Section | SectionGroup)[] = [
       { to: "/vinyl", label: "Vinyl" },
       { to: "/comics", label: "Comics" },
       { to: "/fortnite", label: "Fortnite" },
+      { to: "/dan-fm", label: "dan.fm" },
     ],
   },
 ];

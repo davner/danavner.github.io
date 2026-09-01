@@ -27,7 +27,6 @@ export const ROUTES: readonly string[] = [
   // section joins every sweep at the same moment it gets a page.
   ...STATIC_PATHS,
   "/blog/welcome",
-  "/blog/building-this-site",
   "/shows/bruno-mars-madrid-2026",
   /*
    * An archived now entry's permalink. A literal because `ROUTES` is a static

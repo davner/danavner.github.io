@@ -1469,6 +1469,14 @@ test.describe("share an album", () => {
   const CUT_TAKE = 150;
   const LONG_REVIEW = 400;
 
+  /*
+   * The other end of that measure. The excerpt is set at 34px over the same
+   * 888px, which is around fifty characters a line, so a review under
+   * `WHOLE_REVIEW` is one two lines hold entire - a card carrying it has left
+   * nothing behind to send anyone after.
+   */
+  const WHOLE_REVIEW = 120;
+
   /**
    * The sleeve band, and the rows of it the 420px fade into the sheet has not
    * reached - which is the part of a picture that arrives at full strength.
@@ -1491,6 +1499,27 @@ test.describe("share an album", () => {
   const unreviewed = ALBUMS.find((album) => album.review.trim() === "" && album.take.trim() !== "");
   const longTake = ALBUMS.find(
     (album) => album.take.length >= CUT_TAKE && album.review.trim().length >= LONG_REVIEW,
+  );
+
+  /**
+   * An album the card cannot have carried whole. `LONG_REVIEW` is several times
+   * the two lines an excerpt is cut to, so this holds whatever room the take
+   * left the excerpt - including none of it, which is the sheet that needs the
+   * line most.
+   */
+  const cutReview = ALBUMS.find((album) => album.review.trim().length >= LONG_REVIEW);
+
+  /**
+   * The opposite: a review two lines hold entire, under a take short enough to
+   * leave two lines free. Both halves are the fixture - a review the excerpt
+   * would have carried whole is still cut on a sheet the take has filled.
+   */
+  const wholeReview = ALBUMS.find(
+    (album) =>
+      album.take.trim() !== "" &&
+      album.take.length <= WHOLE_TAKE &&
+      album.review.trim() !== "" &&
+      album.review.trim().length <= WHOLE_REVIEW,
   );
 
   /** The newest album the log gives a sleeve, which is the only card that draws one. */
@@ -1628,6 +1657,22 @@ test.describe("share an album", () => {
       1080, 1920,
     ]);
     return runs.filter((run) => run.top < FOOTER_RULE);
+  }
+
+  /**
+   * The marks at or below the footer rule, which is everything under the body.
+   *
+   * `body` stops at the rule, so the band the date, the day count and the
+   * address are set in is invisible to every case that reads a card as its
+   * body. This is the rest of the same sheet, cut on the same row, so between
+   * them they see every run once.
+   */
+  async function footer(card: Locator) {
+    const { size, runs } = await marks(card);
+    expect(size, "the card is not the sheet these coordinates were read from").toEqual([
+      1080, 1920,
+    ]);
+    return runs.filter((run) => run.top >= FOOTER_RULE);
   }
 
   /**
@@ -1804,6 +1849,84 @@ test.describe("share an album", () => {
 
     const card = await openCard(page, `/dan-fm/${reviewed!.slug}`);
     await expect(card).toHaveAttribute("data-truncated", "false");
+  });
+
+  test("a card that left part of the review behind says where the rest is", async ({ page }) => {
+    /*
+     * A poster carries two dim lines of a piece that runs to a page, and on a
+     * sheet the take has filled it carries none at all. Nothing else on it says
+     * there is more, so a reader has no reason to go looking - this line is the
+     * whole of what sends them.
+     *
+     * Read under the footer rule, where `body` stops: the line sits between the
+     * day count and the address, which is the one band a case about the body
+     * cannot see. Located against its neighbours rather than at a row, because
+     * what it has to be is the second dim line of the footer and not a
+     * particular pixel.
+     */
+    test.skip(
+      cutReview === undefined,
+      `no album in the log the build read has a review over ${LONG_REVIEW} characters - the cut review is undrawn`,
+    );
+
+    const card = await openCard(page, `/dan-fm/${cutReview!.slug}`);
+    const runs = await footer(card);
+
+    const address = runs.at(-1);
+    expect(address?.colour, "the address is not the last mark on the sheet").toBe("ember");
+
+    const dim = runs.filter((run) => run.colour === "dim");
+    expect(
+      dim,
+      "the footer drew one dim line where the day count and the review line are two",
+    ).toHaveLength(2);
+    expect(dim[1].top, "the line is not under the day count").toBeGreaterThan(dim[0].bottom);
+    expect(dim[1].bottom, "the line is not over the address").toBeLessThan(address!.top);
+  });
+
+  test("an album with no review is not pointed at one", async ({ page }) => {
+    /*
+     * The half that keeps the line honest. A footer that drew it whatever the
+     * album held would satisfy the case above and then promise every reader of
+     * an unreviewed record a review nobody wrote.
+     */
+    test.skip(
+      unreviewed === undefined,
+      "every album in the log the build read has a review - the empty-review footer is unverified",
+    );
+
+    const card = await openCard(page, `/dan-fm/${unreviewed!.slug}`);
+
+    expect(
+      (await footer(card)).filter((run) => run.colour === "dim"),
+      "a line was drawn under the day count on an album with no review",
+    ).toHaveLength(1);
+  });
+
+  test("a review the card carried whole is not offered as having more", async ({ page }) => {
+    /*
+     * The half a reader would actually catch. The poster is already showing
+     * every word of this review, so a line offering the full one sends them to
+     * what they have just finished reading - and a card that drew the line
+     * whenever an album had a review at all would look right on every other
+     * album in the log.
+     *
+     * The excerpt is checked as drawn first, because a card that dropped the
+     * review entirely also has nothing to point at and would satisfy the
+     * footer assertion for the opposite reason.
+     */
+    test.skip(
+      wholeReview === undefined,
+      `no album has a take under ${WHOLE_TAKE} characters and a review under ${WHOLE_REVIEW} - the whole-review card is unverified`,
+    );
+
+    const card = await openCard(page, `/dan-fm/${wholeReview!.slug}`);
+
+    expect((await body(card)).at(-1)?.colour, "the review was not drawn at all").toBe("dim");
+    expect(
+      (await footer(card)).filter((run) => run.colour === "dim"),
+      "the footer offered a full review of one the card had shown whole",
+    ).toHaveLength(1);
   });
 
   test("a take that fits the card whole is not cut to make room for the review", async ({

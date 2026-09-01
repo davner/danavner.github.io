@@ -7,11 +7,11 @@ import { albumsOnDisk } from "./dan-fm";
 /**
  * What `/dan-fm` puts on screen.
  *
- * Nothing here fixes a clock, and that is the point rather than an omission:
- * what the lamp currently reads is the log rather than the calendar, so the
- * page renders the same way at any hour and a case owning the browser's clock
- * would be paying for a variable not in today's answer. Give the lamp a rule
- * about staleness and the clock comes back here with it.
+ * Every case here opens the page on a fixed clock, because the lamp reads the
+ * calendar as well as the log: an album ages off the air, so what the badge
+ * says depends on how recently one was logged. `openDanFm` pins the day to the
+ * newest album's own, so a run reports the site rather than whether the owner
+ * has kept up with his listening.
  *
  * What the states mean is settled without a browser in `tests/dan-fm.spec.ts`,
  * over `station()` and a handful of dated rows. These exist for the half that
@@ -100,6 +100,15 @@ async function openDanFm(page: Page) {
     "no album log on disk to take the station's dates from",
   );
   expect(NEWEST, "the committed album log is not on disk").toBeDefined();
+
+  /*
+   * Midday on the newest album's own day, before anything navigates - the
+   * station's clock is read while React renders, so a clock installed after
+   * the page has loaded arrives too late to decide the lamp. 19:00 UTC is late
+   * morning in California in either half of the year, so the station's day is
+   * the album's whichever side of a daylight-saving change it falls.
+   */
+  await page.clock.setFixedTime(new Date(`${NEWEST_DATE}T19:00:00Z`));
 
   await page.goto("/dan-fm");
   await page.getByRole("heading", { level: 1, name: "dan.fm" }).waitFor();

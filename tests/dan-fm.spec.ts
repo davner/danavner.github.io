@@ -238,18 +238,35 @@ test.describe("which log a build reads", () => {
     expect(log.albums.map((album) => album.artist)).toEqual(["FIXTURE"]);
   });
 
-  test("a fetched log wins over the fixture", () => {
+  test("a fetched log wins over a fixture the build only allows", () => {
     /*
-     * How the fixture retires itself. The day the job commits a real payload,
-     * a dev server and a CI build both stop reading the made-up one without
-     * anybody remembering to delete it.
+     * How the fixture retires itself at a dev server. The day the job commits a
+     * real payload, `npm run dev` stops reading the made-up one without anybody
+     * remembering to delete it.
      */
     const log = loadLog(
       { log: doc([row({ artist: "FETCHED" })]), seed: doc([row({ artist: "FIXTURE" })]) },
-      { command: "serve", env: "1" },
+      { command: "serve" },
     );
 
     expect(log.albums.map((album) => album.artist)).toEqual(["FETCHED"]);
+  });
+
+  test("a fixture the build asked for by name wins over a fetched log", () => {
+    /*
+     * The other half, and the reason the two are different questions. A sweep
+     * asks for the fixture because it needs what the fixture has - several
+     * albums, a score over the tape's bar, a second review. The real log is
+     * whatever was heard, and on its first day that was one album scoring 3.5.
+     * Retire the fixture here too and every case written against it stops
+     * testing anything, without one of them going red to say so.
+     */
+    const log = loadLog(
+      { log: doc([row({ artist: "FETCHED" })]), seed: doc([row({ artist: "FIXTURE" })]) },
+      { command: "build", env: "1" },
+    );
+
+    expect(log.albums.map((album) => album.artist)).toEqual(["FIXTURE"]);
   });
 
   test("a fetched log is read by a build that does not allow the fixture", () => {
@@ -808,6 +825,18 @@ let pending: Promise<DanFmModule> | undefined;
 
 function danFm(): Promise<DanFmModule> {
   pending ??= (async () => {
+    /*
+     * Named so the module evaluates against the fixture rather than the fetched
+     * log. The cases below that take no argument are asking what the page's own
+     * sections render, and those want the several albums and the score over the
+     * tape's bar that the fixture is built to hold - the committed log is
+     * whatever was actually heard, and a quiet week of nothing above the bar
+     * would turn "the tape defaults to the whole log" red without anything
+     * being wrong with the tape.
+     */
+    const before = process.env.DANFM_SEED;
+    process.env.DANFM_SEED = "1";
+
     const server = await createServer({
       root: path.resolve(),
       logLevel: "error",
@@ -825,6 +854,8 @@ function danFm(): Promise<DanFmModule> {
       return (await server.ssrLoadModule("/src/lib/dan-fm.ts")) as DanFmModule;
     } finally {
       await server.close();
+      if (before === undefined) delete process.env.DANFM_SEED;
+      else process.env.DANFM_SEED = before;
     }
   })();
 
@@ -836,6 +867,19 @@ function dated(...dates: string[]): Album[] {
   // Cast rather than filled out: `statsFor` is documented as reading the dates
   // and nothing else, and fourteen fields nobody looks at would hide that.
   return dates.map((date) => ({ date }) as Album);
+}
+
+/**
+ * Midday on a station day, as an instant.
+ *
+ * 19:00 UTC is late morning in California in either half of the year, so the
+ * station's day is the one named here whichever side of a daylight-saving
+ * change it falls. Every case that asserts what the lamp reads passes one of
+ * these rather than letting `station` reach for the machine's clock, which
+ * would make the answer depend on the day the suite happened to run.
+ */
+function noon(date: string): Date {
+  return new Date(`${date}T19:00:00Z`);
 }
 
 test.describe("the station's clock", () => {
@@ -1067,23 +1111,23 @@ test.describe("the station light", () => {
   test("an album in the log lights the lamp", async () => {
     const { station } = await danFm();
 
-    expect(station(dated("2026-08-30"))).toMatchObject({ lamp: "on-air" });
+    expect(station(dated("2026-08-30"), noon("2026-08-30"))).toMatchObject({ lamp: "on-air" });
   });
 
-  test("the lamp is decided by the log rather than by a clock", async () => {
+  test("an album the station has aged out of takes the lamp with it", async () => {
     /*
-     * An album logged one evening is what is playing the next day, so age is
-     * not currently what the light follows - having anything in the log is.
+     * What the light follows now: the age of the newest album rather than the
+     * mere existence of one. `AIR_DAYS` is the album's own day and the one
+     * after, so two days on is the first the badge reads quiet.
      *
-     * Named for what it checks rather than for what it forbids. A rule about
-     * how stale the newest album may be would narrow this, and a case called
-     * "no elapsed time takes it off air" would have to be deleted to allow
-     * that, which reads as removing a guarantee rather than tightening one.
+     * The album is still featured while it does, and that half matters as much
+     * as the lamp - the page has to go on showing the record it has gone quiet
+     * about, or a missed day empties the front page.
      */
     const { station } = await danFm();
 
-    expect(station(dated("2026-08-20"))).toMatchObject({
-      lamp: "on-air",
+    expect(station(dated("2026-08-20"), noon("2026-08-22"))).toMatchObject({
+      lamp: "off-air",
       featured: expect.objectContaining({ date: "2026-08-20" }),
     });
   });
@@ -1097,7 +1141,7 @@ test.describe("the station light", () => {
      */
     const { station } = await danFm();
 
-    const now = station(dated("2026-08-25", "2026-08-30", "2026-08-20"));
+    const now = station(dated("2026-08-25", "2026-08-30", "2026-08-20"), noon("2026-08-30"));
 
     expect(now.featured?.date).toBe("2026-08-30");
     expect(now.lamp).toBe("on-air");
@@ -1114,7 +1158,12 @@ test.describe("the station light", () => {
 
     expect(albums.length, "no albums in the log - nothing below is being asked").toBeGreaterThan(0);
 
-    expect(station()).toEqual(station(albums));
-    expect(station().featured).toBeDefined();
+    // One instant for both calls. Two reads of the machine's clock can land
+    // either side of the station's midnight, which is a difference in the lamp
+    // and nothing to do with which list was passed.
+    const at = new Date();
+
+    expect(station(undefined, at)).toEqual(station(albums, at));
+    expect(station(undefined, at).featured).toBeDefined();
   });
 });

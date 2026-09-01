@@ -1038,19 +1038,33 @@ run it where a stray `src/content/dan-fm.json` will not surprise you.
 
 ### The seeded build
 
-`src/content/dan-fm.json` is not committed, so a build made before the first
+The job writes `src/content/dan-fm.json`, so a build made before its first
 successful run has an empty log and `/dan-fm` renders four empty boxes. That is
 the right answer for the live site and the wrong one for the test suite, which
 sweeps every route for cursors, contrast, overflow and readout drift and can
 only see what is rendered.
 
-So `DANFM_SEED=1` makes the build fall back to `src/content/dan-fm.seed.json`, a
-hand-written log that nothing generates. The dev server seeds itself for the same
-reason; `ci.yml`'s build job sets the variable and uploads that `dist` for the
-Playwright job to sweep. `deploy.yml` builds without it, so the fixture never
-reaches the site. A real `src/content/dan-fm.json` wins over the seed wherever
-both exist, which makes the fixture dead the moment the job writes for the first
-time.
+So `DANFM_SEED=1` builds from `src/content/dan-fm.seed.json`, a hand-written log
+that nothing generates. `ci.yml`'s build job sets it and uploads that `dist` for
+the Playwright job to sweep; `deploy.yml` builds without it, so the fixture never
+reaches the site.
+
+**Asking for the fixture by name is not the same as allowing it**, and the
+difference is what keeps it useful:
+
+| Build                        | Reads                                                |
+| ---------------------------- | ---------------------------------------------------- |
+| `DANFM_SEED=1 npm run build` | the fixture, over a fetched log if there is one      |
+| `npm run dev`                | a fetched log if there is one, otherwise the fixture |
+| `npm run build`              | a fetched log, otherwise nothing                     |
+
+The dev server drops the fixture the day a real log lands, which is what someone
+building against the page wants. A sweep does not, because it asked for what the
+fixture holds - several albums, a score over the tape's bar, a second review -
+and the fetched log is whatever was actually heard. On its first day that was one
+album scoring 3.5, which is below the bar and has nothing to compare against.
+Retire the fixture there too and every case written against it stops testing
+anything, without one of them going red to say so.
 
 ### The schedule
 

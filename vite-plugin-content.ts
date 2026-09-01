@@ -701,6 +701,36 @@ function danFmTrack(value: unknown): DanFmTrackJson {
 }
 
 /**
+ * Whether the album log may fall back to its fixture: always in dev, and in a
+ * build that asks for it by name.
+ *
+ * `DANFM_SEED` is how a build gets a populated log to render, because an empty
+ * one draws none of the controls a browser sweep would have to find.
+ * `deploy.yml` sets nothing, so the fixture never reaches production.
+ *
+ * Asking by name is different from merely allowing it, and the difference is
+ * what keeps the fixture useful. A dev server allows it so `npm run dev` has
+ * something to build against before the first fetch, and drops it the day a
+ * real log arrives - the fixture retiring itself, which is what a person at a
+ * dev server wants. A build that names `DANFM_SEED=1` is asking for the several
+ * albums, the score over the tape's bar and the second review that the cases
+ * sweeping it were written against, and the committed log is whatever the owner
+ * happened to hear - on its first day, one album scoring 3.5. Let the real log
+ * win there too and every one of those cases goes quiet the day the job runs,
+ * without any of them failing.
+ *
+ * One rule for both plugins rather than the same expression written twice: the
+ * bundle and the generated pages have to be built from the same log, and two
+ * copies of this could disagree about which log that is.
+ */
+export type SeedRule = "forced" | "fallback" | "never";
+
+export function seedsDanFm(command: "build" | "serve"): SeedRule {
+  if (process.env.DANFM_SEED === "1") return "forced";
+  return command === "serve" ? "fallback" : "never";
+}
+
+/**
  * The album log - one album a day, read from `src/content/dan-fm.json`, which
  * the scheduled job writes from a published sheet rather than anyone typing by
  * hand.
@@ -721,6 +751,10 @@ function danFmTrack(value: unknown): DanFmTrackJson {
  * seed, and the precedence above retires the fixture on its own the day a real
  * payload lands.
  *
+ * Exported for the reason `readShows` is: the build writes a real HTML page per
+ * album, and it has to see exactly the log the bundle sees or it publishes
+ * addresses the app answers with a redirect.
+ *
  * Blank cells are the job's to normalise, not this reader's. A published sheet
  * exports an empty cell as "", so a job that passes cells through verbatim
  * writes `later: ""` and fails here rather than reading as absent. That is the
@@ -728,15 +762,18 @@ function danFmTrack(value: unknown): DanFmTrackJson {
  * accepted "" as "no number" would accept it for `score` too, where there is no
  * absent to fall back on. The job writes `null`.
  */
-function readDanFm(root: string, publicDir: string, seed: boolean) {
+export function readDanFm(root: string, publicDir: string, seed: SeedRule) {
   const empty = { url: "", fetched: "", albums: [] as DanFmAlbumJson[] };
 
   const real = "src/content/dan-fm.json";
   const fixture = "src/content/dan-fm.seed.json";
 
+  // A build that names the fixture gets it; one that merely allows it falls
+  // back to it. See `seedsDanFm` for why those are not the same question.
   let where = "";
-  if (existsSync(path.resolve(root, real))) where = real;
-  else if (seed && existsSync(path.resolve(root, fixture))) where = fixture;
+  if (seed === "forced" && existsSync(path.resolve(root, fixture))) where = fixture;
+  else if (existsSync(path.resolve(root, real))) where = real;
+  else if (seed === "fallback" && existsSync(path.resolve(root, fixture))) where = fixture;
   else return empty;
 
   const fail = (message: string): never => invalid("dan.fm payload", where, message);
@@ -1588,7 +1625,7 @@ export function contentPlugin(): Plugin {
   let root = "";
   let publicDir = "";
   let includeDrafts = false;
-  let seedDanFm = false;
+  let seedDanFm: SeedRule = "never";
 
   /**
    * Pages with their own virtual module rather than the `Collection` shape.
@@ -1629,15 +1666,7 @@ export function contentPlugin(): Plugin {
       root = config.root;
       publicDir = config.publicDir;
       includeDrafts = config.command === "serve";
-      /*
-       * Whether the album log may fall back to its fixture: always in dev, and
-       * in a build that asks for it by name. `DANFM_SEED` is how a build gets a
-       * populated log to render, because an empty one draws none of the
-       * controls a browser sweep would have to find. `deploy.yml` sets nothing,
-       * and `readDanFm` prefers a real payload regardless, so the fixture
-       * reaches neither production nor any build made after the first fetch.
-       */
-      seedDanFm = config.command === "serve" || process.env.DANFM_SEED === "1";
+      seedDanFm = seedsDanFm(config.command);
     },
 
     // Once per build and once per dev server start, rather than inside `load`:

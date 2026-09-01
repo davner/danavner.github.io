@@ -48,6 +48,13 @@ const Fortnite = lazy(() =>
 // demand like the rest of the collections.
 const DanFm = lazy(() => import("@/routes/dan-fm").then((module) => ({ default: module.DanFm })));
 
+// One album's own page, which is what every shared dan.fm link opens. Its own
+// chunk rather than the station's: the two render the same record but nothing
+// arriving at one needs the other.
+const DanFmAlbum = lazy(() =>
+  import("@/routes/dan-fm-album").then((module) => ({ default: module.DanFmAlbum })),
+);
+
 export function App() {
   // Hoisted so both now routes share one element, and with it one lazy
   // identity - see the `Now` import above.
@@ -148,6 +155,16 @@ export function App() {
                 <RouteBoundary>
                   <Suspense fallback={<PostSkeleton />}>
                     <DanFm />
+                  </Suspense>
+                </RouteBoundary>
+              }
+            />
+            <Route
+              path="/dan-fm/:slug"
+              element={
+                <RouteBoundary>
+                  <Suspense fallback={<PostSkeleton />}>
+                    <DanFmAlbum />
                   </Suspense>
                 </RouteBoundary>
               }

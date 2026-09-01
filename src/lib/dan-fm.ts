@@ -86,6 +86,16 @@ export interface DanFmPayload {
   albums: Album[];
 }
 
+/**
+ * "1998 pressing" rather than "1998" where the year came off a reissue, and ""
+ * for a row that never said. Beside the type rather than in a component,
+ * because both surfaces that print an album print this and neither owns it.
+ */
+export function yearLabel(album: Pick<Album, "year" | "yearIsPressing">): string {
+  if (album.year === null) return "";
+  return album.yearIsPressing ? `${album.year} pressing` : String(album.year);
+}
+
 export const log: DanFmPayload = payload;
 export const albums: Album[] = payload.albums;
 
@@ -127,18 +137,12 @@ export function mixtape(list: Album[] = albums): Album[] {
 /**
  * Whether the station has anything on.
  *
- * What currently lights it is having anything in the log at all. The newest
- * album keeps the front page and keeps the light, because one logged at eleven
- * at night is still what is playing the next day - a lamp reading the calendar
- * would take it off the air at midnight while it was the only thing on.
- *
- * That is the present rule rather than a promise: what counts as too long since
- * the last album is a question this deliberately does not ask yet, and a state
- * added for it belongs here beside the two.
- *
- * The empty log is unlit. There is no album to be on air with, and a lit lamp
- * over the launch-day panel would have the badge and the page under it saying
- * opposite things.
+ * Two states, over three situations: playing, gone quiet, and never started.
+ * The last two are both unlit and both read "Off air", because what separates
+ * them is already under the badge - the last album with the day it was heard,
+ * or the panel saying nothing has been logged yet. A third label would be a
+ * second copy of a distinction the page draws anyway, and the two copies would
+ * have to be kept saying the same thing.
  */
 export type Lamp = "on-air" | "off-air";
 
@@ -149,12 +153,29 @@ export interface Station {
 }
 
 /**
- * Takes no clock, because nothing it currently decides needs one: the featured
- * album is the newest row, and the lamp follows whether there is one. A rule
- * about how stale the newest album may be would need today's date passed in,
- * and this is the one place that would change.
+ * How many station days an album keeps the lamp lit, counting the day it was
+ * heard.
+ *
+ * Two, so a record has its own day and the whole of the next one to be followed
+ * before the badge reads quiet: one logged at eleven at night would otherwise
+ * go off air the next morning. Skip a day entirely and the station is dark on
+ * the morning after it, which is the rule rather than a floor - it says a day
+ * was missed, and it says so while the miss is still the current state.
  */
-export function station(list: Album[] = albums): Station {
+export const AIR_DAYS = 2;
+
+/**
+ * What the station has on, and whether the lamp is lit.
+ *
+ * Takes a clock because the lamp is a claim about now rather than about the
+ * log: an album ages out of the air after `AIR_DAYS`, so a log nobody is adding
+ * to reads as quiet instead of as still playing whatever was heard last.
+ *
+ * The featured album is the newest row whatever its age, and the page shows it
+ * either way. Its date is what says how old it is, which is why an unlit badge
+ * needs no second readout beside it saying the same thing in words.
+ */
+export function station(list: Album[] = albums, now?: Date): Station {
   // Read off the dates rather than taking the head of the list, for the reason
   // `statsFor` does: the payload is newest-first, a caller's list need not be.
   const featured = list.reduce<Album | undefined>(
@@ -162,7 +183,13 @@ export function station(list: Album[] = albums): Station {
     undefined,
   );
 
-  return { lamp: featured ? "on-air" : "off-air", featured };
+  // The oldest day still on air. Comparing it against the album as strings
+  // compares the two as days, because both are `YYYY-MM-DD` and lexical order
+  // is calendar order there. `asLogDate` in the content plugin is what
+  // guarantees an album's half of that shape.
+  const oldest = shiftDays(stationDate(now), 1 - AIR_DAYS);
+
+  return { lamp: featured && featured.date >= oldest ? "on-air" : "off-air", featured };
 }
 
 /**
@@ -220,6 +247,17 @@ function daysApart(first: string, last: string): number | null {
   if (Number.isNaN(from) || Number.isNaN(to)) return null;
 
   return Math.round((to - from) / DAY);
+}
+
+/**
+ * The `YYYY-MM-DD` day a whole number of days from another one.
+ *
+ * Parsed at UTC midnight for the reason `daysApart` is: this is counting dates
+ * off a calendar, and no daylight-saving shift changes how many are on one. The
+ * input is `stationDate`'s output, which is that shape by construction.
+ */
+function shiftDays(date: string, days: number): string {
+  return new Date(Date.parse(`${date}T00:00:00Z`) + days * DAY).toISOString().slice(0, 10);
 }
 
 /** The same distance counting both ends, which is what a span of days means. */

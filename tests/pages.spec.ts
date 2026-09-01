@@ -23,7 +23,7 @@ const SECTIONS = STATIC_PATHS.filter((route) => route !== "/");
  * The static routes that also name a directory the build fills. Each is written
  * twice, so whichever form Pages prefers, the URL answers with a page.
  */
-const BOTH_FORMS = ["/blog", "/shows", "/now"];
+const BOTH_FORMS = ["/blog", "/shows", "/now", "/dan-fm"];
 
 /** `/about` -> `dist/about.html`. */
 function fileFor(route: string) {

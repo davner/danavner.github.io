@@ -4,11 +4,19 @@ import path from "node:path";
 import sharp from "sharp";
 import type { Plugin, Rollup } from "vite";
 
+import { albumSummary, albumTitle, albumUrl } from "./src/lib/dan-fm-summary";
 import { nowSummary, nowTitle } from "./src/lib/now-summary";
 import { PAGE_META } from "./src/lib/routes";
 import { showHeading, showSummary } from "./src/lib/show-summary";
-import { DEFAULT_SHARE_IMAGE, SHOW_FALLBACK_IMAGE, SITE_NAME, SITE_URL } from "./src/lib/site";
-import { readNow, readPosts, readShows } from "./vite-plugin-content";
+import { CARD_FALLBACK_IMAGE, DEFAULT_SHARE_IMAGE, SITE_NAME, SITE_URL } from "./src/lib/site";
+import {
+  readDanFm,
+  readNow,
+  readPosts,
+  readShows,
+  seedsDanFm,
+  type SeedRule,
+} from "./vite-plugin-content";
 
 /**
  * The home page's hero preload, marked in `index.html` so a generated page can
@@ -38,13 +46,14 @@ const LAZY_MODULE = {
   "/comics": "src/routes/comics.tsx",
   "/fortnite": "src/routes/fortnite.tsx",
   "/dan-fm": "src/routes/dan-fm.tsx",
+  "/dan-fm/:slug": "src/routes/dan-fm-album.tsx",
 } as const satisfies Record<string, string>;
 
 /**
  * The module a static route renders from, or null where the entry bundle
  * already carries it.
  *
- * `as const` above so the four lookups written by hand are checked: a key
+ * `as const` above so the lookups written by hand are checked: a key
  * renamed out from under one of them fails the build instead of leaving that
  * page without its preload, which nothing else would notice.
  */
@@ -184,7 +193,7 @@ interface WrittenPage extends Page {
  * `index.html` is not among them: Vite writes it, and it is the file Pages
  * serves at "/".
  */
-function collectPages(root: string, publicDir: string): WrittenPage[] {
+function collectPages(root: string, publicDir: string, seedDanFm: SeedRule): WrittenPage[] {
   const content: Page[] = [];
 
   /*
@@ -209,9 +218,9 @@ function collectPages(root: string, publicDir: string): WrittenPage[] {
       path: `/shows/${show.slug}`,
       title: showHeading(show),
       description: showSummary(show),
-      // The show fallback rather than the site's own card: a link preview
+      // The wordless card rather than the site's own portrait: a link preview
       // showing a headshot for a festival reads as the wrong link entirely.
-      ...shareImage(show.photos, SHOW_FALLBACK_IMAGE),
+      ...shareImage(show.photos, CARD_FALLBACK_IMAGE),
       lazyModule: LAZY_MODULE["/shows/:slug"],
       indexed: true,
     });
@@ -247,6 +256,32 @@ function collectPages(root: string, publicDir: string): WrittenPage[] {
       ...shareImage(entry.photos, DEFAULT_SHARE_IMAGE),
       lazyModule: LAZY_MODULE["/now/:date"],
       indexed: entry !== current,
+    });
+  }
+
+  /*
+   * One page per album in the log.
+   *
+   * Read through the same `seedDanFm` the content plugin bundles by, or a build
+   * that seeded the app would write pages for a log the bundle does not hold -
+   * every one of them answering with the redirect an unknown slug takes.
+   */
+  for (const album of readDanFm(root, publicDir, seedDanFm).albums) {
+    content.push({
+      path: albumUrl(album),
+      title: albumTitle(album),
+      description: albumSummary(album),
+      /*
+       * The wordless card rather than the sleeve, even for an album that has
+       * one. `og:image:alt` is the only words a preview read by ear gets, and
+       * the page deliberately gives the sleeve an empty `alt` because the
+       * artist and the album are printed beside it - so a cover cannot become
+       * the preview until it has words written for that job.
+       */
+      image: absoluteImage(CARD_FALLBACK_IMAGE),
+      photo: null,
+      lazyModule: LAZY_MODULE["/dan-fm/:slug"],
+      indexed: true,
     });
   }
 
@@ -447,6 +482,7 @@ export function pagesPlugin(): Plugin {
   let root = "";
   let publicDir = "";
   let outDir = "";
+  let seedDanFm: SeedRule = "never";
 
   return {
     name: "pages",
@@ -456,6 +492,7 @@ export function pagesPlugin(): Plugin {
       root = config.root;
       publicDir = config.publicDir;
       outDir = path.resolve(config.root, config.build.outDir);
+      seedDanFm = seedsDanFm(config.command);
     },
 
     async writeBundle(_options, bundle) {
@@ -481,7 +518,7 @@ export function pagesPlugin(): Plugin {
       // the site has no page for, so it can claim none of their addresses.
       writeFileSync(path.join(outDir, "404.html"), template);
 
-      const pages = collectPages(root, publicDir);
+      const pages = collectPages(root, publicDir, seedDanFm);
       const sizes = await measurePhotos(pages, publicDir);
 
       // Memoised: every blog post preloads the same chunk, as does every show.

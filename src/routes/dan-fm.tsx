@@ -1,13 +1,13 @@
 import { ArrowUpRight, Disc3 } from "lucide-react";
+import { Link } from "react-router";
 
+import { AlbumCover, AlbumReview, AlbumScore, AlbumTracks } from "@/components/album-record";
 import { EmptyState } from "@/components/empty-state";
 import { OnAir } from "@/components/on-air";
 import { PageHeader, PageShell, Section } from "@/components/page";
-import { Rating } from "@/components/rating";
 import { SourceLine } from "@/components/source-line";
 import { SpotifyCredit } from "@/components/spotify-credit";
 import { Badge } from "@/components/ui/badge";
-import { coverSrcSet } from "@/lib/covers";
 import {
   CHART_MINIMUM,
   MIXTAPE_SCORE,
@@ -16,20 +16,15 @@ import {
   mixtape,
   station,
   statsFor,
+  yearLabel,
   type Album,
 } from "@/lib/dan-fm";
+import { albumUrl } from "@/lib/dan-fm-summary";
 import { longDate } from "@/lib/dates";
 import { PAGE_META } from "@/lib/routes";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
 const META = PAGE_META["/dan-fm"];
-
-/**
- * A star instead of the show log's horns. `Rating` paints whatever mark it is
- * handed and takes its colour from the line it sits on, so the album score and
- * a show's rating stay one component drawing one ember.
- */
-const STAR = "★";
 
 /**
  * How wide the sleeve is laid out, so the browser can pick between the two
@@ -41,12 +36,6 @@ const STAR = "★";
 const COVER_SIZES =
   "(min-width: 1024px) 352px, (min-width: 768px) 288px, (min-width: 640px) 384px, 100vw";
 
-/** "1998 pressing" rather than "1998" where the year came off a reissue. */
-function yearLabel(album: Album): string {
-  if (album.year === null) return "";
-  return album.yearIsPressing ? `${album.year} pressing` : String(album.year);
-}
-
 /** One album, at the size the front page gives the current one. */
 function TodayCard({ album }: { album: Album }) {
   const attribution = album.from ? `From ${album.from}` : "Own pick";
@@ -55,18 +44,7 @@ function TodayCard({ album }: { album: Album }) {
     <div className="grid gap-8 md:grid-cols-[18rem_minmax(0,1fr)] md:gap-10 lg:grid-cols-[22rem_minmax(0,1fr)]">
       <div className="sm:max-w-sm md:max-w-none">
         {album.cover ? (
-          <img
-            src={album.cover}
-            srcSet={coverSrcSet(album.cover) ?? undefined}
-            sizes={COVER_SIZES}
-            /* The artist and the album are set in full beside it, so naming the
-               sleeve as well would have a screen reader read the record twice. */
-            alt=""
-            width={500}
-            height={500}
-            decoding="async"
-            className="aspect-square w-full border border-border object-cover"
-          />
+          <AlbumCover cover={album.cover} sizes={COVER_SIZES} />
         ) : (
           <div className="flex aspect-square w-full items-center justify-center border border-border bg-card/40">
             <Disc3 className="size-8 text-muted-foreground" aria-hidden />
@@ -75,33 +53,29 @@ function TodayCard({ album }: { album: Album }) {
       </div>
 
       <div>
-        {/* Which day of the log this is, and which day it was heard. The date
-            carries the freshness on its own, which matters while the lamp does
-            not: it currently lights for the newest album however old that is. */}
+        {/* Which day of the log this is, and which day it was heard. The badge
+            above says only whether the station is still on air; how long ago
+            this was is read here, which is why an off-air badge needs nothing
+            beside it repeating the same thing in words. */}
         <p className="readout-dim">
           {longDate(album.date)} · Day {album.ordinal}
         </p>
 
-        <h3 className="display mt-4 text-feature text-balance">{album.album}</h3>
+        {/* The album's own address, and the only way onto it from the site
+            while the archive is unbuilt - the title is what a reader would
+            click to go from the card to the record. */}
+        <h3 className="display mt-4 text-feature text-balance">
+          <Link to={albumUrl(album)} className="transition-colors hover:text-ember">
+            {album.album}
+          </Link>
+        </h3>
 
         <p className="mt-4 text-title leading-snug text-muted-foreground text-pretty">
           {[album.artist, yearLabel(album)].filter(Boolean).join(" · ")}
         </p>
 
         <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3">
-          <Rating value={album.score} mark={STAR} />
-
-          {album.later === null ? (
-            <span className="readout-dim">{album.score}</span>
-          ) : (
-            /* The stars draw the first score, so the second one is written out
-               beside them rather than folded into the graphic - and the word is
-               spoken where the arrow is only drawn. */
-            <span className="readout text-ember">
-              {album.score} <span aria-hidden>→</span>
-              <span className="sr-only">later</span> {album.later}
-            </span>
-          )}
+          <AlbumScore album={album} />
 
           {album.shelf ? <Badge variant="ember">{album.shelf}</Badge> : null}
           <Badge variant="outline">{attribution}</Badge>
@@ -122,13 +96,13 @@ function TodayCard({ album }: { album: Album }) {
           </div>
         ) : null}
 
-        <Tracks album={album} />
+        <AlbumTracks album={album} className="mt-8" />
 
         {/* Last of the writing, under the spec block rather than over it: the
             score, the tags and the two tracks are scanned in a second, and a
             reader who wants them should not have to pass a thousand words to
             reach them. The Spotify link then sits where the reading ends. */}
-        <AlbumReview review={album.review} />
+        <AlbumReview review={album.review} className="mt-10" />
 
         {album.url ? (
           <a
@@ -183,68 +157,6 @@ function mixtapeCopy(keepers: number): string {
 
   const many = keepers === 1 ? "1 album has" : `${keepers} albums have`;
   return `${many} scored a ${MIXTAPE_SCORE} or better. I have not made the tape yet.`;
-}
-
-/**
- * The two tracks a row can name. Either half may be blank - an album can be
- * worth hearing with no favourite standing out, and one with nothing to skip is
- * the whole point of a good one - so each row appears only when it has a name.
- */
-function Tracks({ album }: { album: Album }) {
-  const rows = [
-    { label: "Standout", name: album.standout.name, accent: true },
-    { label: "Skip", name: album.skip.name, accent: false },
-  ].filter((row) => row.name);
-
-  if (rows.length === 0) return null;
-
-  return (
-    <dl className="mt-8 max-w-2xl">
-      {rows.map((row) => (
-        <div
-          key={row.label}
-          className="grid grid-cols-[5.5rem_minmax(0,1fr)] items-baseline gap-3 border-t border-border py-2.5"
-        >
-          <dt className={row.accent ? "readout text-ember" : "readout-dim"}>{row.label}</dt>
-          <dd className="text-sm text-pretty">{row.name}</dd>
-        </div>
-      ))}
-    </dl>
-  );
-}
-
-/**
- * The long piece about the record, set as prose rather than as a readout.
- *
- * Local to this route the way `Tracks` is, and for the same reason: the front
- * page is the only thing rendering an album in full today. The album's own
- * permalink is the second one, and the moment it exists this is what it lifts
- * out - the way `NowProse` was lifted the day a second route needed the same
- * writing to look like the same writing.
- *
- * `prose-dan` at `max-w-2xl` is how `/now` and `/blog` set body copy, so the
- * measure and the leading a review is read at are the site's, not this page's.
- *
- * Split rather than parsed. The cell behind it is text somebody typed into a
- * spreadsheet, where a newline is a deliberate break and there is no soft wrap
- * to undo - so every line that has anything on it is a paragraph, and a stray
- * `#` or `*` stays the character it was typed as instead of becoming markup.
- */
-function AlbumReview({ review }: { review: string }) {
-  const paragraphs = review
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
-
-  if (paragraphs.length === 0) return null;
-
-  return (
-    <div className="prose-dan mt-10 max-w-2xl">
-      {paragraphs.map((paragraph, index) => (
-        <p key={index}>{paragraph}</p>
-      ))}
-    </div>
-  );
 }
 
 export function DanFm() {

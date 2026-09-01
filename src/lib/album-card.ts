@@ -96,7 +96,9 @@ function fit(lines: string[], capacity: number): { lines: string[]; truncated: b
  *
  * `truncated` is the take's alone. A cut review is what an excerpt is, not a
  * card that failed to say something, and the share sheet turns that flag into a
- * claim about the whole subject.
+ * claim about the whole subject. `reviewCut` reports the excerpt's own cut
+ * beside it, for the footer line that says where the rest of the review is - a
+ * review the excerpt carried whole leaves nothing to point anyone at.
  *
  * The review's paragraph breaks collapse into the flow, because `wrap` splits
  * on whitespace: two lines has no room to show a break as anything but a hole,
@@ -109,7 +111,7 @@ function fitBody(
   take: string,
   review: string,
   top: number,
-): { take: string[]; truncated: boolean; review: string[] } {
+): { take: string[]; truncated: boolean; review: string[]; reviewCut: boolean } {
   const budget = BODY_BOTTOM - top;
 
   context.font = BODY_FONT;
@@ -126,12 +128,12 @@ function fitBody(
   const excerpt = fit(
     wrap(context, review, MAX_WIDTH),
     Math.min(Math.floor(spare / REVIEW_LINE), MAX_REVIEW_LINES),
-  ).lines;
+  );
 
-  const reserved = excerpt.length > 0 ? gap + excerpt.length * REVIEW_LINE : 0;
+  const reserved = excerpt.lines.length > 0 ? gap + excerpt.lines.length * REVIEW_LINE : 0;
   const { lines, truncated } = fit(wrapped, Math.floor((budget - reserved) / LINE));
 
-  return { take: lines, truncated, review: excerpt };
+  return { take: lines, truncated, review: excerpt.lines, reviewCut: excerpt.truncated };
 }
 
 /**
@@ -152,6 +154,9 @@ function fitBody(
  * The address printed at the foot is the station rather than the album. A
  * slug-length URL set in the readout face runs half again as wide as the card
  * and shrinking it to fit puts it under the size anyone can read off a story.
+ * The line over it still holds once the album is off air, because the station
+ * carries a filterable archive of every album on its own permalink, so a review
+ * is reachable from that address and not only on the day it played.
  * Whichever address a reader should land on travels with the link action beside
  * this one in the share panel: the album's on the permalink, the station's on
  * the station.
@@ -245,7 +250,7 @@ export async function renderAlbumCard(album: Album): Promise<Card> {
   // review under it. Two lines of it at most: a thousand words set at story
   // scale is a screenshot of an essay, and the page it is excerpted from is
   // where the rest is.
-  const { take, truncated, review } = fitBody(context, album.take, album.review, y);
+  const { take, truncated, review, reviewCut } = fitBody(context, album.take, album.review, y);
 
   context.font = BODY_FONT;
   context.fillStyle = palette.ink;
@@ -272,6 +277,17 @@ export async function renderAlbumCard(album: Album): Promise<Card> {
   context.fillText(longDate(album.date), PAD, y);
   context.fillStyle = palette.dim;
   context.fillText(`Day ${album.ordinal}`, PAD, y + 52);
+
+  /*
+   * The review is at most two dim lines of a piece that runs to a page, and on
+   * a sheet the take has filled it is none at all, so without this line a
+   * reader has no way of knowing there is more of it. Drawn only where the card
+   * left some of the review behind: an album with no review, and one whose
+   * review the excerpt carried entire, have nothing further to send anyone to,
+   * and a poster advertising a review that is not there is a promise the site
+   * cannot keep.
+   */
+  if (reviewCut) drawReadout(context, "Full review at", FOOTER_TOP + 166, palette.dim, 28);
 
   drawReadout(
     context,

@@ -232,6 +232,191 @@ export function statsFor(list: Album[]): DanFmStats {
   };
 }
 
+/*
+ * The archive's filters.
+ *
+ * Every vocabulary below is built from the log's own distinct values. Genre,
+ * source, shelf and the tags are free text typed into a spreadsheet, so a list
+ * spelled out here would go on offering last month's words and quietly stop
+ * offering the ones being typed today.
+ */
+
+/**
+ * What a control carries when it is not filtering.
+ *
+ * Not an empty string, because these are `Select` option values and Radix
+ * reserves "" for "nothing is selected". Not a word either: the options beside
+ * it are genres, tags, shelves and sentences typed into a spreadsheet, and one
+ * of them spelling the sentinel puts two options with the same value in the
+ * same control - the real one then unselectable, because choosing it reads as
+ * clearing the filter. A separator character answers that by being something
+ * the sheet cannot produce, and it never reaches a URL: a control set to this
+ * drops its parameter instead of carrying it.
+ */
+export const ALL = "\u001fall";
+
+/** The four things a row files itself under. */
+export const FACET_IDS = ["genre", "tag", "source", "shelf"] as const;
+
+export type FacetId = (typeof FACET_IDS)[number];
+
+/**
+ * Both strings a facet's control needs. Written out rather than derived,
+ * because the plural of "shelf" is not the name with an "s" on it.
+ */
+const FACET_TEXT: Record<FacetId, { name: string; all: string }> = {
+  genre: { name: "Genre", all: "All genres" },
+  tag: { name: "Tag", all: "All tags" },
+  source: { name: "Source", all: "All sources" },
+  shelf: { name: "Shelf", all: "All shelves" },
+};
+
+/**
+ * Every value an album files itself under for one facet.
+ *
+ * Blanks dropped. A row may leave any of these empty, and an empty cell is not
+ * a value worth offering - it would arrive in the list as an option labelled
+ * with nothing.
+ */
+function valuesOf(album: Album, facet: FacetId): string[] {
+  return (facet === "tag" ? album.tags : [album[facet]]).filter(Boolean);
+}
+
+export interface FacetOption {
+  value: string;
+  /** Albums filed under it, out of the whole log. */
+  count: number;
+}
+
+export interface Facet {
+  id: FacetId;
+  /** Names the control, for its accessible label. */
+  name: string;
+  /** The option that filters nothing out. */
+  all: string;
+  options: FacetOption[];
+}
+
+/**
+ * Whether a control over these options can change what is listed.
+ *
+ * An option every album matches narrows nothing, so a control whose every
+ * option does that cannot be moved to any effect. A log of one album has one
+ * genre, one source and one shelf, and a bar of controls over a single row is
+ * furniture.
+ */
+function narrows(options: readonly { count: number }[], total: number): boolean {
+  return options.some((option) => option.count < total);
+}
+
+/**
+ * The facets worth offering over a list, each with the values it holds.
+ *
+ * Options are alphabetical rather than ranked by count: a dropdown is scanned
+ * for a value the reader already has in mind, and a list that reorders itself
+ * as the log fills is one they have to read twice.
+ */
+export function facetsFor(list: Album[]): Facet[] {
+  return FACET_IDS.map((id) => {
+    const counts = new Map<string, number>();
+    for (const album of list) {
+      for (const value of valuesOf(album, id)) counts.set(value, (counts.get(value) ?? 0) + 1);
+    }
+
+    return {
+      id,
+      ...FACET_TEXT[id],
+      options: [...counts]
+        .map(([value, count]) => ({ value, count }))
+        .sort((first, second) => first.value.localeCompare(second.value)),
+    };
+  }).filter((facet) => narrows(facet.options, list.length));
+}
+
+/** Scores are recorded in half steps, so one band tops out a step under the next. */
+const HALF_STEP = 0.5;
+
+/**
+ * The archive's lower cut, the middle of a 1-to-5 scale. At or above it a
+ * record was worth the day it took; below it, it was not.
+ */
+const MIDDLING_SCORE = 3;
+
+export interface ScoreBand {
+  /** What the URL carries. */
+  id: string;
+  label: string;
+  holds: (score: number) => boolean;
+}
+
+/**
+ * The three bands the scale is read in, best first.
+ *
+ * The top one is the mixtape's bar rather than a figure of its own, so the two
+ * surfaces cut the scale in the same place instead of at two nearby numbers a
+ * reader has to reconcile. Both labels below it are written from the constants,
+ * so a moved bar cannot leave a pill advertising where it used to be.
+ */
+const SCORE_BANDS: readonly ScoreBand[] = [
+  { id: "keepers", label: `${MIXTAPE_SCORE} and up`, holds: (score) => score >= MIXTAPE_SCORE },
+  {
+    id: "middling",
+    label: `${MIDDLING_SCORE} to ${MIXTAPE_SCORE - HALF_STEP}`,
+    holds: (score) => score >= MIDDLING_SCORE && score < MIXTAPE_SCORE,
+  },
+  { id: "low", label: `Under ${MIDDLING_SCORE}`, holds: (score) => score < MIDDLING_SCORE },
+];
+
+export interface BandTally extends ScoreBand {
+  count: number;
+}
+
+/**
+ * The bands the log actually falls into, with what each holds. Empty when every
+ * album lands in one of them, for the reason `facetsFor` drops a facet.
+ */
+export function bandsFor(list: Album[]): BandTally[] {
+  const held = SCORE_BANDS.map((band) => ({
+    ...band,
+    count: list.filter((album) => band.holds(album.score)).length,
+  })).filter((band) => band.count > 0);
+
+  return narrows(held, list.length) ? held : [];
+}
+
+export type FilterKey = FacetId | "score";
+
+/** One archive control each, and the query parameter it is carried in. */
+export const FILTER_KEYS: readonly FilterKey[] = [...FACET_IDS, "score"];
+
+/** What each control is set to, `ALL` where it is not filtering. */
+export type Selection = Record<FilterKey, string>;
+
+/** Whether anything is narrowing the list. */
+export function isFiltered(selection: Selection): boolean {
+  return FILTER_KEYS.some((key) => selection[key] !== ALL);
+}
+
+/**
+ * Everything in `list` that every set control agrees on, in the order it
+ * arrived.
+ *
+ * A score no band names filters nothing rather than everything, which is what a
+ * stale link should do: show the log, instead of an empty list with nothing on
+ * the page to say why it is empty.
+ */
+export function filterAlbums(list: Album[], selection: Selection): Album[] {
+  const band = SCORE_BANDS.find((entry) => entry.id === selection.score);
+
+  return list.filter(
+    (album) =>
+      FACET_IDS.every(
+        (id) => selection[id] === ALL || valuesOf(album, id).includes(selection[id]),
+      ) &&
+      (band === undefined || band.holds(album.score)),
+  );
+}
+
 /**
  * Whole days from one `YYYY-MM-DD` date to another, or null for a string that is
  * not one. Parsed at UTC midnight so the arithmetic is a subtraction rather than

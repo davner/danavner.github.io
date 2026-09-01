@@ -123,6 +123,27 @@ async function boardSentence(page: Page): Promise<string> {
 }
 
 /**
+ * `3 of 8 albums shown` on `/dan-fm`, read off the archive's own head rather
+ * than written down: the album log is refilled daily, so a figure here goes
+ * stale overnight.
+ *
+ * The head is where the page says the same thing to a reader who can see it, so
+ * taking the sentence from there is what stops the two drifting apart.
+ * `textContent` and not `innerText`, because the line is set in `readout-dim` -
+ * `text-transform: uppercase` - and `innerText` hands back the rendering rather
+ * than the words the page built its sentence from.
+ */
+async function archiveSentence(page: Page): Promise<string> {
+  const head = await page
+    .locator("section")
+    .filter({ has: page.getByRole("heading", { level: 2, name: "Archive", exact: true }) })
+    .locator("h2 + p")
+    .textContent();
+
+  return `${head?.trim()} shown`;
+}
+
+/**
  * One control that filters a collection, and what the region owes the reader
  * once it has been used.
  *
@@ -242,6 +263,40 @@ const ANNOUNCERS: Announcer[] = [
           await expect(modes.nth(1)).toHaveAttribute("aria-checked", "true");
         },
         sentence: boardSentence,
+      },
+    ],
+  },
+  {
+    path: "/dan-fm",
+    controls: [
+      {
+        name: "score band",
+        apply: async (page) => {
+          const bands = page.getByRole("radiogroup", { name: "Filter albums by score" });
+
+          /*
+           * The archive drops a control every album answers the same way, so a
+           * build from the one-album fetched log carries no filter bar and has
+           * nothing here to press. Refused under CI, which always builds the
+           * fixture: a bar that vanished there is the regression rather than
+           * the reason to stand down.
+           */
+          test.skip(
+            !process.env.CI && (await bands.count()) === 0,
+            "the album log on disk offers no score to filter by",
+          );
+
+          const pills = bands.getByRole("radio");
+          expect(
+            await pills.count(),
+            "the archive offers no score band beside the pill that filters nothing",
+          ).toBeGreaterThan(1);
+
+          await pills.nth(1).click();
+          await expect(page).toHaveURL(/score=/);
+          await expect(pills.nth(1)).toHaveAttribute("aria-checked", "true");
+        },
+        sentence: archiveSentence,
       },
     ],
   },

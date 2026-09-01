@@ -2,6 +2,7 @@ import { ArrowUpRight, Disc3 } from "lucide-react";
 import { Link } from "react-router";
 
 import { AlbumCover, AlbumReview, AlbumScore, AlbumTracks } from "@/components/album-record";
+import { DanFmArchive } from "@/components/dan-fm-archive";
 import { EmptyState } from "@/components/empty-state";
 import { OnAir } from "@/components/on-air";
 import { PageHeader, PageShell, Section } from "@/components/page";
@@ -121,7 +122,7 @@ function TodayCard({ album }: { album: Album }) {
 }
 
 /*
- * The three sections that stand on the page before they are built.
+ * The two sections that stand on the page before they are built.
  *
  * Each sentence says what the log holds for that section and admits the section
  * itself is not there, and both halves have to stay true as the log fills: the
@@ -129,12 +130,6 @@ function TodayCard({ album }: { album: Album }) {
  * copy written only for an empty log would sit on screen contradicting it.
  * Every one of these goes when the section it stands in is built.
  */
-
-function archiveCopy(total: number): string {
-  if (total === 0) return "Nothing logged yet. Give it a day.";
-
-  return `${total === 1 ? "1 album" : `${total} albums`} logged. I have not built the list yet.`;
-}
 
 /**
  * Below the minimum the wait is counted down from the constant rather than
@@ -196,11 +191,7 @@ export function DanFm() {
 
       {/* All four sections stand from the first day, each with its own copy, so
           the page's shape never changes under someone who comes back. */}
-      {/* No count in the head. "N albums · M days" belongs with the rows it
-          counts, which arrive with the archive itself. */}
-      <Section title="Archive">
-        <EmptyState>{archiveCopy(stats.total)}</EmptyState>
-      </Section>
+      <DanFmArchive albums={albums} />
 
       <Section title="Charts">
         <EmptyState>{chartsCopy(stats.total)}</EmptyState>

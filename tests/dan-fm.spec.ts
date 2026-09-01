@@ -8,7 +8,7 @@ import { createServer } from "vite";
 import { MAX_SCORE, albumSummary, albumTitle, albumUrl } from "../src/lib/dan-fm-summary";
 import { contentPlugin } from "../vite-plugin-content";
 
-import type { Album, DanFmPayload } from "../src/lib/dan-fm";
+import type { Album, DanFmPayload, Selection } from "../src/lib/dan-fm";
 
 /**
  * The album log, checked where it is actually decided: in Node, at build time.
@@ -1165,5 +1165,372 @@ test.describe("the station light", () => {
 
     expect(station(undefined, at)).toEqual(station(albums, at));
     expect(station(undefined, at).featured).toBeDefined();
+  });
+});
+
+/*
+ * The archive's filters.
+ *
+ * All of this is decided before a browser exists: which controls the bar
+ * offers, what each one holds, and which rows a set of them leaves standing.
+ * `tests/dan-fm-page.spec.ts` covers the half that cannot be answered here -
+ * that the controls on the page are wired to these, and that a link carries
+ * what they were set to.
+ */
+
+/**
+ * An album carrying the four things a row files itself under, and a score.
+ *
+ * Cast rather than filled out, for the reason `dated` is. Every field is always
+ * present rather than left to the caller to remember, because a facet is
+ * offered or dropped on what the *whole* list holds: one row accidentally
+ * missing a genre changes the answer for every other row in the case.
+ */
+function filed(over: Partial<Album> = {}): Album {
+  return { slug: "", genre: "", source: "", shelf: "", tags: [], score: 3, ...over } as Album;
+}
+
+/**
+ * A selection with the named controls set and every other one left alone.
+ *
+ * Built by walking `FILTER_KEYS` rather than written out, so a control added to
+ * the archive without being added here fails as a missing key rather than as a
+ * quietly unfiltered one.
+ */
+function set(
+  { ALL, FILTER_KEYS }: Pick<DanFmModule, "ALL" | "FILTER_KEYS">,
+  over: Partial<Selection> = {},
+): Selection {
+  return { ...(Object.fromEntries(FILTER_KEYS.map((key) => [key, ALL])) as Selection), ...over };
+}
+
+/** One album at every score the log can hold, for the bands to cut up. */
+function theWholeScale(): Album[] {
+  const scale: Album[] = [];
+  for (let score = 1; score <= MAX_SCORE; score += 0.5) scale.push(filed({ score }));
+
+  return scale;
+}
+
+test.describe("what the archive offers to filter by", () => {
+  test("a log of one album offers nothing to filter it by", async () => {
+    /*
+     * The rule the whole bar hangs off, and the state the site is in today. One
+     * album has one genre, one source and one shelf, so every control over it
+     * is a control that cannot be moved to any effect - and a reader has to
+     * open all five to find that out. The score pills go the same way, for the
+     * same reason.
+     */
+    const { facetsFor, bandsFor } = await danFm();
+
+    const only = [
+      filed({ genre: "Jazz", source: "A crate dig", shelf: "Keeping", tags: ["piano"], score: 5 }),
+    ];
+
+    expect(facetsFor(only)).toEqual([]);
+    expect(bandsFor(only)).toEqual([]);
+  });
+
+  test("an empty log offers nothing to filter it by", async () => {
+    // Launch day, and every day until the job commits its first row. Nothing
+    // here may throw, and no control may come back over a vocabulary read off
+    // no rows at all.
+    const { facetsFor, bandsFor } = await danFm();
+
+    expect(facetsFor([])).toEqual([]);
+    expect(bandsFor([])).toEqual([]);
+  });
+
+  test("a facet is offered only where the log disagrees", async () => {
+    /*
+     * Decided per facet and not per bar. Two albums found the same way, put on
+     * the same shelf, under the same tag differ only in genre, and the genre is
+     * the only one of the four worth a control. Dropping the bar wholesale, or
+     * keeping it wholesale, both satisfy a case that only counts the controls.
+     */
+    const { facetsFor } = await danFm();
+
+    const list = [
+      filed({ genre: "Jazz", source: "A crate dig", shelf: "Keeping", tags: ["piano"] }),
+      filed({ genre: "Post-punk", source: "A crate dig", shelf: "Keeping", tags: ["piano"] }),
+    ];
+
+    expect(facetsFor(list).map((facet) => facet.id)).toEqual(["genre"]);
+  });
+
+  test("the controls come back in the order the bar reads them", async () => {
+    // Written out rather than compared against `FACET_IDS`, which is the same
+    // list and would agree with itself however it had been scrambled on the way
+    // through. This is the left-to-right order of the bar on screen.
+    const { facetsFor } = await danFm();
+
+    const list = [
+      filed({ genre: "Jazz", source: "A crate dig", shelf: "Keeping", tags: ["piano"] }),
+      filed({ genre: "Post-punk", source: "The radio", shelf: "Not for me", tags: ["loud"] }),
+    ];
+
+    expect(facetsFor(list).map((facet) => facet.id)).toEqual(["genre", "tag", "source", "shelf"]);
+  });
+
+  test("a blank cell is not something to filter by", async () => {
+    /*
+     * A row may leave any of the four empty, and the fetched log does. A blank
+     * arriving as an option puts an entry labelled with nothing in the dropdown
+     * - and it makes the facet look like it narrows, when all it would narrow
+     * to is the rows that said nothing.
+     */
+    const { facetsFor } = await danFm();
+
+    const list = [filed({ genre: "Jazz" }), filed({ genre: "" })];
+
+    expect(facetsFor(list)).toEqual([
+      expect.objectContaining({ id: "genre", options: [{ value: "Jazz", count: 1 }] }),
+    ]);
+  });
+
+  test("options are alphabetical rather than ranked by what the log holds most of", async () => {
+    /*
+     * A dropdown is scanned for a value the reader already has in mind, and a
+     * list that reorders itself as the log fills is one they have to read
+     * twice. These three arrive in one order, rank by count in a second and
+     * sort into a third, so neither of the other two can satisfy this.
+     *
+     * The counts are the second half: they are out of the whole log rather than
+     * out of what is currently on screen.
+     */
+    const { facetsFor } = await danFm();
+
+    const list = [
+      filed({ genre: "Post-punk" }),
+      filed({ genre: "Post-punk" }),
+      filed({ genre: "Post-punk" }),
+      filed({ genre: "Ambient folk" }),
+      filed({ genre: "Jazz" }),
+      filed({ genre: "Jazz" }),
+    ];
+
+    expect(facetsFor(list)[0].options).toEqual([
+      { value: "Ambient folk", count: 1 },
+      { value: "Jazz", count: 2 },
+      { value: "Post-punk", count: 3 },
+    ]);
+  });
+
+  test("an album is filed under every tag it carries", async () => {
+    /*
+     * The one facet that is a list rather than a cell. Read as a single value
+     * it would offer "piano, late night" as an option no other row could ever
+     * match. The untagged row counts towards the total and towards no option,
+     * which is what leaves "piano" narrowing anything at all.
+     */
+    const { facetsFor } = await danFm();
+
+    const list = [
+      filed({ tags: ["piano", "late night"] }),
+      filed({ tags: ["piano"] }),
+      filed({ tags: [] }),
+    ];
+
+    expect(facetsFor(list)).toEqual([
+      expect.objectContaining({
+        id: "tag",
+        options: [
+          { value: "late night", count: 1 },
+          { value: "piano", count: 2 },
+        ],
+      }),
+    ]);
+  });
+});
+
+test.describe("the archive's score bands", () => {
+  test("a log inside one band offers no score control", async () => {
+    // `facetsFor`'s rule, over the scale. A good run is three keepers, and a
+    // row of pills whose only live one is already showing everything is
+    // furniture for the same reason a one-option dropdown is.
+    const { bandsFor } = await danFm();
+
+    expect(bandsFor([filed({ score: 4 }), filed({ score: 4.5 }), filed({ score: 5 })])).toEqual([]);
+  });
+
+  test("a band nothing fell into is not offered", async () => {
+    // Every pill prints its own tally, so a band kept at zero is a pill reading
+    // 0 that empties the list when it is pressed.
+    const { bandsFor } = await danFm();
+
+    expect(bandsFor([filed({ score: 5 }), filed({ score: 1 })]).map((band) => band.id)).toEqual([
+      "keepers",
+      "low",
+    ]);
+  });
+
+  test("every score the log can hold lands in exactly one band", async () => {
+    /*
+     * The bands are a partition of the scale and nothing in the code says so:
+     * they are three predicates written separately, and a `>` where a `>=`
+     * belongs leaves a score in none of them or in two. Neither reports itself
+     * - a score in no band is a row no pill can reach, and one in two is
+     * counted twice in a tally the pills print beside their labels.
+     */
+    const { bandsFor } = await danFm();
+
+    const scale = theWholeScale();
+    const bands = bandsFor(scale);
+
+    for (const album of scale) {
+      expect(
+        bands.filter((band) => band.holds(album.score)).map((band) => band.id),
+        `a score of ${album.score} is not in exactly one band`,
+      ).toHaveLength(1);
+    }
+
+    expect(
+      bands.reduce((running, band) => running + band.count, 0),
+      "the pills' tallies do not add up to the log they were counted from",
+    ).toBe(scale.length);
+  });
+
+  test("the bands are read best first", async () => {
+    const { bandsFor } = await danFm();
+
+    expect(bandsFor(theWholeScale()).map((band) => band.id)).toEqual([
+      "keepers",
+      "middling",
+      "low",
+    ]);
+  });
+
+  test("the top band is the mixtape's bar rather than a figure of its own", async () => {
+    /*
+     * The two surfaces cut the scale in the same place, which is why the band
+     * is written off `MIXTAPE_SCORE` rather than off a number beside it.
+     * Counted against `mixtape` rather than against a figure here, so the claim
+     * is checked through two independent readings of the bar: an album sitting
+     * exactly on it is on the tape and in the top band, and a `>` in either one
+     * moves it out of one and not the other.
+     */
+    const { bandsFor, mixtape, MIXTAPE_SCORE } = await danFm();
+
+    const scale = theWholeScale();
+    const keepers = bandsFor(scale).find((band) => band.id === "keepers");
+
+    expect(keepers?.count).toBe(mixtape(scale).length);
+    expect(keepers?.label, "the top pill advertises a bar the tape does not take").toBe(
+      `${MIXTAPE_SCORE} and up`,
+    );
+  });
+});
+
+test.describe("narrowing the archive", () => {
+  test("nothing set leaves the log exactly as it arrived", async () => {
+    /*
+     * Order included. The rows are read newest first because the build hands
+     * them over that way, so a matcher that sorted or grouped on the way
+     * through would reorder the whole archive the moment anyone touched a
+     * control - and put it back the moment they cleared it.
+     */
+    const module = await danFm();
+
+    const list = [filed({ slug: "c" }), filed({ slug: "a" }), filed({ slug: "b" })];
+
+    expect(module.filterAlbums(list, set(module))).toEqual(list);
+  });
+
+  test("two controls narrow to the rows both agree on", async () => {
+    // An `or` here shows a reader who asked for two things the rows that
+    // answered either, which is more rows than they started with on one of
+    // them.
+    const module = await danFm();
+
+    const list = [
+      filed({ slug: "both", genre: "Jazz", shelf: "Keeping" }),
+      filed({ slug: "genre-only", genre: "Jazz", shelf: "Passing it on" }),
+      filed({ slug: "shelf-only", genre: "Post-punk", shelf: "Keeping" }),
+    ];
+
+    expect(
+      module
+        .filterAlbums(list, set(module, { genre: "Jazz", shelf: "Keeping" }))
+        .map((a) => a.slug),
+    ).toEqual(["both"]);
+  });
+
+  test("a tag matches an album carrying it among others", async () => {
+    const module = await danFm();
+
+    const list = [
+      filed({ slug: "several", tags: ["piano", "late night"] }),
+      filed({ slug: "one", tags: ["loud"] }),
+      filed({ slug: "none", tags: [] }),
+    ];
+
+    expect(
+      module.filterAlbums(list, set(module, { tag: "late night" })).map((a) => a.slug),
+    ).toEqual(["several"]);
+  });
+
+  test("a band narrows on the score and nothing else", async () => {
+    // Against `mixtape` again rather than against a list written out here, so
+    // the pills and the tape go on agreeing about which records are the good
+    // ones.
+    const module = await danFm();
+
+    const scale = theWholeScale();
+
+    expect(module.filterAlbums(scale, set(module, { score: "keepers" }))).toEqual(
+      module.mixtape(scale),
+    );
+  });
+
+  test("a score no band names shows the log rather than nothing", async () => {
+    /*
+     * What a link should do once a band has been renamed underneath it: show
+     * the archive. Taking it literally answers with an empty list and nothing
+     * on the page to say why it is empty.
+     *
+     * This is also how `all` is handled - there is no case for it, only a band
+     * lookup that finds nothing - so a matcher that started rejecting unknown
+     * ids would empty the archive for every reader who had not touched a
+     * control.
+     */
+    const module = await danFm();
+
+    const list = [filed({ slug: "a", score: 5 }), filed({ slug: "b", score: 1 })];
+
+    expect(module.filterAlbums(list, set(module, { score: "tepid" }))).toEqual(list);
+  });
+
+  test("a facet value the log does not hold matches nothing", async () => {
+    /*
+     * The facets are taken literally where the score is not, and the split is
+     * deliberate: a facet value that is not in the log is screened out by the
+     * page before it reaches here, against the vocabulary it built the control
+     * from. Falling back here as well would put a control set to something the
+     * log has stopped holding behind a full archive that looks untouched.
+     */
+    const module = await danFm();
+
+    const list = [filed({ slug: "a", genre: "Jazz" }), filed({ slug: "b", genre: "Post-punk" })];
+
+    expect(module.filterAlbums(list, set(module, { genre: "Doo-wop" }))).toEqual([]);
+  });
+
+  test("nothing set is not filtering, and any one control on its own is", async () => {
+    /*
+     * What puts the Clear link on the page. Every key is asked rather than one,
+     * because a control left out of the check leaves a reader who set only that
+     * one looking at three rows with nothing on screen offering to put the rest
+     * back.
+     */
+    const module = await danFm();
+
+    expect(module.isFiltered(set(module))).toBe(false);
+
+    for (const key of module.FILTER_KEYS) {
+      expect(
+        module.isFiltered(set(module, { [key]: "anything" } as Partial<Selection>)),
+        `a ${key} on its own does not count as filtering`,
+      ).toBe(true);
+    }
   });
 });

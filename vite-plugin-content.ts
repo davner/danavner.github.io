@@ -874,9 +874,20 @@ export function readDanFm(root: string, publicDir: string, seed: SeedRule) {
       // every album gets a piece written about it. Trimmed at the ends only -
       // the newlines inside are what the page splits into paragraphs.
       review: asTrimmedString(entry.review),
-      tags: asStringArray(entry.tags)
-        .map((tag) => tag.trim())
-        .filter(Boolean),
+      /*
+       * Deduped here as well as in the job, because the fixture is hand-written
+       * and never passes through it. A tag carried twice by one album counts
+       * twice everywhere downstream, and the archive reads a count equal to the
+       * list length as "every album has this", which drops the whole control
+       * rather than showing a wrong number.
+       */
+      tags: [
+        ...new Set(
+          asStringArray(entry.tags)
+            .map((tag) => tag.trim())
+            .filter(Boolean),
+        ),
+      ],
       later,
       spotifyId: asTrimmedString(entry.spotifyId),
       url: asTrimmedString(entry.url),

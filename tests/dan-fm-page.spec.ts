@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
-import { MAX_SCORE } from "../src/lib/dan-fm-summary";
+import { MAX_SCORE, albumUrl } from "../src/lib/dan-fm-summary";
 
 import { albumsOnDisk } from "./dan-fm";
 
@@ -391,6 +391,18 @@ test.describe("the album's review", () => {
      */
     await openDanFm(page);
 
+    /*
+     * The whole case is about an album that is *not* the featured one, and the
+     * fetched log is one album long: there is no other review for the page to
+     * leak, and no arrangement of the code could make one appear. Stood down
+     * rather than asserted, the way `openDanFm` stands down for a log that is
+     * not on disk - `ci.yml` always builds the fixture, which carries a second
+     * review, so refusing the skip there keeps a genuinely leaking page red.
+     */
+    test.skip(
+      !process.env.CI && OTHER_REVIEWS.length === 0,
+      "the album log on disk holds no review but the featured one's",
+    );
     expect(
       OTHER_REVIEWS.length,
       "no album but the featured one has a review - nothing below is being asked",
@@ -520,8 +532,8 @@ function reported(text: string, pattern: RegExp): number | null {
  * uppercases it.
  */
 
-/** "8 albums logged", the archive's count of the whole log. */
-const ARCHIVE_COUNT = /(\d+) albums? logged/i;
+/** "8 albums · 9 days", the archive's head, counting the whole log. */
+const ARCHIVE_COUNT = /(\d+) albums? · \d+ days?/i;
 
 /** "4 albums have scored", the tape's count of what cleared its bar. */
 const MIXTAPE_COUNT = /(\d+) albums? (?:has|have) scored/i;
@@ -569,6 +581,22 @@ test.describe("what the page claims about the log", () => {
     expect(bar, "the mixtape no longer says what score it takes").not.toBeNull();
 
     const keepers = LOGGED.filter((album) => album.score >= bar!).length;
+
+    /*
+     * A log whose every album is under the bar has a mixtape that is honestly
+     * empty, and the sentence saying so is the right one - which is the state
+     * the fetched log is in, at one album scoring 3.5. Stood down for the same
+     * reason and in the same shape as the review case above; `ci.yml` builds
+     * the fixture, which carries four keepers.
+     *
+     * It takes the archive's half of this case down with it, and that half is
+     * asked again in "the archive's head counts the whole log and the days it
+     * spans" below, which a log of any size can answer.
+     */
+    test.skip(
+      !process.env.CI && keepers === 0,
+      "no album in the log on disk clears the mixtape's bar",
+    );
     expect(
       keepers,
       "no album in the log clears the mixtape's bar - nothing below is being asked",
@@ -589,5 +617,426 @@ test.describe("what the page claims about the log", () => {
         "the mixtape is not counting what cleared its bar while a scored album is on the page",
       )
       .toBe(keepers);
+  });
+});
+
+/*
+ * The archive.
+ *
+ * What the controls mean is settled without a browser in `tests/dan-fm.spec.ts`
+ * - which facets a log earns, how the bands cut the scale, which rows a
+ * selection leaves. These exist for the half that cannot be answered there:
+ * that the bar on the page is built from those answers, and that a link carries
+ * what it was set to.
+ *
+ * Every case is derived from the log on disk rather than from the fixture's
+ * values, because both builds have to be able to answer it: the fetched log is
+ * one album long, and the archive drops every control a single row cannot
+ * disagree with itself about. The ones that need a control to drive stand down
+ * where there is none, in the shape `openDanFm` uses.
+ */
+
+/** The rows the archive owes, in the order it owes them. */
+const NEWEST_FIRST = [...LOGGED].sort((first, second) => second.date.localeCompare(first.date));
+
+/**
+ * Station days the log spans, both ends counted.
+ *
+ * Spelled out here rather than taken from `statsFor`, which lives behind
+ * `virtual:dan-fm` and only a Vite build resolves. What the span *means* is
+ * held to that function in `tests/dan-fm.spec.ts`; this is only the number the
+ * head should be printing.
+ */
+const SPANNED = (() => {
+  const days = LOGGED.map((album) => Date.parse(`${album.date}T00:00:00Z`));
+  if (days.length === 0) return 0;
+
+  return Math.round((Math.max(...days) - Math.min(...days)) / 86_400_000) + 1;
+})();
+
+/** "1 album", "8 albums" - the archive's own pluralisation, which it prints twice. */
+function counted(total: number, noun: string): string {
+  return `${total} ${total === 1 ? noun : `${noun}s`}`;
+}
+
+/** The head as it reads while the whole log is on screen. */
+const WHOLE_LOG = `${counted(LOGGED.length, "album")} · ${counted(SPANNED, "day")}`;
+
+/** The distinct values the log files itself under for one facet. */
+function held(field: "genre" | "source" | "shelf"): string[] {
+  return [...new Set(LOGGED.map((album) => album[field]).filter(Boolean))];
+}
+
+/** A genre some but not all of the log carries, or none where they all agree. */
+const NARROWING_GENRE = held("genre").find(
+  (genre) => LOGGED.filter((album) => album.genre === genre).length < LOGGED.length,
+);
+
+/**
+ * A genre and a shelf the log never files one album under together.
+ *
+ * Both are values a control offers, and that comes free: a shelf some album is
+ * on and the genre's album is not is a shelf fewer than all of them are on, and
+ * the genre is likewise not on every row or nothing could hold the shelf. So a
+ * pair found here is a pair both controls can be set to.
+ *
+ * None for a log of one album, which is on every shelf it knows about - and the
+ * cases that need one stand down rather than inventing a value the page would
+ * throw away.
+ */
+const IMPOSSIBLE = (() => {
+  for (const genre of held("genre")) {
+    for (const shelf of held("shelf")) {
+      if (!LOGGED.some((album) => album.genre === genre && album.shelf === shelf)) {
+        return { genre, shelf };
+      }
+    }
+  }
+
+  return undefined;
+})();
+
+/**
+ * What the newest album files itself under, one entry per control.
+ *
+ * Its own filing rather than a value chosen per facet, so setting all four at
+ * once still leaves its row standing: a round trip over an archive narrowed to
+ * nothing proves only that nothing came back twice.
+ */
+const FILING_OF_NEWEST: [string, string][] = (
+  [
+    ["genre", NEWEST?.genre ?? ""],
+    ["tag", NEWEST?.tags[0] ?? ""],
+    ["source", NEWEST?.source ?? ""],
+    ["shelf", NEWEST?.shelf ?? ""],
+  ] as [string, string][]
+).filter(([, value]) => value !== "");
+
+/** The Archive section. */
+function archive(page: Page): Locator {
+  return section(page, "Archive");
+}
+
+/** The line beside the Archive's heading, which is where the section counts. */
+function archiveHead(page: Page): Locator {
+  return archive(page).locator("h2 + p");
+}
+
+/** One per album listed. */
+function rows(page: Page): Locator {
+  return archive(page).getByRole("listitem");
+}
+
+/**
+ * Where each row leads, in the order they are listed.
+ *
+ * The whole row is one link, so this is both the list and its addresses: a row
+ * that lost its link disappears from here rather than passing as a row that
+ * goes nowhere.
+ */
+async function listedRows(page: Page): Promise<string[]> {
+  return rows(page)
+    .locator("a")
+    .evaluateAll((links) => links.map((link) => (link as HTMLAnchorElement).pathname));
+}
+
+/**
+ * Stands the case down where the log on disk offers no control to drive, and
+ * refuses to under CI.
+ *
+ * The archive drops a control every row answers the same way, so a build from
+ * the one-album fetched log carries no filter bar at all and there is nothing
+ * here to press. `ci.yml` always builds the fixture, where a bar that vanished
+ * is the regression rather than the reason - which is why the skip is local
+ * only, exactly as `openDanFm`'s launch-day carve-out is.
+ */
+async function needsTheBar(control: Locator, what: string) {
+  const offered = await control.count();
+
+  test.skip(!process.env.CI && offered === 0, `the album log on disk offers no ${what}`);
+  expect(offered, `the archive offers no ${what}`).toBeGreaterThan(0);
+}
+
+test.describe("the archive", () => {
+  test("every album in the log has a row, newest first", async ({ page }) => {
+    /*
+     * The build hands the page a newest-first payload, but nothing in the
+     * archive's signature says so. A component that sorted for itself, or that
+     * trusted position while the payload's order changed underneath it, buries
+     * today's album at the bottom of a year of rows with every date on screen
+     * still reading correctly.
+     */
+    await openDanFm(page);
+
+    expect(await listedRows(page)).toEqual(NEWEST_FIRST.map((album) => albumUrl(album)));
+  });
+
+  test("the archive's head counts the whole log and the days it spans", async ({ page }) => {
+    /*
+     * Two claims and not one: eight albums over nine days says a morning was
+     * missed, and eight over eight does not. Compared against a span computed
+     * from the log rather than against a regex over whatever the page printed,
+     * so a head that dropped the days, or started counting the rows on screen
+     * instead of the log, fails rather than matching itself.
+     *
+     * A log of any size can answer this, which is what lets it stand in for the
+     * archive's half of "no section calls the log empty while an album is on
+     * the page" on a build the mixtape's half cannot be asked of.
+     */
+    await openDanFm(page);
+
+    await expect(archiveHead(page)).toHaveText(WHOLE_LOG);
+  });
+
+  test("a log of one album offers no control to narrow it", async ({ page }) => {
+    /*
+     * The archive's own rule, on screen, and the state the site is in today: a
+     * control every row answers the same way cannot be moved to any effect, so
+     * one album gets no bar at all rather than five dropdowns of one option.
+     *
+     * Only a log of one can be asked it. Two albums that disagree about
+     * anything earn a control, and the fixture disagrees about everything -
+     * which is why this is the case that runs on the build a contributor gets
+     * and stands down on the one CI makes.
+     */
+    test.skip(LOGGED.length !== 1, "the log on disk holds more than one album to filter");
+
+    await openDanFm(page);
+
+    await expect(rows(page)).toHaveCount(1);
+    await expect(archive(page).getByRole("combobox")).toHaveCount(0);
+    await expect(archive(page).getByRole("radiogroup")).toHaveCount(0);
+    await expect(archive(page).getByRole("button", { name: "Clear filters" })).toHaveCount(0);
+  });
+
+  test("choosing a genre narrows the rows, and the head counts what is left", async ({ page }) => {
+    /*
+     * The head's other form. Days are dropped the moment the list is a subset,
+     * because they belong to the whole log and say nothing about three rows cut
+     * out of it - a narrowed archive still advertising the log's span is a
+     * claim about a set of albums nobody is looking at.
+     */
+    test.skip(NARROWING_GENRE === undefined, "the log on disk files every album under one genre");
+
+    await openDanFm(page);
+
+    const control = archive(page).getByRole("combobox", { name: "Filter albums by genre" });
+    await needsTheBar(control, "genre to filter by");
+
+    await control.click();
+    await page.getByRole("option", { name: NARROWING_GENRE!, exact: true }).click();
+
+    const kept = NEWEST_FIRST.filter((album) => album.genre === NARROWING_GENRE);
+
+    await expect(page).toHaveURL(`/dan-fm?${new URLSearchParams({ genre: NARROWING_GENRE! })}`);
+    await expect(rows(page)).toHaveCount(kept.length);
+    expect(await listedRows(page)).toEqual(kept.map((album) => albumUrl(album)));
+    await expect(archiveHead(page)).toHaveText(
+      `${kept.length} of ${counted(LOGGED.length, "album")}`,
+    );
+  });
+
+  test("a link carries every control it was narrowed with, and reopens on the same rows", async ({
+    page,
+  }) => {
+    /*
+     * The reason the state is in the URL at all: an archive somebody narrowed
+     * is a thing they send, and a link that arrives showing the whole log shows
+     * the reader something other than what was meant. Round-tripped rather than
+     * compared against a list written out here - the claim is that the page
+     * puts back what it wrote, and the rows before the reload are the only
+     * honest statement of what that was.
+     */
+    await openDanFm(page);
+
+    await needsTheBar(archive(page).getByRole("combobox"), "control to filter by");
+
+    const narrowed: [string, string][] = [];
+    for (const [id, value] of FILING_OF_NEWEST) {
+      const control = archive(page).getByRole("combobox", { name: `Filter albums by ${id}` });
+      // A facet the log agrees about is not offered, and the case is about the
+      // ones that are.
+      if ((await control.count()) === 0) continue;
+
+      await control.click();
+      await page.getByRole("option", { name: value, exact: true }).click();
+      await expect(control).toHaveText(value);
+      narrowed.push([id, value]);
+    }
+
+    expect(narrowed.length, "no facet the newest album is filed under is offered").toBeGreaterThan(
+      0,
+    );
+
+    const shared = new URL(page.url());
+    const before = await listedRows(page);
+
+    expect(before, "the controls narrowed the archive to nothing to reopen on").toContain(
+      albumUrl(NEWEST!),
+    );
+    expect(
+      [...shared.searchParams.keys()].sort(),
+      "the link carries a different set of controls from the ones that were set",
+    ).toEqual(narrowed.map(([id]) => id).sort());
+    for (const [id, value] of narrowed) expect(shared.searchParams.get(id)).toBe(value);
+
+    await page.goto(shared.toString());
+    await page.getByRole("heading", { level: 1, name: "dan.fm" }).waitFor();
+
+    expect(await listedRows(page)).toEqual(before);
+    for (const [id, value] of narrowed) {
+      await expect(
+        archive(page).getByRole("combobox", { name: `Filter albums by ${id}` }),
+        `the ${id} control did not come back set to what the link carried`,
+      ).toHaveText(value);
+    }
+  });
+
+  test("a score band is carried in the link, and its tally is the rows it leaves", async ({
+    page,
+  }) => {
+    /*
+     * The pill's number and the list under it come from two different readings
+     * of the same log - one counts the bands, the other selects the rows - and
+     * nothing in the code makes them agree. A reader who presses "4 and up 3"
+     * and counts four rows has been lied to by one of them, and there is
+     * nothing on the page saying which.
+     */
+    await openDanFm(page);
+
+    const bands = archive(page).getByRole("radiogroup", { name: "Filter albums by score" });
+    await needsTheBar(bands, "score to filter by");
+
+    const pills = bands.getByRole("radio");
+    // The tally on a pill, which is the last thing written on it.
+    const tallyOn = async (pill: Locator) => {
+      const printed = /(\d+)\s*$/.exec((await pill.innerText()).trim());
+      expect(printed, "a score pill prints no tally to check the rows against").not.toBeNull();
+      return Number(printed![1]);
+    };
+
+    expect(await tallyOn(pills.first()), "the everything pill is not counting the log").toBe(
+      LOGGED.length,
+    );
+    expect(
+      await pills.count(),
+      "the score row offers nothing but the pill that filters nothing",
+    ).toBeGreaterThan(1);
+
+    const band = pills.nth(1);
+    const tally = await tallyOn(band);
+
+    await band.click();
+    await expect(band).toHaveAttribute("aria-checked", "true");
+    await expect(page).toHaveURL(/[?&]score=/);
+
+    await expect(rows(page)).toHaveCount(tally);
+    await expect(archiveHead(page)).toHaveText(`${tally} of ${counted(LOGGED.length, "album")}`);
+  });
+
+  test("changing a filter replaces the entry rather than pushing one", async ({ page }) => {
+    /*
+     * Back is for leaving the page, not for stepping through somebody's own
+     * adjustments. With five controls that is a lot of steps: a reader who
+     * tried four genres before finding the one they wanted would press Back
+     * four times and still be on the archive.
+     *
+     * Two changes rather than one, because a single change replacing the entry
+     * it arrived on is a different claim from a run of them leaving one entry
+     * between them.
+     */
+    const genres = held("genre");
+    test.skip(genres.length < 2, "the log on disk offers fewer than two genres to move between");
+
+    await openDanFm(page);
+    // A second entry, so Back has somewhere known to land. `openDanFm` leaves
+    // one entry of its own, which is not enough to tell a replace from a push.
+    await page.goto("/");
+    await page.goto("/dan-fm");
+    await page.getByRole("heading", { level: 1, name: "dan.fm" }).waitFor();
+
+    const control = archive(page).getByRole("combobox", { name: "Filter albums by genre" });
+    await needsTheBar(control, "genre to filter by");
+
+    for (const genre of genres.slice(0, 2)) {
+      await control.click();
+      await page.getByRole("option", { name: genre, exact: true }).click();
+      await expect(control).toHaveText(genre);
+    }
+
+    await page.goBack();
+
+    await expect(page, "Back stepped through the reader's own filter changes").toHaveURL("/");
+  });
+
+  test("a value the log does not hold opens on the whole archive rather than on nothing", async ({
+    page,
+  }) => {
+    /*
+     * A link shared before a genre was renamed, or a query somebody typed.
+     * Taken literally it answers with an empty list and nothing on the page to
+     * say why, so the reader meets an archive that looks broken instead of one
+     * that looks untouched.
+     *
+     * Every build can be asked this: the fallback is over the vocabulary the
+     * log actually holds, and a log that offers no control at all holds none of
+     * these either.
+     */
+    await openDanFm(page);
+    await page.goto("/dan-fm?genre=zzz-not-a-genre&score=zzz-not-a-band&shelf=nowhere&tag=nothing");
+    await page.getByRole("heading", { level: 1, name: "dan.fm" }).waitFor();
+
+    expect(await listedRows(page)).toEqual(NEWEST_FIRST.map((album) => albumUrl(album)));
+    await expect(archiveHead(page)).toHaveText(WHOLE_LOG);
+    await expect(
+      archive(page).getByRole("button", { name: "Clear filters" }),
+      "nothing is narrowing the archive, so there is nothing to offer to clear",
+    ).toHaveCount(0);
+
+    const genre = archive(page).getByRole("combobox", { name: "Filter albums by genre" });
+    if ((await genre.count()) > 0) await expect(genre).toHaveText("All genres");
+  });
+
+  test("a combination the log has nothing for says so rather than showing an empty list", async ({
+    page,
+  }) => {
+    test.skip(IMPOSSIBLE === undefined, "every genre in the log on disk is on every shelf in it");
+
+    await openDanFm(page);
+    await page.goto(`/dan-fm?${new URLSearchParams(IMPOSSIBLE!)}`);
+    await page.getByRole("heading", { level: 1, name: "dan.fm" }).waitFor();
+
+    await expect(rows(page)).toHaveCount(0);
+    await expect(archive(page)).toContainText("Nothing in the log matches those filters.");
+    await expect(archiveHead(page)).toHaveText(`0 of ${counted(LOGGED.length, "album")}`);
+    await expect(
+      archive(page).getByRole("button", { name: "Clear filters" }),
+      "the state worth undoing fastest is the one showing nothing",
+    ).toBeVisible();
+  });
+
+  test("Clear puts every control back in one move", async ({ page }) => {
+    /*
+     * Two set here, and both have to go. Controls that clear one at a time make
+     * the reader undo their way out of a filter they cannot see the whole of -
+     * and the archive can hold five at once, four of them collapsed into a
+     * dropdown reading a value rather than a word that stands out.
+     */
+    test.skip(IMPOSSIBLE === undefined, "every genre in the log on disk is on every shelf in it");
+
+    await openDanFm(page);
+    await page.goto(`/dan-fm?${new URLSearchParams(IMPOSSIBLE!)}`);
+    await page.getByRole("heading", { level: 1, name: "dan.fm" }).waitFor();
+
+    const clear = archive(page).getByRole("button", { name: "Clear filters" });
+    await clear.click();
+
+    await expect(page).toHaveURL("/dan-fm");
+    expect(await listedRows(page)).toEqual(NEWEST_FIRST.map((album) => albumUrl(album)));
+    await expect(archiveHead(page)).toHaveText(WHOLE_LOG);
+    await expect(
+      clear,
+      "the archive still offers to clear filters it has already cleared",
+    ).toHaveCount(0);
   });
 });

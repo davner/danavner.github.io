@@ -266,7 +266,12 @@ test.describe("the link preview card", () => {
 
     expect(site("og:image:alt"), "index.html leaves the site card undescribed").not.toBe("");
 
-    for (const route of SECTIONS) {
+    /*
+     * The station is not one of these. `/dan-fm` previews as the sleeve of the
+     * album on air, so its card comes out of the log rather than off the site
+     * and moves every time the log does.
+     */
+    for (const route of SECTIONS.filter((route) => route !== "/dan-fm")) {
       const meta = metaFrom(read(fileFor(route)));
 
       expect(meta("og:image"), `${route} previews as something other than the site card`).toBe(

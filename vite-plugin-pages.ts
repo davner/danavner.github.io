@@ -187,6 +187,48 @@ interface WrittenPage extends Page {
   files: string[];
 }
 
+/** The station's own index, which previews as whatever is on air. */
+const STATION = "/dan-fm";
+
+/**
+ * An album's sleeve as a preview card, or null for an album with no art saved.
+ *
+ * The words are written here rather than taken from the page, where the sleeve
+ * carries an empty `alt` because the artist and the album are set in type
+ * beside it. A preview has no type beside it: `og:image:alt` is the whole of
+ * what an unfurl read by ear says about the picture, so here the sleeve has to
+ * name the record itself.
+ *
+ * `readDanFm` fails the build on a `cover` naming a file that is not under
+ * `public/`, so a path reaching this is one the build copies into the output.
+ */
+function sleeveOf(album: { artist: string; album: string; cover: string }): SharePhoto | null {
+  return album.cover
+    ? { src: album.cover, alt: `The sleeve of ${album.album} by ${album.artist}` }
+    : null;
+}
+
+/**
+ * The album `/dan-fm` is showing, which is the newest row in the log.
+ *
+ * Mirrors `station()` in `src/lib/dan-fm.ts`, which the page calls and this
+ * cannot: that module reads `virtual:dan-fm`, a specifier the content plugin
+ * creates and Vite's config context has no resolver for. Read off the dates
+ * rather than off position, the way `station()` reads them, so the page and its
+ * preview cannot land on different records - and `readDanFm` rejects two rows
+ * sharing a day, so the newest date names exactly one album.
+ *
+ * The lamp is not consulted, for the same reason the page does not consult it:
+ * the featured album is the newest row whatever its age, and an off-air station
+ * is still showing the last thing it played.
+ */
+function onAirAlbum<T extends { date: string }>(albums: T[]): T | undefined {
+  return albums.reduce<T | undefined>(
+    (latest, album) => (!latest || album.date > latest.date ? album : latest),
+    undefined,
+  );
+}
+
 /**
  * Every page the build writes, section indexes and content alike.
  *
@@ -266,33 +308,42 @@ function collectPages(root: string, publicDir: string, seedDanFm: SeedRule): Wri
    * that seeded the app would write pages for a log the bundle does not hold -
    * every one of them answering with the redirect an unknown slug takes.
    */
-  for (const album of readDanFm(root, publicDir, seedDanFm).albums) {
+  const albums = readDanFm(root, publicDir, seedDanFm).albums;
+
+  for (const album of albums) {
+    const sleeve = sleeveOf(album);
+
     content.push({
       path: albumUrl(album),
       title: albumTitle(album),
       description: albumSummary(album),
-      /*
-       * The wordless card rather than the sleeve, even for an album that has
-       * one. `og:image:alt` is the only words a preview read by ear gets, and
-       * the page deliberately gives the sleeve an empty `alt` because the
-       * artist and the album are printed beside it - so a cover cannot become
-       * the preview until it has words written for that job.
-       */
-      image: absoluteImage(CARD_FALLBACK_IMAGE),
-      photo: null,
+      // The record itself, and the wordless card for an album with no art
+      // saved - the site's own portrait would preview a stranger's album as a
+      // picture of me.
+      ...shareImage(sleeve ? [sleeve] : [], CARD_FALLBACK_IMAGE),
       lazyModule: LAZY_MODULE["/dan-fm/:slug"],
       indexed: true,
     });
   }
 
+  /*
+   * What the station previews as: the sleeve of the album on air, so a shared
+   * link says what is playing and moves as the log does.
+   *
+   * Null where the log is empty or the album on air has no art saved, and
+   * `/dan-fm` then takes the site card every other index takes.
+   */
+  const onAir = onAirAlbum(albums);
+  const stationSleeve = onAir ? sleeveOf(onAir) : null;
+
   const sections = Object.entries(PAGE_META).map(([route, meta]): Page => ({
     path: route,
     title: meta.title,
     description: meta.description,
-    // A section index has no photo of its own, and the site's card is defined
-    // as the one for any page without a more specific image.
-    image: absoluteImage(DEFAULT_SHARE_IMAGE),
-    photo: null,
+    // The station is the one index with a single picture standing for it. The
+    // rest take the site's card, which is defined as the image for any page
+    // with nothing more specific.
+    ...shareImage(route === STATION && stationSleeve ? [stationSleeve] : [], DEFAULT_SHARE_IMAGE),
     lazyModule: lazyModuleFor(route),
     indexed: true,
   }));
@@ -409,6 +460,10 @@ function render(template: string, page: Page, chunk: string | null, sizes: Map<s
   html = setMeta(html, "og:url", url);
   html = setMeta(html, "og:image", page.image);
 
+  // Null for a page falling back to a site card, and for a remote photo, which
+  // the build refuses to fetch and so cannot measure.
+  const size = page.photo ? (sizes.get(page.photo.src) ?? null) : null;
+
   /*
    * What that image is and how big it is, for a page carrying its own photo.
    * A page falling back to a card keeps what `index.html` ships: both cards are
@@ -420,18 +475,26 @@ function render(template: string, page: Page, chunk: string | null, sizes: Map<s
    * the picture to the shape it was promised.
    */
   if (page.photo) {
-    const size = sizes.get(page.photo.src) ?? null;
-
     html = setMeta(html, "og:image:width", size && String(size.width));
     html = setMeta(html, "og:image:height", size && String(size.height));
     html = setMeta(html, "og:image:alt", page.photo.alt);
   }
 
-  // Every image reaching here is either the page's own photo or one of the
-  // site's cards, and both are made to be shown large.
+  /*
+   * Which frame X lays the card out in. Its wide card crops the picture to 2:1
+   * and its small card crops to a square, so a picture no wider than it is tall
+   * loses at least half its height to the wide one - an album sleeve arrives as
+   * a band across its own middle. The small card shows that same sleeve whole.
+   *
+   * Decided by the picture's shape rather than by which page it belongs to, so
+   * an upright show photo is treated the way a square sleeve is. An unmeasured
+   * image takes the wide card, which is what both site cards are drawn for.
+   */
+  const frame = size && size.width <= size.height ? "summary" : "summary_large_image";
+
   html = html.replace(
     /<meta\s+name="twitter:card"\s+content="[^"]*"\s*\/?>/,
-    '<meta name="twitter:card" content="summary_large_image" />',
+    `<meta name="twitter:card" content="${frame}" />`,
   );
 
   /*

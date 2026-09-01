@@ -1,12 +1,15 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
 
+import { albumUrl } from "../src/lib/dan-fm-summary";
 import { PAGE_META, STATIC_PATHS, type PageMeta } from "../src/lib/routes";
-import { ALL_SECTIONS, DEFAULT_SHARE_IMAGE, SITE_URL } from "../src/lib/site";
+import { ALL_SECTIONS, CARD_FALLBACK_IMAGE, DEFAULT_SHARE_IMAGE, SITE_URL } from "../src/lib/site";
 import { readNow, readPosts, readShows } from "../vite-plugin-content";
+
+import { albumsOnDisk, type LoggedAlbum } from "./dan-fm";
 
 const DIST = path.resolve("dist");
 const CONTENT_ROOT = process.cwd();
@@ -192,6 +195,17 @@ test.describe("a page per published post", () => {
 });
 
 /**
+ * The dimensions of an image under `public/`, as a browser would paint it.
+ *
+ * Module scope because both the photo cases and the album sleeve cases hold a
+ * page's declared card size against the file it names.
+ */
+async function measure(src: string) {
+  const { autoOrient } = await sharp(path.join(PUBLIC, src)).metadata();
+  return { width: String(autoOrient.width), height: String(autoOrient.height) };
+}
+
+/**
  * What a link preview is told about its own picture, none of which is visible
  * on the page. `og:image:width` and `og:image:height` are the box a crawler
  * lays the card out in, so a portrait photo announced as 1200x630 is cropped to
@@ -199,12 +213,6 @@ test.describe("a page per published post", () => {
  * preview by ear gets for it.
  */
 test.describe("the link preview card", () => {
-  /** The dimensions of an image under `public/`, as a browser would paint it. */
-  async function measure(src: string) {
-    const { autoOrient } = await sharp(path.join(PUBLIC, src)).metadata();
-    return { width: String(autoOrient.width), height: String(autoOrient.height) };
-  }
-
   /** Every generated page whose card is a photo out of the content. */
   function pagesWithPhotos() {
     const { current, archive } = readNow(CONTENT_ROOT, PUBLIC);
@@ -283,6 +291,238 @@ test.describe("the link preview card", () => {
         site("og:image:alt"),
       );
     }
+  });
+});
+
+/**
+ * What `/dan-fm` and an album's permalink preview as, which is the record
+ * rather than a picture of whoever played it.
+ *
+ * The one card on the site that moves on its own: the log gains a row every day
+ * the job runs, so the station's picture is whatever sleeve that row saved. All
+ * of it is read off the log on disk for that reason - a slug or a title written
+ * out here would be describing yesterday's station by tomorrow.
+ */
+test.describe("an album's sleeve as its card", () => {
+  /** The log the built site was made from, oldest first. */
+  const LOGGED = [...albumsOnDisk()].sort((a, b) => a.date.localeCompare(b.date));
+
+  /**
+   * The album the station previews as: the newest row by date.
+   *
+   * `station()` picks the featured album this way and the build re-derives it,
+   * because `vite-plugin-pages.ts` runs where `virtual:dan-fm` has no resolver
+   * and cannot call the function the page calls. Two derivations of one choice
+   * living in two files is exactly the drift these cases are here to catch, so
+   * this is a third reading of the dates rather than a call into either.
+   */
+  const ON_AIR = LOGGED.at(-1);
+
+  /**
+   * The words a preview writes for a sleeve. The page writes none: the artist
+   * and the album are set in type beside the picture there, and an unfurl read
+   * by ear has nothing beside it, so the two are deliberately not the same
+   * string and neither can be taken from the other.
+   */
+  function sleeveAlt(album: LoggedAlbum) {
+    return `The sleeve of ${album.album} by ${album.artist}`;
+  }
+
+  /** What `index.html` says about the site's own card, which a fallback keeps. */
+  const site = metaFrom(read(path.join(DIST, "index.html")));
+
+  test("an album with a sleeve saved previews as that sleeve", async () => {
+    const withSleeve = LOGGED.filter((album) => album.cover);
+    test.skip(withSleeve.length === 0, "no album in the log on disk has a sleeve saved");
+
+    for (const album of withSleeve) {
+      const route = albumUrl(album);
+      const meta = metaFrom(read(fileFor(route)));
+
+      expect(meta("og:image"), `${route} previews as something other than its sleeve`).toBe(
+        `${SITE_URL}${album.cover}`,
+      );
+      expect(meta("og:image:alt"), `${route} does not name the record its card shows`).toBe(
+        sleeveAlt(album),
+      );
+
+      // A sleeve is square and the card tags default to 1200x630, so an album
+      // that kept the default would hand a crawler a ratio to crop it into.
+      const { width, height } = await measure(album.cover);
+      expect(meta("og:image:width"), `${route} declares the wrong sleeve width`).toBe(width);
+      expect(meta("og:image:height"), `${route} declares the wrong sleeve height`).toBe(height);
+    }
+  });
+
+  test("an album with no sleeve saved previews as the wordless card", () => {
+    const bare = LOGGED.filter((album) => !album.cover);
+    test.skip(bare.length === 0, "every album in the log on disk has a sleeve saved");
+
+    for (const album of bare) {
+      const route = albumUrl(album);
+      const meta = metaFrom(read(fileFor(route)));
+
+      /*
+       * The wordless card rather than the site's portrait, which would preview
+       * a stranger's record as a picture of the owner - and rather than a
+       * sleeve path the album has none of, which would point the crawler at a
+       * file the build never wrote.
+       */
+      expect(meta("og:image"), `${route} previews as something other than the wordless card`).toBe(
+        `${SITE_URL}${CARD_FALLBACK_IMAGE}`,
+      );
+      expect(meta("og:image:alt"), `${route} describes a sleeve it has not got`).toBe(
+        site("og:image:alt"),
+      );
+    }
+  });
+
+  test("the station previews as the album on air, exactly as that album's own page does", () => {
+    test.skip(ON_AIR === undefined, "no album log on disk for the station to preview");
+    test.skip(!ON_AIR!.cover, "the album on air has no sleeve for the station to show");
+
+    const album = ON_AIR!;
+    const station = metaFrom(read(fileFor("/dan-fm")));
+    const permalink = metaFrom(read(fileFor(albumUrl(album))));
+
+    expect(station("og:image"), "the station does not preview as the album on air").toBe(
+      `${SITE_URL}${album.cover}`,
+    );
+    expect(station("og:image:alt"), "the station's card does not name the album on air").toBe(
+      sleeveAlt(album),
+    );
+
+    /*
+     * Held against the album's own page as well as against the log, so the
+     * station keeps taking its card from the same place the album does however
+     * the build is rearranged - a station given a second derivation of its own
+     * fails here even if it happens to agree with the log on this one row.
+     *
+     * The other half of the drift is on the page rather than in the file:
+     * `station()` picks what the browser shows and the build cannot call it.
+     * `tests/dan-fm-page.spec.ts` holds that half to the same reading of the
+     * dates these do, which is what makes the pair of them a fence.
+     */
+    for (const tag of ["og:image", "og:image:alt", "og:image:width", "og:image:height"]) {
+      expect(station(tag), `the station and ${albumUrl(album)} disagree about ${tag}`).toBe(
+        permalink(tag),
+      );
+    }
+  });
+
+  test("the station takes the site card when nothing on air has a sleeve", async () => {
+    /*
+     * Both fallbacks at once, because the station cannot tell them apart: an
+     * empty log and an album whose sleeve never saved both leave it with no
+     * picture of its own, and it takes the site card either way - the one every
+     * other section index takes.
+     *
+     * Runs on a build in one of those states and stands down on any other. A
+     * log that has never been fetched is one, and so is a run of the job where
+     * the newest row's cover download failed, which is not hypothetical: the
+     * committed fixture files six such rows out of eight.
+     */
+    test.skip(
+      ON_AIR !== undefined && Boolean(ON_AIR.cover),
+      "the album on air has a sleeve, so the station previews as that instead",
+    );
+
+    const station = metaFrom(read(fileFor("/dan-fm")));
+    const { width, height } = await measure(DEFAULT_SHARE_IMAGE);
+
+    expect(station("og:image"), "the station previews as neither a sleeve nor the site card").toBe(
+      `${SITE_URL}${DEFAULT_SHARE_IMAGE}`,
+    );
+    expect(station("og:image:width"), "the station declares the wrong card width").toBe(width);
+    expect(station("og:image:height"), "the station declares the wrong card height").toBe(height);
+    expect(station("og:image:alt"), "the station describes the site card as something else").toBe(
+      site("og:image:alt"),
+    );
+  });
+});
+
+/**
+ * Which of X's two frames a page's card is laid out in.
+ *
+ * The wide card crops the picture to 2:1 and the small one crops it to a
+ * square, so a picture no wider than it is tall loses at least half its height
+ * to the wide card: a square sleeve arrives as a band across its own middle.
+ *
+ * Asserted as a rule over every page the build wrote rather than over a list of
+ * routes, because the rule is about the picture's shape and nothing about which
+ * page it belongs to. A page type nobody has invented yet is covered by this
+ * the day it first writes a file.
+ */
+test.describe("the frame X lays a card out in", () => {
+  /**
+   * The frame a picture fits, measured off the file `dist` actually serves.
+   *
+   * Off the file rather than off the `og:image:width` the page declares, so a
+   * page that got the size and the frame wrong in the same direction still
+   * fails here.
+   */
+  async function frameFor(image: string) {
+    // A picture on somebody else's host cannot be measured by a build that
+    // reads no network, and takes the wide card both site cards are drawn at.
+    if (!image.startsWith(`${SITE_URL}/`)) return "summary_large_image";
+
+    const file = path.join(DIST, image.slice(SITE_URL.length));
+    expect(existsSync(file), `${image} is not a file the build wrote`).toBe(true);
+
+    const { autoOrient } = await sharp(file).metadata();
+    return autoOrient.width <= autoOrient.height ? "summary" : "summary_large_image";
+  }
+
+  test("every page takes the frame its own picture fits", async () => {
+    const pages = readdirSync(DIST, { recursive: true })
+      .map(String)
+      .filter((name) => name.endsWith(".html"));
+
+    expect(pages.length, "the build wrote no pages to check").toBeGreaterThan(0);
+
+    // One picture is the card for a whole run of pages, and measuring it once
+    // per page would open the same two files twenty times.
+    const frames = new Map<string, string>();
+    let checked = 0;
+
+    for (const name of pages) {
+      const meta = metaFrom(read(path.join(DIST, name)));
+      const image = meta("og:image");
+      const card = meta("twitter:card");
+
+      // `dist/admin` is the CMS's own page and carries neither tag.
+      if (!image || !card) continue;
+
+      const known = frames.get(image) ?? (await frameFor(image));
+      frames.set(image, known);
+
+      expect(card, `${name} lays ${image} out in the wrong frame`).toBe(known);
+      checked += 1;
+    }
+
+    expect(checked, "no page the build wrote declares both a card and a picture").toBeGreaterThan(
+      0,
+    );
+  });
+
+  test("both shapes are on the site, so the rule is doing work", () => {
+    /*
+     * What keeps the sweep above from going quiet rather than red. It compares
+     * each page against its own picture, so a site whose pictures were all one
+     * shape would pass it while proving nothing about the rule - and a frame
+     * pinned back to one value would pass with it. This is what says both
+     * branches are reachable from the pages this build wrote.
+     */
+    const cards = new Set(
+      readdirSync(DIST, { recursive: true })
+        .map(String)
+        .filter((name) => name.endsWith(".html"))
+        .map((name) => metaFrom(read(path.join(DIST, name)))("twitter:card"))
+        .filter(Boolean),
+    );
+
+    expect(cards, "no page on the site takes the small card").toContain("summary");
+    expect(cards, "no page on the site takes the wide card").toContain("summary_large_image");
   });
 });
 

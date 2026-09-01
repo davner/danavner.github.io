@@ -1,0 +1,87 @@
+name: dan.fm
+
+# The album log is committed rather than fetched in the browser, for the same
+# reasons the record collection is. The site's standing promise is that nothing
+# phones home except the GoatCounter beacon, which `tests/links.spec.ts` asserts
+# on every run. And the payload is validated at build time by
+# `vite-plugin-content.ts`, which can only happen to a file in the repo.
+#
+# So this job is the only thing that reads the sheet: it fetches the published
+# CSV, turns it into `src/content/dan-fm.json`, and commits it. A row the log
+# cannot take fails the run and commits nothing, so the last good log stays and
+# keeps showing. The push triggers the normal deploy, because `deploy.yml` names
+# this workflow in its `workflow_run` list.
+
+on:
+  schedule:
+    # 03:07 / 07:07 / 11:07 / 15:07 / 19:07 / 23:07 station-local in PDT.
+    #
+    # The hours are listed rather than written `*/4` on purpose. The point of
+    # six runs is that ON AIR is reachable at all: the lamp reads today's album
+    # only while a row dated today is deployed, so the last run has to land
+    # after he logs. `*/4` puts that run at 21:07 PDT, and anything logged later
+    # is dated yesterday by the time it is read. Do not tidy this back to `*/4`.
+    #
+    # These are UTC, so the station-local times shift an hour in PST: 02:07 /
+    # 06:07 / 10:07 / 14:07 / 18:07 / 22:07, and the evening cutoff moves back
+    # with them. Both are clear of vinyl (08:42), fortnite (09:17) and comics
+    # (Mon 09:42) by at least 25 minutes. Scheduled runs drift under GitHub's
+    # load, so that spacing is hygiene and the rebase below is the real
+    # protection.
+    - cron: "7 6,10,14,18,22,2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dan-fm
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      # csv-parse does the parsing, so this needs real dependencies rather than
+      # the bare Node runtime.
+      - run: npm ci
+
+      # No secret to guard on: the sheet is published to the web. Its URL comes
+      # from `src/content/accounts.json`, so re-publishing it is one edit there.
+      - name: Read the album log from the sheet
+        run: node scripts/update-dan-fm.mjs
+
+      - name: Commit if the log moved
+        run: |
+          if [ -z "$(git status --porcelain -- src/content/dan-fm.json)" ]; then
+            echo "dan-fm: unchanged, nothing to commit"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/content/dan-fm.json
+          git commit -m "chore(dan-fm): refresh the album log"
+
+          # Eight scheduled pushes a day - vinyl, fortnite and this job's six -
+          # and nine on the Monday the comics probe runs, so `main` moving under
+          # this one is routine rather than exceptional. Each job commits a
+          # disjoint set of paths, so the rebase itself cannot conflict and only
+          # the ref moving can fail - which is what the retry answers. Three
+          # attempts, then a red run, because a persistent failure is a real
+          # signal.
+          #
+          # Never `--force-with-lease` here: a bot push that lands mid-rebase
+          # has to fail this run rather than be overwritten.
+          for attempt in 1 2 3; do
+            git pull --rebase origin main && git push && exit 0
+            echo "dan-fm: main moved under the push, retrying ($attempt)"
+          done
+          exit 1

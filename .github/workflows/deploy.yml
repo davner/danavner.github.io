@@ -19,7 +19,7 @@ on:
   push:
     branches: [main]
   workflow_run:
-    workflows: [Vinyl, Comics, Fortnite]
+    workflows: [Vinyl, Comics, Fortnite, dan.fm]
     types: [completed]
   workflow_dispatch:
 

@@ -127,10 +127,11 @@ a convenience rather than a gate: `--no-verify` skips it.
 | `vinyl.yml`    | nightly                                 | reads the Discogs collection, commits it if it moved                                                           |
 | `comics.yml`   | weekly, Mondays (probe - see below)     | reads the comic collection, commits it if it moved                                                             |
 | `fortnite.yml` | nightly                                 | reads the Fortnite stats, commits them if they moved                                                           |
+| `dan-fm.yml`   | every four hours                        | reads the album log from the sheet, commits it if it moved                                                     |
 
 ### Why the data jobs are named in `deploy.yml`
 
-The nightly jobs commit their JSON to `main`, and the site is built from those
+The data jobs commit their JSON to `main`, and the site is built from those
 files, so every refresh needs a rebuild to reach the page. That looks like it
 should happen on its own - `deploy.yml` runs on push to `main`, and a commit is
 a push.
@@ -144,9 +145,9 @@ recording: the vinyl refresh of 10 August sat on `main` from 09:08 until 16:03,
 when an unrelated human push finally carried it out. Nothing was broken or red.
 The data was simply as old as the last time someone happened to push.
 
-So `deploy.yml` also triggers on `workflow_run` for Vinyl, Comics and Fortnite.
-**A new data workflow has to be added to that list**, or its
-numbers will go stale in exactly the same silent way.
+So `deploy.yml` also triggers on `workflow_run` for Vinyl, Comics, Fortnite and
+dan.fm. **A new data workflow has to be added to that list**, or its numbers
+will go stale in exactly the same silent way.
 
 Two details in there are load-bearing:
 
@@ -198,6 +199,7 @@ scripts/
   update-fortnite.mjs     reads the Fortnite stats nightly, keeps a season archive
   backfill-fortnite.mjs   fills past seasons in from Epic, run by hand not by CI
   fetch-fortnite-skins.mjs downloads the render for each season's main outfit
+  update-dan-fm.mjs       reads the album log from a published sheet, every four hours
 eslint.config.js          the browser half, the Node half, prettier last
 .prettierrc.json          printWidth 100, and .prettierignore beside it
 .husky/pre-commit         lint-staged, then a whole-project type-check
@@ -217,6 +219,8 @@ src/
     comics.json           the comic shelf, written nightly
     fortnite.json         the stats, written nightly and backfilled once
     fortnite-seasons.json the season calendar - rollovers by the job, names by hand
+    dan-fm.json           the album log, written from a sheet every four hours
+    dan-fm.seed.json      a hand-written album log, for a build asked for a full one
   routes/                 a file per page, or per pair sharing one lazy chunk
   components/
     ui/                   shadcn/ui, vendored: Badge, Button, Carousel, Checkbox,
@@ -922,6 +926,116 @@ The `first` field on each season entry is the date its numbers start from. A
 backfilled season starts from its own first day; one the nightly job saw
 part-way through carries a `Tracked from ...` line on the page, because partial
 numbers that look whole are worse than none.
+
+## The album log
+
+One album a day, typed into a published Google Sheet and read out of it by
+`scripts/update-dan-fm.mjs` every four hours. The job writes
+`src/content/dan-fm.json` and commits it, and `vite-plugin-content.ts` validates
+that file at build time like every other collection.
+
+The sheet is the only interface. There is no admin form and no markdown file: an
+album is added, corrected or withdrawn by editing a row. The sheet's URL lives in
+`src/content/accounts.json` under `danFmSheet` and is the CSV export of the
+published sheet, so re-publishing it is one edit there. Nothing authenticates -
+it is a public read of a page anyone with the link can see, which is also the
+reason the sheet holds nothing that is not meant to be published.
+
+### The columns
+
+Read by name, never by position, so inserting a column in the sheet cannot shift
+every field one to the left. All nineteen have to be present or the run fails
+before a single row is trusted:
+
+```
+Date, Artist, Album, Link, Year, Genre, Source, From, Score, Stars, Shelf,
+Standout, Skip, Take, Tag1, Tag2, Tag3, Later, Streak
+```
+
+`Stars` and `Streak` are read and thrown away - the score is the number that
+counts, and the streak is a spreadsheet helper - but their absence means the
+header is not this log's, so they are still required. Any column beyond these
+nineteen is ignored, so adding a working column to the sheet is safe.
+
+That header check is also what catches a sheet that is no longer published,
+because Google answers that with 200 and a page of HTML rather than an error.
+
+### What a row has to say
+
+| Outcome       | Rows                                                                                                                                                                                                                                              | What happens                                                                                   |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| **Fatal**     | no `Date`, or one that is not a real `YYYY-MM-DD` day; two rows on one date; no `Artist` or `Album`; a `Score` or a `Later` that is not a half step from 1 to 5; a `Link` that is not a Spotify album link; a `Date` outside the two bounds below | the run fails and commits nothing, so the committed log keeps serving                          |
+| **Held back** | a `Date` from tomorrow to seven days ahead                                                                                                                                                                                                        | left out of the payload and warned about, and picked up by the first run on or after that date |
+| **Tolerated** | every other blank cell, and a `Year` nobody can read                                                                                                                                                                                              | recorded blank                                                                                 |
+
+Every problem is reported in one run rather than one per run, because a run
+happens every four hours and finding typos one at a time would take a day.
+
+A malformed row therefore turns the job red every four hours until the sheet is
+fixed. That is the intended trade: the site keeps serving the last good log, and
+a broken row is loud rather than quiet.
+
+### If every row says its Date is not a date
+
+The first thing to check when the log has never worked. The job wants the `Date`
+cell to hold the literal text `2026-08-31`, and a spreadsheet is free to store a
+date as a number and render it however its locale prefers - so a column
+formatted as a date can export as `8/30/2026` and fail every row at once:
+
+```
+dan-fm: the sheet has 2 problems. The committed log stands, so the page is showing whatever it last read.
+  line 2: Date "8/30/2026" is not a real YYYY-MM-DD day.
+  line 3: Date "8/31/2026" is not a real YYYY-MM-DD day.
+```
+
+That is how it tells itself apart from a typo. A typo is one row and the quoted
+value is wrong; this is every row, and each quoted value is the right day
+written the wrong way round.
+
+The fix is one-time and belongs in the sheet: set the `Date` column to plain
+text (Format > Number > Plain text) so the cell keeps exactly what is typed,
+then type the dates as `YYYY-MM-DD`. Nothing in the job changes, and the next
+run picks them all up. **Worth doing before the first album is ever logged**,
+because the alternative is finding out on the day the log starts.
+
+### The two bounds on a date
+
+A date more than seven days ahead is a mistyped year rather than a plan, and a
+date before `LOG_EPOCH` in `scripts/update-dan-fm.mjs` is a mistyped year rather
+than a backfill - a daily log started on a date is never extended backwards past
+its own start. `LOG_EPOCH` holds a day the sheet was still empty, which is the
+earliest date a row could honestly carry; **move it forward to the date of the
+first row once the log has one**, which tightens it to the truth.
+
+The bounds are deliberately not symmetric. A future date is held back rather
+than refused up to a week out, because logging a day ahead is reasonable; a past
+date needs no such band, because it is publishable the moment it is read.
+
+### An empty sheet is where it starts
+
+Zero rows is a valid answer, not a failed read, so the job says so and writes
+nothing. What it refuses is zero rows while a payload with albums in it is
+committed, which is a read that went wrong rather than an edit - deleting one
+mistyped row is an edit, and is written out as one.
+
+### Running it
+
+```sh
+node scripts/update-dan-fm.mjs
+```
+
+No token, no login. The one thing to know is that it writes into the repo, so
+run it where a stray `src/content/dan-fm.json` will not surprise you.
+
+### The schedule
+
+Six runs a day at `7 6,10,14,18,22,2 * * *`, which is 03:07 to 23:07 in
+California and an hour earlier in winter. The hours are listed rather than
+written `*/4` for a reason the workflow header spells out: `*/4` puts the last
+run of the station day at 21:07 local, and an album logged after that is dated
+yesterday by the time anything reads it.
+
+---
 
 ## Editing the résumé side
 

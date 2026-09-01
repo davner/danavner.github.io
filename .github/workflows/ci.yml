@@ -14,9 +14,10 @@ jobs:
   # ESLint and Prettier repeat what the pre-commit hook runs, because a hook
   # is a convenience rather than a gate: `--no-verify` skips it, and a commit
   # made anywhere but a machine that has run `npm install` never had it. The
-  # two checks after them - actionlint and the admin-config schema - run only
-  # here, since the files they guard are mostly written outside any hook (the
-  # CMS commits via the GitHub API, and workflows misfire rather than fail).
+  # three checks after them - actionlint, the admin-config schema and the
+  # deploy trigger - run only here, since the files they guard are mostly
+  # written outside any hook (the CMS commits via the GitHub API, and workflows
+  # misfire rather than fail).
   lint:
     name: Lint and formatting
     runs-on: ubuntu-latest
@@ -50,6 +51,13 @@ jobs:
 
       - name: Admin config schema
         run: npm run check:admin
+
+      # A data workflow missing from `deploy.yml`'s `workflow_run` list commits
+      # its data and never deploys it, with every run green. The coupling is a
+      # bare string in one file matching a `name:` in another, which actionlint
+      # does not cross-check.
+      - name: Deploy triggers name every data workflow
+        run: npm run check:workflows
 
   build:
     name: Type-check and build

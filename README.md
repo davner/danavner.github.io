@@ -119,15 +119,15 @@ a convenience rather than a gate: `--no-verify` skips it.
 
 ## CI
 
-| Workflow       | When                                    | What                                                                                                           |
-| -------------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `ci.yml`       | every push to `main` and every PR       | lint, format check, workflow lint (actionlint), admin-config schema check, type-check, build, Playwright suite |
-| `deploy.yml`   | push to `main`, or a data job finishing | builds and publishes to GitHub Pages                                                                           |
-| `links.yml`    | weekly, Mondays                         | external link check; opens an issue if anything is dead                                                        |
-| `vinyl.yml`    | nightly                                 | reads the Discogs collection, commits it if it moved                                                           |
-| `comics.yml`   | weekly, Mondays (probe - see below)     | reads the comic collection, commits it if it moved                                                             |
-| `fortnite.yml` | nightly                                 | reads the Fortnite stats, commits them if they moved                                                           |
-| `dan-fm.yml`   | every four hours                        | reads the album log from the sheet, commits it if it moved                                                     |
+| Workflow       | When                                    | What                                                                                                                                 |
+| -------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `ci.yml`       | every push to `main` and every PR       | lint, format check, workflow lint (actionlint), admin-config schema check, deploy-trigger check, type-check, build, Playwright suite |
+| `deploy.yml`   | push to `main`, or a data job finishing | builds and publishes to GitHub Pages                                                                                                 |
+| `links.yml`    | weekly, Mondays                         | external link check; opens an issue if anything is dead                                                                              |
+| `vinyl.yml`    | nightly                                 | reads the Discogs collection, commits it if it moved                                                                                 |
+| `comics.yml`   | weekly, Mondays (probe - see below)     | reads the comic collection, commits it if it moved                                                                                   |
+| `fortnite.yml` | nightly                                 | reads the Fortnite stats, commits them if they moved                                                                                 |
+| `dan-fm.yml`   | every four hours                        | reads the album log from the sheet, commits it if it moved                                                                           |
 
 ### Why the data jobs are named in `deploy.yml`
 
@@ -147,7 +147,10 @@ The data was simply as old as the last time someone happened to push.
 
 So `deploy.yml` also triggers on `workflow_run` for Vinyl, Comics, Fortnite and
 dan.fm. **A new data workflow has to be added to that list**, or its numbers
-will go stale in exactly the same silent way.
+will go stale in exactly the same silent way - which is why it is no longer
+something to remember. `npm run check:workflows` reads every workflow file,
+finds the ones that can commit, and fails CI if any of them is missing from that
+list, or if the list names a workflow that no longer exists.
 
 Two details in there are load-bearing:
 
@@ -200,6 +203,7 @@ scripts/
   backfill-fortnite.mjs   fills past seasons in from Epic, run by hand not by CI
   fetch-fortnite-skins.mjs downloads the render for each season's main outfit
   update-dan-fm.mjs       reads the album log from a published sheet, every four hours
+  check-workflows.mjs     fails CI when a data workflow is not in the deploy trigger
 eslint.config.js          the browser half, the Node half, prettier last
 .prettierrc.json          printWidth 100, and .prettierignore beside it
 .husky/pre-commit         lint-staged, then a whole-project type-check

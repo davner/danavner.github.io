@@ -27,6 +27,15 @@ const STAR = "★";
  */
 const SLEEVE_HEIGHT = 760;
 
+/**
+ * The sizes the title is fitted between, and the step between them. A heading
+ * that will not hold two lines at the smallest of them is set there anyway and
+ * takes the room a third line needs from the body below it.
+ */
+const HEADING_MAX = 120;
+const HEADING_MIN = 56;
+const HEADING_STEP = 8;
+
 /** Where the take may be set, and how it is set there. */
 const LINE = 56;
 const BODY_FONT = '400 40px "Inter Variable", system-ui, sans-serif';
@@ -182,12 +191,20 @@ export async function renderAlbumCard(album: Album): Promise<Card> {
   // has pushed the score and the take through the footer rule, and there is a
   // sleeve above it on the days there is art.
   const heading = album.album.toUpperCase();
-  let size = 120;
-  let lines: string[] = [];
-  for (; size >= 56; size -= 8) {
+  let size = HEADING_MAX;
+  let lines: string[];
+  /*
+   * The step down is taken inside the body, so `size` still names the
+   * measurement `lines` came from once the loop ends. Decrementing in the
+   * header lets a title that never fits leave `size` one step under the face
+   * it was measured at, and the drawing below then advances by less than the
+   * glyphs are tall and sets the lines on top of each other.
+   */
+  for (;;) {
     context.font = `400 ${size}px Anton, system-ui, sans-serif`;
     lines = wrap(context, heading, MAX_WIDTH);
-    if (lines.length <= 2) break;
+    if (lines.length <= 2 || size <= HEADING_MIN) break;
+    size -= HEADING_STEP;
   }
 
   context.fillStyle = palette.ink;

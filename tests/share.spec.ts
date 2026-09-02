@@ -1280,11 +1280,13 @@ test.describe("the card's palette", () => {
      * The pixels are the only place that shows.
      *
      * The bloom's centre is the one pixel on a photo card whose colour is
-     * arithmetic rather than photograph: the picture stops at 900, the fade
-     * with it, and the heading is set below and to the left - so (540, 940) is
-     * the glow at full strength over the card's own black. The expectation is
-     * composited in the page from the token, so this compares the card against
-     * the site rather than against a number written down here.
+     * arithmetic rather than photograph: the picture stops where the show
+     * card's band ends, the fade with it, and the heading is set below and to
+     * the left - so this is the glow at full strength over the card's own
+     * black. The expectation is composited in the page from the token, so this
+     * compares the card against the site rather than against a number written
+     * down here. The coordinate tracks the band: move the photo and this fails
+     * on the ground it lands in, which is the point.
      */
     const card = await openCard(page);
 
@@ -1319,7 +1321,7 @@ test.describe("the card's palette", () => {
 
       return {
         size: [sheet.width, sheet.height],
-        bloom: at(540, 940),
+        bloom: at(540, 740),
         corner: at(4, sheet.height - 4),
         want: [...paint.getImageData(0, 0, 1, 1).data].slice(0, 3),
         ember,

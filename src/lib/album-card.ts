@@ -9,6 +9,7 @@ import {
   drawReadout,
   drawTopPhoto,
   loadImage,
+  markCut,
   toBlob,
   wrap,
 } from "@/lib/card-canvas";
@@ -64,11 +65,7 @@ const MAX_WIDTH = WIDTH - PAD * 2;
  * Neither block has paragraphs to cut between the way a now entry has: a take
  * is one written sentence or three, and the excerpt is up to two lines off the
  * front of the review whatever it is made of. So the lines that fit are taken
- * and the last one carries an ellipsis.
- *
- * The trailing full stop goes with it, or a line that already ended a sentence
- * reads as "shot...." - four dots, which looks like a typo rather than like a
- * cut. A `?` or `!` is kept, since the ellipsis stands in for neither.
+ * and the last one carries the mark that says so.
  *
  * A capacity under zero is a block measured out of a sheet with nothing left,
  * and it means the same as zero. Clamped here rather than at either caller,
@@ -82,7 +79,7 @@ function fit(lines: string[], capacity: number): { lines: string[]; truncated: b
   const kept = lines.slice(0, room);
   if (kept.length === 0) return { lines: [], truncated: true };
 
-  kept[kept.length - 1] = `${kept[kept.length - 1].replace(/\.\s*$/, "")}…`;
+  kept[kept.length - 1] = markCut(kept[kept.length - 1]);
   return { lines: kept, truncated: true };
 }
 

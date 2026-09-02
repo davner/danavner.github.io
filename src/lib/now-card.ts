@@ -8,72 +8,35 @@ import {
   drawHairline,
   drawReadout,
   drawTopPhoto,
+  excerpt,
   loadImage,
   toBlob,
-  wrap,
 } from "@/lib/card-canvas";
 import type { NowEntry } from "@/lib/now";
 import { nowDate, nowParagraphs } from "@/lib/now-summary";
 import { SITE_URL } from "@/lib/site";
 
-/** The photo band. 900 clears `drawTopPhoto`'s `height >= 420` precondition. */
-const PHOTO_HEIGHT = 900;
+/**
+ * The photo band. A banner over the prose rather than a third of the sheet:
+ * every line the picture gives up is a line of the entry the reader gets to
+ * read here instead of on the page. Clears `drawTopPhoto`'s `height >= 420`
+ * precondition.
+ */
+const PHOTO_HEIGHT = 700;
 
-/** Where the excerpt may be set, and how it is set there. */
-const BAND_TOP = 1120;
+/**
+ * Where the excerpt may be set. The top is tied to the photo because the date
+ * headline sits between the two: the readout and the heading put its baseline
+ * at `PHOTO_HEIGHT + 202`, so the band opens clear of the headline's descenders
+ * at whatever height the picture is set to.
+ */
+const BAND_TOP = PHOTO_HEIGHT + 220;
 const BAND_BOTTOM = 1696;
 const LINE = 56;
 const PARAGRAPH_GAP = 28;
 const BODY_FONT = '400 40px "Inter Variable", system-ui, sans-serif';
 
 const MAX_WIDTH = WIDTH - PAD * 2;
-
-/**
- * As much of the entry as the band holds, and whether anything was left out.
- *
- * Whole paragraphs first, while the next one still fits. Cutting at a paragraph
- * boundary never leaves a severed sentence, which is the failure mode that
- * makes an excerpt read as a mistake rather than as an excerpt.
- *
- * When even the first paragraph overflows there is no boundary to cut at, so it
- * is wrapped, the lines that fit are taken, and the text is cut back to the last
- * sentence-ending punctuation among them - or, failing that, to the last whole
- * word. Both of those set `truncated`, and the caller is what turns that into
- * the footer line saying where the rest is.
- *
- * Assumes `context.font` is already `BODY_FONT`, because `wrap` measures.
- */
-function excerpt(
-  context: CanvasRenderingContext2D,
-  paragraphs: string[],
-): { paragraphs: string[][]; truncated: boolean } {
-  const capacity = BAND_BOTTOM - BAND_TOP;
-  const wrapped = paragraphs.map((text) => wrap(context, text, MAX_WIDTH));
-
-  const taken: string[][] = [];
-  let used = 0;
-
-  for (const lines of wrapped) {
-    const cost = (taken.length > 0 ? PARAGRAPH_GAP : 0) + lines.length * LINE;
-    if (used + cost > capacity) break;
-    taken.push(lines);
-    used += cost;
-  }
-
-  if (taken.length > 0) {
-    return { paragraphs: taken, truncated: taken.length < wrapped.length };
-  }
-
-  // Nothing to fall back on: either the entry is empty, or its opening
-  // paragraph alone is taller than the band.
-  if (wrapped.length === 0) return { paragraphs: [], truncated: false };
-
-  const fitting = wrapped[0].slice(0, Math.floor(capacity / LINE)).join(" ");
-  const sentence = /^[\s\S]*[.!?](?=\s|$)/.exec(fitting)?.[0];
-  const cut = sentence ?? fitting.replace(/\s+\S*$/, "");
-
-  return { paragraphs: [wrap(context, cut, MAX_WIDTH)], truncated: true };
-}
 
 /**
  * A now entry as a poster.
@@ -126,22 +89,21 @@ export async function renderNowCard(entry: NowEntry, photoIndex = 0): Promise<Ca
   context.fillText(heading, PAD, y + size * 0.92);
 
   context.font = BODY_FONT;
-  const { paragraphs, truncated } = excerpt(context, nowParagraphs(entry.body));
+  const { paragraphs, truncated } = excerpt(context, nowParagraphs(entry.body), {
+    capacity: BAND_BOTTOM - BAND_TOP,
+    line: LINE,
+    gap: PARAGRAPH_GAP,
+    maxWidth: MAX_WIDTH,
+  });
 
   context.fillStyle = palette.ink;
   y = BAND_TOP;
   paragraphs.forEach((lines, index) => {
     if (index > 0) y += PARAGRAPH_GAP;
-    lines.forEach((line, lineIndex) => {
+    for (const line of lines) {
       y += LINE;
-      const last = index === paragraphs.length - 1 && lineIndex === lines.length - 1;
-      // The trailing full stop goes with it, or a line that already ended a
-      // sentence reads as "winning...." - four dots, which looks like a typo
-      // rather than like an excerpt. A `?` or `!` is kept, since the ellipsis
-      // does not stand in for either.
-      const text = truncated && last ? `${line.replace(/\.\s*$/, "")}…` : line;
-      context.fillText(text, PAD, y);
-    });
+      context.fillText(line, PAD, y);
+    }
   });
 
   // Lower than the show card's `HEIGHT - 300`: there is no venue, city and date

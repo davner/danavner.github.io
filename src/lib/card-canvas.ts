@@ -6,9 +6,9 @@
  * server - the whole site is static - and the browser already has the fonts and
  * the photos loaded.
  *
- * What lives here is what two cards genuinely share. A show's rating block and
- * a now entry's excerpt do not, and neither belongs here just because it is a
- * drawing routine.
+ * What lives here is what more than one card genuinely shares. A show's rating
+ * block and an album's score row do not, and neither belongs here just because
+ * it is a drawing routine.
  */
 
 /** Instagram story canvas. Also fine as a photo in a text message. */
@@ -222,6 +222,120 @@ export function wrap(
 
   if (line) lines.push(line);
   return lines;
+}
+
+/**
+ * `line` with the mark that says the card stopped mid-thought.
+ *
+ * The trailing full stop goes with the ellipsis, or a line that already ended a
+ * sentence reads as "shot...." - four dots, which looks like a typo rather than
+ * like a cut. A `?` or `!` is kept, since the ellipsis stands in for neither.
+ */
+export function markCut(line: string): string {
+  return `${line.replace(/\.\s*$/, "")}…`;
+}
+
+/** `paragraphs` with its last line marked, so a cut block reads as cut. */
+function marked(paragraphs: string[][]): string[][] {
+  const last = paragraphs.at(-1);
+  if (!last || last.length === 0) return paragraphs;
+  return [...paragraphs.slice(0, -1), [...last.slice(0, -1), markCut(last[last.length - 1])]];
+}
+
+/**
+ * The least a cut paragraph is worth setting.
+ *
+ * One line hanging under a whole paragraph reads as an orphan rather than as
+ * the next thought, and a sentence cut given that little room keeps whatever
+ * short phrase happens to end in a stop - a band name carrying an exclamation
+ * mark, an abbreviation - which is a worse mark on the sheet than the air it
+ * would have filled.
+ */
+const MIN_CUT_LINES = 2;
+
+/** The room a block of prose has, and the metrics it is set in. */
+export interface ExcerptMetrics {
+  /** How tall the block may be. Under zero means the same as zero. */
+  capacity: number;
+  /** Baseline to baseline within a paragraph. */
+  line: number;
+  /** The extra air between one paragraph and the next. */
+  gap: number;
+  /** How wide a line may run. */
+  maxWidth: number;
+}
+
+/**
+ * The front of `lines` that fits `limit` lines, ending on a sentence.
+ *
+ * Cut back to the last sentence-ending punctuation among the lines that fit, or
+ * failing that to the last whole word. A severed sentence is the failure mode
+ * that makes an excerpt read as a mistake rather than as an excerpt, and the
+ * sentence is worth the line or two the cut gives up to land on one.
+ *
+ * Re-wrapped rather than returned as the sliced lines, because the cut lands
+ * mid-line and the words after it would otherwise stay on the sheet.
+ */
+function sentences(
+  context: CanvasRenderingContext2D,
+  lines: string[],
+  limit: number,
+  maxWidth: number,
+): string[] {
+  if (limit <= 0) return [];
+
+  const fitting = lines.slice(0, limit).join(" ");
+  const sentence = /^[\s\S]*[.!?](?=\s|$)/.exec(fitting)?.[0];
+  return wrap(context, sentence ?? fitting.replace(/\s+\S*$/, ""), maxWidth);
+}
+
+/**
+ * As much of `paragraphs` as the block holds, and whether anything was left out.
+ *
+ * Whole paragraphs first, while the next one still fits, because a paragraph
+ * taken entire is the excerpt that reads best. Whatever room is left after that
+ * goes to the front of the paragraph that would not fit, cut to a sentence: a
+ * band that stops at the last whole paragraph leaves a hole the height of the
+ * paragraph it refused, which on a card measured in six or seven lines is most
+ * of the block.
+ *
+ * The two cases the caller might think of as separate are the same one. A first
+ * paragraph too tall for the block is the tail fill with no whole paragraphs
+ * under it, and a block measured out of a sheet with nothing left over is the
+ * tail fill with no room: it draws nothing and still reports the cut, because
+ * the prose exists and the reader has not been shown a word of it.
+ *
+ * The ellipsis goes on here rather than at the caller, so what the sheet says
+ * and what `truncated` says cannot drift apart.
+ *
+ * Assumes `context.font` is the face the block will be drawn in, since `wrap`
+ * measures.
+ */
+export function excerpt(
+  context: CanvasRenderingContext2D,
+  paragraphs: string[],
+  { capacity, line, gap, maxWidth }: ExcerptMetrics,
+): { paragraphs: string[][]; truncated: boolean } {
+  const room = Math.max(capacity, 0);
+  const wrapped = paragraphs.map((text) => wrap(context, text, maxWidth));
+
+  const taken: string[][] = [];
+  let used = 0;
+
+  for (const lines of wrapped) {
+    const cost = (taken.length > 0 ? gap : 0) + lines.length * line;
+    if (used + cost > room) break;
+    taken.push(lines);
+    used += cost;
+  }
+
+  if (taken.length === wrapped.length) return { paragraphs: taken, truncated: false };
+
+  const spare = room - used - (taken.length > 0 ? gap : 0);
+  const tail = sentences(context, wrapped[taken.length], Math.floor(spare / line), maxWidth);
+  const block = tail.length >= MIN_CUT_LINES ? [...taken, tail] : taken;
+
+  return { paragraphs: marked(block), truncated: true };
 }
 
 export function loadImage(src: string) {

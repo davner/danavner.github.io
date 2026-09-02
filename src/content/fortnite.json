@@ -1,7 +1,7 @@
 {
   "name": "danwiththeyams",
   "accountId": "c8d91b5d775c424faaca60ccb06765b6",
-  "fetched": "2026-09-01",
+  "fetched": "2026-09-02",
   "lifetime": {
     "overall": {
       "matches": 3815,
@@ -81,7 +81,7 @@
     {
       "key": "ch7-s4",
       "first": "2026-08-20",
-      "fetched": "2026-09-01",
+      "fetched": "2026-09-02",
       "source": "fortnite-api",
       "stats": {
         "overall": {

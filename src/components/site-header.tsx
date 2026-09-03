@@ -1,5 +1,5 @@
 import { Menu } from "lucide-react";
-import { useState } from "react";
+import { type PointerEvent, useState } from "react";
 import { NavLink, useLocation } from "react-router";
 
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -49,6 +49,26 @@ const BAR_ITEM = cn(
   "relative flex h-full flex-row items-center gap-1.5 rounded-none px-1.5 transition-colors sm:px-3",
   "bg-transparent! hover:bg-transparent! focus:bg-transparent! data-[state=open]:bg-transparent!",
 );
+
+/**
+ * What makes the collections panel a click rather than a hover.
+ *
+ * Radix drives a navigation menu from the pointer: moving over a trigger opens
+ * it, leaving either the trigger or the panel starts a close timer. A panel
+ * that expands because the pointer crossed the bar on its way to the theme
+ * toggle is a panel nobody asked for, so both directions are refused here and
+ * the button behaves like a button.
+ *
+ * Refused rather than replaced. `composeEventHandlers` runs the consumer's
+ * handler first and skips Radix's own once the event is defaulted, which is
+ * what lets the rest of the primitive stand - the click still toggles, Escape
+ * and a press outside still dismiss, a link still closes the panel behind it,
+ * and the roles, the focus order and `aria-expanded` are all still Radix's.
+ */
+const CLICK_TO_OPEN = {
+  onPointerMove: (event: PointerEvent) => event.preventDefault(),
+  onPointerLeave: (event: PointerEvent) => event.preventDefault(),
+};
 
 function ActiveRule({ on }: { on: boolean }) {
   return (
@@ -108,7 +128,10 @@ export function SiteHeader() {
                 <NavigationMenuItem key={entry.label} className="flex">
                   {/* The trigger draws its own chevron, already rotating on
                       open, so this passes only the label. */}
-                  <NavigationMenuTrigger className={cn(BAR_ITEM, "cursor-pointer")}>
+                  <NavigationMenuTrigger
+                    className={cn(BAR_ITEM, "cursor-pointer")}
+                    {...CLICK_TO_OPEN}
+                  >
                     <span
                       className={cn(
                         "readout transition-colors",
@@ -125,7 +148,10 @@ export function SiteHeader() {
                   {/* `rounded-none!` for the same reason: the panel's radius
                       arrives through a `group-data-[viewport=false]` variant
                       that out-specifies a plain utility. Nothing here is round. */}
-                  <NavigationMenuContent className="rounded-none! border-border p-0">
+                  <NavigationMenuContent
+                    className="rounded-none! border-border p-0"
+                    {...CLICK_TO_OPEN}
+                  >
                     <ul className="w-44">
                       {entry.items.map((item) => (
                         <li key={item.to} className="border-b border-border last:border-b-0">

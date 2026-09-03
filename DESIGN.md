@@ -463,7 +463,9 @@ hinting at it.
 - Mono uppercase labels at readout scale, grouped rather than listed flat once
   there are more than a handful. Hover lifts the one label it is on to the full
   foreground and leaves the rest alone; ember is kept for the route you are on,
-  which is marked. On small screens the nav collapses into a sheet.
+  which is marked. A group opens on a click, never on a hover, and closes on a
+  second click, on Escape, on a link, or on a press outside. On small screens
+  the nav collapses into a sheet.
 
 ### The Focus Ring
 

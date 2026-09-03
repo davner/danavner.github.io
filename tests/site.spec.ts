@@ -336,6 +336,40 @@ test.describe("the header", () => {
       ]);
     }
   });
+
+  test("the collections panel opens on a click rather than on a hover", async ({ page }) => {
+    /*
+     * Radix drives a navigation menu from the pointer, and a panel that drops
+     * open because the pointer crossed the bar on its way to the theme toggle
+     * is a panel nobody asked for. The waits are the point of the first half:
+     * what is being asserted is that nothing happens, and Radix's own delay
+     * before opening is 200ms.
+     */
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto("/");
+    await page.getByRole("heading", { level: 1 }).waitFor();
+
+    const trigger = page.locator("[data-slot=navigation-menu-trigger]").first();
+    const panel = page.locator("[data-slot=navigation-menu-content]");
+
+    await trigger.hover();
+    await page.waitForTimeout(500);
+    await expect(panel, "hovering the trigger expanded it").toHaveCount(0);
+    await expect(trigger).toHaveAttribute("aria-expanded", "false");
+
+    await trigger.click();
+    await expect(panel).toBeVisible();
+
+    // The other half of the same decision. A panel opened on purpose does not
+    // belong to the pointer any more, so wandering off does not take it away -
+    // it closes on a second click, on Escape, on a link, or on a press outside.
+    await page.getByRole("heading", { level: 1 }).hover();
+    await page.waitForTimeout(500);
+    await expect(panel, "the panel closed when the pointer left it").toBeVisible();
+
+    await trigger.click();
+    await expect(panel).toHaveCount(0);
+  });
 });
 
 test.describe("theme", () => {

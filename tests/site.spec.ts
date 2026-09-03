@@ -279,6 +279,63 @@ test.describe("the header", () => {
     expect(bar.short, `the bar is ${bar.tall}px and these do not fill it`).toEqual([]);
     expect(bar.rules).toEqual([]);
   });
+
+  test("hovering one bar item lights only that one", async ({ page, isMobile }) => {
+    // The mobile project emulates a touch device, where there is no hover to
+    // measure - the bar is laid out at a desktop width here either way.
+    test.skip(!!isMobile, "a touch context has no hover state");
+
+    /*
+     * `group-hover:` matches any ancestor carrying the class, and Radix's own
+     * list carries a bare `group`. Spelled unnamed on a bar item it therefore
+     * reached every label in the bar at once, so pointing at Blog lit Now,
+     * About, Career and Hobbies with it and the bar stopped saying which one
+     * the pointer was on.
+     *
+     * The comparison is against each label's own resting colour rather than
+     * against a literal, so it holds when the palette moves.
+     */
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto("/");
+    await page.getByRole("heading", { level: 1 }).waitFor();
+    await freezeTransitions(page);
+
+    const labels = () =>
+      page.evaluate(() =>
+        [
+          ...document.querySelectorAll(
+            "header [data-slot=navigation-menu-link], header [data-slot=navigation-menu-trigger]",
+          ),
+        ]
+          .filter((item) => (item as HTMLElement).offsetParent !== null)
+          .map((item) => {
+            // The label is the first span in a bar item; the marker rule and
+            // the trigger's chevron follow it.
+            const label = item.querySelector("span")!;
+            return { name: (label.textContent ?? "").trim(), color: getComputedStyle(label).color };
+          }),
+      );
+
+    const resting = await labels();
+    expect(resting.length, "the bar rendered nothing to hover").toBeGreaterThan(1);
+
+    for (let index = 0; index < resting.length; index++) {
+      const item = page
+        .locator(
+          "header [data-slot=navigation-menu-link], header [data-slot=navigation-menu-trigger]",
+        )
+        .nth(index);
+      await item.hover();
+
+      const lit = (await labels())
+        .filter((label, at) => label.color !== resting[at].color)
+        .map((label) => label.name);
+
+      expect(lit, `hovering ${resting[index].name} changed these labels`).toEqual([
+        resting[index].name,
+      ]);
+    }
+  });
 });
 
 test.describe("theme", () => {

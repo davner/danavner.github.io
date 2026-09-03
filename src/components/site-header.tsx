@@ -24,6 +24,15 @@ import { isGroup, SECTIONS, type Section } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 /**
+ * The group a bar item's label watches for hover. Named rather than bare,
+ * because `group-hover:` matches any ancestor carrying the class and
+ * `NavigationMenuList` carries a bare `group` of its own - so an unnamed one
+ * here lit every label in the bar at once the moment the pointer entered any of
+ * them, which read as the whole nav responding to a hover over one item.
+ */
+const BAR_GROUP = "group/bar-item";
+
+/**
  * A top-level bar item: mono label with the ember rule on the header's edge.
  *
  * The trailing `!` on the backgrounds is doing real work. `navigationMenuTriggerStyle`
@@ -33,10 +42,11 @@ import { cn } from "@/lib/utils";
  * so the accent has to be turned off rather than merely overridden.
  */
 const BAR_ITEM = cn(
+  BAR_GROUP,
   // `flex-row` is stated rather than left to the default: `NavigationMenuLink`'s
   // own base sets `flex-col`, and a direction is not a display, so merging the
   // two class strings keeps both.
-  "group relative flex h-full flex-row items-center gap-1.5 rounded-none px-1.5 transition-colors sm:px-3",
+  "relative flex h-full flex-row items-center gap-1.5 rounded-none px-1.5 transition-colors sm:px-3",
   "bg-transparent! hover:bg-transparent! focus:bg-transparent! data-[state=open]:bg-transparent!",
 );
 
@@ -104,7 +114,7 @@ export function SiteHeader() {
                         "readout transition-colors",
                         entry.items.some((item) => isOn(item.to))
                           ? "text-foreground"
-                          : "text-muted-foreground group-hover:text-foreground",
+                          : "text-muted-foreground group-hover/bar-item:text-foreground",
                       )}
                     >
                       {entry.label}
@@ -160,7 +170,7 @@ export function SiteHeader() {
                               "readout transition-colors",
                               isActive
                                 ? "text-foreground"
-                                : "text-muted-foreground group-hover:text-foreground",
+                                : "text-muted-foreground group-hover/bar-item:text-foreground",
                             )}
                           >
                             {entry.label}

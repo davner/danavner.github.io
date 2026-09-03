@@ -3,6 +3,38 @@
   "fetched": "2026-09-03",
   "albums": [
     {
+      "date": "2026-09-03",
+      "slug": "2026-09-03-games-that-we-play",
+      "artist": "Games",
+      "album": "That We Play",
+      "year": 2010,
+      "yearIsPressing": false,
+      "genre": "chillwave",
+      "source": "Rec",
+      "from": "Nick K.",
+      "score": 3.25,
+      "shelf": "Respect",
+      "standout": {
+        "name": "Strawberry Skies",
+        "id": ""
+      },
+      "skip": {
+        "name": "Planet Party",
+        "id": ""
+      },
+      "take": "\"That We Can Play\" feels like getting dropped somewhere between Blue Planet and an old PlayStation. I loved the whimsy of the opening and darker ending, even if the middle lost some of that magic.",
+      "review": "I had never heard of Games, and I honestly had no idea what to expect from a recommendation from Nick K.\n\nBut as soon as “Strawberry Skies” came on, I knew listening to this album anywhere other than a dimly lit room with the lamps on for vibes would not do it justice.\n\nI loved the introduction. It brought back memories of playing Nicolas Jaar mixes while watching Planet Earth in college. The trickling water, the muted voice, and the xylophone-like rhythm transported me somewhere else almost immediately.\n\n“Midi Drift” kept that feeling going, drifting me off into synthwave land with a little chiptune mixed in. I had a blast with that one.\n\n“Shadows in Bloom” had some great moments too, but this is where the album started losing me a little. The beginning had this whimsy and uniqueness to it where all the clashing sounds and sudden switch-ups somehow flowed perfectly. As it went on, though, everything started feeling busier. There were so many noises happening at once that some of the songs began to blur together.\n\nIt was not bad. It just did not feel as effortless or distinct as those first few tracks.\n\nAfter such a strong start, I started losing the vision of what the rest of the album was trying to do.\n\nThen I heard the familiar sound of the PlayStation booting up, followed by that huge crescendo, and suddenly I was back in.\n\nThe closing Gatekeeper remix of “Strawberry Skies” takes the song somewhere completely different from the original. It is darker, heavier, and lowkey feels like it belongs in Far Cry: Blood Dragon, which I absolutely mean as a compliment.\n\nOverall, I enjoyed this album. I could easily see myself putting it on in the background while debugging some coding issue or designing a user interface. And if I ever find myself watching Planet Earth again, or, even more fittingly, Blue Planet, I know what I’m putting on.",
+      "tags": [
+        "vibin",
+        "coding",
+        "nostalgic"
+      ],
+      "later": null,
+      "spotifyId": "2ZDiVSqDHurIf3gj2oa3zd",
+      "url": "https://open.spotify.com/album/2ZDiVSqDHurIf3gj2oa3zd",
+      "cover": "/img/dan-fm/2ZDiVSqDHurIf3gj2oa3zd.webp"
+    },
+    {
       "date": "2026-09-02",
       "slug": "2026-09-02-system-of-a-down-hypnotize",
       "artist": "System of a Down",
@@ -29,7 +61,7 @@
         "grower",
         "gym"
       ],
-      "later": null,
+      "later": 4,
       "spotifyId": "3QxX3NbWyLlLG6lP1xveL3",
       "url": "https://open.spotify.com/album/3QxX3NbWyLlLG6lP1xveL3",
       "cover": "/img/dan-fm/3QxX3NbWyLlLG6lP1xveL3.webp"
@@ -61,7 +93,7 @@
         "nostalgic",
         "background"
       ],
-      "later": null,
+      "later": 1,
       "spotifyId": "0jWzcec3ugHZoQpogj6PrD",
       "url": "https://open.spotify.com/album/0jWzcec3ugHZoQpogj6PrD",
       "cover": "/img/dan-fm/0jWzcec3ugHZoQpogj6PrD.webp"

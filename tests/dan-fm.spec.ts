@@ -1054,6 +1054,46 @@ test.describe("the mixtape", () => {
     expect(mixtape()).toEqual(mixtape(albums));
   });
 
+  test("a second reading that clears the bar puts the album on the tape", async () => {
+    /*
+     * The whole point of logging a second score. A record that grew on me is
+     * one I would put on a tape, and reading the first score here meant that
+     * second thought could be typed into the sheet and change nothing anyone
+     * could see.
+     */
+    const { mixtape, MIXTAPE_SCORE } = await danFm();
+
+    const kept = mixtape([
+      { slug: "grew-on-me", score: MIXTAPE_SCORE - 1, later: MIXTAPE_SCORE } as Album,
+    ]);
+
+    expect(kept.map((album) => album.slug)).toEqual(["grew-on-me"]);
+  });
+
+  test("a second reading under the bar takes the album off the tape", async () => {
+    /*
+     * The same rule in the direction that is easier to leave out. A promotion
+     * and a demotion are one act of changing my mind, and a tape that took the
+     * second reading only when it flattered the record would be a tape of
+     * whichever number was kinder.
+     */
+    const { mixtape, MIXTAPE_SCORE } = await danFm();
+
+    expect(
+      mixtape([{ slug: "talked-myself-into-it", score: 5, later: MIXTAPE_SCORE - 0.5 } as Album]),
+    ).toEqual([]);
+  });
+
+  test("no second reading leaves the first one standing", async () => {
+    // The ordinary row, and the one every other case here is written on: an
+    // album nobody scored twice is still on the tape on the score it has.
+    const { mixtape, MIXTAPE_SCORE } = await danFm();
+
+    const kept = mixtape([{ slug: "a", score: MIXTAPE_SCORE, later: null } as Album]);
+
+    expect(kept.map((album) => album.slug)).toEqual(["a"]);
+  });
+
   test("an album with no favourite track still makes the tape", async () => {
     /*
      * Gated on the score alone, which is the only field every row has. Gating
@@ -1429,6 +1469,25 @@ test.describe("the archive's score bands", () => {
     expect(keepers?.label, "the top pill advertises a bar the tape does not take").toBe(
       `${MIXTAPE_SCORE} and up`,
     );
+  });
+
+  test("a band is drawn on the standing score, so it cannot hide what the tape plays", async () => {
+    /*
+     * Both halves of the pill on one album: the count behind it and the rows it
+     * leaves standing. A band still reading the first score would offer a "4
+     * and up" filter that answered with nothing while the tape above it played
+     * the promoted album - the reconciliation the bar exists to avoid.
+     */
+    const { bandsFor, filterAlbums, mixtape, ALL, FILTER_KEYS, MIXTAPE_SCORE } = await danFm();
+
+    const grew = filed({ slug: "grew-on-me", score: MIXTAPE_SCORE - 1, later: MIXTAPE_SCORE });
+    const log = [grew, filed({ slug: "middling", score: MIXTAPE_SCORE - 1 })];
+
+    expect(bandsFor(log).find((band) => band.id === "keepers")?.count).toBe(1);
+    expect(
+      filterAlbums(log, set({ ALL, FILTER_KEYS }, { score: "keepers" })).map((album) => album.slug),
+    ).toEqual(["grew-on-me"]);
+    expect(mixtape(log).map((album) => album.slug)).toEqual(["grew-on-me"]);
   });
 });
 

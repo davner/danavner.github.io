@@ -130,14 +130,32 @@ export function todaysAlbum(now?: Date): Album | undefined {
 export const MIXTAPE_SCORE = 4;
 
 /**
+ * Where an album stands now: the second reading where living with the record
+ * changed the verdict, and the first everywhere else.
+ *
+ * A record that grew on me is one I would put on a tape, and one I talked
+ * myself into is not - so the two surfaces that ask whether an album is a
+ * keeper, the mixtape and the archive's top band, both read this rather than
+ * `score`. Reading `score` there meant a second thought could be typed into the
+ * sheet and change nothing anybody could see.
+ *
+ * It replaces the first reading rather than joining it. A promotion and a
+ * demotion are the same act of changing my mind, so an album that fell to a 2
+ * leaves the tape by the same rule that a 4 puts it on.
+ */
+export function standingScore(album: Pick<Album, "score" | "later">): number {
+  return album.later ?? album.score;
+}
+
+/**
  * The keepers, newest first.
  *
- * Gated on the score alone, which is the only field every row has - an entry
- * that scored well without a favourite track named still belongs on the tape,
- * and the section renders it without one.
+ * Gated on where the album stands and on nothing else - an entry that scored
+ * well without a favourite track named still belongs on the tape, and the
+ * section renders it without one.
  */
 export function mixtape(list: Album[] = albums): Album[] {
-  return list.filter((entry) => entry.score >= MIXTAPE_SCORE);
+  return list.filter((entry) => standingScore(entry) >= MIXTAPE_SCORE);
 }
 
 /**
@@ -250,10 +268,13 @@ export function statsFor(list: Album[]): DanFmStats {
  * Four boards of bars and one line, every one of them read off the same
  * committed payload the archive filters.
  *
- * All of them count `score` and none of them counts `later`. A row can carry a
- * second score, and a board that quietly preferred it would be averaging one
- * number for those albums and a different one for the rest. What living with a
- * record did to it is printed beside the record, where both figures are shown.
+ * All of them count `score` and none of them counts `standingScore`. A board
+ * that quietly preferred the second reading would be averaging one number for
+ * the handful of rows that carry it and a different one for the rest, and the
+ * question a board asks is what a genre or a recommender is worth on first
+ * listen. What living with a record did to it is printed beside the record,
+ * where both figures are shown, and it decides the two surfaces that ask
+ * whether an album is a keeper.
  */
 
 /**
@@ -633,8 +654,11 @@ export interface ScoreBand {
  *
  * The top one is the mixtape's bar rather than a figure of its own, so the two
  * surfaces cut the scale in the same place instead of at two nearby numbers a
- * reader has to reconcile. Both labels below it are written from the constants,
- * so a moved bar cannot leave a pill advertising where it used to be.
+ * reader has to reconcile. That holds on both halves of the bar: they are given
+ * the same `standingScore`, so filtering to the top band cannot hide an album
+ * the tape below it is playing. Both labels below it are written from the
+ * constants, so a moved bar cannot leave a pill advertising where it used to
+ * be.
  */
 const SCORE_BANDS: readonly ScoreBand[] = [
   { id: "keepers", label: `${MIXTAPE_SCORE} and up`, holds: (score) => score >= MIXTAPE_SCORE },
@@ -657,7 +681,7 @@ export interface BandTally extends ScoreBand {
 export function bandsFor(list: Album[]): BandTally[] {
   const held = SCORE_BANDS.map((band) => ({
     ...band,
-    count: list.filter((album) => band.holds(album.score)).length,
+    count: list.filter((album) => band.holds(standingScore(album))).length,
   })).filter((band) => band.count > 0);
 
   return narrows(held, list.length) ? held : [];
@@ -692,7 +716,7 @@ export function filterAlbums(list: Album[], selection: Selection): Album[] {
       FACET_IDS.every(
         (id) => selection[id] === ALL || valuesOf(album, id).includes(selection[id]),
       ) &&
-      (band === undefined || band.holds(album.score)),
+      (band === undefined || band.holds(standingScore(album))),
   );
 }
 

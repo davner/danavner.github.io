@@ -648,7 +648,7 @@ function asLogDate(value: unknown): string | null {
  * is hand-typed and often left out.
  *
  * Unreadable values are `null` too, and that is the deliberate difference from
- * `asHalfStep`, which fails the build on the same input. A score is what the
+ * `asQuarterStep`, which fails the build on the same input. A score is what the
  * entry is for and a wrong one is worth stopping the build over; a year is a
  * detail the log routinely omits, so one cell nobody can read drops out rather
  * than holding the site at its last payload until someone edits a sheet. What
@@ -671,23 +671,23 @@ function asYear(value: unknown): number | null {
 const DAN_FM_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 /**
- * A score the log can hold, or `null` for anything else: a half step from 1 to
- * `MAX_RATING`, written as a number or as the digits of one. The page draws the
- * score as a fractional fill, so a 3.7 would settle silently at a position the
- * scale does not offer rather than say anything about itself.
+ * A score the log can hold, or `null` for anything else: a quarter step from 1
+ * to `MAX_RATING`, written as a number or as the digits of one. The page draws
+ * the score as a fractional fill, so a 3.7 would settle silently at a position
+ * the scale does not offer rather than say anything about itself.
  *
  * The type check is not ceremony in front of `Number`. `true` and `[1]` both
  * coerce to a clean 1, and a payload holding either is a write that went wrong
  * rather than a record anyone scored - which is the whole class of damage this
  * guard exists to catch.
  */
-function asHalfStep(value: unknown): number | null {
+function asQuarterStep(value: unknown): number | null {
   if (typeof value !== "number" && typeof value !== "string") return null;
 
   const score = Number(value);
   if (!Number.isFinite(score) || score < 1 || score > MAX_RATING) return null;
 
-  return (score * 2) % 1 === 0 ? score : null;
+  return (score * 4) % 1 === 0 ? score : null;
 }
 
 /**
@@ -829,9 +829,9 @@ export function readDanFm(root: string, publicDir: string, seed: SeedRule) {
     if (!album) fail(`${at} has no \`album\``);
 
     const score =
-      asHalfStep(entry.score) ??
+      asQuarterStep(entry.score) ??
       fail(
-        `${at} needs a \`score\` of 1 to ${MAX_RATING} in half steps, not ${JSON.stringify(entry.score)}`,
+        `${at} needs a \`score\` of 1 to ${MAX_RATING} in quarter steps, not ${JSON.stringify(entry.score)}`,
       );
 
     // A second score after living with the record for a while. Absent is the
@@ -839,9 +839,9 @@ export function readDanFm(root: string, publicDir: string, seed: SeedRule) {
     const later =
       entry.later == null
         ? null
-        : (asHalfStep(entry.later) ??
+        : (asQuarterStep(entry.later) ??
           fail(
-            `${at} needs a \`later\` of 1 to ${MAX_RATING} in half steps, not ${JSON.stringify(entry.later)}`,
+            `${at} needs a \`later\` of 1 to ${MAX_RATING} in quarter steps, not ${JSON.stringify(entry.later)}`,
           ));
 
     // A cover path pointing at nothing would ship as a broken tile, exactly

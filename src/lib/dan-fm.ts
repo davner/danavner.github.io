@@ -46,7 +46,7 @@ export interface Album {
   source: string;
   /** Who recommended it. "" when it was my own pick. */
   from: string;
-  /** 1 to 5 in half steps. */
+  /** 1 to 5 in quarter steps. */
   score: number;
   /** Where it ended up afterwards, as typed - free text, like `source`. */
   shelf: string;
@@ -612,8 +612,8 @@ export function facetsFor(list: Album[]): Facet[] {
   }).filter((facet) => narrows(facet.options, list.length));
 }
 
-/** Scores are recorded in half steps, so one band tops out a step under the next. */
-const HALF_STEP = 0.5;
+/** Scores are recorded in quarter steps, so one band tops out a step under the next. */
+const SCORE_STEP = 0.25;
 
 /**
  * The archive's lower cut, the middle of a 1-to-5 scale. At or above it a
@@ -640,7 +640,7 @@ const SCORE_BANDS: readonly ScoreBand[] = [
   { id: "keepers", label: `${MIXTAPE_SCORE} and up`, holds: (score) => score >= MIXTAPE_SCORE },
   {
     id: "middling",
-    label: `${MIDDLING_SCORE} to ${MIXTAPE_SCORE - HALF_STEP}`,
+    label: `${MIDDLING_SCORE} to ${MIXTAPE_SCORE - SCORE_STEP}`,
     holds: (score) => score >= MIDDLING_SCORE && score < MIXTAPE_SCORE,
   },
   { id: "low", label: `Under ${MIDDLING_SCORE}`, holds: (score) => score < MIDDLING_SCORE },

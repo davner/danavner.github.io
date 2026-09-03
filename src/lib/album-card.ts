@@ -232,9 +232,10 @@ export async function renderAlbumCard(album: Album): Promise<Card> {
 
   /*
    * The score, drawn the way the page draws it: a full row of stars dimmed to
-   * a track, and the same row over it clipped to the fraction scored. Half the
-   * log's scores are half steps, so a row rounded to whole stars would print
-   * four for a 3.5 and leave the number beside it arguing with the picture.
+   * a track, and the same row over it clipped to the fraction scored. Most of
+   * the log's scores land between whole stars, so a row rounded to whole stars
+   * would print four for a 3.5 and leave the number beside it arguing with the
+   * picture.
    */
   context.font = "400 56px system-ui, sans-serif";
   const row = STAR.repeat(MAX_SCORE);

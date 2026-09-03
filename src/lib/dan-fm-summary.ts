@@ -30,7 +30,7 @@ export interface AlbumLike {
   score: number;
 }
 
-/** The top of the scale, in half steps from 1. */
+/** The top of the scale, in quarter steps from 1. */
 export const MAX_SCORE = 5;
 
 /** "Julien Baker - Little Oblivions", for a heading or a share sheet title. */

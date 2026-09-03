@@ -447,13 +447,24 @@ test.describe("a half-succeeded fetch fails the build", () => {
     expect(buildError({ log: doc([row({ album: "   " })]) })).toMatch(/has no `album`/);
   });
 
-  test("a score off the half-step grid fails the build", () => {
+  test("a score off the quarter-step grid fails the build", () => {
     /*
      * The page draws the score as a fractional fill, so a 3.7 would settle
      * silently at a position the scale does not offer rather than say anything
      * about itself.
      */
     expect(buildError({ log: doc([row({ score: 3.7 })]) })).toMatch(/needs a `score`/);
+  });
+
+  test("a quarter step is a score the build takes", () => {
+    /*
+     * The grid the sheet is scored on. Every other row in this file files a
+     * whole number, so a validator still pinned to half steps would satisfy all
+     * of them and refuse the log the moment a real score landed here.
+     */
+    const log = loadLog({ log: doc([row({ score: 4.25, later: 3.75 })]) });
+
+    expect(log.albums[0]).toMatchObject({ score: 4.25, later: 3.75 });
   });
 
   test("a score under the bottom of the scale fails the build", () => {

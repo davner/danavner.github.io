@@ -238,15 +238,15 @@ function cell(row, column) {
 }
 
 /**
- * A score the scale can hold, or `null`: a half step from 1 to `MAX_SCORE`.
+ * A score the scale can hold, or `null`: a quarter step from 1 to `MAX_SCORE`.
  * The page draws a score as a fractional fill, so a 3.7 would settle silently
  * at a position the scale does not offer rather than say anything about itself.
  */
-function asHalfStep(text) {
+function asQuarterStep(text) {
   const score = Number(text);
   if (!Number.isFinite(score) || score < 1 || score > MAX_SCORE) return null;
 
-  return (score * 2) % 1 === 0 ? score : null;
+  return (score * 4) % 1 === 0 ? score : null;
 }
 
 /** A name reduced to the characters a URL segment may hold. */
@@ -437,13 +437,13 @@ function collectAlbums(rows, today) {
     if (!album) problems.push(`${at}: no Album.`);
 
     const scoreText = cell(record, "Score");
-    const score = asHalfStep(scoreText);
+    const score = asQuarterStep(scoreText);
     if (!scoreText) {
       problems.push(
         `${at}: no Score. An album in the log is one that has been listened to and rated.`,
       );
     } else if (score === null) {
-      problems.push(`${at}: Score "${scoreText}" is not a half step from 1 to ${MAX_SCORE}.`);
+      problems.push(`${at}: Score "${scoreText}" is not a quarter step from 1 to ${MAX_SCORE}.`);
     }
 
     // A second reading after living with the record. Blank is the ordinary
@@ -451,9 +451,9 @@ function collectAlbums(rows, today) {
     // the scale is a typo worth stopping for rather than dropping: nothing
     // downstream would ever say it had been ignored.
     const laterText = cell(record, "Later");
-    const later = laterText ? asHalfStep(laterText) : null;
+    const later = laterText ? asQuarterStep(laterText) : null;
     if (laterText && later === null) {
-      problems.push(`${at}: Later "${laterText}" is not a half step from 1 to ${MAX_SCORE}.`);
+      problems.push(`${at}: Later "${laterText}" is not a quarter step from 1 to ${MAX_SCORE}.`);
     }
 
     // Everything from "?" on is Spotify's share tracking, and it is not part of

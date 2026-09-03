@@ -839,7 +839,7 @@ test.describe("reading the header", () => {
 
     expect(stderr).toContain("the sheet has 2 problems");
     expect(stderr).toContain("line 3: no Score.");
-    expect(stderr).toContain(`line 4: Score "9" is not a half step from 1 to ${MAX_SCORE}`);
+    expect(stderr).toContain(`line 4: Score "9" is not a quarter step from 1 to ${MAX_SCORE}`);
   });
 
   test("a row wider than the header drops what has no column name", async () => {
@@ -958,30 +958,41 @@ test.describe("rows the log cannot take", () => {
     expect(stderr).toContain("line 2: no Score.");
   });
 
-  test("a score off the half-step grid is refused", async () => {
+  test("a score off the quarter-step grid is refused", async () => {
     // The page draws a score as a fractional fill, so 3.7 would settle at a
     // position the scale does not offer rather than say anything about itself.
     const stderr = await refusal({ body: sheet(row({ Score: "3.7" })) });
 
-    expect(stderr).toContain(`Score "3.7" is not a half step from 1 to ${MAX_SCORE}`);
+    expect(stderr).toContain(`Score "3.7" is not a quarter step from 1 to ${MAX_SCORE}`);
+  });
+
+  test("a quarter step is a score the log takes", async () => {
+    /*
+     * The grid the sheet is scored on, in both columns that hold a score. Every
+     * other row here scores a whole number, so a job still pinned to half steps
+     * would take every one of them and refuse the sheet as it is now written.
+     */
+    const payload = await wrote({ body: sheet(row({ Score: "4.25", Later: "3.75" })) });
+
+    expect(payload.albums[0]).toMatchObject({ score: 4.25, later: 3.75 });
   });
 
   test("a score over the top of the scale is refused", async () => {
     const stderr = await refusal({ body: sheet(row({ Score: String(MAX_SCORE + 0.5) })) });
 
-    expect(stderr).toContain(`is not a half step from 1 to ${MAX_SCORE}`);
+    expect(stderr).toContain(`is not a quarter step from 1 to ${MAX_SCORE}`);
   });
 
   test("a score under the bottom of the scale is refused", async () => {
     const stderr = await refusal({ body: sheet(row({ Score: "0.5" })) });
 
-    expect(stderr).toContain(`is not a half step from 1 to ${MAX_SCORE}`);
+    expect(stderr).toContain(`is not a quarter step from 1 to ${MAX_SCORE}`);
   });
 
   test("a score that is not a number is refused", async () => {
     const stderr = await refusal({ body: sheet(row({ Score: "great" })) });
 
-    expect(stderr).toContain('Score "great" is not a half step');
+    expect(stderr).toContain('Score "great" is not a quarter step');
   });
 
   test("the ends of the scale are scores the log takes", async () => {
@@ -1005,7 +1016,7 @@ test.describe("rows the log cannot take", () => {
      */
     const stderr = await refusal({ body: sheet(row({ Later: "0" })) });
 
-    expect(stderr).toContain(`Later "0" is not a half step from 1 to ${MAX_SCORE}`);
+    expect(stderr).toContain(`Later "0" is not a quarter step from 1 to ${MAX_SCORE}`);
   });
 
   test("a link that is not an album is refused", async () => {

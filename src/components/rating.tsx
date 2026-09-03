@@ -41,8 +41,11 @@ export function Rating({
   const clamped = Math.min(Math.max(value, 0), MAX_RATING);
   // Rounded once and used for both the label and the bar, so the fill always
   // shows exactly what the accessible label claims. An average like 4.6667
-  // reads as 4.7 and is drawn as 4.7, not as two different numbers.
-  const shown = Number(clamped.toFixed(1));
+  // reads as 4.67 and is drawn as 4.67, not as two different numbers. Two
+  // places rather than one because `/dan-fm` scores in quarter steps and prints
+  // the number beside this row: at one place the label would name 4.3 next to a
+  // visible 4.25.
+  const shown = Number(clamped.toFixed(2));
   const percent = (shown / MAX_RATING) * 100;
   // Trailing zeros look like false precision on a hand-kept log: 4, not 4.0.
   const label = `${shown} out of ${MAX_RATING}`;

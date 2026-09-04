@@ -31,3 +31,8 @@ src/content/now/*.md
 # Auto-generated, and the repo's own rule is never to hand-edit it.
 CHANGELOG.md
 package-lock.json
+
+# Local cache the impeccable design hook rewrites on its own schedule; it is
+# excluded from git in .git/info/exclude and formatting it is a fight with
+# the hook, same as the nightly JSON above.
+.impeccable/hook.cache.json

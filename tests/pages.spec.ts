@@ -133,6 +133,23 @@ test.describe("a real page per route", () => {
     }
   });
 
+  test("each page carries one theme-color meta, defaulting dark", () => {
+    // Exactly one, because the pre-paint script re-stamps this single meta for
+    // the resolved theme - a media-qualified pair would fight it. The content
+    // is the dark hex so a no-JS visitor's chrome matches the dark-baked
+    // markup whatever their OS preference.
+    for (const file of [path.join(DIST, "index.html"), ...SECTIONS.map(fileFor)]) {
+      const html = read(file);
+      const name = path.basename(file);
+
+      expect(
+        html.match(/<meta\s+name="theme-color"/g),
+        `${name} pairs the theme-color meta`,
+      ).toHaveLength(1);
+      expect(metaFrom(html)("theme-color"), `${name} defaults the chrome off dark`).toBe("#0a0c12");
+    }
+  });
+
   test("no generated page preloads the home page's hero", () => {
     // The home page's largest contentful paint, and 47 kB nobody else asked
     // for. `index.html` is the only file Pages serves at "/".

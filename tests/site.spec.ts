@@ -388,6 +388,26 @@ test.describe("theme", () => {
     await page.reload();
     expect(await isDark()).toBe(false);
   });
+
+  // The hex pair here pins the one in `src/lib/theme.ts` and the pre-paint
+  // script in `index.html`, which duplicate it because the script cannot
+  // import the module.
+  test("the browser chrome follows the toggle", async ({ page }) => {
+    await page.goto("/");
+    await page.emulateMedia({ colorScheme: "dark" });
+    await page.reload();
+    const chrome = () =>
+      page.evaluate(() =>
+        document.querySelector('meta[name="theme-color"]')?.getAttribute("content"),
+      );
+    expect(await chrome()).toBe("#0a0c12");
+
+    await page.getByRole("button", { name: /Switch to light mode/ }).click();
+    expect(await chrome()).toBe("#f6f3ed");
+
+    await page.getByRole("button", { name: /Switch to dark mode/ }).click();
+    expect(await chrome()).toBe("#0a0c12");
+  });
 });
 
 test.describe("blog", () => {

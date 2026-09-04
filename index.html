@@ -61,6 +61,12 @@
           var dark = stored ? stored === "dark" : prefersDark;
           document.documentElement.classList.toggle("dark", dark);
           document.documentElement.style.colorScheme = dark ? "dark" : "light";
+          // The hex pair lives here and in THEME_COLOR in src/lib/theme.ts,
+          // which this script cannot import. Dark is the shipped chrome value;
+          // light is the newsprint background token.
+          document
+            .querySelector('meta[name="theme-color"]')
+            ?.setAttribute("content", dark ? "#0a0c12" : "#f6f3ed");
         } catch (e) {
           /* localStorage unavailable - fall back to the dark default in the markup. */
         }

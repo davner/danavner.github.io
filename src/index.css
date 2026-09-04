@@ -806,6 +806,27 @@
     animation: none;
   }
 
+  /*
+   * The rating fill sweeps in like a needle finding its groove. The keyframe
+   * has no `to`: it resolves to the element's own inline width, so one rule
+   * serves every value. Riding `.group:hover` scopes it to surfaces that
+   * declare a group - the /shows rows - and degrades to nothing where none
+   * exists, rather than needing a per-surface switch. Hover-only by
+   * construction, and `ease-out` rather than the stamp: a needle decelerates,
+   * it does not stamp. Reduced motion collapses it to the jump.
+   */
+  @media (hover: hover) {
+    .group:hover [data-slot="rating-fill"] {
+      animation: rating-needle 120ms ease-out;
+    }
+  }
+
+  @keyframes rating-needle {
+    from {
+      width: 0;
+    }
+  }
+
   /* ---- Long-form -------------------------------------------------------- */
 
   .prose-dan {

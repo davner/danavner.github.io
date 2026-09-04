@@ -65,6 +65,9 @@ export function Rating({
       </span>
       <span
         aria-hidden
+        // The hook the needle sweep in `index.css` animates from zero; the
+        // inline width stays the single source of the value.
+        data-slot="rating-fill"
         className="absolute inset-y-0 left-0 overflow-hidden whitespace-nowrap"
         style={{ width: `${percent}%` }}
       >

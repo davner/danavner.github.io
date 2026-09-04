@@ -257,9 +257,21 @@
     font-size: 1.0625rem;
     font-synthesis-weight: none;
     text-rendering: optimizeLegibility;
+    /* The reader's own marks - the text caret and the native parts of form
+       controls - write in the hot ink, like the selection below. */
+    caret-color: var(--ember);
+    accent-color: var(--ember);
   }
 
   ::selection {
+    background: var(--ember);
+    color: var(--primary-foreground);
+  }
+
+  /* A shared text fragment (#:~:text=) is a mark a reader made, so it takes
+     the same ink as a selection. Its own rule: an unknown pseudo-element in a
+     selector list would invalidate the whole rule where it is unsupported. */
+  ::target-text {
     background: var(--ember);
     color: var(--primary-foreground);
   }
@@ -741,7 +753,9 @@
   }
 
   .prose-dan table {
-    @apply block w-full overflow-x-auto text-sm;
+    /* The one Inter surface whose digits sit in columns; every other data
+       figure is set in the mono or display face, which line up by nature. */
+    @apply block w-full overflow-x-auto text-sm tabular-nums slashed-zero;
   }
 
   .prose-dan thead {

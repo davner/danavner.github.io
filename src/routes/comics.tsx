@@ -113,7 +113,9 @@ function ComicTile({ entry }: { entry: ComicEntry }) {
        * part-filled row leaves empty cells, which render as a solid grey block.
        * Same fix as the filter pills.
        */
-      className="group relative flex flex-col bg-background shadow-[0_0_0_1px_var(--color-border)]"
+      /* `hover:z-10` because the slipped cover overlaps the tile above by the
+         2px it rises; without it the neighbour paints over the overlap. */
+      className="group relative flex flex-col bg-background shadow-[0_0_0_1px_var(--color-border)] hover:z-10"
     >
       <a
         href={entry.url}
@@ -134,7 +136,7 @@ function ComicTile({ entry }: { entry: ComicEntry }) {
             height={600}
             loading="lazy"
             decoding="async"
-            className="aspect-2/3 w-full object-cover transition-opacity group-hover:opacity-80"
+            className="aspect-2/3 w-full object-cover transition-[opacity,translate,rotate] duration-150 ease-stamp group-hover:opacity-80 motion-safe:group-hover:-translate-y-0.5 motion-safe:group-hover:rotate-[0.4deg]"
           />
         ) : (
           <div className="flex aspect-2/3 w-full items-center justify-center border-b border-border bg-card/40">

@@ -83,7 +83,9 @@ function RecordTile({ record }: { record: VinylRecord }) {
        * neighbouring tiles land their hairline on the same pixel and nothing is
        * painted where there is no tile. Same fix as the filter pills.
        */
-      className="group relative flex flex-col bg-background shadow-[0_0_0_1px_var(--color-border)]"
+      /* `hover:z-10` because the slipped cover overlaps the tile above by the
+         4px it rises; without it the neighbour paints over the overlap. */
+      className="group relative flex flex-col bg-background shadow-[0_0_0_1px_var(--color-border)] hover:z-10"
     >
       <a
         href={record.url}
@@ -104,7 +106,7 @@ function RecordTile({ record }: { record: VinylRecord }) {
             height={500}
             loading="lazy"
             decoding="async"
-            className="aspect-square w-full object-cover transition-opacity group-hover:opacity-80"
+            className="aspect-square w-full object-cover transition-[opacity,translate] duration-150 ease-stamp group-hover:opacity-80 motion-safe:group-hover:-translate-y-1"
           />
         ) : (
           <div className="flex aspect-square w-full items-center justify-center border-b border-border bg-card/40">

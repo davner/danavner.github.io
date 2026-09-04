@@ -732,6 +732,30 @@
     @apply my-10 border-l-2 border-ember pl-6 text-title leading-snug text-balance text-foreground italic sm:my-12 sm:pl-8;
   }
 
+  /*
+   * An editor's note over a stale post - the one blockquote that is not a pull
+   * quote. A hairline box at the small step, marked with a REMAINDERED stamp:
+   * the post is not rewritten, it is marked down. `blog-post.tsx` detects the
+   * convention; README's "Adding a blog post" states it.
+   */
+  .remainder-note {
+    @apply relative my-10 border border-border p-5 text-sm;
+  }
+
+  .remainder-note p + p {
+    @apply mt-2.5;
+  }
+
+  /*
+   * The stamp. Rotated a static two degrees - a stamp lands crooked, and it
+   * never moves - and inked in the foreground rather than ember, because a
+   * post page has already spent the hot-ink budget on its links and bullets.
+   * The page colour behind it is what stops the box's border striking through.
+   */
+  .remainder-stamp {
+    @apply readout absolute -top-2.5 right-4 -rotate-2 border border-foreground bg-background px-1.5 py-0.5 text-foreground;
+  }
+
   .prose-dan hr {
     @apply my-12 border-border;
   }

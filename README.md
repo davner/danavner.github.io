@@ -401,6 +401,16 @@ illustration inside it: they are validated like every other photo on the site an
 render in the same carousel, below the writing. The carousel itself is loaded on
 demand, so a post without photos never fetches it.
 
+A post overtaken by events gets a dated editor's note, never a rewrite: a
+blockquote opening `Editor's note, <date>.` renders as a remainder stamp - a
+hairline box with a rotated REMAINDERED mark - instead of the pull quote every
+other blockquote gets.
+
+```md
+> Editor's note, August 2026. The build this post describes has since been
+> replaced; the reasoning below still holds.
+```
+
 ---
 
 ## Adding a show

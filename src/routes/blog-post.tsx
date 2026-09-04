@@ -19,6 +19,32 @@ const PhotoCarousel = lazy(() =>
   import("@/components/photo-carousel").then((module) => ({ default: module.PhotoCarousel })),
 );
 
+/**
+ * The slice of a hast node these two functions read. Structural rather than
+ * imported: react-markdown hands its overrides hast, and `mdast-util-to-string`
+ * only walks mdast, so the text has to be gathered here - from three fields.
+ */
+interface HastNode {
+  type: string;
+  value?: string;
+  children?: HastNode[];
+}
+
+function textOf(node: HastNode | undefined): string {
+  if (!node) return "";
+  if (node.type === "text") return node.value ?? "";
+  return (node.children ?? []).map(textOf).join("");
+}
+
+/**
+ * Whether a blockquote opens with the editor's-note convention from README's
+ * "Adding a blog post". The curly apostrophe is folded in because the CMS is
+ * written from a phone, where the keyboard autocorrects the straight one.
+ */
+function isEditorsNote(node: HastNode | undefined): boolean {
+  return textOf(node).trimStart().replace("’", "'").startsWith("Editor's note");
+}
+
 export function BlogPost() {
   const { slug } = useParams();
   const post = getPost(slug);
@@ -92,6 +118,22 @@ export function BlogPost() {
                   {children}
                 </pre>
               ),
+              // A blockquote is a pull quote unless it opens "Editor's note":
+              // that one is a remainder stamp - a correction over a stale post,
+              // boxed small and marked, not a line worth stopping on set large.
+              blockquote: ({ node, children, ...props }) => {
+                if (!isEditorsNote(node)) return <blockquote {...props}>{children}</blockquote>;
+                return (
+                  <aside className="remainder-note" {...props}>
+                    {children}
+                    {/* Decoration: the note's own opening words carry the
+                        meaning, so the stamp is withheld from AT. */}
+                    <span aria-hidden className="remainder-stamp">
+                      Remaindered
+                    </span>
+                  </aside>
+                );
+              },
               a: ({ node, href, children, ...props }) => {
                 const external = href?.startsWith("http");
                 return (

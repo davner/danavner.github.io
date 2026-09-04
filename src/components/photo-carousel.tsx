@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   Carousel,
@@ -22,19 +22,40 @@ import { cn } from "@/lib/utils";
 export function PhotoCarousel({ photos, label }: { photos: Photo[]; label: string }) {
   const [api, setApi] = useState<CarouselApi>();
   const [active, setActive] = useState(0);
+  const frame = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
 
   useEffect(() => {
     if (!api) return;
 
     const sync = () => setActive(api.selectedScrollSnap());
+
+    /*
+     * The shutter blink: the frame dips and returns when a slide commits -
+     * button, arrow key, or drag snap alike. Its own listener rather than a
+     * branch in `sync`, which is also registered for "reInit" and runs at
+     * mount; the frame must blink only when the reader advances it. WAAPI
+     * rather than a CSS class, and that is the point under reduced motion:
+     * with the travel jumping (`duration: 0` below), this reader-triggered,
+     * sub-100ms, opacity-only cue is the one signal left that the frame
+     * advanced - the bound DESIGN.md's Allowlist Contract Rule names.
+     */
+    const blink = () => {
+      frame.current?.animate([{ opacity: 1 }, { opacity: 0.55 }, { opacity: 1 }], {
+        duration: 90,
+        easing: "ease-out",
+      });
+    };
+
     sync();
     api.on("select", sync);
     api.on("reInit", sync);
+    api.on("select", blink);
 
     return () => {
       api.off("select", sync);
       api.off("reInit", sync);
+      api.off("select", blink);
     };
   }, [api]);
 
@@ -73,7 +94,7 @@ export function PhotoCarousel({ photos, label }: { photos: Photo[]; label: strin
       >
         {/* The frame wraps only the photos. Putting it on the Carousel root
             would drag the controls onto the border colour too. */}
-        <div className="border border-border">
+        <div ref={frame} className="border border-border">
           <CarouselContent>
             {photos.map((photo, index) => (
               <CarouselItem

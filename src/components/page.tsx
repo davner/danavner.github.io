@@ -32,6 +32,7 @@ const TITLE_SIZE = {
  */
 export function PageHeader({
   title,
+  catalogue,
   lede,
   children,
   aside,
@@ -39,6 +40,13 @@ export function PageHeader({
   size = "default",
 }: {
   title: ReactNode;
+  /**
+   * The page's catalogue line, like "DA-005 · SHOWS", spelled by
+   * `catalogueLine` in `lib/routes.ts`. Section pages carry one; content
+   * pages - a show, a post, an album - are items in the catalogue rather than
+   * pages of it and pass nothing, and the home page is the cover.
+   */
+  catalogue?: string;
   lede?: ReactNode;
   /** Picks the display size. See `TITLE_SIZE`. */
   size?: keyof typeof TITLE_SIZE;
@@ -57,6 +65,15 @@ export function PageHeader({
 }) {
   const intro = (
     <>
+      {/* Hidden from AT on purpose: the line restates the h1 plus a decorative
+          serial, and exposing it would put mono noise before every page title
+          in a screen reader. */}
+      {catalogue ? (
+        <p aria-hidden className="readout-dim mb-4">
+          {catalogue}
+        </p>
+      ) : null}
+
       <h1 className={cn("display", TITLE_SIZE[size])}>{title}</h1>
 
       {/* `mt-6` is the standing gap under a page title, whatever follows it -

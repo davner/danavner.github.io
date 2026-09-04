@@ -27,7 +27,7 @@ import {
   type VinylRecord,
 } from "@/lib/vinyl";
 import { coverSrcSet } from "@/lib/covers";
-import { PAGE_META } from "@/lib/routes";
+import { catalogueLine, PAGE_META } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
@@ -210,6 +210,7 @@ export function Vinyl() {
     return (
       <PageShell>
         <PageHeader
+          catalogue={catalogueLine("/vinyl")}
           title={TITLE}
           size="long"
           lede="The shelf has not been read yet. Once the nightly Discogs job runs, it lands here."
@@ -263,6 +264,7 @@ export function Vinyl() {
   return (
     <PageShell>
       <PageHeader
+        catalogue={catalogueLine("/vinyl")}
         title={TITLE}
         size="long"
         lede="Alexis and I share one Discogs account and separate opinions on what music is good. Collecting vinyl is an expensive hobby, but nothing beats the warm sound of a record player, not to mention the vibes. Filter it down to just hers or mine."

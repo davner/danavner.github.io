@@ -1,6 +1,6 @@
 import { PageHeader, PageShell, Section } from "@/components/page";
 import { code128bWidths } from "@/lib/code128";
-import { PAGE_META } from "@/lib/routes";
+import { catalogueLine, PAGE_META } from "@/lib/routes";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
 const META = PAGE_META["/colophon"];
@@ -61,6 +61,7 @@ export function Colophon() {
   return (
     <PageShell>
       <PageHeader
+        catalogue={catalogueLine("/colophon")}
         title="Colophon"
         lede="A zine keeps a page at the back saying how it was printed. This is mine: the type it is set in, the inks on the plate, and the press it comes off of."
       />

@@ -9,7 +9,7 @@ import { ScrollingText } from "@/components/scrolling-text";
 import { SourceLine } from "@/components/source-line";
 import { comics, issueCount, SHELVES, type ComicEntry, type ShelfId } from "@/lib/comics";
 import { coverSrcSet } from "@/lib/covers";
-import { PAGE_META } from "@/lib/routes";
+import { catalogueLine, PAGE_META } from "@/lib/routes";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
 /*
@@ -198,6 +198,7 @@ export function Comics() {
     return (
       <PageShell>
         <PageHeader
+          catalogue={catalogueLine("/comics")}
           title={HEADING}
           size="long"
           lede="The shelf has not been read yet. Once the nightly League of Comic Geeks job runs, it lands here."
@@ -209,6 +210,7 @@ export function Comics() {
   return (
     <PageShell>
       <PageHeader
+        catalogue={catalogueLine("/comics")}
         title={HEADING}
         size="long"
         lede="New comic day is Wednesday. This is every run on the shelf, what is waiting at the shop this week, and what I have not talked myself into yet."

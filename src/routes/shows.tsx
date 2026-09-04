@@ -27,7 +27,7 @@ import {
   type Show,
   type Tally,
 } from "@/lib/shows";
-import { PAGE_META } from "@/lib/routes";
+import { catalogueLine, PAGE_META } from "@/lib/routes";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
 const META = PAGE_META["/shows"];
@@ -213,6 +213,7 @@ export function Shows() {
     return (
       <PageShell>
         <PageHeader
+          catalogue={catalogueLine("/shows")}
           title={
             <>
               <span className="block">Every show</span>
@@ -256,6 +257,7 @@ export function Shows() {
     <>
       <PageShell className="pb-0">
         <PageHeader
+          catalogue={catalogueLine("/shows")}
           title={
             <>
               <span className="block">Every show</span>

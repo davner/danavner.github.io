@@ -6,7 +6,7 @@ import { FilterToggle } from "@/components/filter-toggle";
 import { PageHeader, PageShell } from "@/components/page";
 import { PostCard } from "@/components/post-card";
 import { CATEGORIES, CATEGORY_LABEL, posts, postsByCategory, type Category } from "@/lib/blog";
-import { PAGE_META } from "@/lib/routes";
+import { catalogueLine, PAGE_META } from "@/lib/routes";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
 const META = PAGE_META["/blog"];
@@ -38,6 +38,7 @@ export function Blog() {
   return (
     <PageShell>
       <PageHeader
+        catalogue={catalogueLine("/blog")}
         title={
           <>
             <span className="block">Notes on</span>

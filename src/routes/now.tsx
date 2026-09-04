@@ -16,7 +16,7 @@ import {
   type NowEntry,
 } from "@/lib/now";
 import { nowDate, nowSummary, nowTitle } from "@/lib/now-summary";
-import { PAGE_META } from "@/lib/routes";
+import { catalogueLine, PAGE_META } from "@/lib/routes";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
 // Most now entries are words only, and the carousel is ~24kB of embla that they
@@ -102,6 +102,7 @@ function NowCurrent() {
             folder here told a visitor about a path they cannot do anything
             with. */}
         <PageHeader
+          catalogue={catalogueLine("/now")}
           title={HEADING}
           lede="Nothing here at the moment. I have not written one of these yet."
         />
@@ -112,6 +113,7 @@ function NowCurrent() {
   return (
     <PageShell>
       <PageHeader
+        catalogue={catalogueLine("/now")}
         title={HEADING}
         /*
          * The same line the meta description carries, deliberately.

@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { albums, log, station, statsFor, yearLabel, type Album } from "@/lib/dan-fm";
 import { albumUrl } from "@/lib/dan-fm-summary";
 import { longDate } from "@/lib/dates";
-import { PAGE_META } from "@/lib/routes";
+import { catalogueLine, PAGE_META } from "@/lib/routes";
 import { SITE_URL } from "@/lib/site";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
@@ -145,6 +145,7 @@ export function DanFm() {
   return (
     <PageShell>
       <PageHeader
+        catalogue={catalogueLine("/dan-fm")}
         title="dan.fm"
         lede="One album a day. A review, a favourite track, a least favourite, and a score out of five."
       >

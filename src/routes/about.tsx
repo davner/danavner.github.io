@@ -17,7 +17,7 @@ import { PageHeader, PageShell, Section } from "@/components/page";
 import { SocialLinks } from "@/components/social-links";
 import { Badge } from "@/components/ui/badge";
 import { funFact, interests, profile, type Interest } from "@/content/profile";
-import { PAGE_META } from "@/lib/routes";
+import { catalogueLine, PAGE_META } from "@/lib/routes";
 import { showStats } from "@/lib/shows";
 import { cn } from "@/lib/utils";
 import { useDocumentMeta } from "@/lib/use-document-meta";
@@ -66,6 +66,7 @@ export function About() {
   return (
     <PageShell>
       <PageHeader
+        catalogue={catalogueLine("/about")}
         title={
           <>
             <span className="block">Who is</span>

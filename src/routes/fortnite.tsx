@@ -27,7 +27,7 @@ import {
   type ModeStats,
   type SeasonEntry,
 } from "@/lib/fortnite";
-import { PAGE_META } from "@/lib/routes";
+import { catalogueLine, PAGE_META } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
@@ -319,6 +319,7 @@ export function Fortnite() {
   return (
     <PageShell>
       <PageHeader
+        catalogue={catalogueLine("/fortnite")}
         title={HEADING}
         lede={META.description}
         aside={

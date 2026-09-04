@@ -502,6 +502,18 @@ timestamp as the last-updated date. It is a house mark wearing Julian-epoch
 clothes, not an ephemeris; do not correct it toward or away from astronomical
 time.
 
+Every section page and the colophon also carry a catalogue number over the
+title, in the dim readout: "DA-005" over Shows. The numbers run in nav order
+with the colophon last, and the scheme never renumbers itself - each is a
+literal beside the page's meta in `lib/routes.ts`, so pages joining or leaving
+the nav cannot shuffle serials already in print, the way a label does not
+renumber its back catalogue when a record goes out of press. Content pages - a
+show, a post, an album, an archived now entry - are items in the catalogue
+rather than pages of it, so they carry none, and the home page is the cover.
+The line is hidden from assistive technology on purpose: it restates the h1
+plus a decorative serial, and exposing it would put mono noise before every
+page title in a screen reader.
+
 ### Named Rules
 
 **The Commit On Hover Rule.** An interactive element does not hint. Border, text

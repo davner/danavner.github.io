@@ -212,7 +212,7 @@ export function PixelFire({ className }: { className?: string }) {
     <canvas
       ref={canvasRef}
       aria-hidden
-      className={cn("pointer-events-none block w-full", className)}
+      className={cn("pointer-events-none block w-full print:hidden", className)}
       style={{ height: `${ROWS * PIXEL}px`, imageRendering: "pixelated" }}
     />
   );

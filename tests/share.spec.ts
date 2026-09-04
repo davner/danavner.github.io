@@ -740,9 +740,15 @@ test.describe("share", () => {
       "download",
       "bruno-mars-madrid-2026.png",
     );
-    // The URL is not printed in the panel - the buttons carry it. Nothing
-    // should be showing it as text.
-    await expect(page.getByText("danavner.com/shows/", { exact: false })).toHaveCount(0);
+    // The URL is not printed in the panel - the buttons carry it. Nothing in
+    // the panel should be showing it as text. Scoped to the panel because the
+    // page as a whole does hold the URL now: the footer's print-only imprint
+    // carries it as hidden text for paper.
+    await expect(
+      page.getByRole("dialog", { name: /^Share/ }).getByText("danavner.com/shows/", {
+        exact: false,
+      }),
+    ).toHaveCount(0);
   });
 
   test("the card and the link are separate actions", async ({ page }) => {

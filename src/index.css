@@ -854,3 +854,72 @@
 .hljs-deletion {
   @apply text-muted-foreground line-through;
 }
+
+/*
+ * ---- Print ----------------------------------------------------------------
+ *
+ * This section stays at the END of the file, and that position is load-bearing:
+ * the token overrides below sit at the same specificity as the `.dark` block at
+ * the top, so source order is the only thing letting paper beat a dark screen.
+ * Anything added to the stylesheet goes above this line, or a reader printing
+ * from the dark theme quietly gets dark ink on dark stock back.
+ *
+ * One-ink press: white stock, black ink. Every surface goes to the stock and
+ * both accents go to black, because a printout is the machine's copy of the
+ * poster, not the poster - and the greys that survive are the halftones one
+ * ink can print. The grain and the bloom are screen light rather than ink, so
+ * the grain's opacity goes to zero (its backdrop is hidden outright too).
+ */
+@media print {
+  :root,
+  .dark {
+    --background: #fff;
+    --foreground: #000;
+    --card: #fff;
+    --card-foreground: #000;
+    --popover: #fff;
+    --popover-foreground: #000;
+    --primary: #000;
+    --primary-foreground: #fff;
+    --secondary: #fff;
+    --secondary-foreground: #000;
+    --muted: #f0f0f0;
+    --muted-foreground: #444;
+    --accent: #fff;
+    --accent-foreground: #000;
+    --border: #bbb;
+    --input: #bbb;
+    --ring: #000;
+    --ember: #000;
+    --ion: #000;
+    --star: #000;
+    --glow: transparent;
+    --grain-opacity: 0;
+    --hairline: rgb(0 0 0 / 0.15);
+  }
+
+  /* Crop marks: the cut-corners idiom at page scale, two L-shaped registration
+     marks on opposite corners. `fixed` is what repeats them per printed sheet. */
+  body::before,
+  body::after {
+    content: "";
+    position: fixed;
+    width: 0.75rem;
+    height: 0.75rem;
+    border: 0 solid #000;
+  }
+
+  body::before {
+    top: 0;
+    left: 0;
+    border-top-width: 1px;
+    border-left-width: 1px;
+  }
+
+  body::after {
+    right: 0;
+    bottom: 0;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+  }
+}

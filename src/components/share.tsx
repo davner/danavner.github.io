@@ -143,7 +143,8 @@ export function Share({ subject, className }: { subject: Shareable; className?: 
           variant="outline"
           size="sm"
           className={cn(
-            "readout rounded-none text-muted-foreground hover:border-ember hover:bg-ember/5 hover:text-ember",
+            // A control that opens a panel is nothing on paper.
+            "readout rounded-none text-muted-foreground hover:border-ember hover:bg-ember/5 hover:text-ember print:hidden",
             className,
           )}
         >

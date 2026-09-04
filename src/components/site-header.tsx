@@ -99,8 +99,9 @@ export function SiteHeader() {
 
   return (
     /* Opaque, so the bar's contrast is a property of the bar rather than of
-       whatever cover art happens to scroll under it. */
-    <header className="sticky top-0 z-50 border-b border-border bg-background">
+       whatever cover art happens to scroll under it. Paper has no navigation,
+       so print drops the whole bar. */
+    <header className="sticky top-0 z-50 border-b border-border bg-background print:hidden">
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-2 sm:gap-3 sm:px-6">
         <NavLink
           to="/"

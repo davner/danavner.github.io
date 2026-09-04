@@ -61,7 +61,7 @@ export function BlogPost() {
     <PageShell className="max-w-3xl">
       <Link
         to={`/blog?category=${post.category}`}
-        className="readout group inline-flex items-center gap-2 text-muted-foreground transition-colors hover:text-ember"
+        className="readout group inline-flex items-center gap-2 text-muted-foreground transition-colors hover:text-ember print:hidden"
       >
         <ArrowLeft className="size-3.5 transition-transform group-hover:-translate-x-0.5" />
         All {CATEGORY_LABEL[post.category].toLowerCase()} posts
@@ -172,7 +172,7 @@ export function BlogPost() {
            shadow takes no layout space, so with `gap-px` each link's shadow
            lands on the exact pixel its neighbour's does. Same idiom as the
            record shelf and the season grid. */
-        <nav aria-label="More posts" className="mt-20 grid gap-px sm:grid-cols-2">
+        <nav aria-label="More posts" className="mt-20 grid gap-px sm:grid-cols-2 print:hidden">
           {older ? (
             <Link
               to={`/blog/${older.slug}`}

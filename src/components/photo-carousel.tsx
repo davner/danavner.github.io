@@ -88,7 +88,7 @@ export function PhotoCarousel({ photos, label }: { photos: Photo[]; label: strin
         </div>
 
         {single ? null : (
-          <div className="mt-2 flex items-center gap-3">
+          <div className="mt-2 flex items-center gap-3 print:hidden">
             <div className="flex gap-px">
               <CarouselPrevious className="static size-7 translate-y-0 border-border text-muted-foreground hover:border-ember hover:text-ember" />
               <CarouselNext className="static size-7 translate-y-0 border-border text-muted-foreground hover:border-ember hover:text-ember" />

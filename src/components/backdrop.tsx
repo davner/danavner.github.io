@@ -8,7 +8,11 @@ const GRAIN =
  */
 export function Backdrop() {
   return (
-    <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+    // Screen light, not ink: print gets neither the bloom nor the grain.
+    <div
+      aria-hidden
+      className="pointer-events-none fixed inset-0 -z-10 overflow-hidden print:hidden"
+    >
       <div
         className="absolute inset-x-0 top-0 h-[80vh]"
         style={{

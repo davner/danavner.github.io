@@ -36,8 +36,10 @@ export default defineConfig({
       // the Pixel 7's - among them, so running it here would take the same
       // measurements a second time under a device that never applies. The
       // encoder spec never opens a page, so a second device would run the
-      // same arithmetic twice.
-      testIgnore: ["**/responsive.spec.ts", "**/code128.spec.ts"],
+      // same arithmetic twice. Print emulation swaps the media type and the
+      // ink, neither of which reads the viewport, so the print spec would
+      // resolve the same computed styles a second time too.
+      testIgnore: ["**/responsive.spec.ts", "**/code128.spec.ts", "**/print.spec.ts"],
     },
   ],
   webServer: {

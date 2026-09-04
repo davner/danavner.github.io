@@ -1,8 +1,9 @@
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 
 import { PixelFire } from "@/components/pixel-fire";
 import { SocialLinks } from "@/components/social-links";
 import { profile } from "@/content/profile";
+import { catalogueFor } from "@/lib/routes";
 import { ALL_SECTIONS } from "@/lib/site";
 
 const LINKS = ALL_SECTIONS;
@@ -17,10 +18,13 @@ const EPOCH = __EPOCH__;
 const PRESSING = __IMPRESSION__ === null ? "Proof copy" : `Impression No. ${__IMPRESSION__}`;
 
 export function SiteFooter() {
+  const { pathname } = useLocation();
+
   return (
     <footer className="mt-20 border-t border-border">
       <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-10 sm:px-6">
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+        {/* Paper cannot follow a link, so the whole navigation half stays off it. */}
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between print:hidden">
           <nav aria-label="Footer">
             <ul className="flex flex-wrap gap-x-5 gap-y-2">
               {LINKS.map((link) => (
@@ -47,7 +51,9 @@ export function SiteFooter() {
             <p className="readout-dim">
               Last updated {LAST_UPDATED} · Epoch {EPOCH}
             </p>
-            <p className="readout-dim">
+            {/* The print imprint below restates the pressing, so on paper this
+                line - two links and that same pressing - would only repeat it. */}
+            <p className="readout-dim print:hidden">
               {PRESSING} ·{" "}
               <Link to="/colophon" className="readout-link">
                 Colophon
@@ -59,9 +65,17 @@ export function SiteFooter() {
                 Admin
               </a>
             </p>
+            {/* Paper gets an address instead of links: which page of the
+                catalogue this is, which pressing, and where the living copy
+                stands. The home page is the cover, so it carries no number. */}
+            <p className="readout-dim hidden print:block">
+              {[catalogueFor(pathname), PRESSING, `danavner.com${pathname}`]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
           </div>
           {/* The last thing anyone reads should be a wave, not a job title. */}
-          <p className="readout">
+          <p className="readout print:hidden">
             <span aria-hidden>👋🏽</span> See ya later, alligator <span aria-hidden>🐊</span>
           </p>
         </div>

@@ -15,6 +15,24 @@
         "files": ["src/index.css"],
         "createdAt": "2026-08-29T06:09:57.596Z",
         "reason": "rule-ticks is a 0.5rem ruler strip: repeat-x ticks plus one non-repeating baseline, never a tiled field"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#000",
+        "createdAt": "2026-09-04T21:46:52.281Z",
+        "reason": "plan-reviewer-approved print stylesheet: one-ink press, white stock black ink, deliberately outside the screen palette"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgb(0 0 0 / 0.55)",
+        "createdAt": "2026-09-04T21:53:18.228Z",
+        "reason": "halftone dot screen sits on photographs: stock black holds in either theme, same exception as the carousel caption gradient"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "oklch(0.5 0.1 200)",
+        "createdAt": "2026-09-04T21:59:29.167Z",
+        "reason": "pre-existing share.spec fixture: its own comment says any resolved colour works, the case tests the form"
       }
     ]
   }

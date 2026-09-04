@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/carousel";
 import type { Photo } from "@/lib/photo";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
+import { cn } from "@/lib/utils";
 
 /**
  * Photo strip for a show, built on the shadcn/ui Carousel.
@@ -42,8 +43,18 @@ export function PhotoCarousel({ photos, label }: { photos: Photo[]; label: strin
   const single = photos.length === 1;
 
   return (
-    // Capped so a photo does not dwarf the entry it belongs to.
-    <figure className="mt-5 max-w-2xl">
+    /*
+     * Capped so a photo does not dwarf the entry it belongs to.
+     *
+     * The halftone rests on multi-photo strips only, and that is the decision
+     * rather than a limitation: a single-photo carousel renders no controls,
+     * so it holds nothing focusable and a keyboard reader would have no way to
+     * the true photo. A treatment whose resolution mechanism does not exist on
+     * a surface does not apply there - the lone photo shows true at rest. The
+     * host class carries the focus half, because focus lands on the buttons
+     * in this figure rather than on the screened item itself.
+     */
+    <figure className={cn("mt-5 max-w-2xl", !single && "halftone-host")}>
       <Carousel
         setApi={setApi}
         /*
@@ -65,7 +76,10 @@ export function PhotoCarousel({ photos, label }: { photos: Photo[]; label: strin
         <div className="border border-border">
           <CarouselContent>
             {photos.map((photo, index) => (
-              <CarouselItem key={photo.src} className="relative bg-background">
+              <CarouselItem
+                key={photo.src}
+                className={cn("relative bg-background", !single && "halftone")}
+              >
                 <img
                   src={photo.src}
                   alt={photo.alt || `${label} - photo ${index + 1} of ${photos.length}`}
@@ -77,8 +91,9 @@ export function PhotoCarousel({ photos, label }: { photos: Photo[]; label: strin
                   /* Stock black and white rather than the palette: this caption
                      sits on a photograph, so it has to hold in either theme, and
                      every ink in the system flips with the stock it is printed
-                     on. */
-                  <figcaption className="readout absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-4 pt-10 pb-3 text-white">
+                     on. Lifted above the halftone screen, whose dots would
+                     otherwise land on the words. */
+                  <figcaption className="readout absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/85 to-transparent px-4 pt-10 pb-3 text-white">
                     {photo.caption}
                   </figcaption>
                 ) : null}
@@ -88,6 +103,7 @@ export function PhotoCarousel({ photos, label }: { photos: Photo[]; label: strin
         </div>
 
         {single ? null : (
+          // Paper shows one slide and cannot turn it, so the controls stay off it.
           <div className="mt-2 flex items-center gap-3 print:hidden">
             <div className="flex gap-px">
               <CarouselPrevious className="static size-7 translate-y-0 border-border text-muted-foreground hover:border-ember hover:text-ember" />

@@ -635,6 +635,56 @@
     }
   }
 
+  /* ---- Halftone ------------------------------------------------------ */
+
+  /*
+   * A carousel photo rests as newsprint - greyscaled, pushed in contrast, and
+   * screened with a dot lattice - and resolves to the true photo under the
+   * reader's pointer, or when focus lands anywhere in the hosting figure. The
+   * focus half hangs on the figure because the item holds only an image and a
+   * caption, neither focusable; the figure holds the prev/next buttons, so
+   * tabbing to either control resolves the visible slide. Hover-capable
+   * devices only: anywhere else the treatment would have no way back.
+   *
+   * The screen crossfades on opacity, which the reduced-motion allowlist in
+   * the base layer already permits. The filter snaps, deliberately: adding it
+   * to that allowlist would widen a global contract for one treatment.
+   */
+  @media (hover: hover) {
+    .halftone > img {
+      filter: grayscale(1) contrast(1.15);
+    }
+
+    /* Two offset lattices make the classic rotated screen. Stock black rather
+       than an ink token, for the caption's reason: this sits on a photograph,
+       so it has to hold in either theme. */
+    .halftone::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        radial-gradient(circle, rgb(0 0 0 / 0.55) 0.5px, transparent 1px),
+        radial-gradient(circle, rgb(0 0 0 / 0.55) 0.5px, transparent 1px);
+      background-size: 4px 4px;
+      background-position:
+        0 0,
+        2px 2px;
+      mix-blend-mode: multiply;
+      transition: opacity 200ms ease;
+    }
+
+    .halftone:hover > img,
+    .halftone-host:focus-within .halftone > img {
+      filter: none;
+    }
+
+    .halftone:hover::after,
+    .halftone-host:focus-within .halftone::after {
+      opacity: 0;
+    }
+  }
+
   /* ---- Long-form -------------------------------------------------------- */
 
   .prose-dan {

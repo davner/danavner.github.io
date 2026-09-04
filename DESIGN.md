@@ -416,6 +416,22 @@ component wants to look softer, the answer is that it does not get to.
 **The Registration Mark Rule.** Corner ticks mean interactive. They appear on
 hover and focus-within, never at rest, and never as pure ornament.
 
+**The Halftone Rule.** A photo in a multi-photo carousel rests screened - grey,
+pushed in contrast, a dot lattice over the top, like a picture on newsprint -
+and resolves to the true photograph in exactly two ways: under the reader's
+pointer, or when focus lands anywhere in the figure hosting the strip, which is
+where the prev/next controls live, so tabbing to either resolves the visible
+slide. The treatment exists on hover-capable devices only, and never on
+identification imagery - not the home portraits, not a record sleeve, not an
+album cover - where the picture is the information rather than the atmosphere.
+One exemption follows from the mechanism rather than softening it: a
+single-photo carousel renders no controls, so it holds nothing focusable, and a
+photo with no focusable neighbour is never screened - it shows true at rest
+instead of standing behind a screen a keyboard cannot lift. The screen's
+crossfade is an opacity change, which the reduced-motion allowlist already
+permits; the filter snaps deliberately, because widening that allowlist for one
+treatment would loosen a global contract.
+
 ## Components
 
 Controls are instrument-precise and poster-loud: square, mono-lettered and exact

@@ -52,7 +52,11 @@ function SheetContent({
       <SheetPrimitive.Content
         data-slot="sheet-content"
         className={cn(
-          "fixed z-50 flex flex-col gap-4 bg-background transition ease-in-out data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:animate-in data-[state=open]:duration-500",
+          /* Departure from upstream timing: the drawer curve instead of
+             ease-in-out, and 500/300ms cut to 200/150 - the site's 200ms cap
+             binds the open gesture, and a drawer decelerates on its rails
+             rather than cruising. The slide keyframes stay upstream's. */
+          "fixed z-50 flex flex-col gap-4 bg-background transition ease-drawer data-[state=closed]:animate-out data-[state=closed]:duration-150 data-[state=open]:animate-in data-[state=open]:duration-200",
           side === "right" &&
             "inset-y-0 right-0 h-full w-3/4 border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm",
           side === "left" &&

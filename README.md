@@ -201,6 +201,7 @@ scripts/
   make-share-fallback.mjs draws the social image for a show with no photos
   make-site-card.mjs      draws the site's own link-preview card
   make-badge.mjs          draws the 88x31 button the colophon offers
+  make-easings.mjs        solves the two spring curves behind the easing tokens
   gen-font-fallbacks.mjs  measures the fonts so fallbacks match their metrics
   update-vinyl.mjs        reads the Discogs collection nightly, saves the sleeves
   update-comics.mjs       reads League of Comic Geeks nightly, saves the covers

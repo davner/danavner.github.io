@@ -182,6 +182,65 @@
   --text-title: clamp(1.25rem, 1.05rem + 1vw, 1.5rem);
 }
 
+/*
+ * The two motion curves, both damped springs printed by
+ * `scripts/make-easings.mjs` - the spring constants live beside each value, so
+ * the numbers are regenerable rather than magic. The stamp is critically
+ * damped and lands moving; the drawer is over-damped and decelerates the whole
+ * way. Where `linear()` is unsupported the variable computes invalid and the
+ * timing falls back to stock `ease`.
+ */
+@theme {
+  /* stamp: stiffness 900, damping 60, mass 1, velocity 15 */
+  --ease-stamp: linear(
+    0,
+    0.209,
+    0.3938,
+    0.5459,
+    0.6656,
+    0.757,
+    0.8254,
+    0.8756,
+    0.912,
+    0.9382,
+    0.9568,
+    0.9699,
+    0.9792,
+    0.9856,
+    0.9901,
+    0.9932,
+    0.9953,
+    0.9968,
+    0.9978,
+    0.9985,
+    1
+  );
+  /* drawer: stiffness 400, damping 48, mass 1, velocity 0 */
+  --ease-drawer: linear(
+    0,
+    0.1374,
+    0.3522,
+    0.5357,
+    0.673,
+    0.7713,
+    0.8405,
+    0.8889,
+    0.9227,
+    0.9462,
+    0.9625,
+    0.9739,
+    0.9818,
+    0.9874,
+    0.9912,
+    0.9939,
+    0.9957,
+    0.997,
+    0.9979,
+    0.9986,
+    1
+  );
+}
+
 @layer base {
   * {
     @apply border-border;

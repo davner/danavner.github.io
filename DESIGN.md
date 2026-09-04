@@ -432,6 +432,47 @@ crossfade is an opacity change, which the reduced-motion allowlist already
 permits; the filter snaps deliberately, because widening that allowlist for one
 treatment would loosen a global contract.
 
+## Motion
+
+The register is the snap. A page prints; it does not perform. What moves does
+so because the reader's pointer is on it, finishes fast, and moves with the
+character of the press - a stamp lands, a drawer glides shut on its rails.
+
+Two curves carry all of it, held as easing tokens in `src/index.css` and
+printed by `scripts/make-easings.mjs` from spring constants named beside the
+values, so the numbers are regenerable rather than magic. **The stamp**
+(`--ease-stamp`) is a critically damped spring that is already moving when it
+lands - most of its travel in the first fifth, a short settle, structurally
+incapable of overshoot. It times pressed controls, drawn hairlines, and copy
+confirmations. **The drawer** (`--ease-drawer`) is over-damped from rest and
+spends its whole travel decelerating; it times the mobile sheet. A third curve
+arrives when a third character has a second customer, not before.
+
+### Named Rules
+
+**The Two Hundred Rule.** Every duration is 200ms or less. Paper snaps, and a
+motion that needs longer to read is a motion carrying more meaning than this
+site gives it. The cap binds vendored components too: a stock duration above it
+is edited down in place, with the departure documented in the file.
+
+**The Pointer's Motion Rule.** A transform state exists only where a pointer
+can be the cause: under the motion-safe condition and, for hovers, on
+hover-capable devices. Keyboard activation never moves anything - the same
+control pressed from the keyboard swaps state without the travel, delivered by
+suppressing the animation wherever focus is visible rather than by tracking
+input modality in script. Under reduced motion the transform state is removed
+outright, so nothing is left to jump.
+
+**The Allowlist Contract Rule.** The reduced-motion allowlist in
+`src/index.css`'s base layer - colour and opacity keep transitioning,
+everything else stops - is the contract, and no motion added anywhere widens
+it. One bounded survival exists: a reader-triggered, sub-100ms, opacity-only
+commit cue may survive reduced motion, because when everything else is stilled
+it is the only remaining signal that the action landed. That bound is a
+mechanism, not a license - riding an API the CSS kill cannot reach is
+sanctioned only inside it, and anything longer, self-starting, or spatial does
+not qualify however it is implemented.
+
 ## Components
 
 Controls are instrument-precise and poster-loud: square, mono-lettered and exact

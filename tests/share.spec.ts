@@ -826,7 +826,7 @@ test.describe("share", () => {
     await copy.scrollIntoViewIfNeeded();
     await copy.click();
 
-    await expect(panel.getByRole("button", { name: /Link copied/ })).toBeVisible();
+    await expect(panel.getByRole("button", { name: /Copied/ })).toBeVisible();
     expect(
       await page.evaluate(() => (window as unknown as { __copied: string[] }).__copied),
     ).toEqual(["https://danavner.com/shows/bruno-mars-madrid-2026"]);
@@ -876,7 +876,7 @@ test.describe("share", () => {
     await copy.scrollIntoViewIfNeeded();
     await copy.click();
 
-    await expect(panel.getByRole("button", { name: /Link copied/ })).toBeVisible();
+    await expect(panel.getByRole("button", { name: /Copied/ })).toBeVisible();
     expect(
       await page.evaluate(() => (window as unknown as { __copied: string[] }).__copied),
     ).toEqual(["https://danavner.com/shows/bruno-mars-madrid-2026"]);
@@ -1225,7 +1225,7 @@ test.describe("share a now entry", () => {
     await copy.scrollIntoViewIfNeeded();
     await copy.click();
 
-    await expect(panel.getByRole("button", { name: /Link copied/ })).toBeVisible();
+    await expect(panel.getByRole("button", { name: /Copied/ })).toBeVisible();
     expect(
       await page.evaluate(() => (window as unknown as { __copied: string[] }).__copied),
     ).toEqual([`https://danavner.com/now/${date}`]);
@@ -1562,7 +1562,7 @@ test.describe("share an album", () => {
     const copy = panel.getByRole("button", { name: /Copy the link/ });
     await copy.scrollIntoViewIfNeeded();
     await copy.click();
-    await expect(panel.getByRole("button", { name: /Link copied/ })).toBeVisible();
+    await expect(panel.getByRole("button", { name: /Copied/ })).toBeVisible();
     return page.evaluate(() => (window as unknown as { __copied: string[] }).__copied);
   }
 

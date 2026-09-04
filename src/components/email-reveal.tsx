@@ -70,7 +70,8 @@ export function EmailReveal({ className }: { className?: string }) {
         aria-label={copied ? "Email copied" : "Copy email address"}
         className="h-auto w-11 rounded-none text-muted-foreground hover:text-ember"
       >
-        {copied ? <Check className="text-ember" /> : <Copy />}
+        {/* Ion for machine output, stamped like the share panel's Copied. */}
+        {copied ? <Check className="copy-stamp text-ion" /> : <Copy />}
       </Button>
     </span>
   );

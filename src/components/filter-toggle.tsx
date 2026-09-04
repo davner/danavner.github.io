@@ -87,6 +87,16 @@ export function FilterToggle<T extends string>({
             "gap-2 bg-background text-muted-foreground",
             "hover:bg-background hover:text-ember",
             "data-[state=on]:bg-ember data-[state=on]:text-primary-foreground",
+            /*
+             * The date-stamp. Naming the transition list drops the base's
+             * `transition-colors` through tw-merge, so the ember fill snaps
+             * both ways while hover text colour keeps fading - and the press
+             * scale rides the stamp curve back on release. `:focus-visible` is
+             * excluded because a pointer press never sets it and a keyboard
+             * press does: keyboard activation gains no motion.
+             */
+            "transition-[color,scale] ease-stamp",
+            "motion-safe:[&:active:not(:focus-visible)]:scale-[0.97]",
           )}
         >
           <span className="readout">{option.label}</span>

@@ -776,6 +776,36 @@
     }
   }
 
+  /* ---- Motion --------------------------------------------------------- */
+
+  /*
+   * A copy confirmation stamps in: one frame of appear, then the scale
+   * settles on the stamp curve. Keyboard activation leaves `:focus-visible`
+   * on the button, and an ancestor holding it suppresses the animation - the
+   * label swaps bare, so keyboard-initiated activation gains no motion.
+   * Reduced motion collapses the animation globally to an opacity swap.
+   */
+  .copy-stamp {
+    animation: stamp-in 140ms var(--ease-stamp);
+  }
+
+  @keyframes stamp-in {
+    0% {
+      opacity: 0;
+      scale: 0.96;
+    }
+    30% {
+      opacity: 1;
+    }
+    100% {
+      scale: 1;
+    }
+  }
+
+  :focus-visible .copy-stamp {
+    animation: none;
+  }
+
   /* ---- Long-form -------------------------------------------------------- */
 
   .prose-dan {

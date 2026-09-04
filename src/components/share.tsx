@@ -285,8 +285,11 @@ export function Share({ subject, className }: { subject: Shareable; className?: 
           ) : null}
 
           <Button variant="outline" size="sm" onClick={copyLink} className={action}>
-            {copied ? <Check className="text-ember" /> : <Copy />}
-            {copied ? "Link copied" : "Copy the link"}
+            {/* Ion, not ember: a copy confirmation is machine output, the one
+                job the cold ink has. The stamp mounts with the state flip, so
+                it plays once per copy and never on keyboard activation. */}
+            {copied ? <Check className="text-ion" /> : <Copy />}
+            {copied ? <span className="copy-stamp text-ion">Copied</span> : "Copy the link"}
           </Button>
         </div>
       </PopoverContent>

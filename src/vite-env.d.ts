@@ -1,7 +1,13 @@
 /// <reference types="vite/client" />
 
-/** Last-commit date (UTC), formatted like "Aug 4, 2026", injected by `define` in `vite.config.ts`. */
+/** Last-commit date in the site's time zone, formatted like "Aug 4, 2026", injected by `define` in `vite.config.ts`. */
 declare const __LAST_UPDATED__: string;
+
+/** The imprint's epoch stamp, like "J2026.67", from the same commit timestamp as `__LAST_UPDATED__`. */
+declare const __EPOCH__: string;
+
+/** The deploy run number - `IMPRESSION` in `deploy.yml` - as a string; null on a local proof build. */
+declare const __IMPRESSION__: string | null;
 
 declare module "virtual:blog" {
   import type { Post } from "@/lib/blog";

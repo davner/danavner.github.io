@@ -11,29 +11,54 @@ import { coverVariantsPlugin } from "./vite-plugin-cover-variants";
 import { pagesPlugin } from "./vite-plugin-pages";
 
 /**
- * The date of the last commit, formatted for the footer's "last updated" line.
- * Since the site deploys on push to main, the last commit is the last change
- * that reached the live site.
+ * The date of the last commit. Since the site deploys on push to main, the
+ * last commit is the last change that reached the live site.
  *
  * `%ct` is the committer date as a Unix timestamp, which carries no timezone of
- * its own, so the zone is the site's. Falls back to the build time if git is
- * unavailable (e.g. a source tarball with no history).
+ * its own, so the formatters apply the site's. Falls back to the build time if
+ * git is unavailable (e.g. a source tarball with no history).
  */
-function lastUpdated(): string {
-  const format = (date: Date) =>
-    new Intl.DateTimeFormat("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      timeZone: SITE_TIME_ZONE,
-    }).format(date);
-
+function commitDate(): Date {
   try {
     const seconds = Number(execSync("git log -1 --format=%ct", { encoding: "utf8" }).trim());
-    return format(new Date(seconds * 1000));
+    if (Number.isFinite(seconds)) return new Date(seconds * 1000);
   } catch {
-    return format(new Date());
+    // git unavailable - fall through to the build time.
   }
+  return new Date();
+}
+
+/** The commit date formatted for the footer's "last updated" line. */
+function lastUpdated(date: Date): string {
+  return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    timeZone: SITE_TIME_ZONE,
+  }).format(date);
+}
+
+/**
+ * The commit date as the imprint's epoch stamp: the year plus the fraction of
+ * it elapsed, like "J2026.67". The formula is year + dayOfYear / 365.25 kept
+ * to two decimals - a house mark wearing Julian-epoch clothes, not an
+ * ephemeris, so it is not to be corrected toward astronomical time.
+ */
+function epoch(date: Date): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    timeZone: SITE_TIME_ZONE,
+  }).formatToParts(date);
+  const field = (type: string) => Number(parts.find((part) => part.type === type)?.value);
+  const year = field("year");
+  const dayOfYear =
+    (Date.UTC(year, field("month") - 1, field("day")) - Date.UTC(year, 0, 1)) / 86_400_000 + 1;
+  // Dec 31 of a leap year is day 366, which pushes the fraction past .99; the
+  // stamp stays inside its own year rather than growing a third digit.
+  const fraction = Math.min(Math.floor((dayOfYear / 365.25) * 100), 99);
+  return `J${year}.${String(fraction).padStart(2, "0")}`;
 }
 
 /**
@@ -77,9 +102,15 @@ function preloadFonts(): Plugin {
   };
 }
 
+// One read, so the date line and the epoch stamp cannot disagree.
+const pressed = commitDate();
+
 export default defineConfig({
   define: {
-    __LAST_UPDATED__: JSON.stringify(lastUpdated()),
+    __LAST_UPDATED__: JSON.stringify(lastUpdated(pressed)),
+    __EPOCH__: JSON.stringify(epoch(pressed)),
+    // Set by deploy.yml from the workflow run number; null marks a local proof.
+    __IMPRESSION__: JSON.stringify(process.env.IMPRESSION ?? null),
   },
   plugins: [
     react(),

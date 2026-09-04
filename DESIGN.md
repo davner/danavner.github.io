@@ -485,6 +485,23 @@ out entirely and needs a stated reason, and a control inside an
 `overflow: hidden` container must paint its ring inward with a negative offset
 instead.
 
+### The Imprint
+
+The footer closes with a printer's imprint: dim readout lines carrying the
+copyright, the last-updated date with an epoch stamp, and the pressing.
+
+The impression number is the deploy workflow's run number. It advances on every
+deploy, and deploys fire on every nightly data refresh as well as on every
+push, so it moves several times a day with no human change. That is honest for
+a pressing - the plates rolled whether or not anyone touched the artwork - and
+it is not a bug to file. A build outside CI reads "Proof copy" instead.
+
+The epoch stamp ("J2026.67") is the year plus the fraction of it elapsed:
+year + dayOfYear / 365.25, truncated to two decimals, computed from the same commit
+timestamp as the last-updated date. It is a house mark wearing Julian-epoch
+clothes, not an ephemeris; do not correct it toward or away from astronomical
+time.
+
 ### Named Rules
 
 **The Commit On Hover Rule.** An interactive element does not hint. Border, text

@@ -164,6 +164,11 @@ The cost is a deploy on nights when a job finds nothing changed: a minute of CI
 for no change. That is cheaper than a long-lived PAT to dodge the token rule,
 and much cheaper than data that quietly stops updating.
 
+The build step also exports `IMPRESSION` from `github.run_number`, which the
+footer prints as the impression number - every deploy is a press run, data-job
+deploys included, so the number advances several times a day on its own. A
+build without the variable prints "Proof copy" instead.
+
 The Playwright suite runs against the **production build**, on desktop and
 mobile viewports, and covers four things:
 

@@ -10,6 +10,12 @@ const LINKS = ALL_SECTIONS;
 /** Last-commit date, already formatted like "Aug 4, 2026" in `vite.config.ts`. */
 const LAST_UPDATED = __LAST_UPDATED__;
 
+/** Epoch stamp for the same commit, already formatted like "J2026.67" in `vite.config.ts`. */
+const EPOCH = __EPOCH__;
+
+/** Which pressing this is: the deploy run number on CI, a proof off it. */
+const PRESSING = __IMPRESSION__ === null ? "Proof copy" : `Impression No. ${__IMPRESSION__}`;
+
 export function SiteFooter() {
   return (
     <footer className="mt-20 border-t border-border">
@@ -39,7 +45,10 @@ export function SiteFooter() {
               © {new Date().getFullYear()} {profile.name} · Built in the dark with good music on
             </p>
             <p className="readout-dim">
-              Last updated {LAST_UPDATED} ·{" "}
+              Last updated {LAST_UPDATED} · Epoch {EPOCH}
+            </p>
+            <p className="readout-dim">
+              {PRESSING} ·{" "}
               {/* A plain anchor on purpose: /admin/ is a static page outside
                   the SPA, and a router Link would land on the 404 route. */}
               <a href="/admin/" className="readout-link">

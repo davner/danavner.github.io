@@ -62,7 +62,12 @@ jobs:
 
       - run: npm ci
 
+      # The impression number on the footer's imprint line. `run_number` ticks
+      # on every run of this workflow, data-triggered deploys included, so it
+      # counts pressings rather than human changes.
       - run: npm run build
+        env:
+          IMPRESSION: ${{ github.run_number }}
 
       - uses: actions/upload-pages-artifact@v5
         with:

@@ -1,8 +1,9 @@
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
-import { Link, Navigate, useParams } from "react-router";
+import { Navigate, useParams } from "react-router";
 
 import { AlbumCover, AlbumReview, AlbumScore, AlbumTracks } from "@/components/album-record";
 import { FactLine } from "@/components/fact-line";
+import { Link } from "@/components/link";
 import { PageHeader, PageShell, Section } from "@/components/page";
 import { ShareAlbum } from "@/components/share-album";
 import { SpotifyCredit } from "@/components/spotify-credit";

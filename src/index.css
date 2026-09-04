@@ -360,6 +360,38 @@
         opacity !important;
     }
   }
+
+  /*
+   * Route changes cross-fade like swapping one print for another. The `(*)`
+   * group selector matters: the root group's own default is 250ms and would
+   * stretch the transition past the fade.
+   */
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 150ms;
+  }
+
+  /* The snapshot overlay captures hit-testing for the fade's window
+     otherwise, which readers and the Playwright suite would both feel. */
+  ::view-transition {
+    pointer-events: none;
+  }
+
+  /*
+   * The allowlist's `*` selector cannot reach the view-transition pseudos, so
+   * their zeroing is spelled here - after the duration rules above, because at
+   * equal specificity source order is what lets it win. `animation: none`
+   * finishes the transition immediately rather than fading it.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-image-pair(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation: none;
+    }
+  }
 }
 
 /*

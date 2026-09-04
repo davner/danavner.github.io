@@ -1,9 +1,10 @@
 import { Disc3 } from "lucide-react";
 import { useMemo } from "react";
-import { Link, useSearchParams } from "react-router";
+import { useSearchParams } from "react-router";
 
 import { AlbumScore } from "@/components/album-record";
 import { EmptyState } from "@/components/empty-state";
+import { Link } from "@/components/link";
 import { FilterStatus } from "@/components/filter-status";
 import { FilterToggle } from "@/components/filter-toggle";
 import { Section } from "@/components/page";

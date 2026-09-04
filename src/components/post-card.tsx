@@ -1,6 +1,6 @@
 import { ArrowUpRight } from "lucide-react";
-import { Link } from "react-router";
 
+import { Link } from "@/components/link";
 import { Badge } from "@/components/ui/badge";
 import { CATEGORY_LABEL, formatDate, type Post } from "@/lib/blog";
 

@@ -1,10 +1,10 @@
 import { ArrowUpRight, Disc3 } from "lucide-react";
-import { Link } from "react-router";
 
 import { AlbumCover, AlbumReview, AlbumScore, AlbumTracks } from "@/components/album-record";
 import { DanFmArchive } from "@/components/dan-fm-archive";
 import { DanFmCharts } from "@/components/dan-fm-charts";
 import { DanFmMixtape } from "@/components/dan-fm-mixtape";
+import { Link } from "@/components/link";
 import { OnAir } from "@/components/on-air";
 import { PageHeader, PageShell, Section } from "@/components/page";
 import { ShareAlbum } from "@/components/share-album";

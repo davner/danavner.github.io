@@ -12,11 +12,12 @@ import {
   Youtube,
 } from "lucide-react";
 import Markdown from "react-markdown";
-import { Link, Navigate, useParams } from "react-router";
+import { Navigate, useParams } from "react-router";
 import remarkGfm from "remark-gfm";
 
 import { DuoBadge } from "@/components/duo-badge";
 import { FactLine } from "@/components/fact-line";
+import { Link } from "@/components/link";
 import { PageHeader, PageShell, Section } from "@/components/page";
 import { PhotoCarousel } from "@/components/photo-carousel";
 import { Rating } from "@/components/rating";

@@ -10,9 +10,9 @@ import {
   Users,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import { Link } from "react-router";
 
 import { BandList } from "@/components/band-list";
+import { Link } from "@/components/link";
 import { PageHeader, PageShell } from "@/components/page";
 import { DuoBadge } from "@/components/duo-badge";
 import { Rating } from "@/components/rating";

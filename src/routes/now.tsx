@@ -1,7 +1,8 @@
 import { ArrowLeft } from "lucide-react";
 import { Suspense, lazy } from "react";
-import { Link, Navigate, useParams } from "react-router";
+import { Navigate, useParams } from "react-router";
 
+import { Link } from "@/components/link";
 import { NowProse } from "@/components/now-prose";
 import { NowTimeline } from "@/components/now-timeline";
 import { PageHeader, PageShell } from "@/components/page";

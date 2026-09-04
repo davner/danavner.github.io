@@ -1,5 +1,6 @@
-import { Link, useLocation } from "react-router";
+import { useLocation } from "react-router";
 
+import { Link } from "@/components/link";
 import { PixelFire } from "@/components/pixel-fire";
 import { SocialLinks } from "@/components/social-links";
 import { profile } from "@/content/profile";

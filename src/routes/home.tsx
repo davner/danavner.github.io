@@ -1,8 +1,8 @@
 import { ArrowRight, ArrowUpRight, CheckIcon } from "lucide-react";
-import { Link } from "react-router";
 
 import { BandList } from "@/components/band-list";
 import { FramedPhoto } from "@/components/framed-photo";
+import { Link } from "@/components/link";
 import { Marquee } from "@/components/marquee";
 import { Section } from "@/components/page";
 import { SocialLinks } from "@/components/social-links";

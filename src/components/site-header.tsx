@@ -1,7 +1,8 @@
 import { Menu } from "lucide-react";
 import { type PointerEvent, useState } from "react";
-import { NavLink, useLocation } from "react-router";
+import { useLocation } from "react-router";
 
+import { NavLink } from "@/components/link";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import {

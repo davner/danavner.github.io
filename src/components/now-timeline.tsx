@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as RovingFocus from "@radix-ui/react-roving-focus";
-import { Link } from "react-router";
 
+import { Link } from "@/components/link";
 import { NowProse } from "@/components/now-prose";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { formatDate } from "@/lib/blog";

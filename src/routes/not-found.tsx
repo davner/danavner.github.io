@@ -1,6 +1,6 @@
 import { ArrowLeft } from "lucide-react";
-import { Link } from "react-router";
 
+import { Link } from "@/components/link";
 import { PageShell } from "@/components/page";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 

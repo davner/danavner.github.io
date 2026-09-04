@@ -10,9 +10,9 @@ import {
   Telescope,
   Trophy,
 } from "lucide-react";
-import { Link } from "react-router";
 
 import { FramedPhoto } from "@/components/framed-photo";
+import { Link } from "@/components/link";
 import { PageHeader, PageShell, Section } from "@/components/page";
 import { SocialLinks } from "@/components/social-links";
 import { Badge } from "@/components/ui/badge";

@@ -448,6 +448,15 @@ confirmations. **The drawer** (`--ease-drawer`) is over-damped from rest and
 spends its whole travel decelerating; it times the mobile sheet. A third curve
 arrives when a third character has a second customer, not before.
 
+A route change cross-fades at 150ms, like one print being swapped for another
+on the same easel - the browser's view-transition machinery, opted in through
+the site's own `Link` wrapper, never per call site. Filter and search-param
+updates stay a snap, because nothing was swapped. Under reduced motion the
+swap finishes immediately, and the transition overlay never captures the
+pointer. The page title does not travel: a poster title sliding and rescaling
+between pages would make every navigation morph-dominant, and the register is
+the snap - don't name a shared element into the transition.
+
 ### Named Rules
 
 **The Two Hundred Rule.** Every duration is 200ms or less. Paper snaps, and a

@@ -1,7 +1,7 @@
 import { ArrowUpRight } from "lucide-react";
-import { Link } from "react-router";
 
 import { EmptyState } from "@/components/empty-state";
+import { Link } from "@/components/link";
 import { Section } from "@/components/page";
 import { MIXTAPE_SCORE, mixtape, type Album } from "@/lib/dan-fm";
 import { albumTitle, albumUrl } from "@/lib/dan-fm-summary";

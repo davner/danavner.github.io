@@ -1,12 +1,13 @@
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Suspense, lazy } from "react";
 import Markdown from "react-markdown";
-import { Link, useParams } from "react-router";
+import { useParams } from "react-router";
 import rehypeHighlight from "rehype-highlight";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 
 import { FactLine } from "@/components/fact-line";
+import { Link } from "@/components/link";
 import { PageHeader, PageShell } from "@/components/page";
 import { Badge } from "@/components/ui/badge";
 import { CATEGORY_LABEL, formatDate, getPost, posts } from "@/lib/blog";

@@ -154,6 +154,9 @@ export function SiteHeader() {
                     className="rounded-none! border-border p-0"
                     {...CLICK_TO_OPEN}
                   >
+                    {/* The ember hairline that draws in as the panel opens -
+                        the ActiveRule idiom at panel scale. */}
+                    <span aria-hidden className="nav-panel-rule block h-px bg-ember" />
                     <ul className="w-44">
                       {entry.items.map((item) => (
                         <li key={item.to} className="border-b border-border last:border-b-0">

@@ -827,6 +827,28 @@
     }
   }
 
+  /*
+   * The collections panel's ember hairline draws in from the left as the
+   * panel fades open. A keyboard open leaves the trigger `:focus-visible`,
+   * and that suppresses the draw - fade only, no transform on any keyboard
+   * path. Reduced motion collapses both animations to instant.
+   */
+  .nav-panel-rule {
+    transform-origin: left;
+    animation: rule-in 120ms var(--ease-stamp);
+  }
+
+  @keyframes rule-in {
+    from {
+      scale: 0 1;
+    }
+  }
+
+  [data-slot="navigation-menu-item"]:has([data-slot="navigation-menu-trigger"]:focus-visible)
+    .nav-panel-rule {
+    animation: none;
+  }
+
   /* ---- Long-form -------------------------------------------------------- */
 
   .prose-dan {

@@ -1,5 +1,13 @@
 import { Suspense, lazy } from "react";
-import { BrowserRouter, Navigate, Route, Routes, useParams } from "react-router";
+import {
+  Navigate,
+  Outlet,
+  Route,
+  RouterProvider,
+  createBrowserRouter,
+  createRoutesFromElements,
+  useParams,
+} from "react-router";
 
 import { Backdrop } from "@/components/backdrop";
 import { RouteBoundary } from "@/components/route-boundary";
@@ -56,19 +64,136 @@ const DanFmAlbum = lazy(() =>
   import("@/routes/dan-fm-album").then((module) => ({ default: module.DanFmAlbum })),
 );
 
-export function App() {
-  // Hoisted so both now routes share one element, and with it one lazy
-  // identity - see the `Now` import above.
-  const nowRoute = (
-    <RouteBoundary>
-      <Suspense fallback={<PostSkeleton />}>
-        <Now />
-      </Suspense>
-    </RouteBoundary>
-  );
+// Hoisted so both now routes share one element, and with it one lazy
+// identity - see the `Now` import above.
+const nowRoute = (
+  <RouteBoundary>
+    <Suspense fallback={<PostSkeleton />}>
+      <Now />
+    </Suspense>
+  </RouteBoundary>
+);
 
+// Mounted through the data router rather than `<BrowserRouter>`: only
+// `RouterProvider` can wire a navigation through `document.startViewTransition`,
+// which the route cross-fade rides. `<Shell />` is the pathless layout holding
+// everything that used to wrap `<Routes>`.
+const router = createBrowserRouter(
+  createRoutesFromElements(
+    <Route element={<Shell />}>
+      <Route path="/" element={<Home />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/career" element={<Career />} />
+      <Route path="/blog" element={<Blog />} />
+      <Route
+        path="/blog/:slug"
+        element={
+          <RouteBoundary>
+            <Suspense fallback={<PostSkeleton />}>
+              <BlogPost />
+            </Suspense>
+          </RouteBoundary>
+        }
+      />
+      <Route
+        path="/shows"
+        element={
+          <RouteBoundary>
+            <Suspense fallback={<PostSkeleton />}>
+              <Shows />
+            </Suspense>
+          </RouteBoundary>
+        }
+      />
+      <Route
+        path="/shows/:slug"
+        element={
+          <RouteBoundary>
+            <Suspense fallback={<PostSkeleton />}>
+              <ShowDetail />
+            </Suspense>
+          </RouteBoundary>
+        }
+      />
+      <Route
+        path="/vinyl"
+        element={
+          <RouteBoundary>
+            <Suspense fallback={<PostSkeleton />}>
+              <Vinyl />
+            </Suspense>
+          </RouteBoundary>
+        }
+      />
+      <Route path="/now" element={nowRoute} />
+      <Route path="/now/:date" element={nowRoute} />
+      <Route
+        path="/comics"
+        element={
+          <RouteBoundary>
+            <Suspense fallback={<PostSkeleton />}>
+              <Comics />
+            </Suspense>
+          </RouteBoundary>
+        }
+      />
+      <Route
+        path="/fortnite"
+        element={
+          <RouteBoundary>
+            <Suspense fallback={<PostSkeleton />}>
+              <Fortnite />
+            </Suspense>
+          </RouteBoundary>
+        }
+      />
+      <Route
+        path="/dan-fm"
+        element={
+          <RouteBoundary>
+            <Suspense fallback={<PostSkeleton />}>
+              <DanFm />
+            </Suspense>
+          </RouteBoundary>
+        }
+      />
+      <Route
+        path="/dan-fm/:slug"
+        element={
+          <RouteBoundary>
+            <Suspense fallback={<PostSkeleton />}>
+              <DanFmAlbum />
+            </Suspense>
+          </RouteBoundary>
+        }
+      />
+
+      {/* The page about the site rather than a section of it, so the
+          footer's imprint links it and the nav does not. */}
+      <Route path="/colophon" element={<Colophon />} />
+
+      {/* Links in the wild still point at /work, /writing and /trips; keep
+          them resolving so nothing already linked breaks. The travel
+          writing lives in the blog, so /trips lands there rather than on
+          the 404. */}
+      <Route path="/work" element={<Navigate to="/career" replace />} />
+      <Route path="/writing" element={<Navigate to="/blog" replace />} />
+      <Route path="/writing/:slug" element={<LegacyPostRedirect />} />
+      <Route path="/trips" element={<Navigate to="/blog" replace />} />
+      <Route path="/trips/:slug" element={<Navigate to="/blog" replace />} />
+
+      <Route path="*" element={<NotFound />} />
+    </Route>,
+  ),
+);
+
+export function App() {
+  return <RouterProvider router={router} />;
+}
+
+function Shell() {
   return (
-    <BrowserRouter>
+    <>
       <ScrollToTop />
       <Backdrop />
 
@@ -83,115 +208,12 @@ export function App() {
         <SiteHeader />
 
         <main id="main" className="flex-1">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/career" element={<Career />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route
-              path="/blog/:slug"
-              element={
-                <RouteBoundary>
-                  <Suspense fallback={<PostSkeleton />}>
-                    <BlogPost />
-                  </Suspense>
-                </RouteBoundary>
-              }
-            />
-            <Route
-              path="/shows"
-              element={
-                <RouteBoundary>
-                  <Suspense fallback={<PostSkeleton />}>
-                    <Shows />
-                  </Suspense>
-                </RouteBoundary>
-              }
-            />
-            <Route
-              path="/shows/:slug"
-              element={
-                <RouteBoundary>
-                  <Suspense fallback={<PostSkeleton />}>
-                    <ShowDetail />
-                  </Suspense>
-                </RouteBoundary>
-              }
-            />
-            <Route
-              path="/vinyl"
-              element={
-                <RouteBoundary>
-                  <Suspense fallback={<PostSkeleton />}>
-                    <Vinyl />
-                  </Suspense>
-                </RouteBoundary>
-              }
-            />
-            <Route path="/now" element={nowRoute} />
-            <Route path="/now/:date" element={nowRoute} />
-            <Route
-              path="/comics"
-              element={
-                <RouteBoundary>
-                  <Suspense fallback={<PostSkeleton />}>
-                    <Comics />
-                  </Suspense>
-                </RouteBoundary>
-              }
-            />
-            <Route
-              path="/fortnite"
-              element={
-                <RouteBoundary>
-                  <Suspense fallback={<PostSkeleton />}>
-                    <Fortnite />
-                  </Suspense>
-                </RouteBoundary>
-              }
-            />
-            <Route
-              path="/dan-fm"
-              element={
-                <RouteBoundary>
-                  <Suspense fallback={<PostSkeleton />}>
-                    <DanFm />
-                  </Suspense>
-                </RouteBoundary>
-              }
-            />
-            <Route
-              path="/dan-fm/:slug"
-              element={
-                <RouteBoundary>
-                  <Suspense fallback={<PostSkeleton />}>
-                    <DanFmAlbum />
-                  </Suspense>
-                </RouteBoundary>
-              }
-            />
-
-            {/* The page about the site rather than a section of it, so the
-                footer's imprint links it and the nav does not. */}
-            <Route path="/colophon" element={<Colophon />} />
-
-            {/* Links in the wild still point at /work, /writing and /trips; keep
-                them resolving so nothing already linked breaks. The travel
-                writing lives in the blog, so /trips lands there rather than on
-                the 404. */}
-            <Route path="/work" element={<Navigate to="/career" replace />} />
-            <Route path="/writing" element={<Navigate to="/blog" replace />} />
-            <Route path="/writing/:slug" element={<LegacyPostRedirect />} />
-            <Route path="/trips" element={<Navigate to="/blog" replace />} />
-            <Route path="/trips/:slug" element={<Navigate to="/blog" replace />} />
-
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <Outlet />
         </main>
 
         <SiteFooter />
       </div>
-    </BrowserRouter>
+    </>
   );
 }
 

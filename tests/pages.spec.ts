@@ -150,6 +150,38 @@ test.describe("a real page per route", () => {
     }
   });
 
+  /*
+   * The `socials` list in src/content/profile.ts, spelled out. A literal
+   * because that module cannot be imported from here: it reads accounts.json,
+   * which Node's loader refuses without an import attribute the app's build
+   * does not use. Adding a profile means adding it in both places, and this
+   * failing is how the second place gets remembered.
+   */
+  const PROFILES = [
+    "https://github.com/davner",
+    "https://www.linkedin.com/in/danavner/",
+    "https://www.instagram.com/aspacemansheavyload/",
+    "https://www.youtube.com/@danmadespace",
+    "https://scholar.google.com/citations?user=B0HllkYAAAAJ&hl=en",
+  ];
+
+  test("each page vouches for every profile that vouches back", () => {
+    /*
+     * The rel=me links are hand-written in index.html - the config context
+     * cannot import profile.ts, for the reason src/lib/routes.ts records - so
+     * this is the only thing binding them to the profile list. Order and all:
+     * the head's list is that list, not a selection from it.
+     */
+    for (const file of [path.join(DIST, "index.html"), ...SECTIONS.map(fileFor)]) {
+      const html = read(file);
+      const hrefs = [...html.matchAll(/<link\s+rel="me"\s+href="([^"]*)"/g)].map((match) =>
+        decode(match[1]),
+      );
+
+      expect(hrefs, `${path.basename(file)} does not vouch for every profile`).toEqual(PROFILES);
+    }
+  });
+
   test("no generated page preloads the home page's hero", () => {
     // The home page's largest contentful paint, and 47 kB nobody else asked
     // for. `index.html` is the only file Pages serves at "/".

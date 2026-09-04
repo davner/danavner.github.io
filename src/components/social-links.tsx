@@ -27,11 +27,14 @@ export function SocialLinks({ className }: { className?: string }) {
               size="icon"
               className="text-muted-foreground hover:text-foreground"
             >
+              {/* `me` marks the profile as this person's own - the body-side
+                  half of the head's rel=me links, for parsers that do run
+                  the app. */}
               <a
                 href={social.href}
                 aria-label={social.label}
                 title={social.label}
-                {...(external ? { target: "_blank", rel: "noreferrer noopener" } : {})}
+                {...(external ? { target: "_blank", rel: "me noreferrer noopener" } : {})}
               >
                 <Icon />
               </a>

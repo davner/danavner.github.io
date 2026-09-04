@@ -13,6 +13,19 @@
     <link rel="manifest" href="/site.webmanifest" />
 
     <!--
+      One rel=me per entry in `socials` in src/content/profile.ts - what
+      Mastodon-style identity verification reads, and it reads the served HTML,
+      never the app. Hand-written because the config context cannot import
+      profile.ts (src/lib/routes.ts records why); tests/pages.spec.ts is what
+      holds the two lists together.
+    -->
+    <link rel="me" href="https://github.com/davner" />
+    <link rel="me" href="https://www.linkedin.com/in/danavner/" />
+    <link rel="me" href="https://www.instagram.com/aspacemansheavyload/" />
+    <link rel="me" href="https://www.youtube.com/@danmadespace" />
+    <link rel="me" href="https://scholar.google.com/citations?user=B0HllkYAAAAJ&amp;hl=en" />
+
+    <!--
       The home page's hero photo, which is its largest contentful paint. React
       renders it, so without this the browser cannot even see the URL until the
       bundle has parsed and run - measured at 1.5s of dead time on mobile before

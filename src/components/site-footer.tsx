@@ -49,6 +49,10 @@ export function SiteFooter() {
             </p>
             <p className="readout-dim">
               {PRESSING} ·{" "}
+              <Link to="/colophon" className="readout-link">
+                Colophon
+              </Link>{" "}
+              ·{" "}
               {/* A plain anchor on purpose: /admin/ is a static page outside
                   the SPA, and a router Link would land on the 404 route. */}
               <a href="/admin/" className="readout-link">

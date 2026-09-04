@@ -28,11 +28,12 @@ export interface PageMeta {
 }
 
 /**
- * Every section of the site, in nav order.
+ * Every section of the site in nav order, then the colophon, which only the
+ * footer links.
  *
- * The titles are the labels `site.ts` gives the same paths, deliberately: a page
- * someone found by scanning a list of links should say the word they scanned
- * for.
+ * The section titles are the labels `site.ts` gives the same paths,
+ * deliberately: a page someone found by scanning a list of links should say
+ * the word they scanned for.
  */
 export const PAGE_META = {
   "/now": {
@@ -77,6 +78,11 @@ export const PAGE_META = {
     title: "dan.fm",
     description:
       "One album a day, logged and rated: a review, a favourite track, a least favourite, and a score out of five.",
+  },
+  "/colophon": {
+    title: "Colophon",
+    description:
+      "How this site is made: the type it is set in, the inks on the plate, and the press it comes off of.",
   },
 } as const satisfies Record<string, PageMeta>;
 

@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { About } from "@/routes/about";
 import { Blog } from "@/routes/blog";
 import { Career } from "@/routes/career";
+import { Colophon } from "@/routes/colophon";
 import { Home } from "@/routes/home";
 import { NotFound } from "@/routes/not-found";
 
@@ -169,6 +170,10 @@ export function App() {
                 </RouteBoundary>
               }
             />
+
+            {/* The page about the site rather than a section of it, so the
+                footer's imprint links it and the nav does not. */}
+            <Route path="/colophon" element={<Colophon />} />
 
             {/* Links in the wild still point at /work, /writing and /trips; keep
                 them resolving so nothing already linked breaks. The travel

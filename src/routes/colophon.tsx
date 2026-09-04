@@ -39,6 +39,9 @@ const BARCODE = code128bWidths(__COMMIT_SHA__);
 const BARCODE_MODULES = BARCODE.reduce((sum, width) => sum + width, 0);
 const BARCODE_HEIGHT = 32;
 
+/** One line, ready to paste - the snippet the button section prints. */
+const EMBED = `<a href="https://danavner.com"><img src="https://danavner.com/img/badge-88x31.png" width="88" height="31" alt="danavner.com"></a>`;
+
 /** The bars alone; the gaps stay page-coloured, like unprinted stock. */
 function barcodeRects() {
   const rects = [];
@@ -155,6 +158,31 @@ export function Colophon() {
         </svg>
 
         <p className="readout-dim mt-3">{__COMMIT_SHA__}</p>
+      </Section>
+
+      <Section title="The button">
+        <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground text-pretty">
+          An 88 by 31 button, in the tradition of every site that ever kept a links page. If you
+          keep one, this is mine. Shown at actual size, because that is the whole format.
+        </p>
+
+        <img
+          src="/img/badge-88x31.png"
+          alt="danavner.com: an 88 by 31 web button, the address in white and ember type on press black"
+          width={88}
+          height={31}
+          className="mt-8"
+        />
+
+        {/* Focusable for the same reason blog-post.tsx's code blocks are: a
+            block that scrolls sideways is unreachable to a keyboard unless it
+            can take focus, and on a phone this one does. */}
+        <pre
+          tabIndex={0}
+          className="mt-6 max-w-2xl overflow-x-auto border border-border bg-card p-4 text-sm"
+        >
+          <code>{EMBED}</code>
+        </pre>
       </Section>
     </PageShell>
   );

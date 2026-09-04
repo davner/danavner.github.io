@@ -84,7 +84,11 @@ export default tseslint.config(
    * question, and better.
    */
   {
-    files: ["scripts/make-site-card.mjs", "scripts/make-share-fallback.mjs"],
+    files: [
+      "scripts/make-site-card.mjs",
+      "scripts/make-share-fallback.mjs",
+      "scripts/make-badge.mjs",
+    ],
     languageOptions: {
       globals: { ...globals.node, ...globals.browser },
     },

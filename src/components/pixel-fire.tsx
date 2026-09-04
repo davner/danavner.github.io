@@ -8,6 +8,10 @@ const ROWS = 16;
 const FPS = 24;
 /** Hottest palette index. The bottom row is pinned here. */
 const MAX_HEAT = 31;
+/** How long a press keeps feeding the flames. */
+const STOKE_MS = 1000;
+/** Gaussian falloff width of the press's kick, in columns. */
+const STOKE_SPREAD = 6;
 
 /**
  * Colour stops for the heat ramp, `[heat 0-1, r, g, b, a]`.
@@ -51,10 +55,26 @@ const PALETTE = (() => {
  * Per-column fuel, drifting frame to frame. Pinning the whole bottom row to one
  * temperature gives an even wall of fire; letting each column run hotter or
  * cooler than its neighbours is what turns it into separate licks.
+ *
+ * A press hands in a boost: extra heat around the pressed column, strongest at
+ * the press and falling off by distance and by how much of its second has
+ * burned away - a parameter kick riding the frames already being drawn, so the
+ * fire leaps there and settles back on its own.
  */
-function stoke(fuel: Float32Array, cols: number) {
+function stoke(fuel: Float32Array, cols: number, boost?: { column: number; until: number }) {
+  const now = performance.now();
+  const kick = boost && boost.until > now ? (boost.until - now) / STOKE_MS : 0;
+
   for (let x = 0; x < cols; x++) {
-    const next = fuel[x] + (Math.random() - 0.5) * 4;
+    let next = fuel[x] + (Math.random() - 0.5) * 4;
+    if (kick > 0 && boost) {
+      const distance = x - boost.column;
+      next +=
+        kick *
+        MAX_HEAT *
+        0.6 *
+        Math.exp(-(distance * distance) / (2 * STOKE_SPREAD * STOKE_SPREAD));
+    }
     fuel[x] = next < 0 ? 0 : next > MAX_HEAT ? MAX_HEAT : next;
   }
 
@@ -105,7 +125,9 @@ function paint(image: ImageData, cells: Uint8Array) {
  * nearest-neighbour so the pixels stay square and chunky.
  *
  * It stops when it is scrolled out of view, and with `prefers-reduced-motion`
- * it settles into a single still frame instead of animating.
+ * it settles into a single still frame instead of animating. A press stokes
+ * it - under reduced motion by re-settling the standing frame once, so the
+ * flames rearrange without ever moving.
  */
 export function PixelFire({ className }: { className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -124,6 +146,7 @@ export function PixelFire({ className }: { className?: string }) {
     let frame = 0;
     let last = 0;
     let visible = true;
+    let boost: { column: number; until: number } | undefined;
 
     function resize() {
       const next = Math.max(1, Math.ceil(canvas!.clientWidth / PIXEL));
@@ -139,7 +162,7 @@ export function PixelFire({ className }: { className?: string }) {
     }
 
     function step() {
-      stoke(fuel, cols);
+      stoke(fuel, cols, boost);
       for (let x = 0; x < cols; x++) cells[(ROWS - 1) * cols + x] = fuel[x];
       spread(cells, cols);
       paint(image!, cells);
@@ -149,7 +172,7 @@ export function PixelFire({ className }: { className?: string }) {
     /** Runs the simulation up to a steady state, for the still frame. */
     function settle() {
       for (let i = 0; i < ROWS * 4; i++) {
-        stoke(fuel, cols);
+        stoke(fuel, cols, boost);
         for (let x = 0; x < cols; x++) cells[(ROWS - 1) * cols + x] = fuel[x];
         spread(cells, cols);
       }
@@ -197,6 +220,15 @@ export function PixelFire({ className }: { className?: string }) {
     }
     reduceMotion.addEventListener("change", onMotionChange);
 
+    function onPointerDown(event: PointerEvent) {
+      const column = Math.min(cols - 1, Math.max(0, Math.floor(event.offsetX / PIXEL)));
+      boost = { column, until: performance.now() + STOKE_MS };
+      // With the loop parked, one settled frame shows the fire rearranged
+      // around the press - motion-free, not dead.
+      if (reduceMotion.matches) settle();
+    }
+    canvas.addEventListener("pointerdown", onPointerDown);
+
     resize();
     play();
 
@@ -205,14 +237,23 @@ export function PixelFire({ className }: { className?: string }) {
       observer.disconnect();
       resizeObserver.disconnect();
       reduceMotion.removeEventListener("change", onMotionChange);
+      canvas.removeEventListener("pointerdown", onPointerDown);
     };
   }, []);
 
   return (
     <canvas
       ref={canvasRef}
+      /*
+       * Takes a press yet stays silent to assistive technology: no role, no
+       * name, no tab stop. The stoke conveys nothing and changes nothing, so
+       * a labeled control would cost every page's footer an announced tab
+       * stop for zero information. DESIGN.md's Motion section records that
+       * judgment; the cursor is the only invitation - by hand, because the
+       * cursor sweep's selector list cannot reach a canvas.
+       */
       aria-hidden
-      className={cn("pointer-events-none block w-full print:hidden", className)}
+      className={cn("block w-full cursor-pointer print:hidden", className)}
       style={{ height: `${ROWS * PIXEL}px`, imageRendering: "pixelated" }}
     />
   );

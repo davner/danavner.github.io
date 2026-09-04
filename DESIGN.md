@@ -457,6 +457,21 @@ pointer. The page title does not travel: a poster title sliding and rescaling
 between pages would make every navigation morph-dominant, and the register is
 the snap - don't name a shared element into the transition.
 
+One thing burns on its own, and a press stokes it. The footer's pixel fire
+takes a pointer press and answers with a kick of heat around the pressed
+column, decaying back to baseline inside a second - a parameter of the
+simulation, not an animation, riding frames the fire was already drawing. It
+adds no information and changes no state, so the canvas stays silent to
+assistive technology: no role, no name, no tab stop, deliberately unreachable
+by keyboard because there is nothing to operate, and the cursor is the only
+invitation. That position is a documented conformance judgment, not a clean
+WCAG 2.1.1 pass - the criterion covers functionality, and the judgment here is
+that a decoration whose press conveys nothing carries none. A strict auditor
+could write it up; this paragraph is the record that the cost of an announced
+control in every page's footer was weighed, with eyes open, against zero
+information conveyed. Under reduced motion a press re-settles the standing
+frame once: the flames rearrange without ever moving.
+
 ### Named Rules
 
 **The Two Hundred Rule.** Every duration is 200ms or less. Paper snaps, and a

@@ -152,3 +152,69 @@ test.describe("the transition allowlist", () => {
     expect(parseFloat(colouring), "every transition on the page is collapsed").toBeGreaterThan(0);
   });
 });
+
+test.describe("the route cross-fade", () => {
+  /*
+   * The allowlist's `*` selector cannot reach the view-transition pseudos, so
+   * `index.css` zeroes them in their own block - and both directions are
+   * asserted, because under reduced motion the pseudo computes `none`/`0s`
+   * even where no rule reaches it at all. The no-preference read proving the
+   * 150ms rule lands on the same pseudo is what shows the selector works,
+   * which makes the `none` under reduce a decision rather than an accident.
+   */
+  test("finishes immediately under reduced motion", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/");
+    await page.getByRole("heading", { level: 1 }).waitFor();
+
+    const style = await page.evaluate(() => {
+      const cs = getComputedStyle(document.documentElement, "::view-transition-old(root)");
+      return { name: cs.animationName, duration: cs.animationDuration };
+    });
+
+    expect(style.name, "the zeroing block no longer reaches the snapshot").toBe("none");
+    expect(style.duration, "a duration survived the zeroing").toBe("0s");
+  });
+
+  test("runs at the fade's 150ms when no preference was expressed", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.goto("/");
+    await page.getByRole("heading", { level: 1 }).waitFor();
+
+    const duration = await page.evaluate(
+      () =>
+        getComputedStyle(document.documentElement, "::view-transition-old(root)").animationDuration,
+    );
+
+    expect(duration, "the 150ms rule no longer reaches the snapshot").toBe("0.15s");
+  });
+});
+
+test.describe("the footer fire", () => {
+  test("a press rearranges the standing frame without setting it moving", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/");
+    await page.getByRole("heading", { level: 1 }).waitFor();
+
+    const canvas = page.locator("footer canvas");
+    await canvas.scrollIntoViewIfNeeded();
+
+    // The settled still frame the reduced-motion path paints on mount.
+    const before = await canvas.evaluate((el) => (el as HTMLCanvasElement).toDataURL());
+
+    await canvas.click();
+    const after = await canvas.evaluate((el) => (el as HTMLCanvasElement).toDataURL());
+    expect(after, "the press changed nothing").not.toBe(before);
+
+    // Rearranged, not animating: the new frame holds across two frames.
+    const later = await canvas.evaluate(
+      (el) =>
+        new Promise<string>((resolve) => {
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => resolve((el as HTMLCanvasElement).toDataURL())),
+          );
+        }),
+    );
+    expect(later, "the fire is animating under reduced motion").toBe(after);
+  });
+});

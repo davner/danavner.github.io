@@ -56,10 +56,15 @@ export function Career() {
           {roles.map((role) => (
             <li
               key={`${role.org}-${role.start}`}
-              className="grid gap-x-8 gap-y-4 border-b border-border py-10 md:grid-cols-[13rem_minmax(0,1fr)]"
+              /* `cut-corners` answers hover and focus-within with the site's
+                 registration marks - opacity only, so reduced motion keeps
+                 them while the period's nudge drops away. */
+              className="group cut-corners grid gap-x-8 gap-y-4 border-b border-border py-10 md:grid-cols-[13rem_minmax(0,1fr)]"
             >
               <div>
-                <p className="readout text-ember">{role.period}</p>
+                <p className="readout text-ember transition-[translate] duration-150 ease-stamp motion-safe:group-hover:translate-x-0.5">
+                  {role.period}
+                </p>
                 <p className="mt-3 font-mono text-sm">{role.org}</p>
                 <p className="readout-dim mt-1">{role.location}</p>
               </div>

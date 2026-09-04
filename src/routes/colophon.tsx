@@ -1,4 +1,5 @@
 import { PageHeader, PageShell, Section } from "@/components/page";
+import { code128bWidths } from "@/lib/code128";
 import { PAGE_META } from "@/lib/routes";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
@@ -28,6 +29,28 @@ const PRESS = [
   { stage: "Pressed by", detail: "GitHub Actions" },
   { stage: "Distributed by", detail: "GitHub Pages" },
 ] as const;
+
+/**
+ * The pressing's barcode: the commit this copy was built from, as Code 128B
+ * element widths. Module-scope because the sha is a build-time constant, so
+ * the widths are too.
+ */
+const BARCODE = code128bWidths(__COMMIT_SHA__);
+const BARCODE_MODULES = BARCODE.reduce((sum, width) => sum + width, 0);
+const BARCODE_HEIGHT = 32;
+
+/** The bars alone; the gaps stay page-coloured, like unprinted stock. */
+function barcodeRects() {
+  const rects = [];
+  let x = 0;
+  for (const [index, width] of BARCODE.entries()) {
+    if (index % 2 === 0) {
+      rects.push(<rect key={index} x={x} y={0} width={width} height={BARCODE_HEIGHT} />);
+    }
+    x += width;
+  }
+  return rects;
+}
 
 export function Colophon() {
   useDocumentMeta(META.title, META.description);
@@ -111,6 +134,27 @@ export function Colophon() {
           site is built, so a bad file fails the build rather than the page. The fonts are served
           from here, not a CDN.
         </p>
+      </Section>
+
+      <Section title="The pressing">
+        <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground text-pretty">
+          Every copy of the site comes off one commit, and this copy came off this one. The text
+          carries the fact; the bars are the same fact for anyone pointing a scanner at a monitor.
+        </p>
+
+        {/* Decoration over data, so it is hidden from AT - the readout line
+            below says the same thing in words. Cold ink because a barcode is
+            machine output, which is the one job `--ion` has. */}
+        <svg
+          viewBox={`0 0 ${BARCODE_MODULES} ${BARCODE_HEIGHT}`}
+          className="mt-8 h-16 w-auto max-w-full fill-ion"
+          shapeRendering="crispEdges"
+          aria-hidden
+        >
+          {barcodeRects()}
+        </svg>
+
+        <p className="readout-dim mt-3">{__COMMIT_SHA__}</p>
       </Section>
     </PageShell>
   );

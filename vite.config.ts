@@ -102,6 +102,20 @@ function preloadFonts(): Plugin {
   };
 }
 
+/**
+ * The short commit id, printed under the colophon's barcode. Falls back to a
+ * proof mark where git is unavailable, the same way `commitDate` falls back.
+ */
+function commitSha(): string {
+  try {
+    const sha = execSync("git rev-parse --short HEAD", { encoding: "utf8" }).trim();
+    if (sha) return sha;
+  } catch {
+    // git unavailable - fall through to the proof mark.
+  }
+  return "proof";
+}
+
 // One read, so the date line and the epoch stamp cannot disagree.
 const pressed = commitDate();
 
@@ -111,6 +125,7 @@ export default defineConfig({
     __EPOCH__: JSON.stringify(epoch(pressed)),
     // Set by deploy.yml from the workflow run number; null marks a local proof.
     __IMPRESSION__: JSON.stringify(process.env.IMPRESSION ?? null),
+    __COMMIT_SHA__: JSON.stringify(commitSha()),
   },
   plugins: [
     react(),

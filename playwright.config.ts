@@ -34,8 +34,10 @@ export default defineConfig({
       use: { ...devices["Pixel 7"], ...launch },
       // The width sweep sets its own viewport for every case it runs, 412 -
       // the Pixel 7's - among them, so running it here would take the same
-      // measurements a second time under a device that never applies.
-      testIgnore: ["**/responsive.spec.ts"],
+      // measurements a second time under a device that never applies. The
+      // encoder spec never opens a page, so a second device would run the
+      // same arithmetic twice.
+      testIgnore: ["**/responsive.spec.ts", "**/code128.spec.ts"],
     },
   ],
   webServer: {

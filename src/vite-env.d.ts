@@ -9,6 +9,9 @@ declare const __EPOCH__: string;
 /** The deploy run number - `IMPRESSION` in `deploy.yml` - as a string; null on a local proof build. */
 declare const __IMPRESSION__: string | null;
 
+/** Short commit id of the pressing, from `git rev-parse`; "proof" where git is unavailable. */
+declare const __COMMIT_SHA__: string;
+
 declare module "virtual:blog" {
   import type { Post } from "@/lib/blog";
 

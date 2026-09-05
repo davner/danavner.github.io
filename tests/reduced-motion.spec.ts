@@ -1,5 +1,7 @@
 import { expect, test, type Locator } from "@playwright/test";
 
+import { albumUrl } from "../src/lib/dan-fm-summary";
+import { albumsOnDisk } from "./dan-fm";
 import { statText } from "./stats";
 
 /**
@@ -298,6 +300,31 @@ test.describe("the framed photo", () => {
         transform,
       );
     }
+  });
+});
+
+test.describe("the star ladder", () => {
+  test("a five holds its glow and stills its dress", async ({ page }) => {
+    const five = albumsOnDisk().find((album) => album.score === 5);
+    test.skip(five === undefined, "no five in the log on disk - the top tier has no row");
+
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto(albumUrl(five!).replace(/^https:\/\/[^/]+/, ""));
+    await page.getByRole("heading", { level: 1 }).waitFor();
+
+    const rating = page.getByRole("img", { name: /^Rated / }).first();
+    await rating.hover();
+
+    // Sheen, breath, flare, shimmer all stilled - the no-preference gates
+    // keep them from existing - while the glow, a static property, holds:
+    // the lamp's bargain, inherited by the ladder.
+    const state = await rating.evaluate((el) => ({
+      animations: el.getAnimations({ subtree: true }).length,
+      shadow: getComputedStyle(el.querySelector("[data-slot=rating-fill]")!).textShadow,
+    }));
+
+    expect(state.animations, "the dress moved under reduced motion").toBe(0);
+    expect(state.shadow, "the glow was taken away with the motion").not.toBe("none");
   });
 });
 

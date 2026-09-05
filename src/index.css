@@ -925,6 +925,123 @@
     mask-position: 140% 0;
   }
 
+  /*
+   * The loop set's second member (DESIGN.md's Do-bullet): a five is live the
+   * way the station is live, so its sheen crosses on its own every six
+   * seconds and its fifth star breathes. The breath's base opacity is 1, so
+   * reduced motion and print hold full brightness with no extra rule.
+   */
+  @media (prefers-reduced-motion: no-preference) {
+    [data-tier="blue"] [data-slot="rating-sheen"] {
+      animation: star-crossing 6s ease-in-out infinite;
+    }
+
+    [data-tier="blue"] [data-slot="rating-star"]:nth-child(5) {
+      animation: star-breathe 7s ease-in-out infinite;
+    }
+  }
+
+  /*
+   * The dress's pointer half, behind hover-capable + no-preference; it sits
+   * after the loops so a hovered fifth star's flare out-orders its breath at
+   * equal specificity - the specimen's own cascade. Reduced motion needs no
+   * extra block: these gates keep every animation from existing, the glow is
+   * a static property and holds, and the global kill still covers the needle
+   * - the lamp's own bargain, inherited.
+   */
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    /*
+     * Ember and gold shimmer under the pointer - on a hovered group row and
+     * on the rating's own hover both, since only the archive rows sit in a
+     * group. The needle rides in the same declaration so the pair stays
+     * composed. 200ms, not the specimen's 220: the Two Hundred Rule binds
+     * each animation's duration.
+     */
+    .group:hover [data-tier="ember"] [data-slot="rating-fill"],
+    .group:hover [data-tier="gold"] [data-slot="rating-fill"],
+    [data-tier="ember"]:hover [data-slot="rating-fill"],
+    [data-tier="gold"]:hover [data-slot="rating-fill"] {
+      -webkit-mask-image: linear-gradient(105deg, #000 35%, rgb(0 0 0 / 0.3) 50%, #000 65%);
+      mask-image: linear-gradient(105deg, #000 35%, rgb(0 0 0 / 0.3) 50%, #000 65%);
+      -webkit-mask-size: 300% 100%;
+      mask-size: 300% 100%;
+      animation:
+        rating-needle 120ms ease-out,
+        star-shimmer 200ms ease-out 120ms;
+    }
+
+    /* The five flares left to right: five 90ms animations on the specimen's
+       28ms stagger - each inside the cap, which reads per animation. */
+    .group:hover [data-tier="blue"] [data-slot="rating-star"],
+    [data-tier="blue"]:hover [data-slot="rating-star"] {
+      animation: star-flare 90ms ease-out both;
+    }
+    .group:hover [data-tier="blue"] [data-slot="rating-star"]:nth-child(2),
+    [data-tier="blue"]:hover [data-slot="rating-star"]:nth-child(2) {
+      animation-delay: 28ms;
+    }
+    .group:hover [data-tier="blue"] [data-slot="rating-star"]:nth-child(3),
+    [data-tier="blue"]:hover [data-slot="rating-star"]:nth-child(3) {
+      animation-delay: 56ms;
+    }
+    .group:hover [data-tier="blue"] [data-slot="rating-star"]:nth-child(4),
+    [data-tier="blue"]:hover [data-slot="rating-star"]:nth-child(4) {
+      animation-delay: 84ms;
+    }
+    .group:hover [data-tier="blue"] [data-slot="rating-star"]:nth-child(5),
+    [data-tier="blue"]:hover [data-slot="rating-star"]:nth-child(5) {
+      animation-delay: 112ms;
+    }
+  }
+
+  @keyframes star-shimmer {
+    from {
+      -webkit-mask-position: 135% 0;
+      mask-position: 135% 0;
+    }
+    to {
+      -webkit-mask-position: -35% 0;
+      mask-position: -35% 0;
+    }
+  }
+
+  @keyframes star-flare {
+    0% {
+      opacity: 1;
+    }
+    40% {
+      opacity: 0.3;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes star-crossing {
+    0% {
+      -webkit-mask-position: 140% 0;
+      mask-position: 140% 0;
+    }
+    22% {
+      -webkit-mask-position: -40% 0;
+      mask-position: -40% 0;
+    }
+    100% {
+      -webkit-mask-position: -40% 0;
+      mask-position: -40% 0;
+    }
+  }
+
+  @keyframes star-breathe {
+    0%,
+    100% {
+      opacity: 0.72;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
   /* ---- Long-form -------------------------------------------------------- */
 
   .prose-dan {

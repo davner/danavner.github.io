@@ -563,6 +563,69 @@ test.describe("the rating mark", () => {
     );
   });
 
+  test("the five's dress is the only self-running motion on its page", async ({ page }) => {
+    /*
+     * The assertable form of the closed loop set: on an album permalink the
+     * lamp is absent, so the infinite animations must be exactly the sheen's
+     * crossing and the fifth star's breath. Read by animation name rather
+     * than by target, because the lamp's member lives on a pseudo-element.
+     */
+    const five = LOGGED.find((album) => album.score === 5);
+    test.skip(five === undefined, "no five in the log on disk - the top tier has no row");
+
+    await page.goto(albumUrl(five!).replace(/^https:\/\/[^/]+/, ""));
+    await page.getByRole("heading", { level: 1 }).waitFor();
+
+    const loops = await page.evaluate(() =>
+      document
+        .getAnimations()
+        .filter((animation) => animation.effect?.getTiming().iterations === Infinity)
+        .map((animation) => (animation as CSSAnimation).animationName)
+        .sort(),
+    );
+    expect(loops).toEqual(["star-breathe", "star-crossing"]);
+  });
+
+  test("the front page's loops are the lamp and the five's dress, nothing else", async ({
+    page,
+  }) => {
+    // The archive holds every album, so a five's row runs its dress here
+    // beside the station lamp; nothing else on the page may loop.
+    await openDanFm(page);
+
+    const loops = await page.evaluate(() =>
+      document
+        .getAnimations()
+        .filter((animation) => animation.effect?.getTiming().iterations === Infinity)
+        .map((animation) => (animation as CSSAnimation).animationName),
+    );
+    for (const name of loops) {
+      expect(
+        ["on-air-warm", "star-breathe", "star-crossing"],
+        `"${name}" loops on its own outside the sanctioned set`,
+      ).toContain(name);
+    }
+  });
+
+  test("a hovered five flares star by star", async ({ page, isMobile }) => {
+    test.skip(Boolean(isMobile), "no hover, no flare");
+    const five = LOGGED.find((album) => album.score === 5);
+    test.skip(five === undefined, "no five in the log on disk - the top tier has no row");
+
+    await page.goto(albumUrl(five!).replace(/^https:\/\/[^/]+/, ""));
+    await page.getByRole("heading", { level: 1 }).waitFor();
+
+    const rating = page.getByRole("img", { name: /^Rated / }).first();
+    await rating.hover();
+
+    const names = await rating
+      .locator("[data-slot=rating-star]")
+      .evaluateAll((stars) => stars.map((star) => getComputedStyle(star).animationName));
+    for (const name of names) {
+      expect(name, "a star did not join the flare").toContain("star-flare");
+    }
+  });
+
   test("the show log carries no tier anywhere", async ({ page }) => {
     // Horns provably untouched: heat is a prop only AlbumScore sets, so no
     // rating outside dan.fm may carry the attribute at any score. The

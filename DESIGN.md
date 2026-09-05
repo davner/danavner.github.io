@@ -526,7 +526,11 @@ site gives it. The cap binds vendored components too: a stock duration above it
 is edited down in place, with the departure documented in the file. A spring
 has no duration, so its settle to rest stands in for one - measured against
 the shipped library rather than read off the constants, because a config can
-claim a feel its damping never delivers.
+claim a feel its damping never delivers. The cap reads per animation: a
+staggered set of sub-cap animations is inside the rule even where the
+gesture's total runs past it. The sanctioned loop set - the lamp and the
+five's dress, named in the Do list - sits outside the cap by grant, not by
+oversight.
 
 **The Pointer's Motion Rule.** A transform state exists only where a pointer
 can be the cause: under the motion-safe condition and, for hovers, on
@@ -684,13 +688,16 @@ without one.
   colour and returns "incomplete" for the rest, so a green run proves a lot and
   not everything.
 - **Do** tie any motion to the reader. The marquee pauses on hover and
-  overflowing text scrolls only while hovered or focused. `.on-air-lamp` is the
-  one loop that runs on its own, because there the motion is the meaning: a lamp that
-  breathes is what says the station is live, the same way the grain is mechanism
-  rather than mood. It pays for the exception by staying small - one element, one
-  state, seven seconds, opacity only, never a transform - and by answering
-  `prefers-reduced-motion` with the glow held still rather than taken away, since
-  a request about movement is not a request to lose the signal.
+  overflowing text scrolls only while hovered or focused. Two loops run on
+  their own, a closed set: `.on-air-lamp`, and the five-star rating's dress -
+  its crossing sheen and breathing fifth star - granted because in both the
+  motion is the meaning: a lamp that breathes says the station is live, and a
+  five is live the way the station is live. Each pays by staying small - one
+  element or one row, opacity and a masked pass, seconds-long, never a
+  transform - and both answer `prefers-reduced-motion` with the glow held
+  still rather than taken away, since a request about movement is not a
+  request to lose the signal. Membership is closed: the next candidate pays
+  the same paragraph these did.
 
 ### Don't:
 

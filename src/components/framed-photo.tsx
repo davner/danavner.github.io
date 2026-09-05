@@ -1,3 +1,5 @@
+import { useRef } from "react";
+
 import { cn } from "@/lib/utils";
 
 /**
@@ -38,8 +40,32 @@ export function FramedPhoto({
    */
   eager?: boolean;
 }) {
+  const figureRef = useRef<HTMLElement>(null);
+
   return (
-    <figure className={cn("relative overflow-hidden border border-border", className)}>
+    /*
+     * The press answer loads on first press: a static import would put
+     * react-spring into the eager bundle this figure anchors (the home hero
+     * is the LCP), so the chunk splits and the first boop may start a frame
+     * late, which an easter egg can afford.
+     *
+     * The figure stays non-focusable and silent to assistive technology -
+     * the pixel fire's conformance judgment, inherited whole: the press
+     * conveys nothing and changes no state, keyboard has nothing to operate,
+     * and the cursor is the only invitation. DESIGN.md's Motion section
+     * records it.
+     */
+    <figure
+      ref={figureRef}
+      className={cn("relative cursor-pointer overflow-hidden border border-border", className)}
+      onPointerDown={() => {
+        const figure = figureRef.current;
+        if (!figure) return;
+        void import("@/lib/boop").then((module) =>
+          module.boop(figure, window.matchMedia("(prefers-reduced-motion: reduce)").matches),
+        );
+      }}
+    >
       <img
         src={src}
         srcSet={srcSet}
@@ -58,6 +84,25 @@ export function FramedPhoto({
       <figcaption className="readout absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-4 pt-10 pb-3 text-white">
         {caption}
       </figcaption>
+      {/* The boop's registration marks - real elements, because the
+          cut-corners pseudos are unreachable from script. At rest they are
+          invisible and inside the frame; the press stamps them 2px inward,
+          since the frame's overflow-hidden would clip an outward pop. */}
+      <span
+        aria-hidden
+        data-slot="boop-tick"
+        className="pointer-events-none absolute top-1.5 left-1.5 h-2 w-2 border-t-2 border-l-2 border-ember opacity-0"
+      />
+      <span
+        aria-hidden
+        data-slot="boop-tick"
+        className="pointer-events-none absolute right-1.5 bottom-1.5 h-2 w-2 border-r-2 border-b-2 border-ember opacity-0"
+      />
+      <span
+        aria-hidden
+        data-slot="boop-flash"
+        className="pointer-events-none absolute inset-0 bg-white opacity-0"
+      />
     </figure>
   );
 }

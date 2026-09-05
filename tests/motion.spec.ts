@@ -76,6 +76,22 @@ test.describe("the stat odometers", () => {
   });
 });
 
+test.describe("the framed photo", () => {
+  test("shows a finger, because it answers a press", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("heading", { level: 1 }).waitFor();
+
+    // Pinned by hand like the fire's: the sitewide cursor sweep matches
+    // `button, select, summary, [role=button]`, and a figure is none of those.
+    const cursor = await page
+      .locator("figure")
+      .first()
+      .evaluate((el) => getComputedStyle(el).cursor);
+
+    expect(cursor, "the photo takes a press but never invites one").toBe("pointer");
+  });
+});
+
 test.describe("the footer fire", () => {
   test("shows a finger, because it answers a press", async ({ page }) => {
     await page.goto("/");

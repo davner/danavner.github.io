@@ -14,24 +14,25 @@ server and no database behind any of it.
 
 ## Stack
 
-| Layer        | Choice                                       | Why                                                          |
-| ------------ | -------------------------------------------- | ------------------------------------------------------------ |
-| Build        | [Vite](https://vite.dev) 7                   | Fast dev server, sane defaults, minimal config               |
-| UI           | [React](https://react.dev) 19 + TypeScript   | Type errors catch content mistakes before the browser does   |
-| Styling      | [Tailwind CSS](https://tailwindcss.com) v4   | CSS-first config - no `tailwind.config.js` to maintain       |
-| Components   | [shadcn/ui](https://ui.shadcn.com)           | Copied into the repo, so they are mine to edit or delete     |
-| Carousel     | [Embla](https://www.embla-carousel.com)      | What shadcn/ui's Carousel is built on                        |
-| Numbers      | [NumberFlow](https://number-flow.barvian.me) | Rolls a stat only when a filter changes it, never on arrival |
-| Icons        | [lucide-react](https://lucide.dev)           | Consistent 24px stroke set, tree-shakeable, ISC              |
-| Type         | [Fontsource](https://fontsource.org)         | Self-hosted Anton / Inter / JetBrains Mono                   |
-| Routing      | [React Router](https://reactrouter.com) 8    | Client routes, with a 404 fallback for GitHub Pages          |
-| CMS          | [Sveltia CMS](https://sveltiacms.app)        | Git-based admin at `/admin/` - forms that commit             |
-| Markdown     | react-markdown + remark-gfm                  | GFM tables, task lists, fenced code                          |
-| Highlighting | rehype-highlight                             | lowlight's `common` set, themed to the palette               |
-| Hosting      | GitHub Pages                                 | Free, already where the repo lives                           |
-| Linting      | ESLint + typescript-eslint                   | Correctness only; every stylistic rule is off                |
-| Formatting   | Prettier, `printWidth: 100`                  | The width the codebase was already written at                |
-| Hooks        | husky + lint-staged                          | Formats and lints what you staged, then type-checks          |
+| Layer        | Choice                                       | Why                                                             |
+| ------------ | -------------------------------------------- | --------------------------------------------------------------- |
+| Build        | [Vite](https://vite.dev) 7                   | Fast dev server, sane defaults, minimal config                  |
+| UI           | [React](https://react.dev) 19 + TypeScript   | Type errors catch content mistakes before the browser does      |
+| Styling      | [Tailwind CSS](https://tailwindcss.com) v4   | CSS-first config - no `tailwind.config.js` to maintain          |
+| Components   | [shadcn/ui](https://ui.shadcn.com)           | Copied into the repo, so they are mine to edit or delete        |
+| Carousel     | [Embla](https://www.embla-carousel.com)      | What shadcn/ui's Carousel is built on                           |
+| Numbers      | [NumberFlow](https://number-flow.barvian.me) | Rolls a stat only when a filter changes it, never on arrival    |
+| Physics      | [react-spring](https://react-spring.dev)     | Momentum and mid-flight retargeting the CSS curves cannot carry |
+| Icons        | [lucide-react](https://lucide.dev)           | Consistent 24px stroke set, tree-shakeable, ISC                 |
+| Type         | [Fontsource](https://fontsource.org)         | Self-hosted Anton / Inter / JetBrains Mono                      |
+| Routing      | [React Router](https://reactrouter.com) 8    | Client routes, with a 404 fallback for GitHub Pages             |
+| CMS          | [Sveltia CMS](https://sveltiacms.app)        | Git-based admin at `/admin/` - forms that commit                |
+| Markdown     | react-markdown + remark-gfm                  | GFM tables, task lists, fenced code                             |
+| Highlighting | rehype-highlight                             | lowlight's `common` set, themed to the palette                  |
+| Hosting      | GitHub Pages                                 | Free, already where the repo lives                              |
+| Linting      | ESLint + typescript-eslint                   | Correctness only; every stylistic rule is off                   |
+| Formatting   | Prettier, `printWidth: 100`                  | The width the codebase was already written at                   |
+| Hooks        | husky + lint-staged                          | Formats and lints what you staged, then type-checks             |
 
 Every dependency is permissively licensed (MIT, ISC, Apache-2.0, BSD-3-Clause,
 OFL-1.1 for the fonts). The only thing that leaves the origin is a

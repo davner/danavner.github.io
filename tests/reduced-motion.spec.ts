@@ -228,6 +228,41 @@ test.describe("the stat odometers", () => {
   });
 });
 
+test.describe("the framed photo", () => {
+  test("a press never moves the registration marks", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/");
+    await page.getByRole("heading", { level: 1 }).waitFor();
+
+    const figure = page.locator("figure").first();
+    await figure.click();
+
+    /*
+     * Sampled per frame across a window that outlives the chunk fetch and the
+     * would-be 183ms settle, because a boop that ran would END at identity -
+     * a read taken late proves nothing. The flash is timing-fragile at 90ms,
+     * so its presence is ui-verifier's eye; this pins only the transforms.
+     */
+    const transforms = await figure.evaluate(async (el) => {
+      const seen = new Set<string>();
+      const start = performance.now();
+      while (performance.now() - start < 450) {
+        for (const tick of el.querySelectorAll("[data-slot=boop-tick]")) {
+          seen.add(getComputedStyle(tick).transform);
+        }
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+      }
+      return [...seen];
+    });
+
+    for (const transform of transforms) {
+      expect(["none", "matrix(1, 0, 0, 1, 0, 0)"], "a tick moved under reduced motion").toContain(
+        transform,
+      );
+    }
+  });
+});
+
 test.describe("the footer fire", () => {
   test("a press rearranges the standing frame without setting it moving", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });

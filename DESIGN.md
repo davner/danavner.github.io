@@ -486,12 +486,24 @@ control in every page's footer was weighed, with eyes open, against zero
 information conveyed. Under reduced motion a press re-settles the standing
 frame once: the flames rearrange without ever moving.
 
+The framed photo is the second pressed ornament, and it inherits that
+position whole. A press stamps its registration marks - two ember ticks
+landing 2px inward on a clamped spring that settles inside 200ms - under a
+90ms white exposure flash, the survival clause's second member. The figure
+stays non-focusable and nameless for the fire's reasons: the press conveys
+nothing, keyboard has nothing to operate, and the cursor is the only
+invitation. Under reduced motion the marks never move and the flash alone
+answers the press.
+
 ### Named Rules
 
 **The Two Hundred Rule.** Every duration is 200ms or less. Paper snaps, and a
 motion that needs longer to read is a motion carrying more meaning than this
 site gives it. The cap binds vendored components too: a stock duration above it
-is edited down in place, with the departure documented in the file.
+is edited down in place, with the departure documented in the file. A spring
+has no duration, so its settle to rest stands in for one - measured against
+the shipped library rather than read off the constants, because a config can
+claim a feel its damping never delivers.
 
 **The Pointer's Motion Rule.** A transform state exists only where a pointer
 can be the cause: under the motion-safe condition and, for hovers, on
@@ -521,7 +533,8 @@ commit cue may survive reduced motion, because when everything else is stilled
 it is the only remaining signal that the action landed. That bound is a
 mechanism, not a license - riding an API the CSS kill cannot reach is
 sanctioned only inside it, and anything longer, self-starting, or spatial does
-not qualify however it is implemented.
+not qualify however it is implemented. Two cues hold the license: the
+carousel's shutter blink and the framed photo's exposure flash.
 
 ## Components
 

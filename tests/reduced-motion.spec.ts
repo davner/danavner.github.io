@@ -228,6 +228,44 @@ test.describe("the stat odometers", () => {
   });
 });
 
+test.describe("the shelf slip", () => {
+  test("a sweep leaves every cover untouched", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/vinyl");
+    await page.getByRole("heading", { level: 1 }).waitFor();
+
+    const shelf = page.locator("[data-slot=record]").first().locator("..");
+
+    // A real sweep across the first row, then per-frame sampling scoped to
+    // the shelf: the springs must never be targeted, so no cover's transform
+    // may leave identity at any point.
+    const first = await page.locator("[data-slot=record]").first().boundingBox();
+    if (first) {
+      for (let step = 0; step <= 6; step += 1) {
+        await page.mouse.move(first.x + 10 + step * 60, first.y + first.height / 3);
+      }
+    }
+
+    const transforms = await shelf.evaluate(async (el) => {
+      const seen = new Set<string>();
+      const start = performance.now();
+      while (performance.now() - start < 350) {
+        for (const img of el.querySelectorAll("[data-slot=record] img")) {
+          seen.add(getComputedStyle(img).transform);
+        }
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+      }
+      return [...seen];
+    });
+
+    for (const transform of transforms) {
+      expect(["none", "matrix(1, 0, 0, 1, 0, 0)"], "a cover moved under reduced motion").toContain(
+        transform,
+      );
+    }
+  });
+});
+
 test.describe("the framed photo", () => {
   test("a press never moves the registration marks", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });

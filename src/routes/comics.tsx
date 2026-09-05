@@ -1,4 +1,5 @@
 import { ArrowUpRight, BookOpen } from "lucide-react";
+import { animated } from "@react-spring/web";
 import { useSearchParams } from "react-router";
 
 import { EmptyState } from "@/components/empty-state";
@@ -9,6 +10,7 @@ import { ScrollingText } from "@/components/scrolling-text";
 import { SourceLine } from "@/components/source-line";
 import { comics, issueCount, SHELVES, type ComicEntry, type ShelfId } from "@/lib/comics";
 import { coverSrcSet } from "@/lib/covers";
+import { useShelfTracker, useSlip } from "@/lib/slip";
 import { catalogueLine, PAGE_META } from "@/lib/routes";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
@@ -79,7 +81,7 @@ const COVER_SIZES =
  * page of our own to send it to, and inventing one would put a click in front of
  * what the tile already says.
  */
-function ComicTile({ entry }: { entry: ComicEntry }) {
+function ComicTile({ entry, velocity }: { entry: ComicEntry; velocity: () => number }) {
   /*
    * Three short lines rather than one joined one. "DC COMICS · 2024 - Present"
    * did not fit a tile at any breakpoint and truncated to "DC COMICS · 2024 -
@@ -101,6 +103,10 @@ function ComicTile({ entry }: { entry: ComicEntry }) {
     ? [entry.price, entry.released ? formatReleased(entry.released) : ""]
     : [shortenYears(entry.years), held];
 
+  // The spring owns the whole pose - shallower than the records, with a hair
+  // of mechanical tilt.
+  const slip = useSlip(velocity, { y: 2, rotate: 0.4 });
+
   return (
     <li
       data-slot="comic"
@@ -113,9 +119,11 @@ function ComicTile({ entry }: { entry: ComicEntry }) {
        * part-filled row leaves empty cells, which render as a solid grey block.
        * Same fix as the filter pills.
        */
-      /* `hover:z-10` because the slipped cover overlaps the tile above by the
-         2px it rises; without it the neighbour paints over the overlap. */
+      /* `hover:z-10` because the slipped cover overlaps the tile above by
+         whatever depth it rises; without it the neighbour paints over it. */
       className="group relative flex flex-col bg-background shadow-[0_0_0_1px_var(--color-border)] hover:z-10"
+      onPointerEnter={slip.onPointerEnter}
+      onPointerLeave={slip.onPointerLeave}
     >
       <a
         href={entry.url}
@@ -124,7 +132,7 @@ function ComicTile({ entry }: { entry: ComicEntry }) {
         className="flex flex-1 flex-col"
       >
         {entry.cover ? (
-          <img
+          <animated.img
             src={entry.cover}
             srcSet={coverSrcSet(entry.cover) ?? undefined}
             sizes={COVER_SIZES}
@@ -136,7 +144,8 @@ function ComicTile({ entry }: { entry: ComicEntry }) {
             height={600}
             loading="lazy"
             decoding="async"
-            className="aspect-2/3 w-full object-cover transition-[opacity,translate,rotate] duration-150 ease-stamp group-hover:opacity-80 motion-safe:group-hover:-translate-y-0.5 motion-safe:group-hover:rotate-[0.4deg]"
+            style={slip.style}
+            className="aspect-2/3 w-full object-cover transition-opacity group-hover:opacity-80"
           />
         ) : (
           <div className="flex aspect-2/3 w-full items-center justify-center border-b border-border bg-card/40">
@@ -178,6 +187,8 @@ export function Comics() {
   useDocumentMeta(META.title, META.description);
 
   const [searchParams, setSearchParams] = useSearchParams();
+  // One velocity tracker for the whole shelf - the tiles listen, it feeds.
+  const tracker = useShelfTracker();
   const raw = searchParams.get("shelf");
   const active: ShelfId = isShelf(raw) ? raw : "series";
 
@@ -259,9 +270,12 @@ export function Comics() {
         <p className="readout-dim mt-8">{shelf.note}</p>
 
         {shown.length > 0 ? (
-          <ul className="mt-4 grid grid-cols-2 gap-px sm:grid-cols-3 lg:grid-cols-5">
+          <ul
+            className="mt-4 grid grid-cols-2 gap-px sm:grid-cols-3 lg:grid-cols-5"
+            onPointerMove={tracker.onPointerMove}
+          >
             {shown.map((entry) => (
-              <ComicTile key={entry.key} entry={entry} />
+              <ComicTile key={entry.key} entry={entry} velocity={tracker.velocity} />
             ))}
           </ul>
         ) : (

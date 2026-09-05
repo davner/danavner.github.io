@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 
+import { SLIP } from "../src/lib/slip";
 import { statText } from "./stats";
 
 /**
@@ -73,6 +74,66 @@ test.describe("the stat odometers", () => {
     // The roll's end state is what is pinned; site.spec's owner-flip pair
     // already proves the two counts differ.
     await expect.poll(async () => Number(await statText(dd))).toBe(chipCount);
+  });
+});
+
+test.describe("the shelf slip", () => {
+  /*
+   * The settle window, ported from scripts/make-easings.mjs's clamp check:
+   * many tails of the spring's slowest decay, derived from the shipped SLIP
+   * constants rather than written down - never first-approach-to-rest, which
+   * for a curve still moving is exactly the wrong moment to stop sampling.
+   * SLIP is underdamped, so the decay rate is zeta * sqrt(tension).
+   */
+  const ZETA = SLIP.friction / (2 * Math.sqrt(SLIP.tension));
+  const WINDOW_MS = Math.ceil((20 * 1000) / (Math.min(ZETA, 1) * Math.sqrt(SLIP.tension)));
+
+  const IDENTITY = /^(none|matrix\(1, 0, 0, 1, 0, 0\))$/;
+
+  test("a slipped cover settles back to rest inside the spring's window", async ({ page }) => {
+    await page.goto("/vinyl");
+    await page.getByRole("heading", { level: 1 }).waitFor();
+
+    // The slip is gated to hover-capable pointers, so the touch project has
+    // nothing to measure - the reduced-motion sweep covers the no-op side.
+    test.skip(
+      !(await page.evaluate(() => window.matchMedia("(hover: hover)").matches)),
+      "no hover, no slip",
+    );
+
+    const tile = page.locator("[data-slot=record]").first();
+    const img = tile.locator("img").first();
+    const transform = () => img.evaluate((el) => getComputedStyle(el).transform);
+
+    // Enter with a real pointer; the cover must actually leave rest first,
+    // or a slip that never fires would pass the settle check by default.
+    await tile.hover();
+    await expect.poll(transform, { timeout: 2000 }).not.toMatch(IDENTITY);
+
+    // Leave, and poll the pose back to identity within the derived window.
+    await page.mouse.move(1, 1);
+    await expect.poll(transform, { timeout: WINDOW_MS + 500 }).toMatch(IDENTITY);
+  });
+
+  test("keyboard focus gets no slip", async ({ page }) => {
+    await page.goto("/vinyl");
+    await page.getByRole("heading", { level: 1 }).waitFor();
+
+    const tile = page.locator("[data-slot=record]").first();
+    await tile.locator("a").first().focus();
+
+    const transform = await tile
+      .locator("img")
+      .first()
+      .evaluate(
+        (el) =>
+          new Promise<string>((resolve) => {
+            requestAnimationFrame(() =>
+              requestAnimationFrame(() => resolve(getComputedStyle(el).transform)),
+            );
+          }),
+      );
+    expect(transform, "focus moved a cover").toMatch(IDENTITY);
   });
 });
 

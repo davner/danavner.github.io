@@ -471,6 +471,14 @@ motion the digits jump by the library's own preference guard: the roll rides
 WAAPI, which the CSS kill cannot reach, and it claims no bounded survival
 because it does not survive.
 
+The shelf slip is a spring rather than a transition, and that is what it
+buys: a sweep across the covers hands its momentum to each one it crosses -
+depth scales with the hand's speed inside the same travel envelope, a
+re-entry retargets the cover mid-flight, and the wake settles within 200ms of
+the pointer leaving. Hover-capable pointers only, removed outright under
+reduced motion, mechanical in register - still the reader's motion, nobody
+else's.
+
 One thing burns on its own, and a press stokes it. The footer's pixel fire
 takes a pointer press and answers with a kick of heat around the pressed
 column, decaying back to baseline inside a second - a parameter of the

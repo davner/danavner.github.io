@@ -1,4 +1,5 @@
 import { ArrowUpRight, Disc3, Search } from "lucide-react";
+import { animated } from "@react-spring/web";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
 
@@ -28,6 +29,7 @@ import {
   type VinylRecord,
 } from "@/lib/vinyl";
 import { coverSrcSet } from "@/lib/covers";
+import { useShelfTracker, useSlip } from "@/lib/slip";
 import { catalogueLine, PAGE_META } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { useDocumentMeta } from "@/lib/use-document-meta";
@@ -67,11 +69,15 @@ const COVER_SIZES =
  * there is no page of our own to send it to, and pretending otherwise would put
  * a click in front of information the tile already shows.
  */
-function RecordTile({ record }: { record: VinylRecord }) {
+function RecordTile({ record, velocity }: { record: VinylRecord; velocity: () => number }) {
   // Everything under the sleeve, in the order you would read it off a spine.
   const spine = [record.year ? String(record.year) : "", record.format, record.label]
     .filter(Boolean)
     .join(" · ");
+
+  // The slip owns the cover's whole pose; 4px at rest speed, up to 6 under a
+  // fast sweep.
+  const slip = useSlip(velocity, { y: 4 });
 
   return (
     <li
@@ -84,9 +90,11 @@ function RecordTile({ record }: { record: VinylRecord }) {
        * neighbouring tiles land their hairline on the same pixel and nothing is
        * painted where there is no tile. Same fix as the filter pills.
        */
-      /* `hover:z-10` because the slipped cover overlaps the tile above by the
-         4px it rises; without it the neighbour paints over the overlap. */
+      /* `hover:z-10` because the slipped cover overlaps the tile above by
+         whatever depth it rises; without it the neighbour paints over it. */
       className="group relative flex flex-col bg-background shadow-[0_0_0_1px_var(--color-border)] hover:z-10"
+      onPointerEnter={slip.onPointerEnter}
+      onPointerLeave={slip.onPointerLeave}
     >
       <a
         href={record.url}
@@ -95,7 +103,7 @@ function RecordTile({ record }: { record: VinylRecord }) {
         className="flex flex-1 flex-col"
       >
         {record.cover ? (
-          <img
+          <animated.img
             src={record.cover}
             srcSet={coverSrcSet(record.cover) ?? undefined}
             sizes={COVER_SIZES}
@@ -107,7 +115,8 @@ function RecordTile({ record }: { record: VinylRecord }) {
             height={500}
             loading="lazy"
             decoding="async"
-            className="aspect-square w-full object-cover transition-[opacity,translate] duration-150 ease-stamp group-hover:opacity-80 motion-safe:group-hover:-translate-y-1"
+            style={slip.style}
+            className="aspect-square w-full object-cover transition-opacity group-hover:opacity-80"
           />
         ) : (
           <div className="flex aspect-square w-full items-center justify-center border-b border-border bg-card/40">
@@ -182,6 +191,9 @@ export function Vinyl() {
   // would send someone.
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState("");
+  // One velocity tracker for the whole shelf - fifty tiles listen to it, one
+  // listener feeds it.
+  const tracker = useShelfTracker();
 
   const rawOwner = searchParams.get("owner");
   const owner = isOwner(rawOwner) ? rawOwner : ALL;
@@ -370,9 +382,12 @@ export function Vinyl() {
         <FilterStatus message={`${visible.length} of ${records.length} records shown`} />
 
         {visible.length > 0 ? (
-          <ul className="mt-8 grid grid-cols-2 gap-px sm:grid-cols-3 lg:grid-cols-4">
+          <ul
+            className="mt-8 grid grid-cols-2 gap-px sm:grid-cols-3 lg:grid-cols-4"
+            onPointerMove={tracker.onPointerMove}
+          >
             {visible.map((record) => (
-              <RecordTile key={record.instanceId} record={record} />
+              <RecordTile key={record.instanceId} record={record} velocity={tracker.velocity} />
             ))}
           </ul>
         ) : (

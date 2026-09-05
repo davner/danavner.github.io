@@ -13,6 +13,11 @@ import { cn } from "@/lib/utils";
  * also the smallest comfortable touch target - and it never steps, only the
  * horizontal padding does: a phone row holds three pills at 14px a side where
  * 20px wraps the last one onto a line of its own.
+ *
+ * A consumer overriding one side of this padding must restate the override
+ * inside the step's own breakpoint too, or the stepped padding-inline wins the
+ * cascade there and silently removes it - vinyl's search field is the worked
+ * example of why.
  */
 export const CONTROL_CLASS = "h-11 px-3.5 sm:px-5";
 

@@ -979,23 +979,53 @@ counts, and the streak is a spreadsheet helper - but their absence means the
 header is not this log's, so they are still required. Any column beyond these
 twenty is ignored, so adding a working column to the sheet is safe.
 
-`Take` and `Review` are both free text, at two different lengths. `Take` is the
+`Take` and `Review` are written text, at two different lengths. `Take` is the
 verdict in a sentence or two. `Review` is the long piece, and only the album
 being reviewed shows it: the front page renders the featured album's, and a list
 of albums does not render any. The share poster is the one place it is cut
-rather than withheld, setting up to two lines of its opening under the take.
-Either may be blank.
+rather than withheld, setting up to two lines of its opening under the take -
+drawn as plain words, markdown stripped. Either may be blank.
+
+### The markdown a cell may carry
+
+Both cells render as restricted CommonMark - no GFM, so a tilde or a pipe stays
+the character you typed. A blank line starts a new paragraph; a single line
+break stays inside its paragraph (the job warns about one without failing).
+Both gates enforce the same table - the fetch script refuses a bad cell with
+its sheet line number, and the build validator re-refuses the same constructs
+so the hand-written seed is held to the identical contract:
+
+| Construct                                | Review  | Take        | Why refused                                                        |
+| ---------------------------------------- | ------- | ----------- | ------------------------------------------------------------------ |
+| paragraphs (blank-line separated)        | allowed | one only    | a take is the sentence worth sending; the long piece is the review |
+| `*emphasis*`, `**strong**`, `` `code` `` | allowed | allowed     |                                                                    |
+| links, reference links                   | allowed | inline only | URL rules below; a definition is a block and belongs in Review     |
+| lists, blockquotes                       | allowed | refused     | block constructs                                                   |
+| headings                                 | refused | refused     | collide with the page's own hierarchy                              |
+| images                                   | refused | refused     | leave the origin or answer 404; the cover is the album's picture   |
+| raw HTML                                 | refused | refused     | the renderer skips it silently; the validator says so loudly       |
+| code blocks (fence or four spaces)       | refused | refused     | four pasted spaces becoming monospace is a trap, not a feature     |
+| `---` dividers                           | refused | refused     | an unstyled rule                                                   |
+| hard breaks (trailing spaces, `\`)       | refused | refused     | invisible syntax in a cell that shows no trailing whitespace       |
+
+A link's URL may be `https:`, `http:`, `mailto:`, or a site path starting `/`.
+Anything else - `javascript:`, `data:`, `//host`, a bare relative, a bare
+`#fragment` - is refused with the URL quoted. An internal `/dan-fm/<slug>` link
+must name a row in the same sheet (tracking after `?` or `#` ignored); other
+internal targets are swept by `tests/links.spec.ts` on every run. The one
+spelling of all of this is `src/lib/dan-fm-markdown.ts`, mirrored in the fetch
+script and held in step by `tests/markdown-cases.ts`.
 
 That header check is also what catches a sheet that is no longer published,
 because Google answers that with 200 and a page of HTML rather than an error.
 
 ### What a row has to say
 
-| Outcome       | Rows                                                                                                                                                                                                                                                 | What happens                                                                                   |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| **Fatal**     | no `Date`, or one that is not a real `YYYY-MM-DD` day; two rows on one date; no `Artist` or `Album`; a `Score` or a `Later` that is not a quarter step from 1 to 5; a `Link` that is not a Spotify album link; a `Date` outside the two bounds below | the run fails and commits nothing, so the committed log keeps serving                          |
-| **Held back** | a `Date` from tomorrow to seven days ahead                                                                                                                                                                                                           | left out of the payload and warned about, and picked up by the first run on or after that date |
-| **Tolerated** | every other blank cell, and a `Year` nobody can read                                                                                                                                                                                                 | recorded blank                                                                                 |
+| Outcome       | Rows                                                                                                                                                                                                                                                                                                                                | What happens                                                                                   |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| **Fatal**     | no `Date`, or one that is not a real `YYYY-MM-DD` day; two rows on one date; no `Artist` or `Album`; a `Score` or a `Later` that is not a quarter step from 1 to 5; a `Link` that is not a Spotify album link; a `Date` outside the two bounds below; markdown the table above refuses, or an internal album link no row answers to | the run fails and commits nothing, so the committed log keeps serving                          |
+| **Held back** | a `Date` from tomorrow to seven days ahead                                                                                                                                                                                                                                                                                          | left out of the payload and warned about, and picked up by the first run on or after that date |
+| **Tolerated** | every other blank cell, and a `Year` nobody can read; a single line break inside a `Review`, which is warned about and stays inside its paragraph                                                                                                                                                                                   | recorded blank                                                                                 |
 
 Every problem is reported in one run rather than one per run, because a run
 happens every four hours and finding typos one at a time would take a day.

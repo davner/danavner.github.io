@@ -17,6 +17,7 @@ import { PageHeader, PageShell } from "@/components/page";
 import { DuoBadge } from "@/components/duo-badge";
 import { Rating } from "@/components/rating";
 import { SoloBadge } from "@/components/solo-badge";
+import { Stat, StatBoard } from "@/components/stat-board";
 import { Badge } from "@/components/ui/badge";
 import {
   formatShowDate,
@@ -299,12 +300,9 @@ export function Shows() {
           they share one block rather than the rankings taking a section and a
           heading of their own. */}
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="grid grid-cols-2 gap-px border border-border bg-border sm:grid-cols-4">
+        <StatBoard>
           {stats.map((stat) => (
-            <dl key={stat.key} className="bg-background p-5 sm:p-6">
-              <dt className="readout-dim">{stat.label}</dt>
-              <dd className="display mt-2 text-heading text-balance">{stat.value}</dd>
-            </dl>
+            <Stat key={stat.key} label={stat.label} value={stat.value} />
           ))}
 
           {hasRepeats ? (
@@ -325,7 +323,7 @@ export function Shows() {
               />
             </>
           ) : null}
-        </div>
+        </StatBoard>
       </div>
 
       <PageShell className="pt-16">

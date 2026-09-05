@@ -8,6 +8,7 @@ import { FilterToggle } from "@/components/filter-toggle";
 import { PageHeader, PageShell } from "@/components/page";
 import { ScrollingText } from "@/components/scrolling-text";
 import { SourceLine } from "@/components/source-line";
+import { Stat, StatBoard } from "@/components/stat-board";
 import { comics, issueCount, SHELVES, type ComicEntry, type ShelfId } from "@/lib/comics";
 import { coverSrcSet } from "@/lib/covers";
 import { useShelfTracker, useSlip } from "@/lib/slip";
@@ -245,12 +246,15 @@ export function Comics() {
           than the current filter, so they do not move when the filter does -
           the same reason the record page keeps its stats above the toggle. */}
       {publishers.length > 0 ? (
-        <dl className="grid grid-cols-2 gap-px border border-border bg-border sm:grid-cols-4">
+        <StatBoard>
           <Stat label="Runs" value={String(comics.series.length)} />
           <Stat label="Issues held" value={issues > 0 ? String(issues) : "-"} />
           <Stat label="Publishers" value={String(publishers.length)} />
-          <Stat label="Most of" value={publishers[0].name} />
-        </dl>
+          {/* A publisher's name rather than a count, so this is the one tile
+              here whose figure wraps - `pretty` keeps it off a last line of
+              one word. */}
+          <Stat label="Most of" value={publishers[0].name} wrap="pretty" />
+        </StatBoard>
       ) : null}
 
       {/* Outside the shelf's own emptiness check on purpose: a live region that
@@ -294,14 +298,5 @@ export function Comics() {
         />
       </section>
     </PageShell>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="bg-background p-5 sm:p-6">
-      <dt className="readout-dim">{label}</dt>
-      <dd className="display mt-2 text-heading text-pretty">{value}</dd>
-    </div>
   );
 }

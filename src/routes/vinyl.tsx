@@ -10,6 +10,7 @@ import { PageHeader, PageShell } from "@/components/page";
 import { ScrollingText } from "@/components/scrolling-text";
 import { SelectControl } from "@/components/select-control";
 import { SourceLine } from "@/components/source-line";
+import { Stat, StatBoard } from "@/components/stat-board";
 import { StatNumber, type StatFormat } from "@/components/stat-number";
 import {
   ALL,
@@ -310,14 +311,13 @@ export function Vinyl() {
       </PageHeader>
 
       <section aria-label="What is on the shelf">
-        <div className="grid grid-cols-2 gap-px border border-border bg-border sm:grid-cols-4">
+        <StatBoard>
           {tiles.map((tile) => (
-            <dl key={tile.label} data-slot="stat" className="bg-background p-5 sm:p-6">
-              <dt className="readout-dim">{tile.label}</dt>
-              <dd className="display mt-2 text-heading text-balance">
-                <StatNumber value={tile.value} format={UNGROUPED} />
-              </dd>
-            </dl>
+            <Stat
+              key={tile.label}
+              label={tile.label}
+              value={<StatNumber value={tile.value} format={UNGROUPED} />}
+            />
           ))}
 
           {hasBoards ? (
@@ -336,7 +336,7 @@ export function Vinyl() {
               />
             </>
           ) : null}
-        </div>
+        </StatBoard>
 
         {asides.length > 0 ? <p className="readout-dim mt-4">{asides.join(" · ")}</p> : null}
       </section>

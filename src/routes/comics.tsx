@@ -7,6 +7,7 @@ import { FilterStatus } from "@/components/filter-status";
 import { FilterToggle } from "@/components/filter-toggle";
 import { PageHeader, PageShell } from "@/components/page";
 import { ScrollingText } from "@/components/scrolling-text";
+import { Shelf } from "@/components/shelf";
 import { SourceLine } from "@/components/source-line";
 import { Stat, StatBoard } from "@/components/stat-board";
 import { comics, issueCount, SHELVES, type ComicEntry, type ShelfId } from "@/lib/comics";
@@ -274,14 +275,11 @@ export function Comics() {
         <p className="readout-dim mt-8">{shelf.note}</p>
 
         {shown.length > 0 ? (
-          <ul
-            className="mt-4 grid grid-cols-2 gap-px sm:grid-cols-3 lg:grid-cols-5"
-            onPointerMove={tracker.onPointerMove}
-          >
+          <Shelf max={5} className="mt-4" onPointerMove={tracker.onPointerMove}>
             {shown.map((entry) => (
               <ComicTile key={entry.key} entry={entry} velocity={tracker.velocity} />
             ))}
-          </ul>
+          </Shelf>
         ) : (
           <EmptyState className="mt-4">
             {active === "pullList"

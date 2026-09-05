@@ -9,6 +9,7 @@ import { CONTROL_CLASS, FilterToggle } from "@/components/filter-toggle";
 import { PageHeader, PageShell } from "@/components/page";
 import { ScrollingText } from "@/components/scrolling-text";
 import { SelectControl } from "@/components/select-control";
+import { Shelf } from "@/components/shelf";
 import { SourceLine } from "@/components/source-line";
 import { Stat, StatBoard } from "@/components/stat-board";
 import { StatNumber, type StatFormat } from "@/components/stat-number";
@@ -392,14 +393,11 @@ export function Vinyl() {
         <FilterStatus message={`${visible.length} of ${records.length} records shown`} />
 
         {visible.length > 0 ? (
-          <ul
-            className="mt-8 grid grid-cols-2 gap-px sm:grid-cols-3 lg:grid-cols-4"
-            onPointerMove={tracker.onPointerMove}
-          >
+          <Shelf max={4} className="mt-8" onPointerMove={tracker.onPointerMove}>
             {visible.map((record) => (
               <RecordTile key={record.instanceId} record={record} velocity={tracker.velocity} />
             ))}
-          </ul>
+          </Shelf>
         ) : (
           <EmptyState className="mt-8">Nothing on the shelf matches “{query}”.</EmptyState>
         )}

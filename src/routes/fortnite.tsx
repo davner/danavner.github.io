@@ -6,6 +6,7 @@ import { FilterStatus } from "@/components/filter-status";
 import { FilterToggle } from "@/components/filter-toggle";
 import { PageHeader, PageShell } from "@/components/page";
 import { ScrollingText } from "@/components/scrolling-text";
+import { Shelf } from "@/components/shelf";
 import { SelectControl } from "@/components/select-control";
 import { SourceLine } from "@/components/source-line";
 import { StatNumber, type StatFormat } from "@/components/stat-number";
@@ -217,15 +218,7 @@ function SeasonHistory({ active, onSelect }: { active: string; onSelect: (key: s
       </h2>
       <p className="readout-dim mt-2">The outfit I mained each season, oldest at the end.</p>
 
-      {/*
-        No `bg-border` behind this grid. A last row that is not full leaves empty
-        cells, and a grid container is as tall and wide as its rows whether or
-        not anything is in them - so the seam colour showing through `gap-px`
-        paints a grey rectangle over the gap where the missing cards would be.
-        The seams are drawn per card instead, by a 1px spread shadow that takes
-        no layout space and lands on the same pixel its neighbour's does.
-      */}
-      <ul className="mt-6 grid grid-cols-2 gap-px sm:grid-cols-3 lg:grid-cols-4">
+      <Shelf max={4} className="mt-6">
         {seasons.map((season) => {
           const current = season.key === active;
 
@@ -277,7 +270,7 @@ function SeasonHistory({ active, onSelect }: { active: string; onSelect: (key: s
             </li>
           );
         })}
-      </ul>
+      </Shelf>
     </section>
   );
 }

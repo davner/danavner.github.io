@@ -33,6 +33,7 @@ const TITLE_SIZE = {
 export function PageHeader({
   title,
   catalogue,
+  catalogueAside,
   lede,
   children,
   aside,
@@ -47,6 +48,13 @@ export function PageHeader({
    * pages of it and pass nothing, and the home page is the cover.
    */
   catalogue?: string;
+  /**
+   * Real content sharing the catalogue's row, right-aligned - dan.fm's
+   * on-air badge. Its own slot rather than a child of the catalogue line,
+   * because that line is aria-hidden decoration and this is not: the badge
+   * keeps its sr-only prefix and its place in the accessibility tree.
+   */
+  catalogueAside?: ReactNode;
   lede?: ReactNode;
   /** Picks the display size. See `TITLE_SIZE`. */
   size?: keyof typeof TITLE_SIZE;
@@ -65,13 +73,19 @@ export function PageHeader({
 }) {
   const intro = (
     <>
-      {/* Hidden from AT on purpose: the line restates the h1 plus a decorative
-          serial, and exposing it would put mono noise before every page title
-          in a screen reader. */}
-      {catalogue ? (
-        <p aria-hidden className="readout-dim mb-4">
-          {catalogue}
-        </p>
+      {/* The catalogue line is hidden from AT on purpose: it restates the h1
+          plus a decorative serial, and exposing it would put mono noise before
+          every page title in a screen reader. The aside shares its row without
+          sharing that hiding. */}
+      {catalogue || catalogueAside ? (
+        <div className="mb-4 flex items-center justify-between gap-4">
+          {catalogue ? (
+            <p aria-hidden className="readout-dim">
+              {catalogue}
+            </p>
+          ) : null}
+          {catalogueAside}
+        </div>
       ) : null}
 
       <h1 className={cn("display", TITLE_SIZE[size])}>{title}</h1>

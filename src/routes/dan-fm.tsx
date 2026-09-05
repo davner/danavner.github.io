@@ -152,14 +152,12 @@ export function DanFm() {
         catalogue={catalogueLine("/dan-fm")}
         title="dan.fm"
         lede="One album a day. A review, a favourite track, a least favourite, and a score out of five."
-      >
-        {/* The halo reaches 2.5rem past the badge, so this gap is structural
-            rather than taste: a glow touching the lede would tint text that axe
-            can then give no contrast ratio for. */}
-        <div className="mt-10">
-          <OnAir lamp={now.lamp} />
-        </div>
-      </PageHeader>
+        /* On the catalogue row rather than a row of its own: the halo reaches
+           2.5rem past the badge, and up here it dies in the poster title's
+           own air before reaching its glyphs - a glow touching text would
+           tint what axe can give no contrast ratio for. */
+        catalogueAside={<OnAir lamp={now.lamp} />}
+      />
 
       <Section title="Today">
         {now.featured ? (

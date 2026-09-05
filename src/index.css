@@ -976,6 +976,14 @@
         star-shimmer 200ms ease-out 120ms;
     }
 
+    /* The needle rides every tier, the five included: on a full fill the
+       sweep reads as a quick re-draw, leading the flare in the same left-to-
+       right direction. */
+    .group:hover [data-tier="blue"] [data-slot="rating-fill"],
+    [data-tier="blue"]:hover [data-slot="rating-fill"] {
+      animation: rating-needle 120ms ease-out;
+    }
+
     /* The five flares left to right: five 90ms animations on the specimen's
        28ms stagger - each inside the cap, which reads per animation. */
     .group:hover [data-tier="blue"] [data-slot="rating-star"],

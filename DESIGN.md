@@ -498,7 +498,12 @@ form, because a suppressed transition has nothing to replay. Surface-open
 motion is the other half and is not control feedback: the sheet's slide and a
 panel's entrance are the surface arriving, so they run for every input
 modality and answer prefers-reduced-motion instead. Under reduced motion the
-transform state is removed outright, so nothing is left to jump.
+transform state is removed outright, so nothing is left to jump. One audited
+edge is accepted rather than closed: on a keyboard navigation the outgoing
+item's current-section rule still scales away, because focus sits on the
+incoming item and its suppression cannot reach a control the hand left - a 2px
+hairline collapsing inside the route cross-fade, snapped still under reduced
+motion, and not feedback answering any control.
 
 **The Allowlist Contract Rule.** The reduced-motion allowlist in
 `src/index.css`'s base layer - colour and opacity keep transitioning,

@@ -827,9 +827,15 @@
    * declare a group - the /shows rows - and degrades to nothing where none
    * exists, rather than needing a per-surface switch. Hover-only by
    * construction, and `ease-out` rather than the stamp: a needle decelerates,
-   * it does not stamp. Reduced motion collapses it to the jump.
+   * it does not stamp.
+   *
+   * Gated on no-preference like every hover rule on the star ladder, so the
+   * whole family carries one spelling of the reduced-motion answer. The
+   * global kill would collapse this to an invisible 0.01ms stub anyway; an
+   * auditor reading two gates for one behavior is the cost the single
+   * spelling removes.
    */
-  @media (hover: hover) {
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
     .group:hover [data-slot="rating-fill"] {
       animation: rating-needle 120ms ease-out;
     }

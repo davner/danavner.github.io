@@ -4,6 +4,7 @@ import path from "node:path";
 import { load as parseYaml } from "js-yaml";
 import type { Plugin } from "vite";
 
+import { danFmLinks, reviewProblems, takeProblems } from "./src/lib/dan-fm-markdown";
 import { nowParagraphs } from "./src/lib/now-summary";
 
 const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;
@@ -844,6 +845,19 @@ export function readDanFm(root: string, publicDir: string, seed: SeedRule) {
             `${at} needs a \`later\` of 1 to ${MAX_RATING} in quarter steps, not ${JSON.stringify(entry.later)}`,
           ));
 
+    /*
+     * The same markdown contract the fetch script enforces on the sheet,
+     * re-refused here because the hand-written seed and any hand-edited
+     * payload never pass through the script. One spelling for both gates:
+     * `src/lib/dan-fm-markdown.ts` (the script mirrors it, held in step by
+     * `tests/markdown-cases.ts`).
+     */
+    const take = asTrimmedString(entry.take);
+    for (const problem of takeProblems(take)) fail(`${at}.take ${problem}`);
+
+    const review = asTrimmedString(entry.review);
+    for (const problem of reviewProblems(review)) fail(`${at}.review ${problem}`);
+
     // A cover path pointing at nothing would ship as a broken tile, exactly
     // like a mistyped photo path in a show.
     const cover = asTrimmedString(entry.cover);
@@ -869,11 +883,11 @@ export function readDanFm(root: string, publicDir: string, seed: SeedRule) {
       shelf: asTrimmedString(entry.shelf),
       standout: danFmTrack(entry.standout),
       skip: danFmTrack(entry.skip),
-      take: asTrimmedString(entry.take),
-      // Free text like `take`, and tolerated blank for the same reason: not
-      // every album gets a piece written about it. Trimmed at the ends only -
-      // the newlines inside are what the page splits into paragraphs.
-      review: asTrimmedString(entry.review),
+      take,
+      // Tolerated blank for the same reason as `take`: not every album gets a
+      // piece written about it. Kept raw - the restricted markdown inside is
+      // parsed at each consumer, not here.
+      review,
       /*
        * Deduped here as well as in the job, because the fixture is hand-written
        * and never passes through it. A tag carried twice by one album counts
@@ -893,6 +907,21 @@ export function readDanFm(root: string, publicDir: string, seed: SeedRule) {
       url: asTrimmedString(entry.url),
       cover,
     };
+  });
+
+  // Internal album links resolve against the whole payload, after the map,
+  // because a review may point at an album elsewhere in the log.
+  albums.forEach((album, index) => {
+    for (const field of ["take", "review"] as const) {
+      for (const url of danFmLinks(album[field])) {
+        const match = /^\/dan-fm\/(.+)$/.exec(url.split(/[?#]/)[0]);
+        if (match && !seenSlugs.has(match[1])) {
+          fail(
+            `\`albums[${index}]\`.${field} links to "${url}", which no album in the payload answers to`,
+          );
+        }
+      }
+    }
   });
 
   return {

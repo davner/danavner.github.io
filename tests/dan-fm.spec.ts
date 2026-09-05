@@ -2308,3 +2308,67 @@ test.describe("stripping a review to plain text", () => {
     ]);
   });
 });
+
+test.describe("markdown the payload cannot carry", () => {
+  /*
+   * The same shared table, this time through `loadLog` - the gate that guards
+   * the hand-written seed and any hand-edited payload, which never pass
+   * through the fetch script's mirror.
+   */
+  for (const refusal of REFUSALS) {
+    test(`${refusal.construct} fails the build naming the row`, () => {
+      const take = buildError({ log: doc([row({ take: refusal.cell })]) });
+      expect(take).toContain("albums[0]");
+      expect(take).toContain(refusal.names);
+
+      if (refusal.fields === "both") {
+        expect(buildError({ log: doc([row({ review: refusal.cell })]) })).toContain(refusal.names);
+      } else {
+        expect(
+          buildError({ log: doc([row({ review: refusal.cell })]) }),
+          "the build refused a review for what only a take refuses",
+        ).toBe("");
+      }
+    });
+  }
+
+  for (const allowed of ALLOWED) {
+    test(`${allowed.construct} passes and lands verbatim`, () => {
+      const fields = allowed.reviewOnly
+        ? { review: allowed.cell }
+        : { review: allowed.cell, take: allowed.cell };
+      const log = loadLog({ log: doc([row(fields)]) });
+
+      expect(log.albums[0].review).toBe(allowed.cell);
+      if (!allowed.reviewOnly) expect(log.albums[0].take).toBe(allowed.cell);
+    });
+  }
+
+  test("an internal album link has to name an album in the payload", () => {
+    const error = buildError({
+      log: doc([row({ review: "Better than [that one](/dan-fm/2026-09-99-nobody-nothing)." })]),
+    });
+
+    expect(error).toContain(
+      '`albums[0]`.review links to "/dan-fm/2026-09-99-nobody-nothing", which no album in the payload answers to',
+    );
+  });
+
+  test("an internal album link may name any album, tracking stripped", () => {
+    const other = {
+      date: "2026-08-21",
+      slug: "2026-08-21-other-band-other-record",
+      artist: "Other Band",
+      album: "Other Record",
+      score: 3,
+    };
+    const log = loadLog({
+      log: doc([
+        row({ review: "See [the other one](/dan-fm/2026-08-21-other-band-other-record?ref=1)." }),
+        other,
+      ]),
+    });
+
+    expect(log.albums).toHaveLength(2);
+  });
+});

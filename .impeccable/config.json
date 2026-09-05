@@ -33,6 +33,11 @@
         "value": "oklch(0.5 0.1 200)",
         "createdAt": "2026-09-04T21:59:29.167Z",
         "reason": "pre-existing share.spec fixture: its own comment says any resolved colour works, the case tests the form"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgb(0 0 0 / 0.3)",
+        "createdAt": "2026-09-05T06:07:40.790Z"
       }
     ]
   }

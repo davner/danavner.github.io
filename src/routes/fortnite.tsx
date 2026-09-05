@@ -6,8 +6,8 @@ import { FilterStatus } from "@/components/filter-status";
 import { FilterToggle } from "@/components/filter-toggle";
 import { PageHeader, PageShell } from "@/components/page";
 import { ScrollingText } from "@/components/scrolling-text";
-import { Shelf } from "@/components/shelf";
 import { SelectControl } from "@/components/select-control";
+import { Shelf } from "@/components/shelf";
 import { SourceLine } from "@/components/source-line";
 import { StatNumber, type StatFormat } from "@/components/stat-number";
 import {

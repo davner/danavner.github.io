@@ -43,11 +43,11 @@ export const OPEN_STATES: OpenState[] = [
      * state is unreachable on the mobile project and the sweep quietly covers
      * nothing rather than failing.
      */
-    name: "the hobbies menu open",
+    name: "the collections menu open",
     path: "/",
     width: 1280,
     reach: async (page) => {
-      await page.getByRole("button", { name: /hobbies/i }).click();
+      await page.getByRole("button", { name: /collections/i }).click();
       await expect(page.locator("[data-slot=navigation-menu-content]")).toBeVisible();
     },
   },

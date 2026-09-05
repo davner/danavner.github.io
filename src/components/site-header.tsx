@@ -168,9 +168,26 @@ export function SiteHeader() {
 
                   {/* `rounded-none!` for the same reason: the panel's radius
                       arrives through a `group-data-[viewport=false]` variant
-                      that out-specifies a plain utility. Nothing here is round. */}
+                      that out-specifies a plain utility. Nothing here is round.
+
+                      Two position overrides, and both of them earn their place:
+
+                      - `absolute` at every width. Upstream turns it on at `md`
+                        and leaves the panel in the header's flow below that,
+                        while this bar starts at `sm` - so between 640 and 768
+                        the panel lays out inside the 64px bar, clipped to its
+                        height, pushing the document 82px wider than the window.
+                      - Anchored to the trigger's right edge rather than its
+                        left. This trigger is the last thing in the bar before
+                        the theme toggle, so a panel opening rightwards runs off
+                        the window: at 1280 a 320px one ends 29px past it, and
+                        the page scrolls sideways to reach a menu.
+
+                      Nothing in the suite sees either, because both sweeps that
+                      would - overflow and layout - only look at a route as it
+                      loads, with the panel closed. */}
                   <NavigationMenuContent
-                    className="rounded-none! border-border p-0"
+                    className="absolute right-0 left-auto w-auto rounded-none! border-border p-0"
                     {...CLICK_TO_OPEN}
                   >
                     {/* The ember hairline that draws in as the panel opens -
@@ -181,7 +198,23 @@ export function SiteHeader() {
                       aria-hidden
                       className={cn("block h-px bg-ember", pointerOpen && "nav-panel-rule")}
                     />
-                    <ul className="w-44">
+                    {/*
+                     * Wide enough that a descriptor sets in two lines rather
+                     * than a ragged five, and capped so five of them cannot run
+                     * past the bottom of a short window - the panel hangs off a
+                     * sticky bar, and the page behind it cannot be scrolled to
+                     * reach what spills.
+                     *
+                     * `tabIndex={-1}` is what makes the cap safe to have.
+                     * Chrome puts an overflowing scroller in the tab order so a
+                     * keyboard can reach content nothing else reaches; this one
+                     * holds five links, and Tab scrolls the list to each of
+                     * them, so there is no such content here. Left in, the extra
+                     * stop takes Tab and does not give it back, wearing a ring
+                     * its own `overflow` clips to nothing - a keyboard trap, on
+                     * the short windows where the cap engages and nowhere else.
+                     */}
+                    <ul tabIndex={-1} className="max-h-[min(70svh,32rem)] w-80 overflow-y-auto">
                       {entry.items.map((item) => (
                         <li key={item.to} className="border-b border-border last:border-b-0">
                           <NavigationMenuLink asChild>
@@ -326,24 +359,37 @@ export function SiteHeader() {
 }
 
 /**
- * A link inside the desktop Hobbies panel.
+ * A link inside the desktop collections panel: the section's name, and the one
+ * line `site.ts` gives it.
  *
  * The colour reacts to the link being hovered rather than the label itself, so
  * the whole row is the target while only the text changes - which is how the
- * bar above behaves.
+ * bar above behaves. Only the name moves: the descriptor holds its colour, so
+ * the row has one thing responding to the pointer rather than two.
  */
 function PanelLabel({ item, active }: { item: Section; active: boolean }) {
   return (
-    <span
-      className={cn(
-        "readout transition-colors",
-        // Hover brightens; ember is reserved for the page you are on. Using it
-        // for both made every row you passed over look like the current one.
-        active ? "text-ember" : "text-muted-foreground group-hover/link:text-foreground",
-      )}
-    >
-      {item.label}
-    </span>
+    <>
+      <span
+        className={cn(
+          "readout transition-colors",
+          // Hover brightens; ember is reserved for the page you are on. Using it
+          // for both made every row you passed over look like the current one.
+          active ? "text-ember" : "text-muted-foreground group-hover/link:text-foreground",
+        )}
+      >
+        {item.label}
+      </span>
+      {/* `--muted-foreground` at full strength. One step down from it is where
+          the phone menu's group heading reads 3.28:1, and this is the same
+          token over the same background. */}
+      <span
+        data-slot="nav-blurb"
+        className="mt-1.5 block text-sm leading-snug text-muted-foreground text-pretty"
+      >
+        {item.blurb}
+      </span>
+    </>
   );
 }
 

@@ -24,7 +24,10 @@ export const SITE_TIME_ZONE = "America/Los_Angeles";
 /**
  * How the now page describes itself, in one place.
  *
- * It is the page's lede, its meta description, and its blurb in the home index.
+ * It is the page's lede, its meta description, and the `blurb` the nav panel
+ * and the home index both read - the one section where those two sets of words
+ * are the same, because the lede already says it.
+ *
  * Kept here rather than in the route because the route is lazily loaded, and
  * importing a constant out of it would pull that whole chunk into the landing
  * page's bundle to read one sentence.
@@ -35,6 +38,22 @@ export const NOW_DESCRIPTION =
 export interface Section {
   to: string;
   label: string;
+  /**
+   * One line saying what the section holds, for the nav panel and the home
+   * index. Both read this one, so a section cannot describe itself two ways
+   * depending on which list you met it in.
+   *
+   * Not `PAGE_META.description`, and the two are not to be unified. That one is
+   * written for a tab, a search result and a link preview; this one is written
+   * for a reader already on the site deciding where to go next. `/now` is the
+   * single exception, where both read `NOW_DESCRIPTION` because the page's own
+   * lede is already that sentence.
+   *
+   * Here rather than in the routes for `NOW_DESCRIPTION`'s reason: every
+   * section route is lazily loaded, so importing a sentence out of one pulls
+   * its whole chunk into the landing page's bundle.
+   */
+  blurb: string;
 }
 
 export interface SectionGroup {
@@ -55,18 +74,50 @@ export interface SectionGroup {
  * every time another shelf gets a page.
  */
 export const SECTIONS: (Section | SectionGroup)[] = [
-  { to: "/now", label: "Now" },
-  { to: "/about", label: "About" },
-  { to: "/career", label: "Career" },
-  { to: "/blog", label: "Blog" },
+  { to: "/now", label: "Now", blurb: NOW_DESCRIPTION },
   {
-    label: "Hobbies",
+    to: "/about",
+    label: "About",
+    blurb: "Alexis, Milly and Penny, shows, records, comics, Legos, and one bowling statistic.",
+  },
+  {
+    to: "/career",
+    label: "Career",
+    blurb: "The day job, and the decade of telescope software behind it.",
+  },
+  {
+    to: "/blog",
+    label: "Blog",
+    blurb: "Notes on whatever has my attention, which is usually not work.",
+  },
+  {
+    label: "Collections",
     items: [
-      { to: "/shows", label: "Shows" },
-      { to: "/vinyl", label: "Vinyl" },
-      { to: "/comics", label: "Comics" },
-      { to: "/fortnite", label: "Fortnite" },
-      { to: "/dan-fm", label: "dan.fm" },
+      {
+        to: "/shows",
+        label: "Shows",
+        blurb: "Every gig I have been to since I started keeping track, logged and rated.",
+      },
+      {
+        to: "/vinyl",
+        label: "Vinyl",
+        blurb: "Every record Alexis and I own, pulled straight from the Discogs shelf.",
+      },
+      {
+        to: "/comics",
+        label: "Comics",
+        blurb: "Every run on the shelf, what is waiting at the shop, and what I still want.",
+      },
+      {
+        to: "/fortnite",
+        label: "Fortnite",
+        blurb: "Wins, kills and K/D, read nightly and kept season by season.",
+      },
+      {
+        to: "/dan-fm",
+        label: "dan.fm",
+        blurb: "One album a day, with a review, a favourite track, and a score out of five.",
+      },
     ],
   },
 ];

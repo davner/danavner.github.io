@@ -1,6 +1,12 @@
 import { ArrowUpRight, Disc3 } from "lucide-react";
 
-import { AlbumCover, AlbumReview, AlbumScore, AlbumTracks } from "@/components/album-record";
+import {
+  AlbumCover,
+  AlbumReview,
+  AlbumScore,
+  AlbumTake,
+  AlbumTracks,
+} from "@/components/album-record";
 import { DanFmArchive } from "@/components/dan-fm-archive";
 import { DanFmCharts } from "@/components/dan-fm-charts";
 import { DanFmMixtape } from "@/components/dan-fm-mixtape";
@@ -77,9 +83,7 @@ function TodayCard({ album }: { album: Album }) {
           <Badge variant="outline">{attribution}</Badge>
         </div>
 
-        {album.take ? (
-          <p className="mt-6 max-w-2xl text-lede leading-relaxed text-pretty">{album.take}</p>
-        ) : null}
+        <AlbumTake take={album.take} className="mt-6" />
 
         {album.genre || album.tags.length > 0 ? (
           <div className="mt-6 flex flex-wrap items-center gap-2">

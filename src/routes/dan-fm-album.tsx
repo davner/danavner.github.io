@@ -1,7 +1,13 @@
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { Navigate, useParams } from "react-router";
 
-import { AlbumCover, AlbumReview, AlbumScore, AlbumTracks } from "@/components/album-record";
+import {
+  AlbumCover,
+  AlbumReview,
+  AlbumScore,
+  AlbumTake,
+  AlbumTracks,
+} from "@/components/album-record";
 import { FactLine } from "@/components/fact-line";
 import { Link } from "@/components/link";
 import { PageHeader, PageShell, Section } from "@/components/page";
@@ -118,9 +124,7 @@ function AlbumBody({ album }: { album: Album }) {
           surfaces is the same album: the verdict, then the two tracks, then the
           long piece. */}
       <Section className="mt-10">
-        {album.take ? (
-          <p className="max-w-2xl text-lede leading-relaxed text-pretty">{album.take}</p>
-        ) : null}
+        <AlbumTake take={album.take} />
 
         <AlbumTracks album={album} className="mt-8" />
         <AlbumReview review={album.review} className="mt-10" />

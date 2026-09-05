@@ -1,3 +1,6 @@
+import Markdown from "react-markdown";
+
+import { ProseAnchor } from "@/components/prose-anchor";
 import { Rating } from "@/components/rating";
 import { coverSrcSet } from "@/lib/covers";
 import type { Album } from "@/lib/dan-fm";
@@ -114,28 +117,46 @@ export function AlbumTracks({ album, className }: { album: Album; className?: st
  * page's. Both are set here rather than passed in, so `className` can move the
  * block without either surface quietly reading its review at another measure.
  *
- * Split rather than parsed. The cell behind it is text somebody typed into a
- * spreadsheet, where a newline is a deliberate break and there is no soft wrap
- * to undo - so every line that has anything on it is a paragraph, and a stray
- * `#` or `*` stays the character it was typed as instead of becoming markup.
- *
- * Split per line rather than on a blank line between them. A sheet exported
- * with CRLF endings holds no `\n\n` anywhere, so a paragraph rule written that
- * way returns the whole review as one block and nothing reports it.
+ * Parsed as restricted CommonMark, no GFM - unlike those two surfaces, so a
+ * tilde or a pipe stays the character the author typed. A blank line starts a
+ * new paragraph and a lone newline stays inside its own; the constructs the
+ * cell may carry are enforced upstream at both gates from one spelling
+ * (`src/lib/dan-fm-markdown.ts`), so whatever reaches this renderer is
+ * exactly what the validators allow.
  */
 export function AlbumReview({ review, className }: { review: string; className?: string }) {
-  const paragraphs = review
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
-
-  if (paragraphs.length === 0) return null;
+  if (!review.trim()) return null;
 
   return (
     <div className={cn("prose-dan max-w-2xl", className)}>
-      {paragraphs.map((paragraph, index) => (
-        <p key={index}>{paragraph}</p>
-      ))}
+      <Markdown components={{ a: ProseAnchor }}>{review}</Markdown>
     </div>
+  );
+}
+
+/**
+ * The sentence worth sending, styled the way both routes set it by hand
+ * before it carried markdown. One paragraph by contract - the validators
+ * refuse a second - so the styled `p` is the whole surface, and `className`
+ * places it. Inline marks ride the browser's own em/strong/code rendering:
+ * the take sits outside `prose-dan` on purpose, at the lede step.
+ */
+export function AlbumTake({ take, className }: { take: string; className?: string }) {
+  if (!take.trim()) return null;
+
+  return (
+    <Markdown
+      components={{
+        a: ProseAnchor,
+        p: ({ node: _node, ...props }) => (
+          <p
+            className={cn("max-w-2xl text-lede leading-relaxed text-pretty", className)}
+            {...props}
+          />
+        ),
+      }}
+    >
+      {take}
+    </Markdown>
   );
 }

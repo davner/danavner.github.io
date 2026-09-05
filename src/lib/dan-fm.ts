@@ -52,13 +52,19 @@ export interface Album {
   shelf: string;
   standout: Track;
   skip: Track;
-  /** The written review. May be empty; not every album gets a sentence. */
+  /**
+   * The sentence worth sending. May be empty; not every album gets one. One
+   * paragraph of restricted inline CommonMark by contract - both validators
+   * refuse blocks and blank lines here (`dan-fm-markdown.ts`).
+   */
   take: string;
   /**
-   * The long piece about the record. Every line with anything on it renders as
-   * its own paragraph, so a hard return inside one thought makes two. May be
-   * empty: a `take` is the sentence every album can carry, and this is the one
-   * some of them earn.
+   * The long piece about the record, as restricted CommonMark - no GFM:
+   * emphasis, links, lists and quotes come through, a blank line starts a new
+   * paragraph, and a lone newline stays inside its own. Both validators
+   * enforce the same subset from one spelling (`dan-fm-markdown.ts`). May be
+   * empty: a `take` is the sentence every album can carry, and this is the
+   * one some of them earn.
    *
    * Only the album being reviewed shows it. The front page's featured card
    * renders it and a list of albums must not, because a page of them would be

@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
+import { plainParagraphs, plainText } from "../src/lib/dan-fm-markdown";
 import { MAX_SCORE, albumUrl } from "../src/lib/dan-fm-summary";
 
 import { albumsOnDisk } from "./dan-fm";
@@ -43,22 +44,6 @@ const NEWEST_DATE = NEWEST?.date ?? "1970-01-01";
 const NEWEST_TITLE = NEWEST?.album ?? "";
 const NEWEST_SCORE = NEWEST?.score ?? 0;
 const NEWEST_REVIEW = NEWEST?.review ?? "";
-
-/**
- * The paragraphs a review is meant to become: every line with something on it,
- * trimmed.
- *
- * Spelled out here rather than imported, because the split is the rule the page
- * is being held to rather than a helper it offers. A cell somebody typed into a
- * spreadsheet has no soft wrap to undo, so a newline in it is a break that was
- * meant.
- */
-function paragraphsOf(review: string): string[] {
-  return review
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
-}
 
 /**
  * The reviews the log holds against albums that are not the featured one.
@@ -349,14 +334,18 @@ test.describe("how the lamp is painted", () => {
 });
 
 test.describe("the album's review", () => {
-  test("the featured album's review is on the page, one paragraph per written line", async ({
-    page,
-  }) => {
+  test("the featured album's review is on the page, word for word", async ({ page }) => {
     /*
-     * Element by element rather than as one blob of text. A review handed over
-     * whole - or run through a markdown parser, which the cell behind it was
-     * never written for - puts every word on the page and would satisfy any
-     * assertion that stopped at whether the words were there.
+     * The whole review against the module the pipeline strips with, so every
+     * word arrives in order and nothing rides along. Block boundaries are
+     * pinned by the allowlist sweep below rather than per element, because a
+     * tight list renders its item paragraphs without <p> tags and a
+     * per-child comparison would be a claim about react-markdown's HTML
+     * shapes rather than about the review.
+     *
+     * Both sides read through the same \s+ collapse: `textContent` is raw -
+     * a lone newline the contract merely warns about keeps its "\n" there -
+     * while `plainParagraphs` collapses whitespace like the rendering does.
      */
     await openDanFm(page);
 
@@ -367,15 +356,55 @@ test.describe("the album's review", () => {
 
     await expect(review(today(page))).toHaveCount(1);
 
-    const written = await review(today(page)).evaluate((block) =>
-      Array.from(block.children).map((child) => ({ tag: child.tagName, text: child.textContent })),
+    const written = await review(today(page)).evaluate(
+      (block) => block.textContent?.replace(/\s+/g, " ").trim() ?? "",
     );
 
-    expect(written.map((child) => child.text)).toEqual(paragraphsOf(NEWEST_REVIEW));
+    expect(written).toBe(plainParagraphs(NEWEST_REVIEW).join(" "));
+  });
+
+  test("nothing the contract bans reaches the review's DOM", async ({ page }) => {
+    /*
+     * The "banned things never render" pin that needs no invalid content to
+     * exist: whatever the log carries, the rendered review may hold only the
+     * elements the allowed constructs produce.
+     */
+    await openDanFm(page);
+
     expect(
-      [...new Set(written.map((child) => child.tag))],
-      "the review is being rendered as something other than paragraphs",
-    ).toEqual(["P"]);
+      NEWEST_REVIEW,
+      "the newest album in the log carries no review - nothing below is being asked",
+    ).not.toBe("");
+
+    const tags = await review(today(page)).evaluate((block) => [
+      ...new Set([...block.querySelectorAll("*")].map((el) => el.tagName)),
+    ]);
+
+    for (const tag of tags) {
+      expect(
+        ["P", "EM", "STRONG", "A", "UL", "OL", "LI", "BLOCKQUOTE", "CODE"],
+        `the review rendered a <${tag.toLowerCase()}>, which no allowed construct produces`,
+      ).toContain(tag);
+    }
+  });
+
+  test("markdown renders as markup rather than as its marks", async ({ page }) => {
+    // Guarded like every case here: it bites once the log carries markdown -
+    // the seed does, so CI always asks - and stands down on a plain one.
+    const marked = plainText(NEWEST_REVIEW) !== NEWEST_REVIEW.replace(/\s+/g, " ").trim();
+    test.skip(!marked, "the featured review carries no markdown - nothing to render");
+
+    await openDanFm(page);
+    const block = review(today(page));
+
+    expect(
+      await block.evaluate((el) => el.textContent ?? ""),
+      "markdown marks reached the rendered text",
+    ).not.toMatch(/\*\*|\]\(/);
+    expect(
+      await block.locator("em, strong, a, ul, blockquote").count(),
+      "the marks were stripped but nothing was styled",
+    ).toBeGreaterThan(0);
   });
 
   test("no other album's review reaches the front page", async ({ page }) => {
@@ -412,7 +441,10 @@ test.describe("the album's review", () => {
     await expect(review(page)).toHaveCount(1);
 
     for (const other of OTHER_REVIEWS) {
-      const opening = paragraphsOf(other)[0];
+      // Derived through the same stripper the page renders with: an opening
+      // matched raw would carry asterisks the DOM never contains, and the
+      // leak check would quietly stop matching anything.
+      const opening = plainParagraphs(other)[0];
 
       await expect(
         page.getByText(opening),

@@ -113,8 +113,14 @@ export function PhotoCarousel({ photos, label }: { photos: Photo[]; label: strin
                      sits on a photograph, so it has to hold in either theme, and
                      every ink in the system flips with the stock it is printed
                      on. Lifted above the halftone screen, whose dots would
-                     otherwise land on the words. */
-                  <figcaption className="readout absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/85 to-transparent px-4 pt-10 pb-3 text-white">
+                     otherwise land on the words.
+
+                     The gradient holds solid until the top padding begins, so
+                     the backing scales with the caption's own box: every line
+                     of a wrapped caption sits on the same 85% black a single
+                     line gets (4.5:1 clears even over a white photo), and only
+                     the pt-10 runway above the text fades out. */
+                  <figcaption className="readout absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/85 from-[calc(100%-2.5rem)] to-transparent px-4 pt-10 pb-3 text-white">
                     {photo.caption}
                   </figcaption>
                 ) : null}

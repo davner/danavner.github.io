@@ -295,7 +295,20 @@ export function Share({ subject, className }: { subject: Shareable; className?: 
             </Button>
           ) : null}
 
-          <Button variant="outline" size="sm" onClick={copyLink} className={action}>
+          {/*
+           * The name stays "Copy the link" across the swap: the visible
+           * label reads Copied for the 2s window, but a control whose name
+           * becomes its own confirmation is a control with no stated purpose
+           * exactly while focus sits on it. The region below announces the
+           * confirmation instead.
+           */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={copyLink}
+            aria-label="Copy the link"
+            className={action}
+          >
             {/* Ion, not ember: a copy confirmation is machine output, the one
                 job the cold ink has. The stamp class lands only on pointer
                 copies, so it either plays once or never exists. */}
@@ -306,6 +319,13 @@ export function Share({ subject, className }: { subject: Shareable; className?: 
               "Copy the link"
             )}
           </Button>
+
+          {/* Announces the copy without leaning on screen-reader heuristics
+              for a focused control's name changing. Mounted with the panel,
+              so the region exists before it has anything to say. */}
+          <span role="status" className="sr-only">
+            {copied ? "Link copied" : ""}
+          </span>
         </div>
       </PopoverContent>
     </Popover>

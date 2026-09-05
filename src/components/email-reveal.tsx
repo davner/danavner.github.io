@@ -73,13 +73,22 @@ export function EmailReveal({ className }: { className?: string }) {
         variant="ghost"
         size="icon"
         onClick={copy}
-        aria-label={copied ? "Email copied" : "Copy email address"}
+        // The name stays the action across the swap - a control renamed to
+        // its own confirmation has no stated purpose exactly while focus
+        // sits on it. The region below announces the copy instead.
+        aria-label="Copy email address"
         className="h-auto w-11 rounded-none text-muted-foreground hover:text-ember"
       >
         {/* Ion for machine output, stamped like the share panel's Copied -
             and like it, only on pointer copies. */}
         {copied ? <Check className={cn("text-ion", stamped && "copy-stamp")} /> : <Copy />}
       </Button>
+
+      {/* Announces the copy; mounted with the revealed address, so the
+          region exists before it has anything to say. */}
+      <span role="status" className="sr-only">
+        {copied ? "Email copied" : ""}
+      </span>
     </span>
   );
 }

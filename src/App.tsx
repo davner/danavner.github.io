@@ -233,7 +233,7 @@ function LegacyPostRedirect() {
  *
  * Three things this must never grow, each of them counted somewhere else: an
  * `h1`, which every wait on a page title would resolve against; a
- * `role="status"`, which the shelf's live region is the only one of; and
+ * `role="status"`, which the filter pages count exactly one of at rest; and
  * `inert` or `data-aria-hidden`, which `lib/inert-behind-overlay.ts` owns
  * outright and reports anything else wearing.
  */

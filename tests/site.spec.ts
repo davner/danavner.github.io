@@ -939,6 +939,27 @@ test.describe("vinyl", () => {
     await expect(page.getByText(/Nothing on the shelf matches/i)).toBeVisible();
   });
 
+  test("search text starts past the icon at both padding steps", async ({ page }) => {
+    /*
+     * The box composes `CONTROL_CLASS`, whose `sm:px-5` compiles into a media
+     * block after every base utility - where its `padding-inline` outranks an
+     * unconditional `pl-11`, so the icon's room has to be re-asserted at `sm`
+     * or typed text lands under the glass from 640px up. Measured against the
+     * icon's real right edge rather than a restated 32px, so resizing or
+     * moving the icon keeps the claim honest.
+     */
+    const input = page.getByRole("searchbox", { name: /search the collection/i });
+    for (const width of [390, 1280]) {
+      await page.setViewportSize({ width, height: 900 });
+      const clearance = await input.evaluate((el) => {
+        const icon = el.parentElement!.querySelector("svg")!;
+        const iconRight = icon.getBoundingClientRect().right - el.getBoundingClientRect().left;
+        return parseFloat(getComputedStyle(el).paddingLeft) - iconRight;
+      });
+      expect(clearance, `text must clear the icon at ${width}px`).toBeGreaterThanOrEqual(0);
+    }
+  });
+
   test("every tile opens its Discogs page safely", async ({ page }) => {
     const links = page.locator("[data-slot=record] a");
     const count = await links.count();

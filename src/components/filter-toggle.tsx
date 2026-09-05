@@ -76,7 +76,8 @@ export function FilterToggle<T extends string>({
              * them - and with `min-w-0` and `whitespace-nowrap`, the longest
              * label then spills straight through its own padding and touches
              * the edges, while a short one looks twice as roomy. Sized to
-             * content, every pill keeps the same 20px either side.
+             * content, every pill keeps `CONTROL_CLASS`'s padding either
+             * side - 14px on a phone, 20px from `sm`.
              */
             "flex-none",
             /*

@@ -366,7 +366,10 @@ export function Vinyl() {
               aria-hidden
             />
             {/* Same `CONTROL_CLASS` as the select beside it, so the row lines up
-                on one baseline instead of by eye. */}
+                on one baseline instead of by eye. Its `sm:px-5` lives in a media
+                block after every base utility, where `padding-inline` outranks
+                the unconditional `pl-11` - so the icon's room is said again at
+                `sm`, or the text slides under the glass from 640px up. */}
             <input
               type="search"
               value={query}
@@ -375,7 +378,7 @@ export function Vinyl() {
               aria-label="Search the collection"
               className={cn(
                 CONTROL_CLASS,
-                "w-full border border-border bg-background pl-11 text-sm",
+                "w-full border border-border bg-background pl-11 text-sm sm:pl-11",
                 "placeholder:text-muted-foreground focus-visible:border-ember focus-visible:outline-none",
               )}
             />

@@ -10,6 +10,7 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { plainText } from "../src/lib/dan-fm-markdown";
+import { MAX_SCORE } from "../src/lib/dan-fm-summary";
 import { longDate } from "../src/lib/dates";
 import { nowParagraphs, nowShareText, nowSummary } from "../src/lib/now-summary";
 import { readNow } from "../vite-plugin-content";
@@ -1604,6 +1605,37 @@ test.describe("share an album", () => {
   /** The newest album the log gives a sleeve, which is the only card that draws one. */
   const covered = ALBUMS.find((album) => album.cover !== "");
 
+  /**
+   * The album whose second reading spells the longest score line, and one whose
+   * first reading still stands.
+   *
+   * A rescore is the only thing that puts two numbers on that line, so between
+   * them the pair is both shapes the readout is drawn in. The widest of the
+   * rescores is the one taken rather than the first, because the line is set
+   * from a fixed origin and runs toward the right margin: what a case about
+   * that margin wants is the longest line the log can actually produce.
+   */
+  const rescored = ALBUMS.filter((album) => album.later !== null).reduce<LoggedAlbum | undefined>(
+    (widest, album) =>
+      !widest || `${album.score}${album.later}`.length > `${widest.score}${widest.later}`.length
+        ? album
+        : widest,
+    undefined,
+  );
+  const firstReading = ALBUMS.find((album) => album.later === null);
+
+  /** The margin every mark is set inside: 96px off a 1080px sheet. */
+  const RIGHT_MARGIN = 1080 - 96;
+
+  /**
+   * The widest line the score readout can spell.
+   *
+   * A score is a quarter step from 1 to `MAX_SCORE` and both validators refuse
+   * anything else, so four characters is the longest either reading is written
+   * in - and a rescore is the only shape that sets two of them on one line.
+   */
+  const WIDEST_READOUT = `${MAX_SCORE - 0.25} → ${MAX_SCORE - 0.75} / ${MAX_SCORE}`;
+
   test("the card draws words, never markdown marks", async ({ page }) => {
     /*
      * The card's own half of the stripping contract, read off what fillText
@@ -2160,5 +2192,202 @@ test.describe("share an album", () => {
     expect(runs.at(-1)!.bottom, "the body ran into the footer rule").toBeLessThan(FOOTER_RULE - 8);
     // The flag is a claim about the verdict, and a missing picture is not one.
     await expect(card).toHaveAttribute("data-truncated", "false");
+  });
+
+  /**
+   * One run of type the card laid down: what was drawn, where it started, and
+   * how far to the right it reached.
+   *
+   * `right` is taken inside the call rather than off the finished sheet.
+   * A canvas clips nothing, so a line set past the edge of the paper leaves no
+   * pixel behind to find and a sheet that overflowed reads back the same as one
+   * that fitted. The extent has to be measured while the context still holds
+   * the face, the tracking and the alignment the run was set in, which is true
+   * for the length of the call and no longer.
+   */
+  interface Run {
+    /** What reached the sheet - the substitute, where a case set one. */
+    text: string;
+    /** What the card asked for, which is the same string where it did not. */
+    asked: string;
+    x: number;
+    y: number;
+    right: number;
+    /** Where the asked-for glyphs would have stopped, from the same origin. */
+    askedRight: number;
+  }
+
+  /**
+   * Records every run the card draws, before the page loads.
+   *
+   * `substitute` swaps the score readout for another string on its way to the
+   * sheet, which is how a case reaches a readout the log has no album to
+   * produce. Nothing downstream measures that line - the block under it starts
+   * at a constant offset - so the swap changes the glyphs and nothing else
+   * about the card.
+   */
+  async function watchRuns(page: Page, substitute: string | null = null) {
+    await page.addInitScript((widest: string | null) => {
+      const runs: Run[] = [];
+      (window as unknown as { __runs: Run[] }).__runs = runs;
+
+      /** The score line, in both of the shapes the card draws it in. */
+      const READOUT = /^\d+(?:\.\d+)? (?:\D+ \d+(?:\.\d+)? )?\/ \d+$/;
+
+      const original = CanvasRenderingContext2D.prototype.fillText;
+      CanvasRenderingContext2D.prototype.fillText = function (
+        this: CanvasRenderingContext2D,
+        ...args: Parameters<CanvasRenderingContext2D["fillText"]>
+      ) {
+        const asked = String(args[0]);
+        const text = widest !== null && READOUT.test(asked) ? widest : asked;
+        const x = Number(args[1]);
+
+        // The wider of what the run claims of the line and where its ink
+        // stops: a glyph may overhang the room it advances, and a run ending
+        // in a space claims room it draws nothing in. Either one off the
+        // paper is a poster with a number sliced in half.
+        const edge = (value: string) => {
+          const metrics = this.measureText(value);
+          return x + Math.max(metrics.width, metrics.actualBoundingBoxRight);
+        };
+
+        runs.push({
+          text,
+          asked,
+          x,
+          y: Number(args[2]),
+          right: edge(text),
+          askedRight: edge(asked),
+        });
+
+        const call = [...args] as Parameters<CanvasRenderingContext2D["fillText"]>;
+        call[0] = text;
+        return original.apply(this, call);
+      };
+    }, substitute);
+  }
+
+  /** What `watchRuns` collected on the page in hand. */
+  async function drawnRuns(page: Page): Promise<Run[]> {
+    return page.evaluate(() => (window as unknown as { __runs: Run[] }).__runs);
+  }
+
+  test("a rescored album prints both readings inside the right margin", async ({ page }) => {
+    /*
+     * The branch a second reading opens. "3 → 4.5 / 5" is close to twice the length
+     * of "3 / 5" and it is set from the same origin into the same fixed slot
+     * between the star row and the margin, so the album that earns a second
+     * reading is the one whose card can run off the paper - and this is a
+     * picture people post somewhere public.
+     *
+     * The shape is asserted from the album's own two numbers rather than
+     * against the line the renderer spells, so a card that quietly dropped the
+     * second reading fails here instead of passing a margin it never reached.
+     * What sits between them is left as `\D+`: the card draws an arrow where
+     * the page sets an icon, and which glyph that is is not this case's claim.
+     */
+    test.skip(
+      rescored === undefined,
+      "no album in the log the build read carries a second reading - the rescored readout is undrawn",
+    );
+
+    await watchRuns(page);
+    await openCard(page, `/dan-fm/${rescored!.slug}`);
+    const runs = await drawnRuns(page);
+
+    const number = (value: number) => String(value).replace(".", "\\.");
+    const shape = new RegExp(
+      `^${number(rescored!.score)}\\D+${number(rescored!.later!)} / ${MAX_SCORE}$`,
+    );
+    const readout = runs.filter((run) => shape.test(run.text));
+
+    expect(readout, "the card drew no line carrying both readings").toHaveLength(1);
+    expect(
+      readout[0].right,
+      "the score readout runs past the card's right margin",
+    ).toBeLessThanOrEqual(RIGHT_MARGIN);
+  });
+
+  test("the widest readout the score can spell still lands inside the margin", async ({ page }) => {
+    /*
+     * The line the log has no album to draw. Scores are quarter steps, so the
+     * longest the branch can spell is two four-character readings, and whether
+     * that fits was arithmetic off the constants until here.
+     *
+     * Drawn rather than computed, because the slot it has to fit is not a
+     * constant: it starts where the star row ends, and the row is measured in
+     * whatever face `system-ui` resolves to on the machine running this. So the
+     * string is put through the renderer at the real origin in the real face,
+     * and the run it replaced is measured beside it - a substitute narrower
+     * than the widest line the log itself produces would prove nothing.
+     */
+    const subject = rescored ?? FEATURED;
+    test.skip(subject === undefined, "the log the build read is empty - there is no card to draw");
+
+    await watchRuns(page, WIDEST_READOUT);
+    await openCard(page, `/dan-fm/${subject!.slug}`);
+    const runs = await drawnRuns(page);
+
+    const readout = runs.filter((run) => run.text === WIDEST_READOUT);
+    expect(readout, "the widest readout never reached the sheet").toHaveLength(1);
+    expect(
+      readout[0].right - readout[0].askedRight,
+      "the readout this stands in for is narrower than the one it replaced",
+    ).toBeGreaterThanOrEqual(0);
+    expect(
+      readout[0].right,
+      "the widest readout the score can spell runs past the card's right margin",
+    ).toBeLessThanOrEqual(RIGHT_MARGIN);
+  });
+
+  test("the readout is set clear of the star row", async ({ page }) => {
+    /*
+     * The other edge of the same slot. The row's width is measured under the
+     * face the stars are drawn in and the readout is placed from it, so a
+     * measurement taken after the mono face is set - the one rearrangement this
+     * layout invites - lays the numbers over the stars. Nothing about the code
+     * would look wrong, and the card would still be a card.
+     */
+    test.skip(FEATURED === undefined, "the log the build read is empty - there is no card to draw");
+
+    await watchRuns(page);
+    await openCard(page, `/dan-fm/${FEATURED!.slug}`);
+    const runs = await drawnRuns(page);
+
+    const stars = runs.filter((run) => run.text === "★".repeat(MAX_SCORE));
+    const readout = runs.filter((run) =>
+      /^\d+(?:\.\d+)? (?:\D+ \d+(?:\.\d+)? )?\/ \d+$/.test(run.text),
+    );
+
+    expect(stars.length, "the full star row was never drawn").toBeGreaterThan(0);
+    expect(readout, "the card drew no score readout").toHaveLength(1);
+    expect(
+      readout[0].x,
+      "the readout starts inside the star row it is set beside",
+    ).toBeGreaterThanOrEqual(Math.max(...stars.map((run) => run.right)));
+  });
+
+  test("the poster draws whether the score was revised or not", async ({ page }) => {
+    /*
+     * The floor under every case above, which `renderAlbumCard` went without
+     * until this file grew one. A renderer that throws costs the reader the
+     * poster outright: the panel catches it, prints "Could not build the card."
+     * and offers the link alone. Both shapes of the score line are opened,
+     * because the branch between them is the newest thing on the sheet and it
+     * is the one a card can now fail on.
+     */
+    test.skip(
+      rescored === undefined || firstReading === undefined,
+      "the log the build read has no album on one side of the second reading",
+    );
+
+    for (const album of [firstReading!, rescored!]) {
+      const card = await openCard(page, `/dan-fm/${album.slug}`);
+      await expect(card, `${album.slug} drew no poster`).toHaveAttribute(
+        "data-truncated",
+        /^(?:true|false)$/,
+      );
+    }
   });
 });

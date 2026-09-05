@@ -333,7 +333,10 @@ the shell.
 Vertical rhythm is coarse and consistent. `1.5rem` is the standing gap under a
 page title whatever follows it. Paragraphs in prose sit `1.25rem` apart, section
 headings take `3.5rem` above them, and a major section break is `6rem`. Density
-is low by intent: this is a site read at leisure, not a dashboard.
+is low by intent: this is a site read at leisure, not a dashboard. Below the
+small breakpoint the major break steps to `4rem` - the Two Steps Rule's own
+seam - because six rems of air between sections reads as leisure at a desk and
+as dead screen on a phone.
 
 Responsive behaviour is mostly typographic rather than structural. The display
 face is set in `clamp()` so it scales with the viewport instead of stepping at

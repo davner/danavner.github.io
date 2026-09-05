@@ -228,11 +228,23 @@ export function Shows() {
 
   // Candidates in priority order; a stat is only shown once it has something to
   // say, so an early log of one festival never renders "BANDS SEEN - 0".
-  const stats: { label: string; value: ReactNode; show: boolean }[] = [
-    { label: "Logged", value: String(showStats.total), show: true },
-    { label: "Bands seen", value: String(showStats.bands), show: showStats.bands > 0 },
+  const stats: { key: string; label: ReactNode; value: ReactNode; show: boolean }[] = [
+    { key: "Logged", label: "Logged", value: String(showStats.total), show: true },
     {
-      label: `Average (${showStats.ratedCount} rated)`,
+      key: "Bands seen",
+      label: "Bands seen",
+      value: String(showStats.bands),
+      show: showStats.bands > 0,
+    },
+    {
+      key: "Average",
+      // The parenthetical wraps as a unit: at a phone's tile width the label
+      // otherwise breaks mid-parenthesis, "(5" stranded on the first line.
+      label: (
+        <>
+          Average <span className="whitespace-nowrap">({showStats.ratedCount} rated)</span>
+        </>
+      ),
       value:
         showStats.averageRating != null ? (
           <span className="flex flex-wrap items-center gap-2">
@@ -242,11 +254,26 @@ export function Shows() {
         ) : null,
       show: showStats.averageRating != null,
     },
-    { label: "Festivals", value: String(showStats.festivals), show: showStats.festivals > 0 },
-    { label: "Solo runs", value: String(showStats.solo), show: showStats.solo > 0 },
-    { label: "Venues", value: String(showStats.venues), show: showStats.venues > 0 },
-    { label: "Cities", value: String(showStats.cities), show: showStats.cities > 0 },
-    { label: "Since", value: showStats.firstYear ?? "", show: Boolean(showStats.firstYear) },
+    {
+      key: "Festivals",
+      label: "Festivals",
+      value: String(showStats.festivals),
+      show: showStats.festivals > 0,
+    },
+    {
+      key: "Solo runs",
+      label: "Solo runs",
+      value: String(showStats.solo),
+      show: showStats.solo > 0,
+    },
+    { key: "Venues", label: "Venues", value: String(showStats.venues), show: showStats.venues > 0 },
+    { key: "Cities", label: "Cities", value: String(showStats.cities), show: showStats.cities > 0 },
+    {
+      key: "Since",
+      label: "Since",
+      value: showStats.firstYear ?? "",
+      show: Boolean(showStats.firstYear),
+    },
   ]
     .filter((stat) => stat.show)
     .slice(0, 4);
@@ -274,7 +301,7 @@ export function Shows() {
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="grid grid-cols-2 gap-px border border-border bg-border sm:grid-cols-4">
           {stats.map((stat) => (
-            <dl key={stat.label} className="bg-background p-5 sm:p-6">
+            <dl key={stat.key} className="bg-background p-5 sm:p-6">
               <dt className="readout-dim">{stat.label}</dt>
               <dd className="display mt-2 text-heading text-balance">{stat.value}</dd>
             </dl>

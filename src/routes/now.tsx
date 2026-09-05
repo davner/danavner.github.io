@@ -156,7 +156,9 @@ function NowCurrent() {
         </div>
 
         {archive.length > 0 ? (
-          <section aria-labelledby="before" className="mt-24">
+          // The Section component's own stepped break, spelled here because
+          // this section carries its own heading arrangement.
+          <section aria-labelledby="before" className="mt-16 sm:mt-24">
             <div className="mb-8 flex items-end justify-between gap-6 border-b border-border pb-3">
               <h2 id="before" className="display text-heading">
                 Before this

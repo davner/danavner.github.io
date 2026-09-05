@@ -136,7 +136,9 @@ export function Section({
   children: ReactNode;
 }) {
   return (
-    <section id={id} className={cn("mt-24 first:mt-0", className)}>
+    // The major section break steps down on a phone: 6rem of air between
+    // sections reads as leisure at desk widths and as dead screen at 390px.
+    <section id={id} className={cn("mt-16 first:mt-0 sm:mt-24", className)}>
       {title ? (
         <div className="mb-8 flex items-end justify-between gap-6 border-b border-border pb-3">
           <h2 className="display text-heading">{title}</h2>

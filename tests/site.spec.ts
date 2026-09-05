@@ -1434,9 +1434,22 @@ test.describe("now", () => {
       "the whole archive fits in the pane - nothing can sit against its edge",
     );
 
-    // Not the last one: placing a link against the bottom edge needs room left
-    // to scroll past it, and the last entry has none.
-    const target = dates.nth(count - 2);
+    /*
+     * Not the last one: placing a link against the bottom edge needs room left
+     * to scroll past it, and the last entry has none. Nor one with less than a
+     * pane of content above it: the scroll that would carry it to the edge
+     * clamps at zero instead - which is where a two-entry archive leaves every
+     * candidate, so a young archive skips rather than failing its own setup.
+     */
+    const placeable = await dates.evaluateAll((links) => {
+      const port = links[0].closest("[data-slot=scroll-area-viewport]") as HTMLElement;
+      const portTop = port.getBoundingClientRect().top - port.scrollTop;
+      return links
+        .slice(0, -1)
+        .findIndex((link) => link.getBoundingClientRect().bottom - portTop >= port.clientHeight);
+    });
+    test.skip(placeable === -1, "no date can come to rest against the pane's edge");
+    const target = dates.nth(placeable);
     await target.focus();
     // Away and back, so the return trip is a keypress and the ring is painted.
     await page.keyboard.press("Shift+Tab");

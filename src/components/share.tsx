@@ -34,6 +34,13 @@ export interface Shareable {
   heading: string;
   /** Canonical absolute URL. Never printed as text; the buttons carry it. */
   url: string;
+  /**
+   * Prose that travels with the link - a now entry's body, because the entry
+   * is the writing. Absent for subjects whose page is the thing worth
+   * arriving at; when present, the link actions carry it and their labels
+   * say so.
+   */
+  text?: string;
   /** Basename for the saved PNG, no extension. */
   filename: string;
   /** Cover candidates. More than one shows the picker. */
@@ -55,7 +62,9 @@ export interface Shareable {
  * all three, and Messages decides to stack them: a full-height poster, the
  * whole lineup as a paragraph, and the link underneath. Sending one thing at a
  * time means the story gets the poster and the message gets a link that
- * previews itself.
+ * previews itself. A subject offering prose sends it with the link - two of
+ * the three, still never alongside the file - so what was written arrives
+ * with where it lives.
  *
  * The panel is a shadcn Popover, so open/close, focus return, Escape, click
  * outside, and positioning are Radix's job rather than hand-rolled here.
@@ -74,7 +83,12 @@ export function Share({ subject, className }: { subject: Shareable; className?: 
   const [stamped, setStamped] = useState(false);
   const building = useRef(false);
 
-  const { heading, url, filename, photos, renderCard } = subject;
+  const { heading, url, filename, photos, renderCard, text } = subject;
+
+  // The labels tell the truth about the payload: with prose aboard, "the
+  // link" would be less than what either action carries.
+  const copyLabel = text ? "Copy the text and link" : "Copy the link";
+  const sendLabel = text ? "Send the text and link" : "Send the link";
 
   // Object URLs outlive the component unless they are handed back.
   useEffect(
@@ -135,7 +149,7 @@ export function Share({ subject, className }: { subject: Shareable; className?: 
      */
     const stamp = !event.currentTarget.matches(":focus-visible");
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(text ? `${text}\n\n${url}` : url);
       setCopied(true);
       setStamped(stamp);
       window.setTimeout(() => setCopied(false), 2000);
@@ -287,26 +301,26 @@ export function Share({ subject, className }: { subject: Shareable; className?: 
             <Button
               variant="outline"
               size="sm"
-              onClick={() => share({ title: heading, url })}
+              onClick={() => share(text ? { title: heading, url, text } : { title: heading, url })}
               className={action}
             >
               <Link2 />
-              Send the link
+              {sendLabel}
             </Button>
           ) : null}
 
           {/*
-           * The name stays "Copy the link" across the swap: the visible
-           * label reads Copied for the 2s window, but a control whose name
-           * becomes its own confirmation is a control with no stated purpose
-           * exactly while focus sits on it. The region below announces the
+           * The name stays the action across the swap: the visible label
+           * reads Copied for the 2s window, but a control whose name becomes
+           * its own confirmation is a control with no stated purpose exactly
+           * while focus sits on it. The region below announces the
            * confirmation instead.
            */}
           <Button
             variant="outline"
             size="sm"
             onClick={copyLink}
-            aria-label="Copy the link"
+            aria-label={copyLabel}
             className={action}
           >
             {/* Ion, not ember: a copy confirmation is machine output, the one
@@ -316,7 +330,7 @@ export function Share({ subject, className }: { subject: Shareable; className?: 
             {copied ? (
               <span className={cn("text-ion", stamped && "copy-stamp")}>Copied</span>
             ) : (
-              "Copy the link"
+              copyLabel
             )}
           </Button>
 
@@ -324,7 +338,7 @@ export function Share({ subject, className }: { subject: Shareable; className?: 
               for a focused control's name changing. Mounted with the panel,
               so the region exists before it has anything to say. */}
           <span role="status" className="sr-only">
-            {copied ? "Link copied" : ""}
+            {copied ? (text ? "Text and link copied" : "Link copied") : ""}
           </span>
         </div>
       </PopoverContent>

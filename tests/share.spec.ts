@@ -10,7 +10,7 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { longDate } from "../src/lib/dates";
-import { nowParagraphs, nowSummary } from "../src/lib/now-summary";
+import { nowParagraphs, nowShareText, nowSummary } from "../src/lib/now-summary";
 import { readNow } from "../vite-plugin-content";
 import { type LoggedAlbum, albumsOnDisk } from "./dan-fm";
 import { PHOTO_GAP, nowEntriesWithPhotos } from "./now-photos";
@@ -1084,11 +1084,72 @@ test.describe("share a now entry", () => {
     return page.getByRole("dialog", { name: /^Share Now / });
   }
 
+  /** What the copy and send actions should carry for one entry on disk. */
+  const shareText = (date: string) => nowShareText({ body: bodyOf(date) });
+
+  test("the copy action writes what was written, then the link", async ({ page }) => {
+    /*
+     * The owner's ask, verbatim: "what I wrote and the link". The prose is
+     * derived by the same reader the page renders with, so this pins the
+     * wiring - ShareNow hands the body over, the sheet joins it to the URL
+     * with one blank line - while the parser's own fidelity is pinned by the
+     * describe blocks above.
+     */
+    await page.addInitScript(() => {
+      const copied: string[] = [];
+      (window as unknown as { __copied: string[] }).__copied = copied;
+      Object.defineProperty(navigator, "clipboard", {
+        configurable: true,
+        value: { writeText: async (text: string) => void copied.push(text) },
+      });
+    });
+
+    const date = NOW_DATES[0];
+    const panel = await openSheet(page, `/now/${date}`);
+
+    const copy = panel.getByRole("button", { name: /Copy the text and link/ });
+    await copy.scrollIntoViewIfNeeded();
+    await copy.click();
+
+    await expect(copy).toContainText("Copied");
+    expect(
+      await page.evaluate(() => (window as unknown as { __copied: string[] }).__copied),
+    ).toEqual([`${shareText(date)}\n\nhttps://danavner.com/now/${date}`]);
+  });
+
+  test("the link goes out with the prose riding along", async ({ page }) => {
+    // The show-side twin of this test pins the absence: a show's link payload
+    // carries no text, and its file payload never gains any.
+    await page.addInitScript(() => {
+      const shared: unknown[] = [];
+      (window as unknown as { __shared: unknown[] }).__shared = shared;
+      Object.defineProperty(navigator, "share", {
+        configurable: true,
+        value: async (data: unknown) => void shared.push(data),
+      });
+    });
+
+    const date = NOW_DATES[0];
+    const panel = await openSheet(page, `/now/${date}`);
+
+    const send = panel.getByRole("button", { name: /Send the text and link/ });
+    await send.scrollIntoViewIfNeeded();
+    await send.click();
+
+    const payloads = await page.evaluate(
+      () => (window as unknown as { __shared: Record<string, unknown>[] }).__shared,
+    );
+    expect(payloads).toHaveLength(1);
+    expect(payloads[0].url).toBe(`https://danavner.com/now/${date}`);
+    expect(payloads[0].text).toBe(shareText(date));
+    expect(payloads[0].files).toBeUndefined();
+  });
+
   test("the sheet opens and offers both link actions", async ({ page }) => {
     const panel = await openSheet(page, "/now");
     await expect(panel).toBeVisible({ timeout: 15_000 });
 
-    await expect(panel.getByRole("button", { name: /Copy the link/ })).toBeVisible();
+    await expect(panel.getByRole("button", { name: /Copy the text and link/ })).toBeVisible();
     // The URL belongs to the buttons, not to the panel's text.
     await expect(page.getByText("danavner.com/now/", { exact: false })).toHaveCount(0);
   });
@@ -1109,7 +1170,7 @@ test.describe("share a now entry", () => {
     await expect(panel.getByRole("link", { name: /Save the card/ })).toHaveCount(0);
     // No build to sit through either - there is nothing to build.
     await expect(panel.getByText("Building the card")).toHaveCount(0);
-    await expect(panel.getByRole("button", { name: /Copy the link/ })).toBeVisible();
+    await expect(panel.getByRole("button", { name: /Copy the text and link/ })).toBeVisible();
   });
 
   test("an entry with photos builds a card", async ({ page }) => {
@@ -1221,14 +1282,14 @@ test.describe("share a now entry", () => {
     await expect(panel.getByRole("link", { name: /Save the card/ })).toHaveCount(0);
 
     // The page is still worth sending even though its poster is not.
-    const copy = panel.getByRole("button", { name: /Copy the link/ });
+    const copy = panel.getByRole("button", { name: /Copy the text and link/ });
     await copy.scrollIntoViewIfNeeded();
     await copy.click();
 
     await expect(copy).toContainText("Copied");
     expect(
       await page.evaluate(() => (window as unknown as { __copied: string[] }).__copied),
-    ).toEqual([`https://danavner.com/now/${date}`]);
+    ).toEqual([`${shareText(date)}\n\nhttps://danavner.com/now/${date}`]);
   });
 
   test("an entry whose opening paragraph alone overflows the band still draws", async ({

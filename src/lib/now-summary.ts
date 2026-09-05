@@ -207,6 +207,17 @@ export function nowTitle(entry: Pick<NowEntryLike, "updated">): string {
   return `Now · ${nowDate(entry)}`;
 }
 
+/**
+ * The whole body as plain text, paragraphs separated by a blank line - what
+ * the share sheet copies alongside the link. No truncation: the ask is the
+ * entry as written, and a now entry is short by form. Derived through the
+ * same parser as every other reading of the body, which is this module's own
+ * point - the copied prose can never quote words the page does not print.
+ */
+export function nowShareText(entry: Pick<NowEntryLike, "body">): string {
+  return nowParagraphs(entry.body).join("\n\n");
+}
+
 /** The opening paragraph, cut at a word boundary. The meta description. */
 export function nowSummary(entry: Pick<NowEntryLike, "body">, limit = 160): string {
   const first = nowParagraphs(entry.body)[0] ?? "";

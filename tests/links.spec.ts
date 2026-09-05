@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 
 import { ANALYTICS_HOSTS } from "../src/lib/analytics";
+import { danFmLinks } from "../src/lib/dan-fm-markdown";
+import { albumsOnDisk } from "./dan-fm";
 import { ROUTES } from "./routes";
 
 /**
@@ -30,6 +32,35 @@ test.describe("internal links", () => {
       const response = await page.request.get(new URL(href, baseURL).toString());
       // The SPA fallback serves index.html for unknown paths, so a 200 alone
       // proves nothing - the rendered page must not be the 404 route.
+      expect(response.status(), `${href} did not respond`).toBe(200);
+
+      await page.goto(href);
+      await expect(
+        page.getByRole("heading", { level: 1 }),
+        `${href} renders the 404 page`,
+      ).not.toContainText(/NOTHING AT THESE COORDINATES/i);
+    }
+  });
+
+  test("every site-relative link written into an album holds", async ({ page, baseURL }) => {
+    /*
+     * The middle of the log: `ROUTES` walks the featured review on /dan-fm
+     * and the oldest album's own page, but a review two weeks deep is on no
+     * swept page, and its links rot as quietly as any. Request-level like the
+     * sweep above - one GET per actual link rather than one page load per
+     * album, which would grow with a daily log. `/dan-fm/` targets are also
+     * proved against the payload at build time; this covers the rest
+     * (/blog/..., /vinyl) and proves the build-time promise end to end.
+     */
+    const written = new Set<string>();
+    for (const album of albumsOnDisk()) {
+      for (const url of [...danFmLinks(album.review), ...danFmLinks(album.take)]) {
+        if (url.startsWith("/")) written.add(url.split(/[?#]/)[0]);
+      }
+    }
+
+    for (const href of written) {
+      const response = await page.request.get(new URL(href, baseURL).toString());
       expect(response.status(), `${href} did not respond`).toBe(200);
 
       await page.goto(href);

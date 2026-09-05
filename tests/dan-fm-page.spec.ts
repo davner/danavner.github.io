@@ -581,7 +581,10 @@ test.describe("what the page claims about the log", () => {
     const bar = reported(tape, MIXTAPE_BAR);
     expect(bar, "the mixtape no longer says what score it takes").not.toBeNull();
 
-    const keepers = LOGGED.filter((album) => album.score >= bar!).length;
+    // Where the album stands now, not where it started: `mixtape()` reads the
+    // second score where one exists, so a filter on the first alone counts a
+    // demoted album in and a promoted one out. The seed carries one of each.
+    const keepers = LOGGED.filter((album) => (album.later ?? album.score) >= bar!).length;
 
     /*
      * A log whose every album is under the bar has a mixtape that is honestly
@@ -1270,7 +1273,10 @@ test.describe("the mixtape", () => {
     const bar = reported(await section(page, "Mixtape").innerText(), MIXTAPE_BAR);
     expect(bar, "the mixtape no longer says what score it takes").not.toBeNull();
 
-    const keepers = NEWEST_FIRST.filter((album) => album.score >= bar!);
+    // The standing score, for the reason the count test above reads it: the
+    // tape plays albums where they stand, and the seed demotes one keeper and
+    // promotes one non-keeper exactly to catch a filter still on the first read.
+    const keepers = NEWEST_FIRST.filter((album) => (album.later ?? album.score) >= bar!);
 
     // Stood down where the log on disk has nothing over the bar, in the shape
     // and for the reason `openDanFm` stands down on launch day. `ci.yml` builds

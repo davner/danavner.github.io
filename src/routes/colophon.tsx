@@ -107,7 +107,10 @@ export function Colophon() {
             <li key={ink.css}>
               {/* The hairline is what gives newsprint-on-newsprint an edge:
                   without it the page swatch is invisible on its own stock. */}
-              <div className="h-14 border border-border" style={{ background: ink.css }} />
+              <div
+                className="ink-swatch h-14 border border-border"
+                style={{ background: ink.css }}
+              />
               <p className="readout-dim mt-2">
                 {ink.light === ink.dark ? (
                   ink.light

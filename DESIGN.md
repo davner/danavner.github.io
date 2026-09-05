@@ -248,6 +248,11 @@ agree with the first, and would still be blind in exactly the same places.
 **The Same Artefact Rule.** The two themes are one design on different stock.
 A colour decision that only makes sense in one theme is not finished.
 
+**The One-Ink Press Rule.** A printout is the machine's copy of the poster:
+white stock, black ink, every accent flattened to black. One exception, scoped
+to one element: the colophon's ink bar keeps its true inks on paper, because a
+specimen page flattened to one ink denies its own caption.
+
 ## Typography
 
 **Display Font:** Anton (with Arial Narrow, Haettenschweiler, Impact)

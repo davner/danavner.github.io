@@ -1130,4 +1130,33 @@
     border-right-width: 1px;
     border-bottom-width: 1px;
   }
+
+  /*
+   * The one exception to the one-ink press: the colophon's ink bar exists to
+   * show the inks, and flattened to black it prints a specimen page that
+   * denies its own caption. Literal values, because the override above has
+   * already rewritten every token these swatches read - and per run, because
+   * the bar is labeled for whichever run the reader is holding.
+   * `print-color-adjust` asks the printer for the actual ink rather than the
+   * blank a background normally becomes on paper.
+   */
+  .ink-swatch {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    --background: oklch(0.965 0.008 85);
+    --card: oklch(0.995 0.004 85);
+    --foreground: oklch(0.16 0.012 268);
+    --ember: oklch(0.53 0.22 30);
+    --ion: oklch(0.5 0.13 215);
+    --star: oklch(0.6 0.05 268);
+  }
+
+  .dark .ink-swatch {
+    --background: oklch(0.115 0.014 268);
+    --card: oklch(0.155 0.016 268);
+    --foreground: oklch(0.95 0.008 90);
+    --ember: oklch(0.66 0.225 32);
+    --ion: oklch(0.82 0.14 197);
+    --star: oklch(0.93 0.02 90);
+  }
 }

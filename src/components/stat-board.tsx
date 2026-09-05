@@ -13,9 +13,13 @@ import { cn } from "@/lib/utils";
  * that axe's `definition-list` rule fails. Each `Stat` carries its own one-pair
  * list instead, so the grouping lives in the grid and not in the markup.
  *
- * The last row is always full here - every caller fills the board - so the seam
- * field cannot paint an empty cell grey. A ladder whose last row can be short
- * draws its seams per card; `Shelf` is that one.
+ * The seam field sits behind the grid rather than on each tile, which is the
+ * opposite of what `Shelf` does, and it holds only while the rows come out
+ * full: an empty cell in a `bg-border` grid paints as a solid grey block. All
+ * three boards do fill today - four figures, or four plus two double-width
+ * lists - but every one of those is conditional on the data behind it, so a
+ * board that comes to hold a count the row does not divide wants `Shelf`'s
+ * per-tile hairline instead of this.
  */
 export function StatBoard({ children }: { children: ReactNode }) {
   return (

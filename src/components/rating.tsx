@@ -29,10 +29,10 @@ export function Rating({
    * the copy clipped to `value / MAX_RATING`. Paint only - both rows are already
    * `aria-hidden` and the name stays "Rated {n} out of {MAX_RATING}".
    *
-   * It never draws a second score. `/dan-fm` shows an album's later rating as
-   * its own `3.5 -> 4.5` readout beside the row, so the graphic and the name
-   * describe the same single number; a mark painting two would leave a
-   * one-number name incomplete.
+   * It never draws a second score. `/dan-fm` draws the score an album stands
+   * at and writes a rescore's history as its own `4.5 -> 3.5` readout beside
+   * the row, so the graphic and the name describe the same single number; a
+   * mark painting two would leave a one-number name incomplete.
    *
    * A string rather than a code point, because the default is an emoji plus a
    * skin-tone modifier and no single number expresses that pair.
@@ -61,7 +61,8 @@ export function Rating({
   const label = `${shown} out of ${MAX_RATING}`;
   const row = mark.repeat(MAX_RATING);
   // The tier keys on the number the row draws - `shown`, clamped and rounded
-  // - never on a raw or later score a caller might compute from.
+  // - never on a raw value the caller passed, so the dress can never disagree
+  // with the label.
   const tier = heat ? tierFor(shown) : null;
 
   return (

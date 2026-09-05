@@ -3,7 +3,7 @@ import Markdown from "react-markdown";
 import { ProseAnchor } from "@/components/prose-anchor";
 import { Rating } from "@/components/rating";
 import { coverSrcSet } from "@/lib/covers";
-import type { Album } from "@/lib/dan-fm";
+import { standingScore, type Album } from "@/lib/dan-fm";
 import { cn } from "@/lib/utils";
 
 /**
@@ -55,7 +55,7 @@ export function AlbumCover({ cover, sizes }: { cover: string; sizes: string }) {
 }
 
 /**
- * The score, and the second one where living with the record changed it.
+ * The score as it stands, and the first read where living with it moved it.
  *
  * A fragment rather than a row of its own: both surfaces set it on a line of
  * chips they lay out themselves, and a wrapper here would be a second flex
@@ -64,17 +64,19 @@ export function AlbumCover({ cover, sizes }: { cover: string; sizes: string }) {
 export function AlbumScore({ album }: { album: Album }) {
   return (
     <>
-      <Rating value={album.score} mark={STAR} heat />
+      <Rating value={standingScore(album)} mark={STAR} heat />
 
       {album.later === null ? (
         <span className="readout-dim">{album.score}</span>
       ) : (
-        /* The stars draw the first score, so the second one is written out
-           beside them rather than folded into the graphic - and the word is
-           spoken where the arrow is only drawn. */
+        /* The stars draw where the album stands, so what is written out beside
+           them is the history: first read, arrow, the score the stars show. A
+           screen reader gets "rescored from {score}" and no more - the standing
+           value is already the rating's own label, and speaking it here too
+           would read the verdict twice. */
         <span className="readout text-ember">
-          {album.score} <span aria-hidden>→</span>
-          <span className="sr-only">later</span> {album.later}
+          <span className="sr-only">rescored from</span> {album.score}{" "}
+          <span aria-hidden>→ {album.later}</span>
         </span>
       )}
     </>

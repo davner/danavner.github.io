@@ -42,7 +42,8 @@ const NEWEST = [...LOGGED].sort((a, b) => a.date.localeCompare(b.date)).at(-1);
  */
 const NEWEST_DATE = NEWEST?.date ?? "1970-01-01";
 const NEWEST_TITLE = NEWEST?.album ?? "";
-const NEWEST_SCORE = NEWEST?.score ?? 0;
+// The score the stars draw: the standing one, where a rescore exists.
+const NEWEST_SCORE = NEWEST?.later ?? NEWEST?.score ?? 0;
 const NEWEST_REVIEW = NEWEST?.review ?? "";
 
 /**
@@ -556,17 +557,42 @@ test.describe("the rating mark", () => {
     expect(painted.overflow, "the glow layer is clipped - the bloom will box").toBe("visible");
   });
 
-  test("the tier keys on the number the row draws, not a later one", async ({ page }) => {
-    const revised = LOGGED.find((album) => album.score === 4.5 && album.later !== null);
-    test.skip(revised === undefined, "no revised 4.5 in the log on disk");
+  test("a demotion loses the dress the first night earned", async ({ page }) => {
+    const demoted = LOGGED.find(
+      (album) => album.later !== null && album.later < 4 && album.score >= 4.5,
+    );
+    test.skip(demoted === undefined, "no album demoted off the ladder in the log on disk");
 
-    await page.goto(albumUrl(revised!).replace(/^https:\/\/[^/]+/, ""));
+    await page.goto(albumUrl(demoted!).replace(/^https:\/\/[^/]+/, ""));
     await page.getByRole("heading", { level: 1 }).waitFor();
 
-    // Drawn 4.5, revised later: gold, whatever the second reading said.
-    await expect(page.getByRole("img", { name: /^Rated / }).first()).toHaveAttribute(
-      "data-tier",
-      "gold",
+    // The stars draw where the album stands, so a record that fell off the
+    // ladder is plain ink whatever the first night scored - and the label
+    // names the same number the row shows.
+    const rating = page.getByRole("img", { name: /^Rated / }).first();
+    await expect(rating).toHaveAttribute("data-tier", "base");
+    await expect(rating).toHaveAttribute(
+      "aria-label",
+      `Rated ${demoted!.later} out of ${MAX_SCORE}`,
+    );
+  });
+
+  test("a promotion earns the dress the first night withheld", async ({ page }) => {
+    const promoted = LOGGED.find(
+      (album) => album.later !== null && album.later >= 4.5 && album.later < 5 && album.score < 4,
+    );
+    test.skip(promoted === undefined, "no album promoted onto the ladder in the log on disk");
+
+    await page.goto(albumUrl(promoted!).replace(/^https:\/\/[^/]+/, ""));
+    await page.getByRole("heading", { level: 1 }).waitFor();
+
+    // The other direction of the same rule: a record that grew into a 4.5
+    // wears gold, and the first night's plain score is history in the readout.
+    const rating = page.getByRole("img", { name: /^Rated / }).first();
+    await expect(rating).toHaveAttribute("data-tier", "gold");
+    await expect(rating).toHaveAttribute(
+      "aria-label",
+      `Rated ${promoted!.later} out of ${MAX_SCORE}`,
     );
   });
 

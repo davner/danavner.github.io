@@ -140,10 +140,11 @@ export const MIXTAPE_SCORE = 4;
  * changed the verdict, and the first everywhere else.
  *
  * A record that grew on me is one I would put on a tape, and one I talked
- * myself into is not - so the two surfaces that ask whether an album is a
- * keeper, the mixtape and the archive's top band, both read this rather than
- * `score`. Reading `score` there meant a second thought could be typed into the
- * sheet and change nothing anybody could see.
+ * myself into is not - so everything that judges an album judges this rather
+ * than `score`: the mixtape, the archive's top band, and the stars a row is
+ * drawn with, on the page and on its share card. Reading `score` there meant a
+ * second thought could be typed into the sheet and change nothing anybody
+ * could see.
  *
  * It replaces the first reading rather than joining it. A promotion and a
  * demotion are the same act of changing my mind, so an album that fell to a 2
@@ -279,8 +280,8 @@ export function statsFor(list: Album[]): DanFmStats {
  * the handful of rows that carry it and a different one for the rest, and the
  * question a board asks is what a genre or a recommender is worth on first
  * listen. What living with a record did to it is printed beside the record,
- * where both figures are shown, and it decides the two surfaces that ask
- * whether an album is a keeper.
+ * where both figures are shown, and it decides the stars a row draws and the
+ * two surfaces that ask whether an album is a keeper.
  */
 
 /**

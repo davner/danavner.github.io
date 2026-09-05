@@ -16,6 +16,7 @@ import {
 import type { Album } from "@/lib/dan-fm";
 import { plainText } from "@/lib/dan-fm-markdown";
 import { MAX_SCORE } from "@/lib/dan-fm-summary";
+import { tierFor } from "@/lib/rating-heat";
 import { longDate } from "@/lib/dates";
 import { SITE_URL } from "@/lib/site";
 
@@ -247,18 +248,49 @@ export async function renderAlbumCard(album: Album): Promise<Card> {
   context.fillStyle = palette.dim;
   context.fillText(row, PAD, y + 44);
 
+  /*
+   * The ladder's ink at card scale (the page's Star Heat treatment): base
+   * keeps today's bone fill, and gold and blue bake their glow in as a
+   * shadowBlur halo - text-shaped for free, the same grammar as the bloom
+   * the card has always painted. The halo clips with the star rect, and
+   * that mirrors the DOM on purpose: the fill span's overflow clips its own
+   * text-shadow at the same edge.
+   */
+  const tier = tierFor(album.score);
+  const starInk =
+    tier === "blue"
+      ? palette.blue
+      : tier === "gold"
+        ? palette.gold
+        : tier === "ember"
+          ? palette.ember
+          : palette.ink;
+
   context.save();
   context.beginPath();
   // Tall enough to clear the glyph above and below its baseline, which is what
   // decides whether the clip trims the stars or the row of them.
   context.rect(PAD, y - 8, rowWidth * (album.score / MAX_SCORE), 80);
   context.clip();
-  context.fillStyle = palette.ink;
+  if (tier === "blue") {
+    // The wide pass first: two passes are the three-layer feel at canvas scale.
+    context.shadowColor = palette.blueGlowWide;
+    context.shadowBlur = 36;
+    context.fillStyle = starInk;
+    context.fillText(row, PAD, y + 44);
+    context.shadowColor = palette.blueGlow;
+    context.shadowBlur = 14;
+  } else if (tier === "gold") {
+    context.shadowColor = palette.goldGlow;
+    context.shadowBlur = 14;
+  }
+  context.fillStyle = starInk;
   context.fillText(row, PAD, y + 44);
   context.restore();
 
   context.font = '500 34px "JetBrains Mono Variable", ui-monospace, monospace';
-  context.fillStyle = palette.ember;
+  // The readout follows the tier; base keeps the ember it has always worn.
+  context.fillStyle = tier === "base" ? palette.ember : starInk;
   context.fillText(`${album.score} / ${MAX_SCORE}`, PAD + rowWidth + 32, y + 40);
   y += 108;
 

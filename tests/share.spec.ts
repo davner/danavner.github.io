@@ -1711,6 +1711,8 @@ test.describe("share an album", () => {
         ink: style.getPropertyValue("--foreground").trim(),
         dim: style.getPropertyValue("--muted-foreground").trim(),
         ember: style.getPropertyValue("--ember").trim(),
+        gold: style.getPropertyValue("--heat-gold").trim(),
+        blue: style.getPropertyValue("--heat-blue").trim(),
       };
       probe.remove();
 
@@ -1888,6 +1890,25 @@ test.describe("share an album", () => {
     await openCard(page, `/dan-fm/${FEATURED!.slug}`);
 
     expect(await copyLink(page)).toEqual([`https://danavner.com/dan-fm/${FEATURED!.slug}`]);
+  });
+
+  test("a five's stars are drawn in the blue-white ink", async ({ page }) => {
+    /*
+     * The card's half of the ladder: the star band on a five must carry the
+     * blue-white spot ink, read the way every other run is - the brightest
+     * pixel names the fill, and the classifier resolves the heat tokens off
+     * the same probe the palette does.
+     */
+    const five = ALBUMS.find((album) => album.score === 5);
+    test.skip(five === undefined, "no five in the log the build read - the top card is undrawn");
+
+    const card = await openCard(page, `/dan-fm/${five!.slug}`);
+    const runs = await body(card);
+
+    expect(
+      runs.some((run) => run.colour === "blue"),
+      "no run on the five's card wears the blue-white ink",
+    ).toBe(true);
   });
 
   test("the front of the review is drawn under the take, in the dim ink", async ({ page }) => {

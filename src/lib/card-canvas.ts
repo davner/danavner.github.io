@@ -38,6 +38,15 @@ export interface Palette {
   voidFade: string;
   /** Ink at 18%, the rule over a card's footer. */
   hairline: string;
+  /** The star ladder's spot inks - dark-stock values; the card has no light stock. */
+  gold: string;
+  blue: string;
+  /** Gold at 55%, the halo behind a gold row's stars. */
+  goldGlow: string;
+  /** Blue-white at 60%, the five's inner halo. */
+  blueGlow: string;
+  /** Blue-white at 28%, the five's wide halo pass. */
+  blueGlowWide: string;
 }
 
 /**
@@ -75,6 +84,8 @@ export function palette(): Palette {
 
     const ink = read("--foreground");
     const ember = read("--ember");
+    const gold = read("--heat-gold");
+    const blue = read("--heat-blue");
     /* Deliberately blacker than `--background`'s press-black: the card is its
        own sheet, not a screenshot of a page, so this is a value rather than a
        copy of a token that would drift with the site's. */
@@ -89,6 +100,11 @@ export function palette(): Palette {
       emberFade: alpha(ember, 0),
       voidFade: alpha(black, 0),
       hairline: alpha(ink, 18),
+      gold,
+      blue,
+      goldGlow: alpha(gold, 55),
+      blueGlow: alpha(blue, 60),
+      blueGlowWide: alpha(blue, 28),
     };
   } finally {
     element.remove();

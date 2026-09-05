@@ -14,6 +14,7 @@ import {
   wrap,
 } from "@/lib/card-canvas";
 import type { Album } from "@/lib/dan-fm";
+import { plainText } from "@/lib/dan-fm-markdown";
 import { MAX_SCORE } from "@/lib/dan-fm-summary";
 import { longDate } from "@/lib/dates";
 import { SITE_URL } from "@/lib/site";
@@ -265,7 +266,14 @@ export async function renderAlbumCard(album: Album): Promise<Card> {
   // review under it. Two lines of it at most: a thousand words set at story
   // scale is a screenshot of an essay, and the page it is excerpted from is
   // where the rest is.
-  const { take, truncated, review, reviewCut } = fitBody(context, album.take, album.review, y);
+  // The fields carry restricted markdown; the card draws the words alone,
+  // through the same stripper the validators spell the contract with.
+  const { take, truncated, review, reviewCut } = fitBody(
+    context,
+    plainText(album.take),
+    plainText(album.review),
+    y,
+  );
 
   context.font = BODY_FONT;
   context.fillStyle = palette.ink;

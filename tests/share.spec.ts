@@ -9,6 +9,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { plainText } from "../src/lib/dan-fm-markdown";
 import { longDate } from "../src/lib/dates";
 import { nowParagraphs, nowShareText, nowSummary } from "../src/lib/now-summary";
 import { readNow } from "../vite-plugin-content";
@@ -1559,15 +1560,24 @@ test.describe("share an album", () => {
   /** The card's footer rule, 300px off the foot of a 1920px sheet. */
   const FOOTER_RULE = 1620;
 
+  /*
+   * Measured through the same stripper the card draws with: the fields carry
+   * markdown now, and a predicate over raw lengths would select fixtures
+   * against a ruler the canvas never sees - a link's destination is length
+   * on the sheet and nothing on the card.
+   */
+  const reviewText = (album: LoggedAlbum) => plainText(album.review);
+  const takeText = (album: LoggedAlbum) => plainText(album.take);
+
   const reviewed = ALBUMS.find(
     (album) =>
-      album.review.trim().length >= LONG_REVIEW &&
-      album.take.trim() !== "" &&
-      album.take.length <= WHOLE_TAKE,
+      reviewText(album).length >= LONG_REVIEW &&
+      takeText(album) !== "" &&
+      takeText(album).length <= WHOLE_TAKE,
   );
-  const unreviewed = ALBUMS.find((album) => album.review.trim() === "" && album.take.trim() !== "");
+  const unreviewed = ALBUMS.find((album) => reviewText(album) === "" && takeText(album) !== "");
   const longTake = ALBUMS.find(
-    (album) => album.take.length >= CUT_TAKE && album.review.trim().length >= LONG_REVIEW,
+    (album) => takeText(album).length >= CUT_TAKE && reviewText(album).length >= LONG_REVIEW,
   );
 
   /**
@@ -1576,7 +1586,7 @@ test.describe("share an album", () => {
    * left the excerpt - including none of it, which is the sheet that needs the
    * line most.
    */
-  const cutReview = ALBUMS.find((album) => album.review.trim().length >= LONG_REVIEW);
+  const cutReview = ALBUMS.find((album) => reviewText(album).length >= LONG_REVIEW);
 
   /**
    * The opposite: a review two lines hold entire, under a take short enough to
@@ -1585,14 +1595,46 @@ test.describe("share an album", () => {
    */
   const wholeReview = ALBUMS.find(
     (album) =>
-      album.take.trim() !== "" &&
-      album.take.length <= WHOLE_TAKE &&
-      album.review.trim() !== "" &&
-      album.review.trim().length <= WHOLE_REVIEW,
+      takeText(album) !== "" &&
+      takeText(album).length <= WHOLE_TAKE &&
+      reviewText(album) !== "" &&
+      reviewText(album).length <= WHOLE_REVIEW,
   );
 
   /** The newest album the log gives a sleeve, which is the only card that draws one. */
   const covered = ALBUMS.find((album) => album.cover !== "");
+
+  test("the card draws words, never markdown marks", async ({ page }) => {
+    /*
+     * The card's own half of the stripping contract, read off what fillText
+     * was actually handed rather than off pixels. Doubled asterisks and the
+     * "](". seam are what stripping can never legitimately leave behind; a
+     * lone "*" is not asserted, because an unclosed emphasis is a literal
+     * character an author may type and the reader sees.
+     */
+    test.skip(FEATURED === undefined, "no albums on disk - no card to draw");
+
+    await page.addInitScript(() => {
+      const drawn: string[] = [];
+      (window as unknown as { __drawn: string[] }).__drawn = drawn;
+      const original = CanvasRenderingContext2D.prototype.fillText;
+      CanvasRenderingContext2D.prototype.fillText = function (
+        this: CanvasRenderingContext2D,
+        ...args: Parameters<CanvasRenderingContext2D["fillText"]>
+      ) {
+        drawn.push(String(args[0]));
+        return original.apply(this, args);
+      };
+    });
+
+    await openCard(page, "/dan-fm");
+
+    const drawn = await page.evaluate(() => (window as unknown as { __drawn: string[] }).__drawn);
+    expect(drawn.length, "nothing was drawn at all").toBeGreaterThan(0);
+    for (const run of drawn) {
+      expect(run, "a markdown mark reached the card").not.toMatch(/\*\*|\]\(|^#|^> /);
+    }
+  });
 
   /** Opens the sheet on one page and hands back the card once it is drawn. */
   async function openCard(page: Page, path: string): Promise<Locator> {

@@ -356,7 +356,11 @@ export function NowTimeline({
                   </Link>
                   {held ? <> - stood for {held}</> : null}
                 </p>
-                <div className="mt-4">
+                {/* The measure, carried here rather than inherited: the
+                    archive takes `.prose-full` so its rail gets the whole
+                    width of the page, and a block escaping the reading measure
+                    must not take the writing inside it along. */}
+                <div className="mt-4 max-w-2xl">
                   <NowProse body={entry.body} />
                 </div>
               </li>

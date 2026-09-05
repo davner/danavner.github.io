@@ -1234,6 +1234,41 @@
   .prose-dan td {
     @apply border-t border-border px-3 py-2 align-top;
   }
+
+  /*
+   * The reading measure as a track, so a block can be wider than the writing
+   * without leaving the page's flow. Everything sits in the measure; a child
+   * asking for `.prose-full` takes the measure and the space beside it. The
+   * `-start`/`-end` line names declare an implicit area, which is what lets a
+   * child say `grid-column: content` and get the pair.
+   *
+   * Two tracks rather than the symmetric `1fr min(42rem, 100%) 1fr` full-bleed
+   * grid: that one centres the measure, and every reading surface here is
+   * left-aligned in its shell, so adopting it would re-centre the prose as a
+   * side effect of adding a full-bleed track.
+   *
+   * `column-gap: 0` is load-bearing rather than an omission. On a phone track
+   * one resolves to 100%, and that percentage is taken against the content box
+   * rather than against what a gap leaves of it, so any gap makes the grid
+   * wider than its shell and scrolls the page sideways - which is what
+   * `tests/responsive.spec.ts` fails outright, at every width it sweeps. A
+   * future occupant of track two brings its own `padding-inline-start`.
+   */
+  .prose-grid {
+    display: grid;
+    grid-template-columns:
+      [content-start] min(var(--measure, 42rem), 100%)
+      [content-end] minmax(0, 1fr);
+    column-gap: 0;
+  }
+
+  .prose-grid > * {
+    grid-column: content;
+  }
+
+  .prose-grid > .prose-full {
+    grid-column: content-start / -1;
+  }
 }
 
 /* Syntax highlighting, tuned to the palette rather than a stock hljs theme. */

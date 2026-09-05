@@ -129,7 +129,9 @@ function NowCurrent() {
         lede={META.description}
       />
 
-      <div className="max-w-2xl">
+      {/* The measure is the grid's first track, so the archive below can take
+          the width beside it without leaving the column's flow. */}
+      <div className="prose-grid">
         <NowProse body={current.body} />
 
         {/* The label is the formatted date because a now entry has no title -
@@ -158,7 +160,7 @@ function NowCurrent() {
         {archive.length > 0 ? (
           // The Section component's own stepped break, spelled here because
           // this section carries its own heading arrangement.
-          <section aria-labelledby="before" className="mt-16 sm:mt-24">
+          <section aria-labelledby="before" className="prose-full mt-16 sm:mt-24">
             <div className="mb-8 flex items-end justify-between gap-6 border-b border-border pb-3">
               <h2 id="before" className="display text-heading">
                 Before this
@@ -223,7 +225,10 @@ function NowPermalink({ entry, replacedBy }: { entry: NowEntry; replacedBy: NowE
           lede={`What I was doing back then${held ? `, for the ${held} it stood` : ""}.`}
         />
 
-        <div className="max-w-2xl">
+        {/* The same grid as the current entry with nothing in the wide track:
+            the reading measure is stated once, so the two now surfaces cannot
+            drift into two column widths. */}
+        <div className="prose-grid">
           <NowProse body={entry.body} />
 
           {entry.photos.length > 0 ? (

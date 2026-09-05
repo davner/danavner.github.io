@@ -82,6 +82,7 @@ import { existsSync } from "node:fs";
 import { mkdir, readFile, readdir, unlink, writeFile } from "node:fs/promises";
 
 import { parse } from "csv-parse/sync";
+import { fromMarkdown } from "mdast-util-from-markdown";
 import sharp from "sharp";
 
 const ACCOUNTS = new URL("../src/content/accounts.json", import.meta.url);
@@ -249,6 +250,131 @@ function asQuarterStep(text) {
   return (score * 4) % 1 === 0 ? score : null;
 }
 
+/*
+ * ---- The markdown contract, mirrored --------------------------------------
+ *
+ * The one spelling lives in `src/lib/dan-fm-markdown.ts`, which the build
+ * validator imports; this file cannot (its spec stages the script standalone
+ * with only `node_modules` beside it), so the rules are mirrored here the way
+ * `asQuarterStep` above mirrors the build's. `tests/markdown-cases.ts` holds
+ * the two in step: a construct decision landing on one side without the other
+ * fails the other side's spec. Bare CommonMark on both sides - no GFM - so
+ * parity needs no extension bookkeeping.
+ */
+
+/** Protocols a link may carry, plus site-relative paths starting `/`. */
+const LINK_OK = /^(?:https:|http:|mailto:|\/(?!\/))/;
+
+/** The node's first source line, for quoting back at the author. */
+function quotedSource(text, node) {
+  const start = node.position?.start.offset ?? 0;
+  const end = node.position?.end.offset ?? start;
+  const line = text.slice(start, end).split("\n", 1)[0].trim();
+  return line.length > 40 ? `${line.slice(0, 40)}…` : line;
+}
+
+/** Every node in the tree, document order, depth first. */
+function walkMarkdown(nodes, visit) {
+  for (const node of nodes) {
+    visit(node);
+    if (node.children) walkMarkdown(node.children, visit);
+  }
+}
+
+/** What a Review cell may not carry. Empty means valid, blank included. */
+function reviewProblems(text) {
+  const problems = [];
+
+  walkMarkdown(fromMarkdown(text).children, (node) => {
+    if (node.type === "heading") {
+      problems.push(
+        `holds a heading ("${quotedSource(text, node)}"). The log's markdown is emphasis, links, lists and quotes.`,
+      );
+    } else if (node.type === "image" || node.type === "imageReference") {
+      problems.push(
+        `holds an image ("${quotedSource(text, node)}"). A pasted picture either leaves the origin or answers 404; the cover is the album's picture.`,
+      );
+    } else if (node.type === "html") {
+      problems.push(
+        `holds raw HTML ("${quotedSource(text, node)}"), which the page would silently skip rather than render.`,
+      );
+    } else if (node.type === "code") {
+      problems.push(
+        `holds a code block ("${quotedSource(text, node)}") - a fence, or four leading spaces, reads as code. Write plain text flush left.`,
+      );
+    } else if (node.type === "thematicBreak") {
+      problems.push(
+        `holds a "---" divider, which would render as a bare rule the page never styles.`,
+      );
+    } else if (node.type === "break") {
+      problems.push(
+        `holds a hard line break (two trailing spaces or a backslash before the newline) - invisible syntax in a cell that shows no trailing whitespace.`,
+      );
+    } else if (node.type === "link" || node.type === "definition") {
+      if (!LINK_OK.test(node.url)) {
+        problems.push(
+          `links to "${node.url}", which is not a link the page will carry. A link is https:, http:, mailto:, or a path starting "/".`,
+        );
+      }
+    }
+  });
+
+  return problems;
+}
+
+/** A Take is one sentence: a Review's rules plus blocks and second paragraphs. */
+function takeProblems(text) {
+  const problems = reviewProblems(text);
+  const tree = fromMarkdown(text);
+
+  walkMarkdown(tree.children, (node) => {
+    if (node.type === "list") {
+      problems.push(`holds a list, and a take is one sentence. The long piece belongs in Review.`);
+    } else if (node.type === "blockquote") {
+      problems.push(`holds a quote, and a take is one sentence. The long piece belongs in Review.`);
+    } else if (node.type === "definition") {
+      problems.push(
+        `holds a link definition ("${quotedSource(text, node)}"). Reference-style links belong in Review, where they have room.`,
+      );
+    }
+  });
+
+  const paragraphs = tree.children.filter((node) => node.type === "paragraph").length;
+  if (paragraphs > 1) {
+    problems.push(
+      `holds a blank line, and a take is one paragraph. The long piece belongs in Review.`,
+    );
+  }
+
+  return problems;
+}
+
+/** Every link target in a cell - `link` and `definition` URLs, document order. */
+function markdownLinks(text) {
+  const urls = [];
+  walkMarkdown(fromMarkdown(text).children, (node) => {
+    if (node.type === "link" || node.type === "definition") urls.push(node.url);
+  });
+  return urls;
+}
+
+/**
+ * Whether any paragraph spans a lone newline. The old contract split
+ * paragraphs on every line; markdown keeps a single break inside its
+ * paragraph, so this is the one habit worth a warning without turning the
+ * job red - the `Year` treatment.
+ */
+function holdsLoneNewline(text) {
+  let found = false;
+  walkMarkdown(fromMarkdown(text).children, (node) => {
+    if (node.type !== "paragraph" || !node.position) return;
+    if (text.slice(node.position.start.offset, node.position.end.offset).includes("\n")) {
+      found = true;
+    }
+  });
+  return found;
+}
+
 /** A name reduced to the characters a URL segment may hold. */
 function slugify(text) {
   return text
@@ -399,6 +525,10 @@ function collectAlbums(rows, today) {
   const warnings = [];
   const held = [];
   const filed = new Map();
+  // Internal links are resolved after the loop, because a review may point at
+  // an album further down the sheet - the whole sheet is the address book.
+  const sheetSlugs = new Set();
+  const internalLinks = [];
 
   const horizon = addDays(today, FUTURE_DAYS);
 
@@ -479,7 +609,31 @@ function collectAlbums(rows, today) {
       );
     }
 
+    const take = cell(record, "Take");
+    const takeTrouble = takeProblems(take);
+    for (const problem of takeTrouble) problems.push(`${at}: Take ${problem}`);
+
+    const review = cell(record, "Review");
+    const reviewTrouble = reviewProblems(review);
+    for (const problem of reviewTrouble) problems.push(`${at}: Review ${problem}`);
+
+    // Only for a review the run is otherwise taking: a cell already being
+    // refused has louder things to say than a merged paragraph.
+    if (reviewTrouble.length === 0 && holdsLoneNewline(review)) {
+      warnings.push(
+        `${at}: Review holds a single line break, which stays inside its paragraph - leave a blank line to start a new one.`,
+      );
+    }
+
+    for (const url of markdownLinks(take)) internalLinks.push({ at, field: "Take", url });
+    for (const url of markdownLinks(review)) internalLinks.push({ at, field: "Review", url });
+
     if (problems.length > before) continue;
+
+    // Filed for the link check even when held: a review may name a day still
+    // to come, and by publication time the slug answers.
+    const slug = albumSlug(date, artist, album);
+    sheetSlugs.add(slug);
 
     if (date > today) {
       held.push(date);
@@ -488,7 +642,7 @@ function collectAlbums(rows, today) {
 
     albums.push({
       date,
-      slug: albumSlug(date, artist, album),
+      slug,
       artist,
       album,
       year,
@@ -516,6 +670,20 @@ function collectAlbums(rows, today) {
       url,
       cover: "",
     });
+  }
+
+  /*
+   * The one rule build-time validation cannot check for the sheet: an
+   * internal album link has to name a row, and only the sheet knows its
+   * rows. The nightly job commits and deploys without Playwright, so this
+   * gate is the only one real content passes.
+   */
+  for (const { at, field, url } of internalLinks) {
+    const target = url.split(/[?#]/)[0];
+    const match = /^\/dan-fm\/(.+)$/.exec(target);
+    if (match && !sheetSlugs.has(match[1])) {
+      problems.push(`${at}: ${field} links to "${url}", which no row in the sheet answers to.`);
+    }
   }
 
   return { albums, problems, warnings, held };

@@ -16,6 +16,8 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { expect, test } from "@playwright/test";
+
+import { ALLOWED, NEWLINE_WARNING, REFUSALS } from "./markdown-cases";
 import sharp from "sharp";
 
 import { MAX_SCORE } from "../src/lib/dan-fm-summary";
@@ -1876,5 +1878,102 @@ test.describe("the payload the build reads back", () => {
     // Numbered by the build from the oldest album up, which only works if the
     // job wrote a date the build could read on every row.
     expect(built.albums.map((album) => album.ordinal)).toEqual([3, 2, 1]);
+  });
+});
+
+test.describe("the markdown a cell may carry", () => {
+  /*
+   * The shared table from `markdown-cases.ts`, run against the script's
+   * mirror of `src/lib/dan-fm-markdown.ts`; `dan-fm.spec.ts` runs the same
+   * table against the module itself. The two halves are what hold the
+   * mirrors in step.
+   */
+  for (const refusal of REFUSALS) {
+    test(`${refusal.construct} is refused with its line`, async () => {
+      const stderr = await refusal_(sheet(row({ Take: refusal.cell })), "Take");
+      expect(stderr).toContain(refusal.names);
+
+      if (refusal.fields === "both") {
+        expect(await refusal_(sheet(row({ Review: refusal.cell })), "Review")).toContain(
+          refusal.names,
+        );
+      } else {
+        // Review has the room a take does not: the same cell passes there.
+        const payload = await wrote({ body: sheet(row({ Review: refusal.cell })) });
+        expect(payload.albums[0].review).toBe(refusal.cell);
+      }
+    });
+  }
+
+  /**
+   * A refusal that must blame the right field on a named line. Which line is
+   * csv-parse's accounting - a multi-line cell's record ends lines below
+   * where it starts - so the pin is that a line number is given at all.
+   */
+  async function refusal_(body: string, field: "Take" | "Review"): Promise<string> {
+    const stderr = await refusal({ body });
+    expect(stderr).toMatch(new RegExp(`line \\d+: ${field} `));
+    return stderr;
+  }
+
+  for (const allowed of ALLOWED) {
+    test(`${allowed.construct} passes and lands verbatim`, async () => {
+      // The payload stays raw - markdown is parsed at each consumer, so the
+      // cell must land byte-for-byte, marks and all.
+      const cells = allowed.reviewOnly
+        ? { Review: allowed.cell }
+        : { Review: allowed.cell, Take: allowed.cell };
+      const payload = await wrote({ body: sheet(row(cells)) });
+
+      expect(payload.albums[0].review).toBe(allowed.cell);
+      if (!allowed.reviewOnly) expect(payload.albums[0].take).toBe(allowed.cell);
+    });
+  }
+
+  test("a single line break warns without failing the run", async () => {
+    // The migration net for the paragraph model: the old contract split on
+    // every newline, markdown keeps a lone one inside its paragraph.
+    const ran = await run({ body: sheet(row({ Review: NEWLINE_WARNING.cell })) });
+
+    expect(ran.code).toBe(0);
+    expect(ran.stderr).toMatch(new RegExp(`line \\d+: Review holds a ${NEWLINE_WARNING.names}`));
+    expect(JSON.parse(ran.written!).albums[0].review).toBe(NEWLINE_WARNING.cell);
+  });
+
+  test("an internal album link has to name a row in the sheet", async () => {
+    const stderr = await refusal({
+      body: sheet(row({ Review: "Better than [that one](/dan-fm/2026-09-99-nobody-nothing)." })),
+    });
+
+    expect(stderr).toContain(
+      'line 2: Review links to "/dan-fm/2026-09-99-nobody-nothing", which no row in the sheet answers to.',
+    );
+  });
+
+  test("an internal album link may name any row, held ones included", async () => {
+    /*
+     * The whole sheet is the address book: a review may point at an album
+     * further down the sheet, and at one whose day has not come - by the time
+     * that link is on a page, the slug answers. Tracking on the link is not
+     * part of the address, same as a Spotify share link's.
+     */
+    const older = addDays(TODAY, -1);
+    const future = addDays(TODAY, 2);
+    // `run` rather than `wrote`: the held row's own notice lands on stderr.
+    const ran = await run({
+      body: sheet(
+        row({
+          Review:
+            `See [ahead](/dan-fm/${future}-other-band-other-record) and ` +
+            `[back](/dan-fm/${older}-the-standing-wave-low-tide-signals?ref=1).`,
+        }),
+        row({ Date: older }),
+        row({ Date: future, Artist: "Other Band", Album: "Other Record" }),
+      ),
+    });
+
+    expect(ran.code).toBe(0);
+    expect(ran.stderr).not.toContain("problem");
+    expect(JSON.parse(ran.written!).albums).toHaveLength(2);
   });
 });

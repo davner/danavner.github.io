@@ -10,9 +10,11 @@ import { cn } from "@/lib/utils";
  * A fixed height rather than vertical padding, because these sit in a row with
  * the search field, whose border and larger text would otherwise make it a
  * couple of pixels taller than the pills beside it. `h-11` is 44px, which is
- * also the smallest comfortable touch target.
+ * also the smallest comfortable touch target - and it never steps, only the
+ * horizontal padding does: a phone row holds three pills at 14px a side where
+ * 20px wraps the last one onto a line of its own.
  */
-export const CONTROL_CLASS = "h-11 px-5";
+export const CONTROL_CLASS = "h-11 px-3.5 sm:px-5";
 
 export interface FilterOption<T extends string> {
   value: T;

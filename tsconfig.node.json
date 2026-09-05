@@ -26,6 +26,7 @@
     "vite-plugin-cover-variants.ts",
     "vite-plugin-pages.ts",
     "src/lib/covers.ts",
+    "src/lib/dan-fm-markdown.ts",
     "src/lib/dan-fm-summary.ts",
     "src/lib/dates.ts",
     "src/lib/now-summary.ts",

@@ -5,10 +5,18 @@ import path from "node:path";
 import { expect, test } from "@playwright/test";
 import { createServer } from "vite";
 
+import {
+  danFmLinks,
+  plainParagraphs,
+  plainText,
+  reviewProblems,
+  takeProblems,
+} from "../src/lib/dan-fm-markdown";
 import { MAX_SCORE, albumSummary, albumTitle, albumUrl } from "../src/lib/dan-fm-summary";
 import { contentPlugin } from "../vite-plugin-content";
 
 import type { Album, Board, DanFmCharts, DanFmPayload, Selection } from "../src/lib/dan-fm";
+import { ALLOWED, REFUSALS } from "./markdown-cases";
 
 /**
  * The album log, checked where it is actually decided: in Node, at build time.
@@ -2212,5 +2220,91 @@ test.describe("the boards that score what the log came from", () => {
 
     expect(board(charts, "from").rows).toEqual([{ name: "Alexis", count: 2, value: 5 }]);
     expect(chartsFor(repeated(2, { score: 5, later: 1 })).average).toBe(5);
+  });
+});
+
+test.describe("the markdown contract's one spelling", () => {
+  /*
+   * The shared table from `markdown-cases.ts`, run against the module the
+   * build validates with; `update-dan-fm.spec.ts` runs the same table against
+   * the script's mirror, and the two halves are what keep the mirrors in
+   * step.
+   */
+  for (const refusal of REFUSALS) {
+    test(`${refusal.construct} is refused`, () => {
+      expect(takeProblems(refusal.cell).join("\n")).toContain(refusal.names);
+
+      if (refusal.fields === "both") {
+        expect(reviewProblems(refusal.cell).join("\n")).toContain(refusal.names);
+      } else {
+        expect(reviewProblems(refusal.cell), "a review refused what only a take refuses").toEqual(
+          [],
+        );
+      }
+    });
+  }
+
+  for (const allowed of ALLOWED) {
+    test(`${allowed.construct} passes`, () => {
+      expect(reviewProblems(allowed.cell)).toEqual([]);
+      if (!allowed.reviewOnly) expect(takeProblems(allowed.cell)).toEqual([]);
+    });
+  }
+
+  test("a blank field is valid everywhere - not every album gets a piece", () => {
+    expect(reviewProblems("")).toEqual([]);
+    expect(takeProblems("")).toEqual([]);
+    expect(plainParagraphs("")).toEqual([]);
+  });
+
+  test("no GFM: tildes and pipes stay the characters the author typed", () => {
+    expect(plainParagraphs("~~struck~~ gold")).toEqual(["~~struck~~ gold"]);
+    expect(reviewProblems("| a | b |")).toEqual([]);
+  });
+});
+
+test.describe("stripping a review to plain text", () => {
+  /*
+   * `share.spec.ts` makes these same claims of `nowParagraphs`; they are
+   * re-made here because this is a different parser (bare CommonMark, no
+   * GFM) whose stripper must not inherit the failure cases by accident.
+   */
+  test("a link keeps its label whatever its destination holds", () => {
+    expect(plainParagraphs("Check out [this link](http://example.com/a_(b)) for more.")).toEqual([
+      "Check out this link for more.",
+    ]);
+    expect(
+      plainParagraphs("See [it](https://en.wikipedia.org/wiki/Now_(album)_(disambiguation)) here."),
+    ).toEqual(["See it here."]);
+    expect(plainParagraphs("Read [a [b] c](https://example.com) today.")).toEqual([
+      "Read a [b] c today.",
+    ]);
+  });
+
+  test("an unclosed bracket does not swallow the next link", () => {
+    expect(
+      plainParagraphs(
+        "Bought a new phone [finally and here's [the review](https://example.com) online.",
+      ),
+    ).toEqual(["Bought a new phone [finally and here's the review online."]);
+  });
+
+  test("a reference link unwraps and its definition is not a paragraph", () => {
+    expect(plainParagraphs("Heard [here][src] first.\n\n[src]: https://example.com")).toEqual([
+      "Heard here first.",
+    ]);
+  });
+
+  test("marks come off, and list items arrive as their own paragraphs", () => {
+    expect(plainText("It *lands* and `stays`.\n\nTwo sides:\n\n- the A side\n- the B side")).toBe(
+      "It lands and stays. Two sides: the A side the B side",
+    );
+  });
+
+  test("danFmLinks reads inline and reference targets in order", () => {
+    expect(danFmLinks("See [a](/vinyl) then [b][r].\n\n[r]: https://example.com")).toEqual([
+      "/vinyl",
+      "https://example.com",
+    ]);
   });
 });

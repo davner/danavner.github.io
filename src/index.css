@@ -780,10 +780,11 @@
 
   /*
    * A copy confirmation stamps in: one frame of appear, then the scale
-   * settles on the stamp curve. Keyboard activation leaves `:focus-visible`
-   * on the button, and an ancestor holding it suppresses the animation - the
-   * label swaps bare, so keyboard-initiated activation gains no motion.
-   * Reduced motion collapses the animation globally to an opacity swap.
+   * settles on the stamp curve. The class lands only on pointer activations
+   * - the handler checks `:focus-visible` when the copy fires - because a
+   * CSS suppression keyed on focus merely defers the animation and replays
+   * it the moment focus moves off the button. Reduced motion collapses the
+   * animation globally to an opacity swap.
    */
   .copy-stamp {
     animation: stamp-in 140ms var(--ease-stamp);
@@ -800,10 +801,6 @@
     100% {
       scale: 1;
     }
-  }
-
-  :focus-visible .copy-stamp {
-    animation: none;
   }
 
   /*
@@ -829,9 +826,11 @@
 
   /*
    * The collections panel's ember hairline draws in from the left as the
-   * panel fades open. A keyboard open leaves the trigger `:focus-visible`,
-   * and that suppresses the draw - fade only, no transform on any keyboard
-   * path. Reduced motion collapses both animations to instant.
+   * panel fades open. The class lands only on pointer opens - the header
+   * records the modality when the trigger fires - for the copy stamp's
+   * reason: a focus-keyed CSS suppression defers the draw and replays it
+   * when Tab moves focus into the panel. Reduced motion collapses the
+   * animation to instant.
    */
   .nav-panel-rule {
     transform-origin: left;
@@ -842,11 +841,6 @@
     from {
       scale: 0 1;
     }
-  }
-
-  [data-slot="navigation-menu-item"]:has([data-slot="navigation-menu-trigger"]:focus-visible)
-    .nav-panel-rule {
-    animation: none;
   }
 
   /* ---- Long-form -------------------------------------------------------- */

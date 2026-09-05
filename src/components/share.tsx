@@ -9,7 +9,7 @@ import {
   Share2,
   X,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { type MouseEvent, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -70,6 +70,8 @@ export function Share({ subject, className }: { subject: Shareable; className?: 
     truncated: boolean;
   } | null>(null);
   const [copied, setCopied] = useState(false);
+  // Whether the confirmation may stamp - false on keyboard activations.
+  const [stamped, setStamped] = useState(false);
   const building = useRef(false);
 
   const { heading, url, filename, photos, renderCard } = subject;
@@ -123,10 +125,19 @@ export function Share({ subject, className }: { subject: Shareable; className?: 
   const canShareLink = typeof navigator !== "undefined" && Boolean(navigator.share);
   const canShareImage = Boolean(file && navigator.canShare?.({ files: [file] }));
 
-  async function copyLink() {
+  async function copyLink(event: MouseEvent<HTMLButtonElement>) {
+    /*
+     * Modality is decided here, once, and before the await while the event
+     * still has its target: a keyboard activation leaves the button
+     * `:focus-visible`, and the stamp belongs to the pointer alone. Decided
+     * in CSS instead, the suppression only defers the animation - it replays
+     * the moment focus moves off the button.
+     */
+    const stamp = !event.currentTarget.matches(":focus-visible");
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
+      setStamped(stamp);
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
       // Clipboard blocked; the link is on screen and selectable.
@@ -286,10 +297,14 @@ export function Share({ subject, className }: { subject: Shareable; className?: 
 
           <Button variant="outline" size="sm" onClick={copyLink} className={action}>
             {/* Ion, not ember: a copy confirmation is machine output, the one
-                job the cold ink has. The stamp mounts with the state flip, so
-                it plays once per copy and never on keyboard activation. */}
+                job the cold ink has. The stamp class lands only on pointer
+                copies, so it either plays once or never exists. */}
             {copied ? <Check className="text-ion" /> : <Copy />}
-            {copied ? <span className="copy-stamp text-ion">Copied</span> : "Copy the link"}
+            {copied ? (
+              <span className={cn("text-ion", stamped && "copy-stamp")}>Copied</span>
+            ) : (
+              "Copy the link"
+            )}
           </Button>
         </div>
       </PopoverContent>

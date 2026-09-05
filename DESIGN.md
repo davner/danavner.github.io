@@ -435,8 +435,9 @@ treatment would loosen a global contract.
 ## Motion
 
 The register is the snap. A page prints; it does not perform. What moves does
-so because the reader's pointer is on it, finishes fast, and moves with the
-character of the press - a stamp lands, a drawer glides shut on its rails.
+so because the reader asked - a pointer on a control, a surface called up -
+finishes fast, and moves with the character of the press: a stamp lands, a
+drawer glides shut on its rails.
 
 Two curves carry all of it, held as easing tokens in `src/index.css` and
 printed by `scripts/make-easings.mjs` from spring constants named beside the
@@ -481,11 +482,18 @@ is edited down in place, with the departure documented in the file.
 
 **The Pointer's Motion Rule.** A transform state exists only where a pointer
 can be the cause: under the motion-safe condition and, for hovers, on
-hover-capable devices. Keyboard activation never moves anything - the same
-control pressed from the keyboard swaps state without the travel, delivered by
-suppressing the animation wherever focus is visible rather than by tracking
-input modality in script. Under reduced motion the transform state is removed
-outright, so nothing is left to jump.
+hover-capable devices. Keyboard-initiated control feedback never moves - a
+press scale, a stamp, a drawn hairline, a needle sweep answers the hand on the
+control, so the same control activated from the keyboard swaps state without
+the travel. For an animation the modality is decided once, at activation, from
+whether the control holds visible focus, and the animating class either lands
+or never exists - a CSS suppression keyed on focus only defers the animation
+and replays it the moment focus moves on. A transition may keep the focus-keyed
+form, because a suppressed transition has nothing to replay. Surface-open
+motion is the other half and is not control feedback: the sheet's slide and a
+panel's entrance are the surface arriving, so they run for every input
+modality and answer prefers-reduced-motion instead. Under reduced motion the
+transform state is removed outright, so nothing is left to jump.
 
 **The Allowlist Contract Rule.** The reduced-motion allowlist in
 `src/index.css`'s base layer - colour and opacity keep transitioning,

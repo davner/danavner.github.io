@@ -81,9 +81,12 @@ function NavigationMenuTrigger({
     >
       {children}{" "}
       {/* Departure from upstream: 150ms, not 300 - the open gesture as a
-          whole answers to the site's 200ms cap. */}
+          whole answers to the site's 200ms cap. The turn is pointer feedback,
+          so a keyboard toggle (trigger `:focus-visible`) snaps instead; safe
+          as continuous CSS because a suppressed transition, unlike an
+          animation, has nothing to replay when focus moves on. */}
       <ChevronDownIcon
-        className="relative top-[1px] ml-1 size-3 transition duration-150 group-data-[state=open]:rotate-180"
+        className="relative top-[1px] ml-1 size-3 transition duration-150 group-focus-visible:transition-none group-data-[state=open]:rotate-180"
         aria-hidden="true"
       />
     </NavigationMenuPrimitive.Trigger>

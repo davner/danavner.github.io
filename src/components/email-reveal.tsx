@@ -1,5 +1,5 @@
 import { Check, Copy, Mail } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { type MouseEvent, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { profile } from "@/content/profile";
@@ -15,6 +15,8 @@ import { cn } from "@/lib/utils";
 export function EmailReveal({ className }: { className?: string }) {
   const [address, setAddress] = useState("");
   const [copied, setCopied] = useState(false);
+  // Whether the confirmation may stamp - false on keyboard activations.
+  const [stamped, setStamped] = useState(false);
   const link = useRef<HTMLAnchorElement>(null);
 
   /*
@@ -31,10 +33,14 @@ export function EmailReveal({ className }: { className?: string }) {
     setAddress(`${profile.emailUser}@${profile.emailDomain}`);
   }
 
-  async function copy() {
+  async function copy(event: MouseEvent<HTMLButtonElement>) {
+    // Modality decided once, before the await while the event still has its
+    // target - the same reasoning share.tsx spells out over its handler.
+    const stamp = !event.currentTarget.matches(":focus-visible");
     try {
       await navigator.clipboard.writeText(address);
       setCopied(true);
+      setStamped(stamp);
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
       // Clipboard blocked; the address is on screen and selectable anyway.
@@ -70,8 +76,9 @@ export function EmailReveal({ className }: { className?: string }) {
         aria-label={copied ? "Email copied" : "Copy email address"}
         className="h-auto w-11 rounded-none text-muted-foreground hover:text-ember"
       >
-        {/* Ion for machine output, stamped like the share panel's Copied. */}
-        {copied ? <Check className="copy-stamp text-ion" /> : <Copy />}
+        {/* Ion for machine output, stamped like the share panel's Copied -
+            and like it, only on pointer copies. */}
+        {copied ? <Check className={cn("text-ion", stamped && "copy-stamp")} /> : <Copy />}
       </Button>
     </span>
   );

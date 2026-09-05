@@ -80,6 +80,10 @@ function ActiveRule({ on }: { on: boolean }) {
         // came out taller than a plain link because of the chevron, and its
         // marker sat two pixels lower than the rest.
         "absolute inset-x-1.5 -bottom-px h-0.5 bg-ember transition-transform duration-150",
+        // A keyboard activation holds visible focus on the item when the
+        // route flips, and control feedback never moves for the keyboard -
+        // the rule snaps on instead of scaling.
+        "group-focus-visible/bar-item:transition-none",
         on ? "scale-x-100" : "scale-x-0",
       )}
     />
@@ -94,6 +98,16 @@ export function SiteHeader() {
    * shelf gets a page.
    */
   const [open, setOpen] = useState(false);
+  /*
+   * Whether the collections panel was opened by pointer, decided at
+   * activation: a keydown on the trigger marks the keyboard, and the click
+   * that follows re-checks `:focus-visible` (a pointer click never sets it).
+   * Gating the hairline's class on this - rather than suppressing the
+   * animation in CSS while focus is visible - is what stops the draw from
+   * replaying when Tab moves focus off the trigger into the panel: the class
+   * either lands or never exists.
+   */
+  const [pointerOpen, setPointerOpen] = useState(false);
   const { pathname } = useLocation();
 
   const isOn = (to: string) => pathname === to || pathname.startsWith(`${to}/`);
@@ -133,6 +147,11 @@ export function SiteHeader() {
                   <NavigationMenuTrigger
                     className={cn(BAR_ITEM, "cursor-pointer")}
                     {...CLICK_TO_OPEN}
+                    // Keydown covers the ArrowDown open, which fires no click.
+                    onKeyDown={() => setPointerOpen(false)}
+                    onClick={(event) =>
+                      setPointerOpen(!event.currentTarget.matches(":focus-visible"))
+                    }
                   >
                     <span
                       className={cn(
@@ -155,8 +174,13 @@ export function SiteHeader() {
                     {...CLICK_TO_OPEN}
                   >
                     {/* The ember hairline that draws in as the panel opens -
-                        the ActiveRule idiom at panel scale. */}
-                    <span aria-hidden className="nav-panel-rule block h-px bg-ember" />
+                        the ActiveRule idiom at panel scale. Pointer opens only:
+                        on a keyboard open the class never lands, so there is
+                        no deferred animation left to replay. */}
+                    <span
+                      aria-hidden
+                      className={cn("block h-px bg-ember", pointerOpen && "nav-panel-rule")}
+                    />
                     <ul className="w-44">
                       {entry.items.map((item) => (
                         <li key={item.to} className="border-b border-border last:border-b-0">

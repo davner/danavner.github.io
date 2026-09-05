@@ -56,6 +56,15 @@
   --glow: oklch(0.53 0.22 30 / 0.1);
   --grain-opacity: 0.035;
   --hairline: oklch(0.16 0.012 268 / 0.12);
+
+  /* Star heat: the dan.fm ladder's two spot inks (DESIGN.md's Spot Ink
+     Rule). On this stock the five is a knockout - paper cannot print white,
+     so the star is near-paper inside a hot blue edge, the hero type's own
+     outline - which is what the edge and stroke tokens exist for. */
+  --heat-gold: oklch(0.63 0.14 80);
+  --heat-blue: oklch(0.97 0.02 240);
+  --heat-blue-edge: oklch(0.42 0.1 252);
+  --heat-blue-stroke: 1.3px;
 }
 
 .dark {
@@ -96,6 +105,13 @@
   --glow: oklch(0.66 0.225 32 / 0.18);
   --grain-opacity: 0.05;
   --hairline: oklch(0.95 0.008 90 / 0.14);
+
+  /* Star heat on the dark stock: the blue-white is a real ink here, so the
+     edge is the fill itself and the knockout stroke zeroes out. */
+  --heat-gold: oklch(0.85 0.14 88);
+  --heat-blue: oklch(0.93 0.045 240);
+  --heat-blue-edge: oklch(0.93 0.045 240);
+  --heat-blue-stroke: 0px;
 }
 
 @theme inline {
@@ -668,8 +684,9 @@
   /* ---- Station light ------------------------------------------------ */
 
   /*
-   * The lamp on dan.fm's on-air badge - the one piece of depth work outside the
-   * two fixed layers in `components/backdrop.tsx`, and bounded to that.
+   * The lamp on dan.fm's on-air badge - one of two pieces of light-work
+   * outside the two fixed layers in `components/backdrop.tsx`, the other
+   * being the star ladder's glow (Star heat, below), and bounded to those.
    *
    * The glow is on the dot rather than behind the whole badge. A halo sized to
    * the badge puts ember under the label, and 11px mono at `0.18em` cannot
@@ -841,6 +858,71 @@
     from {
       scale: 0 1;
     }
+  }
+
+  /* ---- Star heat ------------------------------------------------------ */
+
+  /*
+   * The dan.fm ladder (DESIGN.md's Spot Ink Rule): the fill's ink climbs
+   * with the drawn score - ember at 4, gold glowing at 4.5, blue-white full
+   * dress at 5. Attribute-keyed throughout, so every rule is inert on the
+   * show log's horns and invisible to Tailwind's class scanner. The glow is
+   * light an ink gives off - text-shadow in the lamp's grammar - never a
+   * depth shadow between surfaces.
+   */
+  [data-tier="ember"] [data-slot="rating-fill"] {
+    color: var(--ember);
+  }
+
+  [data-tier="gold"] [data-slot="rating-fill"] {
+    color: var(--heat-gold);
+    text-shadow:
+      0 0 0.45em color-mix(in oklab, var(--heat-gold) 60%, transparent),
+      0 0 1.1em color-mix(in oklab, var(--heat-gold) 32%, transparent);
+  }
+
+  /*
+   * Written once against the edge token: on newsprint this is the knockout
+   * (near-paper fill, hot edge, two restrained glow layers), and the stroke
+   * token is 0px on the dark stock so the same declaration serves both. The
+   * dark stock's own three-layer glow lands in the override below - its
+   * edge token is the fill itself, so the mixes stay one spelling.
+   */
+  [data-tier="blue"] [data-slot="rating-fill"] {
+    color: var(--heat-blue);
+    -webkit-text-stroke: var(--heat-blue-stroke) var(--heat-blue-edge);
+    text-shadow:
+      0 0 0.4em color-mix(in oklab, var(--heat-blue-edge) 42%, transparent),
+      0 0 1.1em color-mix(in oklab, var(--heat-blue-edge) 24%, transparent);
+  }
+
+  .dark [data-tier="blue"] [data-slot="rating-fill"] {
+    text-shadow:
+      0 0 0.35em color-mix(in oklab, var(--heat-blue-edge) 60%, transparent),
+      0 0 0.9em color-mix(in oklab, var(--heat-blue-edge) 38%, transparent),
+      0 0 1.9em color-mix(in oklab, var(--heat-blue-edge) 22%, transparent);
+  }
+
+  /*
+   * The five's sheen carrier: a third copy of the row, masked off-canvas at
+   * rest so it is invisible until the crossing moves its mask. Its overflow
+   * clips its own glow at the star rect, deliberately - the share card's
+   * halo cuts at the same edge.
+   */
+  [data-slot="rating-sheen"] {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    pointer-events: none;
+    color: color-mix(in oklab, var(--heat-blue-edge) 30%, white);
+    -webkit-mask-image: linear-gradient(105deg, transparent 40%, #000 50%, transparent 60%);
+    mask-image: linear-gradient(105deg, transparent 40%, #000 50%, transparent 60%);
+    -webkit-mask-size: 320% 100%;
+    mask-size: 320% 100%;
+    -webkit-mask-position: 140% 0;
+    mask-position: 140% 0;
   }
 
   /* ---- Long-form -------------------------------------------------------- */
@@ -1104,6 +1186,10 @@
     --glow: transparent;
     --grain-opacity: 0;
     --hairline: rgb(0 0 0 / 0.15);
+    --heat-gold: #000;
+    --heat-blue: #000;
+    --heat-blue-edge: #000;
+    --heat-blue-stroke: 0px;
   }
 
   /* Crop marks: the cut-corners idiom at page scale, two L-shaped registration
@@ -1158,5 +1244,12 @@
     --ember: oklch(0.66 0.225 32);
     --ion: oklch(0.82 0.14 197);
     --star: oklch(0.93 0.02 90);
+  }
+
+  /* The ladder's glow is screen light, not ink - a grey smudge around a
+     star is not a one-ink press. The flattened tokens above already blacken
+     the fills and zero the knockout stroke. */
+  [data-tier] [data-slot="rating-fill"] {
+    text-shadow: none;
   }
 }

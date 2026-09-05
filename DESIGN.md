@@ -165,7 +165,9 @@ page. This is a site that would rather look printed than rendered.
 
 ## Colors
 
-A four-colour press: black, bone, one hot ink, one cold one.
+A four-colour press: black, bone, one hot ink, one cold one - plus two spot
+inks that exist on exactly one surface: the gold and blue-white of dan.fm's
+star ladder, mixed for the run and never loaded into the main press.
 
 ### Primary
 
@@ -219,6 +221,13 @@ competing rather than pointing, and the newest one is probably the one to cut.
 **The Cold Ink Is Machine Output Rule.** Photocopy Cyan marks what a machine
 produced or a state that is not warm. It never substitutes for Flyer Red as an
 accent, and the two never sit adjacent as a pair.
+
+**The Spot Ink Rule.** Gold and blue-white exist only on the dan.fm star
+ladder and its share card, keyed to the drawn score: gold from 4.5, blue-white
+at 5, and on newsprint the blue-white is not an ink at all but the paper
+showing through a knocked-out star with a hot blue edge. Neither joins the
+palette anywhere else. Flyer Red's One Hot Ink budget is unchanged - a 4
+drawing ember spends nothing new - and Photocopy Cyan is untouched.
 
 **The No Second Dimming Rule.** `ink-faded` is the dim token. Applying an alpha
 on top of it produces text that fails contrast. If something needs to be quieter
@@ -360,13 +369,15 @@ turbulence filter at 3.5% opacity in the light theme and 5% in the dark. Their
 job is to stop flat colour reading as flat, and the grain is the mechanism rather
 than the mood.
 
-A third layer exists, and exactly one: `.on-air-lamp`, the glow on the dot in
-dan.fm's station badge. It is named here rather than left to be found, because a
-page carrying an undocumented glow is a page the next reader reverts. What bounds
-it is that it says something no border could - one element, one state, derived
-from `--ember` through `color-mix`.
+Two more layers exist, and exactly two: `.on-air-lamp`, the glow on the dot
+in dan.fm's station badge, and the star ladder's standing glow on gold and
+blue-white ratings. They are named here rather than left to be found, because
+a page carrying an undocumented glow is a page the next reader reverts. What
+bounds each is that it says something no border could - the lamp is one
+element in one state derived from `--ember` through `color-mix`, and the
+ladder's glow is the tier's own ink radiating, keyed to the drawn score.
 
-It sits on the dot rather than behind the badge, and that is a contrast decision
+The lamp sits on the dot rather than behind the badge, and that is a contrast decision
 before it is a visual one. Sized to the badge, the same glow puts ember under an
 11px mono label at `0.18em`, which measured 3.44:1 at the animation's peak
 against the 4.5 AA needs - and axe returns a node with a pseudo-element under its
@@ -376,8 +387,9 @@ the label starts a `gap-2.5` away, and the falloff ends inside that gap. Keep it
 there. A glow moved back behind the text is a contrast problem again, and the
 build will not say so.
 
-It is not a general-purpose glow. A second call site turns it into a scale, and
-this system has no depth scale on purpose.
+Neither is a general-purpose glow. The membership is closed - the next
+candidate pays the same paragraph these did - and this system has no depth
+scale on purpose.
 
 The one exception in the codebase is `shadow-xs` on filled buttons, inherited
 from shadcn. It is small enough not to break the rule and not worth a special
@@ -387,7 +399,10 @@ case, but it is not a licence to add a shadow scale.
 
 **The Flat Press Rule.** Separation is a hairline, a lightness step, or space.
 It is never a shadow. A component that needs a drop shadow to be legible has a
-contrast problem, not a depth problem.
+contrast problem, not a depth problem. Light an ink gives off is a different
+sentence in the same grammar: the lamp's halo, the star ladder's glow, and the
+share card's bloom are text-shadow-as-glow, never text-shadow-as-elevation - a
+shadow that fakes depth under a surface is still banned.
 
 **The Grain Is Not Decoration Rule.** The grain layer is what keeps large flat
 fields from looking dead. It is `aria-hidden`, fixed, and behind everything, and

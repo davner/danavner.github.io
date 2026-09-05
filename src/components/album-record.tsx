@@ -64,7 +64,7 @@ export function AlbumCover({ cover, sizes }: { cover: string; sizes: string }) {
 export function AlbumScore({ album }: { album: Album }) {
   return (
     <>
-      <Rating value={album.score} mark={STAR} />
+      <Rating value={album.score} mark={STAR} heat />
 
       {album.later === null ? (
         <span className="readout-dim">{album.score}</span>

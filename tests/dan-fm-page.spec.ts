@@ -490,11 +490,20 @@ test.describe("the rating mark", () => {
         Array.from(rating.children).map((row) => ({
           text: row.textContent,
           hidden: row.getAttribute("aria-hidden"),
+          slot: row.getAttribute("data-slot"),
         })),
       );
 
-    expect(rows.map((row) => row.text)).toEqual(["★".repeat(MAX_SCORE), "★".repeat(MAX_SCORE)]);
-    expect(rows.map((row) => row.hidden)).toEqual(["true", "true"]);
+    // The first two children are the track and the fill at every tier; a
+    // blue rating alone may carry a third, and it must be the hidden sheen.
+    expect(rows.slice(0, 2).map((row) => row.text)).toEqual([
+      "★".repeat(MAX_SCORE),
+      "★".repeat(MAX_SCORE),
+    ]);
+    expect(rows.map((row) => row.hidden)).toEqual(rows.map(() => "true"));
+    for (const extra of rows.slice(2)) {
+      expect(extra.slot, "an unexplained third row inside the rating").toBe("rating-sheen");
+    }
   });
 
   test("the star row is clipped to the score it names", async ({ page }) => {
@@ -512,6 +521,59 @@ test.describe("the rating mark", () => {
       .evaluate((row) => (row as HTMLElement).style.width);
 
     expect(Number.parseFloat(width)).toBeCloseTo((NEWEST_SCORE / MAX_SCORE) * 100, 1);
+  });
+
+  test("a five wears the blue-white dress and keeps its plain name", async ({ page }) => {
+    const five = LOGGED.find((album) => album.score === 5);
+    test.skip(five === undefined, "no five in the log on disk - the top tier has no row");
+
+    await page.goto(albumUrl(five!).replace(/^https:\/\/[^/]+/, ""));
+    await page.getByRole("heading", { level: 1 }).waitFor();
+
+    const rating = page.getByRole("img", { name: /^Rated / }).first();
+    await expect(rating).toHaveAttribute("data-tier", "blue");
+    await expect(rating).toHaveAttribute("aria-label", `Rated 5 out of ${MAX_SCORE}`);
+
+    const fill = rating.locator("[data-slot=rating-fill]");
+    const painted = await fill.evaluate((el) => {
+      const styles = getComputedStyle(el);
+      const probe = document.createElement("span");
+      probe.style.color = "var(--heat-blue)";
+      document.body.append(probe);
+      const expected = getComputedStyle(probe).color;
+      probe.remove();
+      return { color: styles.color, expected, shadow: styles.textShadow };
+    });
+
+    expect(painted.color, "the fill is not wearing the blue-white ink").toBe(painted.expected);
+    expect(painted.shadow, "the five carries no standing glow").not.toBe("none");
+  });
+
+  test("the tier keys on the number the row draws, not a later one", async ({ page }) => {
+    const revised = LOGGED.find((album) => album.score === 4.5 && album.later !== null);
+    test.skip(revised === undefined, "no revised 4.5 in the log on disk");
+
+    await page.goto(albumUrl(revised!).replace(/^https:\/\/[^/]+/, ""));
+    await page.getByRole("heading", { level: 1 }).waitFor();
+
+    // Drawn 4.5, revised later: gold, whatever the second reading said.
+    await expect(page.getByRole("img", { name: /^Rated / }).first()).toHaveAttribute(
+      "data-tier",
+      "gold",
+    );
+  });
+
+  test("the show log carries no tier anywhere", async ({ page }) => {
+    // Horns provably untouched: heat is a prop only AlbumScore sets, so no
+    // rating outside dan.fm may carry the attribute at any score. The
+    // permalink is the same one the rest of the suite leans on.
+    await page.goto("/shows");
+    await page.getByRole("heading", { level: 1 }).waitFor();
+    await expect(page.locator("[data-tier]")).toHaveCount(0);
+
+    await page.goto("/shows/bruno-mars-madrid-2026");
+    await page.getByRole("heading", { level: 1 }).waitFor();
+    await expect(page.locator("[data-tier]")).toHaveCount(0);
   });
 
   test("the show log's rating is still horns", async ({ page }) => {

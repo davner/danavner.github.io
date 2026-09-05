@@ -13,6 +13,7 @@ import {
   takeProblems,
 } from "../src/lib/dan-fm-markdown";
 import { MAX_SCORE, albumSummary, albumTitle, albumUrl } from "../src/lib/dan-fm-summary";
+import { tierFor } from "../src/lib/rating-heat";
 import { contentPlugin } from "../vite-plugin-content";
 
 import type { Album, Board, DanFmCharts, DanFmPayload, Selection } from "../src/lib/dan-fm";
@@ -2370,5 +2371,18 @@ test.describe("markdown the payload cannot carry", () => {
     });
 
     expect(log.albums).toHaveLength(2);
+  });
+});
+
+test.describe("the star ladder's tiers", () => {
+  test("the quarter-step boundaries land where the specimen drew them", () => {
+    // The exact steps either side of each threshold: the ladder is the
+    // design, so a drifted comparison operator shows up here by name.
+    expect(tierFor(3.75)).toBe("base");
+    expect(tierFor(4)).toBe("ember");
+    expect(tierFor(4.25)).toBe("ember");
+    expect(tierFor(4.5)).toBe("gold");
+    expect(tierFor(4.75)).toBe("gold");
+    expect(tierFor(5)).toBe("blue");
   });
 });

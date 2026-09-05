@@ -1,3 +1,4 @@
+import { tierFor } from "@/lib/rating-heat";
 import { MAX_RATING } from "@/lib/shows";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +20,7 @@ const HORNS = "🤘🏽";
 export function Rating({
   value,
   mark = HORNS,
+  heat = false,
   className,
 }: {
   value: number;
@@ -36,6 +38,14 @@ export function Rating({
    * skin-tone modifier and no single number expresses that pair.
    */
   mark?: string;
+  /**
+   * The dan.fm ladder (the Star Heat specimen's S6): the fill's ink climbs
+   * with the drawn score, keyed by `data-tier` for `index.css`'s attribute
+   * rules. Explicit rather than derived from the mark, so a second
+   * star-marked surface can never inherit the dress unasked - `AlbumScore`
+   * is the only setter, and horns and /shows never set it.
+   */
+  heat?: boolean;
   className?: string;
 }) {
   const clamped = Math.min(Math.max(value, 0), MAX_RATING);
@@ -50,11 +60,15 @@ export function Rating({
   // Trailing zeros look like false precision on a hand-kept log: 4, not 4.0.
   const label = `${shown} out of ${MAX_RATING}`;
   const row = mark.repeat(MAX_RATING);
+  // The tier keys on the number the row draws - `shown`, clamped and rounded
+  // - never on a raw or later score a caller might compute from.
+  const tier = heat ? tierFor(shown) : null;
 
   return (
     <span
       role="img"
       aria-label={`Rated ${label}`}
+      data-tier={tier ?? undefined}
       className={cn(
         "relative inline-block text-sm leading-none tracking-[0.15em] select-none",
         className,
@@ -71,8 +85,25 @@ export function Rating({
         className="absolute inset-y-0 left-0 overflow-hidden whitespace-nowrap"
         style={{ width: `${percent}%` }}
       >
-        {row}
+        {/* One DOM shape under heat at every tier - per-star spans so the
+            five's dress can address a single star - and the plain string
+            otherwise, byte-identical to the horns' rendering. */}
+        {tier
+          ? Array.from({ length: MAX_RATING }, (_, index) => (
+              <span key={index} data-slot="rating-star">
+                {mark}
+              </span>
+            ))
+          : row}
       </span>
+      {/* The sheen carrier rides after the fill so the fill stays the second
+          child, which the clip test reads by position. Masked off-canvas at
+          rest; only the five's crossing ever moves it. */}
+      {tier === "blue" ? (
+        <span aria-hidden data-slot="rating-sheen">
+          {row}
+        </span>
+      ) : null}
     </span>
   );
 }

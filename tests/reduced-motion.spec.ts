@@ -1,5 +1,7 @@
 import { expect, test, type Locator } from "@playwright/test";
 
+import { statText } from "./stats";
+
 /**
  * What `prefers-reduced-motion: reduce` does, and what it deliberately leaves
  * alone.
@@ -187,6 +189,42 @@ test.describe("the route cross-fade", () => {
     );
 
     expect(duration, "the 150ms rule no longer reaches the snapshot").toBe("0.15s");
+  });
+});
+
+test.describe("the stat odometers", () => {
+  test("digits jump rather than rolling", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/vinyl");
+    await page.getByRole("heading", { level: 1 }).waitFor();
+
+    const chip = page.getByRole("radio").nth(1);
+    const chipCount = Number((await chip.innerText()).trim().split(/\s+/).pop());
+    await chip.click();
+
+    /*
+     * NumberFlow rides WAAPI, which the CSS reduced-motion kill cannot reach;
+     * its own preference guard is what this pins. Sampled per frame across
+     * the roll's whole 180ms window, and scoped to the board's subtree - a
+     * document-wide read would catch view transitions and the footer fire.
+     */
+    const board = page.locator("section[aria-label='What is on the shelf']");
+    const running = await board.evaluate(async (el) => {
+      let seen = 0;
+      const start = performance.now();
+      while (performance.now() - start < 300) {
+        seen = Math.max(
+          seen,
+          el.getAnimations({ subtree: true }).filter((a) => a.playState === "running").length,
+        );
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+      }
+      return seen;
+    });
+    expect(running, "the odometer rolled under reduced motion").toBe(0);
+
+    // And the digits did jump - to the pressed chip's own count.
+    expect(Number(await statText(page.locator("[data-slot=stat] dd").first()))).toBe(chipCount);
   });
 });
 

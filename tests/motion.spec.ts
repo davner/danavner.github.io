@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { statText } from "./stats";
+
 /**
  * The load-bearing edges of the motion work - the ones a stray utility or a
  * refactor would undo silently. Reduced-motion behaviour lives in
@@ -54,6 +56,23 @@ test.describe("route cross-fade", () => {
 
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Notes on");
     expect(errors, "the navigation logged an error").toEqual([]);
+  });
+});
+
+test.describe("the stat odometers", () => {
+  test("an owner chip press rolls the record count to the other figure", async ({ page }) => {
+    await page.goto("/vinyl");
+    await page.getByRole("heading", { level: 1 }).waitFor();
+
+    const dd = page.locator("[data-slot=stat] dd").first();
+    const chip = page.getByRole("radio").nth(1);
+    const chipCount = Number((await chip.innerText()).trim().split(/\s+/).pop());
+    expect(chipCount).toBeGreaterThan(0);
+
+    await chip.click();
+    // The roll's end state is what is pinned; site.spec's owner-flip pair
+    // already proves the two counts differ.
+    await expect.poll(async () => Number(await statText(dd))).toBe(chipCount);
   });
 });
 

@@ -9,6 +9,7 @@ import { FilterStatus } from "@/components/filter-status";
 import { FilterToggle } from "@/components/filter-toggle";
 import { Section } from "@/components/page";
 import { SelectControl } from "@/components/select-control";
+import { StatNumber } from "@/components/stat-number";
 import { coverSrcSet } from "@/lib/covers";
 import {
   ALL,
@@ -199,10 +200,19 @@ export function DanFmArchive({ albums }: { albums: Album[] }) {
    * over fourteen days is a different claim from eleven over eleven - and say
    * nothing about three rows filtered out of it, so they go when it narrows.
    */
+  /*
+   * Known bound, accepted: the first filter press changes the sentence's
+   * shape, which mounts a fresh element - so the count only rolls from the
+   * second press on. Correct under the no-arrival rule.
+   */
   const head =
-    visible.length === albums.length
-      ? `${counted(stats.total, "album")} · ${counted(stats.days, "day")}`
-      : `${visible.length} of ${counted(albums.length, "album")}`;
+    visible.length === albums.length ? (
+      `${counted(stats.total, "album")} · ${counted(stats.days, "day")}`
+    ) : (
+      <>
+        <StatNumber value={visible.length} /> of {counted(albums.length, "album")}
+      </>
+    );
 
   return (
     <Section

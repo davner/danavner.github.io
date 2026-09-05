@@ -1,5 +1,5 @@
 import { ArrowUpRight, Disc3, Search } from "lucide-react";
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
 
 import { EmptyState } from "@/components/empty-state";
@@ -9,6 +9,7 @@ import { PageHeader, PageShell } from "@/components/page";
 import { ScrollingText } from "@/components/scrolling-text";
 import { SelectControl } from "@/components/select-control";
 import { SourceLine } from "@/components/source-line";
+import { StatNumber } from "@/components/stat-number";
 import {
   ALL,
   SORTS,
@@ -224,12 +225,12 @@ export function Vinyl() {
   // These all follow the owner filter. Candidates in priority order, and a stat
   // only shows once it has something to say, so a one-record shelf never
   // renders "LABELS - 0".
-  const tiles: { label: string; value: ReactNode; show: boolean }[] = [
-    { label: "Records", value: String(stats.total), show: true },
-    { label: "Discs", value: String(stats.discs), show: stats.discs > stats.total },
-    { label: "Artists", value: String(stats.artists), show: stats.artists > 0 },
-    { label: "Labels", value: String(stats.labels), show: stats.labels > 0 },
-    { label: "Colored wax", value: String(stats.colored), show: stats.colored > 0 },
+  const tiles: { label: string; value: number; show: boolean }[] = [
+    { label: "Records", value: stats.total, show: true },
+    { label: "Discs", value: stats.discs, show: stats.discs > stats.total },
+    { label: "Artists", value: stats.artists, show: stats.artists > 0 },
+    { label: "Labels", value: stats.labels, show: stats.labels > 0 },
+    { label: "Colored wax", value: stats.colored, show: stats.colored > 0 },
   ]
     .filter((tile) => tile.show)
     .slice(0, 4);
@@ -294,7 +295,9 @@ export function Vinyl() {
           {tiles.map((tile) => (
             <dl key={tile.label} data-slot="stat" className="bg-background p-5 sm:p-6">
               <dt className="readout-dim">{tile.label}</dt>
-              <dd className="display mt-2 text-heading text-balance">{tile.value}</dd>
+              <dd className="display mt-2 text-heading text-balance">
+                <StatNumber value={tile.value} />
+              </dd>
             </dl>
           ))}
 

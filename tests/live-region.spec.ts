@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { flowText } from "./stats";
+
 /**
  * `src/components/filter-status.tsx` is the site's live region: the one thing on
  * the page that speaks without being asked. Four pages filter a collection, and
@@ -128,19 +130,21 @@ async function boardSentence(page: Page): Promise<string> {
  * stale overnight.
  *
  * The head is where the page says the same thing to a reader who can see it, so
- * taking the sentence from there is what stops the two drifting apart.
- * `textContent` and not `innerText`, because the line is set in `readout-dim` -
- * `text-transform: uppercase` - and `innerText` hands back the rendering rather
- * than the words the page built its sentence from.
+ * taking the sentence from there is what stops the two drifting apart. Read
+ * through `flowText`, because the head's count is a NumberFlow odometer whose
+ * digits live in shadow DOM - plain `textContent` drops the number, and
+ * `innerText` would hand back `readout-dim`'s uppercase rendering rather than
+ * the words the page built its sentence from.
  */
 async function archiveSentence(page: Page): Promise<string> {
-  const head = await page
-    .locator("section")
-    .filter({ has: page.getByRole("heading", { level: 2, name: "Archive", exact: true }) })
-    .locator("h2 + p")
-    .textContent();
+  const head = await flowText(
+    page
+      .locator("section")
+      .filter({ has: page.getByRole("heading", { level: 2, name: "Archive", exact: true }) })
+      .locator("h2 + p"),
+  );
 
-  return `${head?.trim()} shown`;
+  return `${head} shown`;
 }
 
 /**

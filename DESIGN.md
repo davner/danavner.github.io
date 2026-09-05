@@ -463,6 +463,14 @@ pointer. The page title does not travel: a poster title sliding and rescaling
 between pages would make every navigation morph-dominant, and the register is
 the snap - don't name a shared element into the transition.
 
+A number a filter changes rolls like an odometer: 180ms on the stamp curve,
+each digit masked in its own column. It rolls only under the reader's filter
+hand and never on arrival - not on page load, not on route entry, not for a
+tile appearing under a filter - the scroll-reveal ban's cousin. Under reduced
+motion the digits jump by the library's own preference guard: the roll rides
+WAAPI, which the CSS kill cannot reach, and it claims no bounded survival
+because it does not survive.
+
 One thing burns on its own, and a press stokes it. The footer's pixel fire
 takes a pointer press and answers with a kick of heat around the pressed
 column, decaying back to baseline inside a second - a parameter of the

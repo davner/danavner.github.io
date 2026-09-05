@@ -3,6 +3,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import { MAX_SCORE, albumUrl } from "../src/lib/dan-fm-summary";
 
 import { albumsOnDisk } from "./dan-fm";
+import { flowText } from "./stats";
 
 /**
  * What `/dan-fm` puts on screen.
@@ -837,9 +838,9 @@ test.describe("the archive", () => {
     await expect(page).toHaveURL(`/dan-fm?${new URLSearchParams({ genre: NARROWING_GENRE! })}`);
     await expect(rows(page)).toHaveCount(kept.length);
     expect(await listedRows(page)).toEqual(kept.map((album) => albumUrl(album)));
-    await expect(archiveHead(page)).toHaveText(
-      `${kept.length} of ${counted(LOGGED.length, "album")}`,
-    );
+    await expect
+      .poll(() => flowText(archiveHead(page)))
+      .toBe(`${kept.length} of ${counted(LOGGED.length, "album")}`);
   });
 
   test("a link carries every control it was narrowed with, and reopens on the same rows", async ({
@@ -937,7 +938,9 @@ test.describe("the archive", () => {
     await expect(page).toHaveURL(/[?&]score=/);
 
     await expect(rows(page)).toHaveCount(tally);
-    await expect(archiveHead(page)).toHaveText(`${tally} of ${counted(LOGGED.length, "album")}`);
+    await expect
+      .poll(() => flowText(archiveHead(page)))
+      .toBe(`${tally} of ${counted(LOGGED.length, "album")}`);
   });
 
   test("changing a filter replaces the entry rather than pushing one", async ({ page }) => {
@@ -1014,7 +1017,9 @@ test.describe("the archive", () => {
 
     await expect(rows(page)).toHaveCount(0);
     await expect(archive(page)).toContainText("Nothing in the log matches those filters.");
-    await expect(archiveHead(page)).toHaveText(`0 of ${counted(LOGGED.length, "album")}`);
+    await expect
+      .poll(() => flowText(archiveHead(page)))
+      .toBe(`0 of ${counted(LOGGED.length, "album")}`);
     await expect(
       archive(page).getByRole("button", { name: "Clear filters" }),
       "the state worth undoing fastest is the one showing nothing",

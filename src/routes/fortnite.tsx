@@ -8,6 +8,7 @@ import { PageHeader, PageShell } from "@/components/page";
 import { ScrollingText } from "@/components/scrolling-text";
 import { SelectControl } from "@/components/select-control";
 import { SourceLine } from "@/components/source-line";
+import { StatNumber, type StatFormat } from "@/components/stat-number";
 import {
   count,
   coverage,
@@ -58,18 +59,35 @@ const HEADING = (
  * count by arithmetic rather than by form, and printing "-941 vs lifetime"
  * under it would be true and say nothing.
  */
+/**
+ * What a tile shows: a number the odometer can own, or a string it cannot.
+ * "Time played" is a composed duration ("41.5h"), not a number, so it stays
+ * text; the delta chips are sentences with signs and units and never roll.
+ */
+type Figure = { value: number; format?: StatFormat; suffix?: string } | { text: string };
+
+/** `count()`'s shape - grouped whole number - as a NumberFlow format. */
+const GROUPED: StatFormat = { useGrouping: true, maximumFractionDigits: 0 };
+
 function headline(stats: ModeStats, against: ModeStats | null) {
   return [
-    { label: "Wins", value: count(stats.wins), delta: null },
+    { label: "Wins", figure: { value: stats.wins, format: GROUPED }, delta: null },
     {
       label: "Win rate",
-      value: `${stats.winRate.toFixed(1)}%`,
+      figure: {
+        value: stats.winRate,
+        format: { minimumFractionDigits: 1, maximumFractionDigits: 1 } satisfies StatFormat,
+        suffix: "%",
+      },
       delta: against ? delta(stats.winRate, against.winRate, 1, "pt") : null,
     },
-    { label: "Kills", value: count(stats.kills), delta: null },
+    { label: "Kills", figure: { value: stats.kills, format: GROUPED }, delta: null },
     {
       label: "K/D",
-      value: stats.kd.toFixed(2),
+      figure: {
+        value: stats.kd,
+        format: { minimumFractionDigits: 2, maximumFractionDigits: 2 } satisfies StatFormat,
+      },
       delta: against ? delta(stats.kd, against.kd, 2) : null,
     },
   ];
@@ -85,23 +103,26 @@ function headline(stats: ModeStats, against: ModeStats | null) {
  */
 function details(stats: ModeStats, against: ModeStats | null, mode: ModeId) {
   return [
-    { label: "Matches", value: count(stats.matches), delta: null },
+    { label: "Matches", figure: { value: stats.matches, format: GROUPED }, delta: null },
     {
       label: "Kills per match",
-      value: stats.killsPerMatch.toFixed(2),
+      figure: {
+        value: stats.killsPerMatch,
+        format: { minimumFractionDigits: 2, maximumFractionDigits: 2 } satisfies StatFormat,
+      },
       delta: against ? delta(stats.killsPerMatch, against.killsPerMatch, 2) : null,
     },
     ...placements(mode).map((tier) => ({
       label: tier.label,
-      value: count(stats[tier.field]),
+      figure: { value: stats[tier.field], format: GROUPED },
       delta: null,
     })),
     {
       label: "Players outlived",
-      value: count(stats.playersOutlived),
+      figure: { value: stats.playersOutlived, format: GROUPED },
       delta: null,
     },
-    { label: "Time played", value: playtime(stats.minutesPlayed), delta: null },
+    { label: "Time played", figure: { text: playtime(stats.minutesPlayed) }, delta: null },
   ];
 }
 
@@ -109,7 +130,15 @@ function details(stats: ModeStats, against: ModeStats | null, mode: ModeId) {
  * One figure in the board. Same `dl` idiom the shows and vinyl stat tiles use -
  * a term and its number, hairlines drawn by the grid behind it.
  */
-function Stat({ label, value, against }: { label: string; value: string; against?: Delta | null }) {
+function Stat({
+  label,
+  figure,
+  against,
+}: {
+  label: string;
+  figure: Figure;
+  against?: Delta | null;
+}) {
   return (
     <dl
       data-slot="stat"
@@ -119,7 +148,13 @@ function Stat({ label, value, against }: { label: string; value: string; against
       {/* Every figure at one size. Setting the four headline tiles larger said
           nothing the "against lifetime" line under them does not already say,
           and it is the delta that carries the comparison. */}
-      <dd className="display mt-2 text-heading text-balance">{value}</dd>
+      <dd className="display mt-2 text-heading text-balance">
+        {"text" in figure ? (
+          figure.text
+        ) : (
+          <StatNumber value={figure.value} format={figure.format} suffix={figure.suffix} />
+        )}
+      </dd>
       {against ? (
         <dd
           className={cn(
@@ -401,13 +436,23 @@ export function Fortnite() {
                 instead of six. Same idiom as the season grid below. */}
             <div className="grid grid-cols-2 gap-px sm:grid-cols-4">
               {headline(stats, against).map((tile) => (
-                <Stat key={tile.label} label={tile.label} value={tile.value} against={tile.delta} />
+                <Stat
+                  key={tile.label}
+                  label={tile.label}
+                  figure={tile.figure}
+                  against={tile.delta}
+                />
               ))}
             </div>
 
             <div className="mt-px grid grid-cols-2 gap-px sm:grid-cols-3">
               {details(stats, against, activeMode).map((tile) => (
-                <Stat key={tile.label} label={tile.label} value={tile.value} against={tile.delta} />
+                <Stat
+                  key={tile.label}
+                  label={tile.label}
+                  figure={tile.figure}
+                  against={tile.delta}
+                />
               ))}
             </div>
           </section>

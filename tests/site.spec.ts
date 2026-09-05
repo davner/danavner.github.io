@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 import { OPEN_STATES, openState, reachOpenState } from "./open-states";
 import { PHOTO_GAP, nowEntriesWithPhotos } from "./now-photos";
 import { ROUTES } from "./routes";
+import { statText, statTexts } from "./stats";
 import { ALL_SECTIONS } from "../src/lib/site";
 
 /** Every section page, from the same list the header and footer render. */
@@ -783,7 +784,7 @@ test.describe("vinyl", () => {
 
   test("tile count matches the records stat", async ({ page }) => {
     const tiles = await page.locator("[data-slot=record]").count();
-    const counted = Number(await page.locator("[data-slot=stat] dd").first().innerText());
+    const counted = Number(await statText(page.locator("[data-slot=stat] dd").first()));
     expect(tiles).toBe(counted);
     expect(tiles).toBeGreaterThan(0);
   });
@@ -791,7 +792,7 @@ test.describe("vinyl", () => {
   test("no stat renders a meaningless zero", async ({ page }) => {
     // Same rule the show log follows: a stat with nothing to say is left out
     // rather than printed as a zero.
-    const values = await page.locator("[data-slot=stat] dd").allInnerTexts();
+    const values = await statTexts(page.locator("[data-slot=stat] dd"));
     for (const value of values) expect(value.trim()).not.toBe("0");
     expect(values.length).toBeGreaterThan(0);
     expect(values.length).toBeLessThanOrEqual(4);
@@ -912,7 +913,7 @@ test.describe("vinyl", () => {
   test("search narrows the shelf without moving the stats", async ({ page }) => {
     const tiles = page.locator("[data-slot=record]");
     const everything = await tiles.count();
-    const counted = await page.locator("[data-slot=stat] dd").first().innerText();
+    const counted = await statText(page.locator("[data-slot=stat] dd").first());
 
     const artist = (
       await page.locator("[data-slot=record] a > div > p:first-child").first().innerText()
@@ -927,7 +928,7 @@ test.describe("vinyl", () => {
     // Typing in the search box narrows what is listed. It must not restate what
     // the shelf is worth, or searching "misfits" would claim the whole
     // collection is worth one record.
-    expect(await page.locator("[data-slot=stat] dd").first().innerText()).toBe(counted);
+    expect(await statText(page.locator("[data-slot=stat] dd").first())).toBe(counted);
   });
 
   test("a search with no match says so", async ({ page }) => {
@@ -2978,7 +2979,7 @@ test.describe("fortnite", () => {
       const tiles = page.locator("[data-slot=stat]");
       if ((await tiles.count()) > 0) {
         // A half-successful fetch shows as a tile with a term and no figure.
-        for (const text of await tiles.locator("dd").allInnerTexts()) {
+        for (const text of await statTexts(tiles.locator("dd"))) {
           expect(text.trim(), `empty stat tile on ?season=${value}`).not.toBe("");
         }
         continue;
@@ -2998,7 +2999,7 @@ test.describe("fortnite", () => {
     if ((await board.count()) > 0) {
       // Stats have landed: every tile must carry a figure, since an empty tile
       // is the shape a half-successful fetch takes.
-      for (const text of await board.locator("dd").allInnerTexts()) {
+      for (const text of await statTexts(board.locator("dd"))) {
         expect(text.trim()).not.toBe("");
       }
       return;

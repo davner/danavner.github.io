@@ -316,11 +316,11 @@ test.describe("the star ladder", () => {
     await rating.hover();
 
     // Sheen, breath, flare, shimmer all stilled - the no-preference gates
-    // keep them from existing - while the glow, a static property, holds:
-    // the lamp's bargain, inherited by the ladder.
+    // keep them from existing - while the glow, a static property on its own
+    // layer, holds: the lamp's bargain, inherited by the ladder.
     const state = await rating.evaluate((el) => ({
       animations: el.getAnimations({ subtree: true }).length,
-      shadow: getComputedStyle(el.querySelector("[data-slot=rating-fill]")!).textShadow,
+      shadow: getComputedStyle(el.querySelector("[data-slot=rating-glow]")!).textShadow,
     }));
 
     expect(state.animations, "the dress moved under reduced motion").toBe(0);

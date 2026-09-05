@@ -69,8 +69,11 @@ export function Rating({
       role="img"
       aria-label={`Rated ${label}`}
       data-tier={tier ?? undefined}
+      // `isolate` so the glow layer's negative z-index stays inside this
+      // span's own stacking context instead of dropping behind the row's
+      // background.
       className={cn(
-        "relative inline-block text-sm leading-none tracking-[0.15em] select-none",
+        "isolate relative inline-block text-sm leading-none tracking-[0.15em] select-none",
         className,
       )}
     >
@@ -102,6 +105,16 @@ export function Rating({
       {tier === "blue" ? (
         <span aria-hidden data-slot="rating-sheen">
           {row}
+        </span>
+      ) : null}
+      {/* The glow lives on its own unclipped layer - transparent glyphs whose
+          text-shadow is the whole paint - because a glow inside the fill's
+          width clip cuts off in a straight line, and a straight-edged bloom
+          reads as a box rather than light. Whole stars only: a fractional
+          star's missing halo is imperceptible, and these tiers start at 4.5. */}
+      {tier === "gold" || tier === "blue" ? (
+        <span aria-hidden data-slot="rating-glow">
+          {mark.repeat(Math.floor(shown))}
         </span>
       ) : null}
     </span>

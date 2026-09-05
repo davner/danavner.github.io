@@ -494,15 +494,19 @@ test.describe("the rating mark", () => {
         })),
       );
 
-    // The first two children are the track and the fill at every tier; a
-    // blue rating alone may carry a third, and it must be the hidden sheen.
+    // The first two children are the track and the fill at every tier; the
+    // dressed tiers may carry more, and each extra must be one of the two
+    // hidden layers the dress owns - the sheen and the unclipped glow.
     expect(rows.slice(0, 2).map((row) => row.text)).toEqual([
       "★".repeat(MAX_SCORE),
       "★".repeat(MAX_SCORE),
     ]);
     expect(rows.map((row) => row.hidden)).toEqual(rows.map(() => "true"));
     for (const extra of rows.slice(2)) {
-      expect(extra.slot, "an unexplained third row inside the rating").toBe("rating-sheen");
+      expect(
+        ["rating-sheen", "rating-glow"],
+        "an unexplained extra row inside the rating",
+      ).toContain(extra.slot);
     }
   });
 
@@ -534,19 +538,22 @@ test.describe("the rating mark", () => {
     await expect(rating).toHaveAttribute("data-tier", "blue");
     await expect(rating).toHaveAttribute("aria-label", `Rated 5 out of ${MAX_SCORE}`);
 
-    const fill = rating.locator("[data-slot=rating-fill]");
-    const painted = await fill.evaluate((el) => {
-      const styles = getComputedStyle(el);
+    // The ink sits on the clipped fill; the glow stands on its own unclipped
+    // layer, so a straight-edged bloom cannot come back without failing here.
+    const painted = await rating.evaluate((el) => {
+      const fill = getComputedStyle(el.querySelector("[data-slot=rating-fill]")!);
+      const glow = getComputedStyle(el.querySelector("[data-slot=rating-glow]")!);
       const probe = document.createElement("span");
       probe.style.color = "var(--heat-blue)";
       document.body.append(probe);
       const expected = getComputedStyle(probe).color;
       probe.remove();
-      return { color: styles.color, expected, shadow: styles.textShadow };
+      return { color: fill.color, expected, shadow: glow.textShadow, overflow: glow.overflow };
     });
 
     expect(painted.color, "the fill is not wearing the blue-white ink").toBe(painted.expected);
     expect(painted.shadow, "the five carries no standing glow").not.toBe("none");
+    expect(painted.overflow, "the glow layer is clipped - the bloom will box").toBe("visible");
   });
 
   test("the tier keys on the number the row draws, not a later one", async ({ page }) => {

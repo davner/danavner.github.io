@@ -882,6 +882,9 @@
 
   [data-tier="gold"] [data-slot="rating-fill"] {
     color: var(--heat-gold);
+  }
+
+  [data-tier="gold"] [data-slot="rating-glow"] {
     text-shadow:
       0 0 0.45em color-mix(in oklab, var(--heat-gold) 60%, transparent),
       0 0 1.1em color-mix(in oklab, var(--heat-gold) 32%, transparent);
@@ -897,12 +900,15 @@
   [data-tier="blue"] [data-slot="rating-fill"] {
     color: var(--heat-blue);
     -webkit-text-stroke: var(--heat-blue-stroke) var(--heat-blue-edge);
+  }
+
+  [data-tier="blue"] [data-slot="rating-glow"] {
     text-shadow:
       0 0 0.4em color-mix(in oklab, var(--heat-blue-edge) 42%, transparent),
       0 0 1.1em color-mix(in oklab, var(--heat-blue-edge) 24%, transparent);
   }
 
-  .dark [data-tier="blue"] [data-slot="rating-fill"] {
+  .dark [data-tier="blue"] [data-slot="rating-glow"] {
     text-shadow:
       0 0 0.35em color-mix(in oklab, var(--heat-blue-edge) 60%, transparent),
       0 0 0.9em color-mix(in oklab, var(--heat-blue-edge) 38%, transparent),
@@ -910,10 +916,24 @@
   }
 
   /*
-   * The five's sheen carrier: a third copy of the row, masked off-canvas at
-   * rest so it is invisible until the crossing moves its mask. Its overflow
-   * clips its own glow at the star rect, deliberately - the share card's
-   * halo cuts at the same edge.
+   * The glow layer itself: transparent glyphs whose shadow is the whole
+   * paint, unclipped where the fill is width-clipped - a bloom that stops in
+   * a straight line reads as a box, not light. Negative z-index tucks it
+   * behind the track and fill inside the rating's own isolated context, the
+   * paint order text-shadow always had.
+   */
+  [data-slot="rating-glow"] {
+    position: absolute;
+    inset: 0 auto 0 0;
+    z-index: -1;
+    white-space: nowrap;
+    pointer-events: none;
+    color: transparent;
+  }
+
+  /*
+   * The five's sheen carrier: another copy of the row, masked off-canvas at
+   * rest so it is invisible until the crossing moves its mask.
    */
   [data-slot="rating-sheen"] {
     position: absolute;
@@ -1380,7 +1400,7 @@
   /* The ladder's glow is screen light, not ink - a grey smudge around a
      star is not a one-ink press. The flattened tokens above already blacken
      the fills and zero the knockout stroke. */
-  [data-tier] [data-slot="rating-fill"] {
-    text-shadow: none;
+  [data-slot="rating-glow"] {
+    display: none;
   }
 }

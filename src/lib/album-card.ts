@@ -252,9 +252,11 @@ export async function renderAlbumCard(album: Album): Promise<Card> {
    * The ladder's ink at card scale (the page's Star Heat treatment): base
    * keeps today's bone fill, and gold and blue bake their glow in as a
    * shadowBlur halo - text-shaped for free, the same grammar as the bloom
-   * the card has always painted. The halo clips with the star rect, and
-   * that mirrors the DOM on purpose: the fill span's overflow clips its own
-   * text-shadow at the same edge.
+   * the card has always painted. The halo draws before the clip and only
+   * over the whole stars, because a bloom cut at the clip rect's straight
+   * edges reads as a box rather than light - the DOM's glow layer escapes
+   * its fill clip the same way, and a fractional star's missing halo is
+   * imperceptible on tiers that start at 4.5.
    */
   const tier = tierFor(album.score);
   const starInk =
@@ -266,24 +268,31 @@ export async function renderAlbumCard(album: Album): Promise<Card> {
           ? palette.ember
           : palette.ink;
 
+  if (tier === "gold" || tier === "blue") {
+    const whole = STAR.repeat(Math.floor(album.score));
+    context.save();
+    context.fillStyle = starInk;
+    if (tier === "blue") {
+      // The wide pass first: two passes are the three-layer feel at canvas scale.
+      context.shadowColor = palette.blueGlowWide;
+      context.shadowBlur = 36;
+      context.fillText(whole, PAD, y + 44);
+      context.shadowColor = palette.blueGlow;
+      context.shadowBlur = 14;
+    } else {
+      context.shadowColor = palette.goldGlow;
+      context.shadowBlur = 14;
+    }
+    context.fillText(whole, PAD, y + 44);
+    context.restore();
+  }
+
   context.save();
   context.beginPath();
   // Tall enough to clear the glyph above and below its baseline, which is what
   // decides whether the clip trims the stars or the row of them.
   context.rect(PAD, y - 8, rowWidth * (album.score / MAX_SCORE), 80);
   context.clip();
-  if (tier === "blue") {
-    // The wide pass first: two passes are the three-layer feel at canvas scale.
-    context.shadowColor = palette.blueGlowWide;
-    context.shadowBlur = 36;
-    context.fillStyle = starInk;
-    context.fillText(row, PAD, y + 44);
-    context.shadowColor = palette.blueGlow;
-    context.shadowBlur = 14;
-  } else if (tier === "gold") {
-    context.shadowColor = palette.goldGlow;
-    context.shadowBlur = 14;
-  }
   context.fillStyle = starInk;
   context.fillText(row, PAD, y + 44);
   context.restore();

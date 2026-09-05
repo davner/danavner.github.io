@@ -9,7 +9,7 @@ import { FilterStatus } from "@/components/filter-status";
 import { FilterToggle } from "@/components/filter-toggle";
 import { Section } from "@/components/page";
 import { SelectControl } from "@/components/select-control";
-import { StatNumber } from "@/components/stat-number";
+import { StatNumber, type StatFormat } from "@/components/stat-number";
 import { coverSrcSet } from "@/lib/covers";
 import {
   ALL,
@@ -29,6 +29,12 @@ import {
 } from "@/lib/dan-fm";
 import { albumUrl } from "@/lib/dan-fm-summary";
 import { MONTHS } from "@/lib/dates";
+
+/* The head's count rolled from a bare template literal, which never
+   grouped, and Intl's default would drift to "1,234" the day the log's
+   thousandth day arrives. Ungrouped on purpose - vinyl's tiles pin the
+   same decision. */
+const UNGROUPED: StatFormat = { useGrouping: false };
 
 /**
  * Every album, newest first, and the controls that narrow it.
@@ -210,7 +216,8 @@ export function DanFmArchive({ albums }: { albums: Album[] }) {
       `${counted(stats.total, "album")} · ${counted(stats.days, "day")}`
     ) : (
       <>
-        <StatNumber value={visible.length} /> of {counted(albums.length, "album")}
+        <StatNumber value={visible.length} format={UNGROUPED} /> of{" "}
+        {counted(albums.length, "album")}
       </>
     );
 

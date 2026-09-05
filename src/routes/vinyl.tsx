@@ -10,7 +10,7 @@ import { PageHeader, PageShell } from "@/components/page";
 import { ScrollingText } from "@/components/scrolling-text";
 import { SelectControl } from "@/components/select-control";
 import { SourceLine } from "@/components/source-line";
-import { StatNumber } from "@/components/stat-number";
+import { StatNumber, type StatFormat } from "@/components/stat-number";
 import {
   ALL,
   SORTS,
@@ -61,6 +61,9 @@ const TITLE = (
  * few bytes at the top of a breakpoint; asking for too few picks a candidate
  * that cannot fill the tile and ships it blurred.
  */
+/** See the tiles comment: today's rendering, made deliberate. */
+const UNGROUPED: StatFormat = { useGrouping: false };
+
 const COVER_SIZES =
   "(min-width: 1152px) 276px, (min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw";
 
@@ -237,6 +240,10 @@ export function Vinyl() {
   // These all follow the owner filter. Candidates in priority order, and a stat
   // only shows once it has something to say, so a one-record shelf never
   // renders "LABELS - 0".
+  //
+  // Ungrouped on purpose: the `String(...)` these tiles rolled from never
+  // grouped, and Intl's default would quietly print "1,234" the day a count
+  // crosses 1000. Fortnite's grouping was a decision; this would be drift.
   const tiles: { label: string; value: number; show: boolean }[] = [
     { label: "Records", value: stats.total, show: true },
     { label: "Discs", value: stats.discs, show: stats.discs > stats.total },
@@ -308,7 +315,7 @@ export function Vinyl() {
             <dl key={tile.label} data-slot="stat" className="bg-background p-5 sm:p-6">
               <dt className="readout-dim">{tile.label}</dt>
               <dd className="display mt-2 text-heading text-balance">
-                <StatNumber value={tile.value} />
+                <StatNumber value={tile.value} format={UNGROUPED} />
               </dd>
             </dl>
           ))}

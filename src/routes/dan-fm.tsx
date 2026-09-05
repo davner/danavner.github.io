@@ -42,99 +42,108 @@ function TodayCard({ album }: { album: Album }) {
   const attribution = album.from ? `From ${album.from}` : "Own pick";
 
   return (
-    <div className="grid gap-8 md:grid-cols-[18rem_minmax(0,1fr)] md:gap-10 lg:grid-cols-[22rem_minmax(0,1fr)]">
-      <div className="sm:max-w-sm md:max-w-none">
-        {album.cover ? (
-          <AlbumCover cover={album.cover} sizes={COVER_SIZES} />
-        ) : (
-          <div className="flex aspect-square w-full items-center justify-center border border-border bg-card/40">
-            <Disc3 className="size-8 text-muted-foreground" aria-hidden />
-          </div>
-        )}
-      </div>
-
-      <div>
-        {/* Which day of the log this is, and which day it was heard. The badge
-            above says only whether the station is still on air; how long ago
-            this was is read here, which is why an off-air badge needs nothing
-            beside it repeating the same thing in words. */}
-        <p className="readout-dim">
-          {longDate(album.date)} · Day {album.ordinal}
-        </p>
-
-        {/* The album's own address. The title is what a reader reaches for to
-            go from the card to the record, and it is the shortest way there:
-            the archive below holds the same link, a scroll and a scan further
-            down. */}
-        <h3 className="display mt-4 text-feature text-balance">
-          <Link to={albumUrl(album)} className="transition-colors hover:text-ember">
-            {album.album}
-          </Link>
-        </h3>
-
-        <p className="mt-4 text-title leading-snug text-muted-foreground text-pretty">
-          {[album.artist, yearLabel(album)].filter(Boolean).join(" · ")}
-        </p>
-
-        <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3">
-          <AlbumScore album={album} />
-
-          {album.shelf ? <Badge variant="ember">{album.shelf}</Badge> : null}
-          <Badge variant="outline">{attribution}</Badge>
+    <div>
+      {/* What identifies the record, and the grid closes after it: this column
+          runs about the sleeve's own height, so the two tracks end together. A
+          review is as long as it was written, and keeping it in here would run
+          it down the narrower track beside a sleeve column empty the whole
+          way. */}
+      <div className="grid gap-8 md:grid-cols-[18rem_minmax(0,1fr)] md:gap-10 lg:grid-cols-[22rem_minmax(0,1fr)]">
+        <div className="sm:max-w-sm md:max-w-none">
+          {album.cover ? (
+            <AlbumCover cover={album.cover} sizes={COVER_SIZES} />
+          ) : (
+            <div className="flex aspect-square w-full items-center justify-center border border-border bg-card/40">
+              <Disc3 className="size-8 text-muted-foreground" aria-hidden />
+            </div>
+          )}
         </div>
 
-        <AlbumTake take={album.take} className="mt-6" />
+        <div>
+          {/* Which day of the log this is, and which day it was heard. The badge
+              above says only whether the station is still on air; how long ago
+              this was is read here, which is why an off-air badge needs nothing
+              beside it repeating the same thing in words. */}
+          <p className="readout-dim">
+            {longDate(album.date)} · Day {album.ordinal}
+          </p>
 
-        {album.genre || album.tags.length > 0 ? (
-          <div className="mt-6 flex flex-wrap items-center gap-2">
-            {album.genre ? <Badge variant="outline">{album.genre}</Badge> : null}
-            {album.tags.map((tag) => (
-              <Badge key={tag} variant="outline">
-                {tag}
-              </Badge>
-            ))}
+          {/* The album's own address. The title is what a reader reaches for to
+              go from the card to the record, and it is the shortest way there:
+              the archive below holds the same link, a scroll and a scan further
+              down. */}
+          <h3 className="display mt-4 text-feature text-balance">
+            <Link to={albumUrl(album)} className="transition-colors hover:text-ember">
+              {album.album}
+            </Link>
+          </h3>
+
+          <p className="mt-4 text-title leading-snug text-muted-foreground text-pretty">
+            {[album.artist, yearLabel(album)].filter(Boolean).join(" · ")}
+          </p>
+
+          <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3">
+            <AlbumScore album={album} />
+
+            {album.shelf ? <Badge variant="ember">{album.shelf}</Badge> : null}
+            <Badge variant="outline">{attribution}</Badge>
           </div>
-        ) : null}
 
-        <AlbumTracks album={album} className="mt-8" />
-
-        {/* Last of the writing, under the spec block rather than over it: the
-            score, the tags and the two tracks are scanned in a second, and a
-            reader who wants them should not have to pass a thousand words to
-            reach them. The actions then sit where the reading ends. */}
-        <AlbumReview review={album.review} className="mt-10" />
-
-        {/* The same pair the album's own page carries under its badges, in the
-            same order and at the same size, so the two surfaces do not offer
-            one album two sets of controls. The row owns the margin rather than
-            either control: the Spotify link is only there on the days the log
-            has an address for the record, and the space under the review is
-            not.
-
-            The share button carries the station's address rather than this
-            album's, because someone sharing the front page is sharing what is
-            on and tomorrow that is a different record. The poster is still this
-            album - it is what is on air at the moment the link is sent. */}
-        <div className="mt-8 flex flex-wrap items-center gap-3">
-          <ShareAlbum album={album} url={`${SITE_URL}/dan-fm`} />
-
-          {/* A plain anchor behind the button styling, and it stays one. An
-              embed or a play button would have this page reach Spotify on load,
-              which `tests/links.spec.ts` fails the build over. */}
-          {album.url ? (
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className="readout rounded-none text-muted-foreground hover:border-ember hover:text-ember"
-            >
-              <a href={album.url} target="_blank" rel="noopener noreferrer">
-                Open on Spotify
-                <ArrowUpRight />
-              </a>
-            </Button>
+          {album.genre || album.tags.length > 0 ? (
+            <div className="mt-6 flex flex-wrap items-center gap-2">
+              {album.genre ? <Badge variant="outline">{album.genre}</Badge> : null}
+              {album.tags.map((tag) => (
+                <Badge key={tag} variant="outline">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
           ) : null}
         </div>
+      </div>
+
+      {/* Out of the grid, where the writing sets its own measure rather than a
+          grid track's, and in the order the album's own page reads it - the
+          verdict, the two tracks, then the long piece - so one album on two
+          surfaces is one album. The review is last of the writing because the
+          score, the tags and the two tracks are scanned in a second, and a
+          reader who wants them should not have to pass a thousand words to
+          reach them. */}
+      <AlbumTake take={album.take} className="mt-10" />
+
+      <AlbumTracks album={album} className="mt-8" />
+      <AlbumReview review={album.review} className="mt-10" />
+
+      {/* The same pair the album's own page carries, in the same order and at
+          the same size, so the two surfaces do not offer one album two sets of
+          controls. They sit where the reading ends rather than under the
+          badges, and the row owns the margin rather than either control: the
+          Spotify link is only there on the days the log has an address for the
+          record, and the space under the review is not.
+
+          The share button carries the station's address rather than this
+          album's, because someone sharing the front page is sharing what is
+          on and tomorrow that is a different record. The poster is still this
+          album - it is what is on air at the moment the link is sent. */}
+      <div className="mt-8 flex flex-wrap items-center gap-3">
+        <ShareAlbum album={album} url={`${SITE_URL}/dan-fm`} />
+
+        {/* A plain anchor behind the button styling, and it stays one. An
+            embed or a play button would have this page reach Spotify on load,
+            which `tests/links.spec.ts` fails the build over. */}
+        {album.url ? (
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="readout rounded-none text-muted-foreground hover:border-ember hover:text-ember"
+          >
+            <a href={album.url} target="_blank" rel="noopener noreferrer">
+              Open on Spotify
+              <ArrowUpRight />
+            </a>
+          </Button>
+        ) : null}
       </div>
     </div>
   );

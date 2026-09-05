@@ -1,6 +1,8 @@
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { ProseAnchor } from "@/components/prose-anchor";
+
 /**
  * A now entry's body, rendered.
  *
@@ -20,25 +22,7 @@ import remarkGfm from "remark-gfm";
 export function NowProse({ body }: { body: string }) {
   return (
     <div className="prose-dan">
-      <Markdown
-        remarkPlugins={[remarkGfm]}
-        components={{
-          // `node` is the mdast node react-markdown hands every override.
-          // Dropped here so the spread below cannot land it on the anchor.
-          a: ({ node, href, children, ...props }) => {
-            const external = href?.startsWith("http");
-            return (
-              <a
-                href={href}
-                {...(external ? { target: "_blank", rel: "noreferrer noopener" } : {})}
-                {...props}
-              >
-                {children}
-              </a>
-            );
-          },
-        }}
-      >
+      <Markdown remarkPlugins={[remarkGfm]} components={{ a: ProseAnchor }}>
         {body}
       </Markdown>
     </div>

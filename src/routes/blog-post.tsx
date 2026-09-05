@@ -9,6 +9,7 @@ import remarkGfm from "remark-gfm";
 import { FactLine } from "@/components/fact-line";
 import { Link } from "@/components/link";
 import { PageHeader, PageShell } from "@/components/page";
+import { ProseAnchor } from "@/components/prose-anchor";
 import { Badge } from "@/components/ui/badge";
 import { CATEGORY_LABEL, formatDate, getPost, posts } from "@/lib/blog";
 import { useDocumentMeta } from "@/lib/use-document-meta";
@@ -138,18 +139,7 @@ export function BlogPost() {
                   </aside>
                 );
               },
-              a: ({ node, href, children, ...props }) => {
-                const external = href?.startsWith("http");
-                return (
-                  <a
-                    href={href}
-                    {...(external ? { target: "_blank", rel: "noreferrer noopener" } : {})}
-                    {...props}
-                  >
-                    {children}
-                  </a>
-                );
-              },
+              a: ProseAnchor,
             }}
           >
             {post.body}

@@ -1,3 +1,4 @@
+import { ArrowRight } from "lucide-react";
 import Markdown from "react-markdown";
 
 import { ProseAnchor } from "@/components/prose-anchor";
@@ -74,9 +75,10 @@ export function AlbumScore({ album }: { album: Album }) {
            screen reader gets "rescored from {score}" and no more - the standing
            value is already the rating's own label, and speaking it here too
            would read the verdict twice. */
-        <span className="readout text-ember">
-          <span className="sr-only">rescored from</span> {album.score}{" "}
-          <span aria-hidden>→ {album.later}</span>
+        <span className="readout inline-flex items-center gap-1 text-ember">
+          <span className="sr-only">rescored from</span> {album.score}
+          <ArrowRight aria-hidden className="size-3" />
+          <span aria-hidden>{album.later}</span>
         </span>
       )}
     </>

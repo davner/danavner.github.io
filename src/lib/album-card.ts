@@ -13,7 +13,7 @@ import {
   toBlob,
   wrap,
 } from "@/lib/card-canvas";
-import type { Album } from "@/lib/dan-fm";
+import { standingScore, type Album } from "@/lib/dan-fm";
 import { plainText } from "@/lib/dan-fm-markdown";
 import { MAX_SCORE } from "@/lib/dan-fm-summary";
 import { tierFor } from "@/lib/rating-heat";
@@ -234,11 +234,12 @@ export async function renderAlbumCard(album: Album): Promise<Card> {
 
   /*
    * The score, drawn the way the page draws it: a full row of stars dimmed to
-   * a track, and the same row over it clipped to the fraction scored. Most of
-   * the log's scores land between whole stars, so a row rounded to whole stars
-   * would print four for a 3.5 and leave the number beside it arguing with the
-   * picture.
+   * a track, and the same row over it clipped to the fraction the album stands
+   * at. Most of the log's scores land between whole stars, so a row rounded to
+   * whole stars would print four for a 3.5 and leave the number beside it
+   * arguing with the picture.
    */
+  const standing = standingScore(album);
   context.font = "400 56px system-ui, sans-serif";
   const row = STAR.repeat(MAX_SCORE);
   // Measured under the face the stars are drawn in, not the mono one set below,
@@ -258,7 +259,7 @@ export async function renderAlbumCard(album: Album): Promise<Card> {
    * its fill clip the same way, and a fractional star's missing halo is
    * imperceptible on tiers that start at 4.5.
    */
-  const tier = tierFor(album.score);
+  const tier = tierFor(standing);
   const starInk =
     tier === "blue"
       ? palette.blue
@@ -269,7 +270,7 @@ export async function renderAlbumCard(album: Album): Promise<Card> {
           : palette.ink;
 
   if (tier === "gold" || tier === "blue") {
-    const whole = STAR.repeat(Math.floor(album.score));
+    const whole = STAR.repeat(Math.floor(standing));
     context.save();
     context.fillStyle = starInk;
     if (tier === "blue") {
@@ -291,7 +292,7 @@ export async function renderAlbumCard(album: Album): Promise<Card> {
   context.beginPath();
   // Tall enough to clear the glyph above and below its baseline, which is what
   // decides whether the clip trims the stars or the row of them.
-  context.rect(PAD, y - 8, rowWidth * (album.score / MAX_SCORE), 80);
+  context.rect(PAD, y - 8, rowWidth * (standing / MAX_SCORE), 80);
   context.clip();
   context.fillStyle = starInk;
   context.fillText(row, PAD, y + 44);
@@ -300,7 +301,15 @@ export async function renderAlbumCard(album: Album): Promise<Card> {
   context.font = '500 34px "JetBrains Mono Variable", ui-monospace, monospace';
   // The readout follows the tier; base keeps the ember it has always worn.
   context.fillStyle = tier === "base" ? palette.ember : starInk;
-  context.fillText(`${album.score} / ${MAX_SCORE}`, PAD + rowWidth + 32, y + 40);
+  // A rescore prints its history the way the page prints it - first read,
+  // arrow, where it stands. The arrow is a drawn glyph where the page sets an
+  // icon, because this line is rendered art rather than DOM text: the canvas
+  // has no lucide, and a glyph in the readout face is the card's own idiom.
+  const readout =
+    album.later === null
+      ? `${album.score} / ${MAX_SCORE}`
+      : `${album.score} → ${album.later} / ${MAX_SCORE}`;
+  context.fillText(readout, PAD + rowWidth + 32, y + 40);
   y += 108;
 
   // The verdict, which is the sentence worth sending, and the front of the long

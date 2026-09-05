@@ -1,9 +1,51 @@
 import { expect, test } from "@playwright/test";
+import { fromMarkdown } from "mdast-util-from-markdown";
 
 import { ANALYTICS_HOSTS } from "../src/lib/analytics";
-import { danFmLinks } from "../src/lib/dan-fm-markdown";
+import { danFmLinks, plainText } from "../src/lib/dan-fm-markdown";
+import { albumUrl } from "../src/lib/dan-fm-summary";
 import { albumsOnDisk } from "./dan-fm";
 import { ROUTES } from "./routes";
+
+type MdastNode = ReturnType<typeof fromMarkdown>["children"][number];
+
+/** Every node in the tree, document order, depth first. */
+function walk(nodes: readonly MdastNode[], visit: (node: MdastNode) => void): void {
+  for (const node of nodes) {
+    visit(node);
+    if ("children" in node) walk(node.children as MdastNode[], visit);
+  }
+}
+
+/**
+ * The hrefs a field's prose draws, in reading order.
+ *
+ * Not `danFmLinks`, which answers a different question: it reports every
+ * written target for validation, so a reference-style definition counts where
+ * it is defined. The page draws an anchor where the reference is used,
+ * resolved against its definition - and an unused definition, or one nothing
+ * defines, draws no anchor at all - so a list a rendered field is compared
+ * against in order has to follow the prose rather than the syntax.
+ */
+function anchorTargets(text: string): string[] {
+  const tree = fromMarkdown(text);
+
+  const definitions = new Map<string, string>();
+  walk(tree.children, (node) => {
+    if (node.type === "definition") definitions.set(node.identifier, node.url);
+  });
+
+  const targets: string[] = [];
+  walk(tree.children, (node) => {
+    if (node.type === "link") targets.push(node.url);
+    else if (node.type === "linkReference") {
+      const url = definitions.get(node.identifier);
+      if (url !== undefined) targets.push(url);
+    }
+  });
+
+  return targets;
+}
 
 /**
  * Internal links and assets are checked on every run: a typo in a route or a
@@ -68,6 +110,65 @@ test.describe("internal links", () => {
         page.getByRole("heading", { level: 1 }),
         `${href} renders the 404 page`,
       ).not.toContainText(/NOTHING AT THESE COORDINATES/i);
+    }
+  });
+
+  test("every link an album renders points where its markdown wrote", async ({ page }) => {
+    /*
+     * The half the two sweeps above cannot see: both read link targets off
+     * the source markdown, or off whatever pages `ROUTES` visits, and prove
+     * each target resolves - nothing compares a rendered anchor's href with
+     * the target written for it. A renderer quietly rewriting one link to a
+     * different valid route would pass every other check in this file. Read
+     * off the DOM in order, so two anchors trading targets fail too. Only
+     * the albums that write links get a page load, which keeps the cost on
+     * the linking albums rather than the log - and hrefs are compared as
+     * strings, so the header's rule stands: nothing external is fetched.
+     */
+    const linked = albumsOnDisk().filter(
+      (album) => anchorTargets(album.take).length > 0 || anchorTargets(album.review).length > 0,
+    );
+
+    // Local courtesy, refused under CI the way `dan-fm-page.spec.ts` refuses
+    // it: `ci.yml` always builds the fixture, which carries a linked review,
+    // so an empty list there means the coverage is gone rather than the log.
+    test.skip(
+      !process.env.CI && linked.length === 0,
+      "no album in the log writes a link into its prose",
+    );
+    expect(linked, "the committed fixture no longer carries a linked review").not.toHaveLength(0);
+
+    for (const album of linked) {
+      await page.goto(albumUrl(album));
+      await expect(page.getByRole("heading", { level: 1, name: album.album })).toBeVisible();
+
+      if (album.take.trim()) {
+        // The take renders as the one paragraph saying its words - no class
+        // names it, and locating on the words finds it however it is set.
+        const take = page.locator("p").and(page.getByText(plainText(album.take), { exact: true }));
+        await expect(take, `${albumUrl(album)} lost the paragraph its take renders as`).toHaveCount(
+          1,
+        );
+
+        expect(
+          await take.locator("a").evaluateAll((links) => links.map((a) => a.getAttribute("href"))),
+          `${albumUrl(album)}: the take's anchors against its markdown`,
+        ).toEqual(anchorTargets(album.take));
+      }
+
+      // Found by `prose-dan` for the reason `dan-fm-page.spec.ts` gives: it
+      // is the site's body-copy contract, not this page's private detail.
+      const review = page.locator(".prose-dan");
+      if (album.review.trim()) {
+        await expect(review, `${albumUrl(album)} lost the block its review renders as`).toHaveCount(
+          1,
+        );
+      }
+
+      expect(
+        await review.locator("a").evaluateAll((links) => links.map((a) => a.getAttribute("href"))),
+        `${albumUrl(album)}: the review's anchors against its markdown`,
+      ).toEqual(anchorTargets(album.review));
     }
   });
 

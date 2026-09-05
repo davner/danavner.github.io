@@ -111,11 +111,14 @@ export function BlogPost() {
             rehypePlugins={[rehypeSlug, [rehypeHighlight, { detect: false }]]}
             components={{
               // A code block that scrolls sideways is unreachable to a keyboard
-              // unless it can take focus, which is most of them on a phone.
+              // unless it can take focus, which is most of them on a phone -
+              // and focusable means it needs a role and a name (WCAG 4.1.2),
+              // or a screen reader lands on an anonymous generic. Generic
+              // because markdown carries no per-block title to lift.
               // `node` is the mdast node react-markdown hands every override.
               // Dropped here so the spread cannot land it on the element.
               pre: ({ node, children, ...props }) => (
-                <pre tabIndex={0} {...props}>
+                <pre tabIndex={0} role="region" aria-label="Code sample" {...props}>
                   {children}
                 </pre>
               ),

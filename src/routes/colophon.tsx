@@ -177,9 +177,13 @@ export function Colophon() {
 
         {/* Focusable for the same reason blog-post.tsx's code blocks are: a
             block that scrolls sideways is unreachable to a keyboard unless it
-            can take focus, and on a phone this one does. */}
+            can take focus, and on a phone this one does. Focusable means it
+            needs a role and a name (WCAG 4.1.2), or a screen reader lands on
+            an anonymous generic. */}
         <pre
           tabIndex={0}
+          role="region"
+          aria-label="Embed snippet"
           className="mt-6 max-w-2xl overflow-x-auto border border-border bg-card p-4 text-sm"
         >
           <code>{EMBED}</code>

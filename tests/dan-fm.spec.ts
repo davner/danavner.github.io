@@ -776,6 +776,7 @@ test.describe("how an album names itself", () => {
     year: 2019,
     genre: "Post-punk",
     score: 4,
+    later: null,
   };
 
   test("the title is the artist and the album", () => {
@@ -784,6 +785,15 @@ test.describe("how an album names itself", () => {
 
   test("the summary names the genre, the year, the score and the day", () => {
     expect(albumSummary(album)).toBe("Post-punk, 2019 · 4 out of 5 · August 20, 2026");
+  });
+
+  test("a rescored album's summary states where it stands", () => {
+    // The preview is one number with no room for history: a link saying 3
+    // while the page's stars draw 4.5 is a link contradicting the page it
+    // opens.
+    expect(albumSummary({ ...album, score: 3, later: 4.5 })).toBe(
+      "Post-punk, 2019 · 4.5 out of 5 · August 20, 2026",
+    );
   });
 
   test("an album with no year still says what it is", () => {

@@ -28,6 +28,8 @@ export interface AlbumLike {
   year: number | null;
   genre: string;
   score: number;
+  /** A second score after living with it. `null` means the first one stands. */
+  later: number | null;
 }
 
 /** The top of the scale, in quarter steps from 1. */
@@ -49,7 +51,12 @@ export function albumTitle(album: Pick<AlbumLike, "artist" | "album">): string {
 export function albumSummary(album: AlbumLike): string {
   return [
     [album.genre, album.year].filter(Boolean).join(", "),
-    `${album.score} out of ${MAX_SCORE}`,
+    // One number with no room for history, so it is the standing score: a
+    // preview must not contradict the stars on the page it opens, and the
+    // first read belongs to surfaces that can draw both. Spelled inline
+    // because `standingScore` lives in `./dan-fm`, behind the virtual module
+    // this file exists to avoid.
+    `${album.later ?? album.score} out of ${MAX_SCORE}`,
     longDate(album.date),
   ]
     .filter(Boolean)

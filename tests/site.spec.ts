@@ -290,7 +290,7 @@ test.describe("the header", () => {
      * `group-hover:` matches any ancestor carrying the class, and Radix's own
      * list carries a bare `group`. Spelled unnamed on a bar item it therefore
      * reached every label in the bar at once, so pointing at Blog lit Now,
-     * About, Career and Hobbies with it and the bar stopped saying which one
+     * About, Career and Collections with it and the bar stopped saying which one
      * the pointer was on.
      *
      * The comparison is against each label's own resting colour rather than
@@ -2313,7 +2313,7 @@ test.describe("focus indicators", () => {
        *
        * It exists because the sweep cannot see a closed disclosure, and
        * `ui/navigation-menu.tsx` shipped a rule that zeroed both the ring and
-       * the outline on every link in the Hobbies panel - written against
+       * the outline on every link in the Collections panel - written against
        * `:focus`, which out-specifies the link's own `:focus-visible`
        * indicator, so it took the ring away from keyboard users specifically.
        * The sweep reported green throughout.
@@ -3029,7 +3029,7 @@ test.describe("fortnite", () => {
     await expect(page.getByText(/no stats yet/i)).toBeVisible();
   });
 
-  test("is reachable from the hobbies group and the footer", async ({ page }) => {
+  test("is reachable from the collections group and the footer", async ({ page }) => {
     await page.goto("/");
     await expect(page.locator('a[href="/fortnite"]').first()).toBeAttached();
   });

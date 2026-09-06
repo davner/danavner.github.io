@@ -45,6 +45,9 @@ const NEWEST_TITLE = NEWEST?.album ?? "";
 // The score the stars draw: the standing one, where a rescore exists.
 const NEWEST_SCORE = NEWEST?.later ?? NEWEST?.score ?? 0;
 const NEWEST_REVIEW = NEWEST?.review ?? "";
+// The take with its marks stripped, which is how the paragraph reads once it
+// has been rendered - the words are the handle on where that block sits.
+const NEWEST_TAKE = plainText(NEWEST?.take ?? "");
 // The sleeve, which is the grid track the card's shape is measured against.
 const NEWEST_COVER = NEWEST?.cover ?? "";
 
@@ -530,6 +533,147 @@ test.describe("the featured card's shape", () => {
         `${what} starts beside the sleeve rather than under it`,
       ).toBeGreaterThanOrEqual(sleeve!.y + sleeve!.height - 1);
     }
+  });
+});
+
+/**
+ * The record's blocks in the order both surfaces set them down, and how to
+ * find each one on a surface that is showing it.
+ *
+ * Which of them are drawn at all is the row's own decision - an album with no
+ * address on the sheet has no Spotify link, and a record with nothing worth
+ * skipping names one track instead of two - so what the reading is held
+ * against is derived from the featured album rather than written out.
+ *
+ * One mark per block rather than one per line. The identity block's own lines
+ * are set down differently by the two on purpose: the card prints the day
+ * above the title, the album's page under the artist. A mark on each of those
+ * would fail on a difference neither surface is wrong about.
+ */
+const RECORD: { mark: string; carried: boolean; find: (scope: Locator | Page) => Locator }[] = [
+  {
+    mark: "the title",
+    carried: NEWEST_TITLE !== "",
+    find: (scope) => scope.getByRole("heading", { name: NEWEST_TITLE, exact: true }),
+  },
+  {
+    mark: "the score",
+    carried: true,
+    find: (scope) => scope.getByRole("img", { name: /^Rated / }),
+  },
+  {
+    mark: "the share button",
+    carried: true,
+    find: (scope) => scope.getByRole("button", { name: /^Share/ }),
+  },
+  {
+    mark: "the Spotify link",
+    carried: Boolean(NEWEST?.url),
+    find: (scope) => scope.getByRole("link", { name: /^Open on Spotify/ }),
+  },
+  {
+    mark: "the take",
+    carried: NEWEST_TAKE !== "",
+    // Found by its own words, so the block is the take wherever it is set
+    // rather than whatever is currently wearing the lede step.
+    find: (scope) => scope.locator("p", { hasText: NEWEST_TAKE }),
+  },
+  {
+    mark: "the two tracks",
+    carried: Boolean(NEWEST?.standout.name || NEWEST?.skip.name),
+    find: (scope) => scope.locator("dl"),
+  },
+  {
+    mark: "the review",
+    carried: NEWEST_REVIEW !== "",
+    find: (scope) => review(scope),
+  },
+];
+
+/** The blocks the featured album is actually asking a surface to draw. */
+const READS = RECORD.filter((block) => block.carried).map((block) => block.mark);
+
+/**
+ * Whether that album has anything that is read rather than glanced at. With no
+ * take, no tracks and no review there is nothing for the action row to sit
+ * above, and every arrangement of what is left reads the same.
+ */
+const WRITTEN_UP = Boolean(
+  NEWEST?.take || NEWEST?.review || NEWEST?.standout.name || NEWEST?.skip.name,
+);
+
+/**
+ * The record's blocks in the order the document holds them, on one surface.
+ *
+ * Document order rather than painted position: it is the order a screen reader
+ * and the tab key take the record in, and it is one claim at every width -
+ * where the card's own geometry is a measurement, and is taken at 1440 above.
+ */
+async function readingOrder(scope: Locator | Page): Promise<string[]> {
+  const placed: { mark: string; at: number }[] = [];
+
+  for (const block of RECORD) {
+    if (!block.carried) continue;
+
+    const found = block.find(scope);
+    /*
+     * A block the row carries and the surface never drew drops out of the
+     * reading here and fails the comparison as a gap in it, rather than
+     * waiting out an auto-wait for an element that is not coming.
+     */
+    if ((await found.count()) === 0) continue;
+
+    placed.push({
+      mark: block.mark,
+      // Its place among every element on the page, which is the reading of
+      // "before" that survives a block moving from one column to another.
+      at: await found.evaluate((el) => [...document.querySelectorAll("*")].indexOf(el)),
+    });
+  }
+
+  return placed.sort((first, second) => first.at - second.at).map((block) => block.mark);
+}
+
+test.describe("the record's reading order", () => {
+  test("the card and the album's own page read the record in one order", async ({ page }) => {
+    /*
+     * Two surfaces draw one record - the station's card and the permalink a
+     * share link lands on - and the marks they draw it with are one component.
+     * What each still decides for itself is where the action row goes, so this
+     * is the half of the record that is written out twice and can drift.
+     *
+     * Both surfaces are read rather than one, because the drift is only ever
+     * in one of them: a card pinned on its own stays right while the album's
+     * page moves, and the record is read two ways round again. Held against
+     * the order itself rather than against each other for the same reason
+     * from the other end - two surfaces that moved together still agree, and
+     * agreeing on the wrong order is not the contract. What a reader is owed
+     * is what the record is, then what there is to do with it, then the
+     * writing, whichever of the two they arrived at.
+     */
+    test.skip(
+      !process.env.CI && !WRITTEN_UP,
+      "the featured album carries no writing, so nothing sits under the action row",
+    );
+    expect(
+      WRITTEN_UP,
+      "the featured album has no take, no tracks and no review - nothing below is being asked",
+    ).toBe(true);
+
+    await openDanFm(page);
+
+    expect(
+      await readingOrder(today(page)),
+      "the front page's card sets the record down in another order",
+    ).toEqual(READS);
+
+    await page.goto(albumUrl(NEWEST!));
+    await page.getByRole("heading", { level: 1, name: NEWEST_TITLE }).waitFor();
+
+    expect(
+      await readingOrder(page),
+      "the album's own page sets the record down in another order",
+    ).toEqual(READS);
   });
 });
 

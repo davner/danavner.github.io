@@ -1532,6 +1532,105 @@ test.describe("now", () => {
       .evaluateAll((els) => els.map((el) => el.textContent ?? ""));
     for (const stamp of stamps) expect(stamp).not.toMatch(/photos?/i);
   });
+
+  test("the archive takes the space beside the measure, not the measure itself", async ({
+    page,
+  }) => {
+    /*
+     * `.prose-grid` states the reading measure as its first track and hands the
+     * rest of the shell to a child asking for `.prose-full`, which the archive
+     * does. That escape hatch fails silently: a typo in the class, a refactor
+     * moving the section out of the grid, the rule renamed, and the archive
+     * renders at the measure with every other assertion on this page still
+     * passing. The rail is what needs the room - at the measure its dates
+     * scroll sideways in their own pane instead of sitting in one row.
+     *
+     * The other direction is already swept: `tests/responsive.spec.ts` loads
+     * `/now` at eleven widths and fails any of them that scrolls the page
+     * sideways, which is what a grid wider than its shell does.
+     */
+    await page.setViewportSize({ width: 1280, height: 900 });
+
+    /*
+     * Counted off the entries rather than off the section, so a section that
+     * stopped being a named region fails below instead of skipping here - the
+     * skip has to mean "nothing is archived" and nothing else. CI's seeded
+     * build always carries entries, so it runs there.
+     */
+    const archived = page.locator("[data-slot=now-archived]");
+    test.skip((await archived.count()) === 0, "nothing archived - no section to widen");
+
+    const archive = page.getByRole("region", { name: /before this/i });
+    await expect(archive, "the archive is not a region named after its heading").toHaveCount(1);
+
+    const measured = await archive.evaluate((section) => ({
+      archive: section.getBoundingClientRect().width,
+      // Read off the page rather than written down here: the shell's max width
+      // and the measure are both free to change without this test holding an
+      // opinion on what they are, only on how they relate.
+      shell: (section.parentElement as HTMLElement).getBoundingClientRect().width,
+      measure: document.querySelector("main .prose-dan")!.getBoundingClientRect().width,
+    }));
+
+    // The premise. Below the measure the first track is the whole column and
+    // there is no space beside it, so both assertions after this would hold on
+    // a phone over a layout that had stopped working.
+    expect(measured.measure, "the measure already fills the shell").toBeLessThan(
+      measured.shell - 1,
+    );
+    expect(
+      measured.archive,
+      "the archive sits at the reading measure - `.prose-full` is not applying",
+    ).toBeGreaterThan(measured.measure + 1);
+    expect(
+      measured.shell - measured.archive,
+      "the archive stops short of the space beside the measure",
+    ).toBeLessThanOrEqual(1);
+  });
+
+  test("an archived entry's writing stays at the measure its section left", async ({ page }) => {
+    /*
+     * `.prose-full` frees the block and not the writing inside it, so
+     * `NowTimeline` caps each archived body at the measure again. Nothing else
+     * pins that cap: drop it and the archive reads at the pane's full width -
+     * the line length the measure exists to prevent - while the page still
+     * renders, still fits, and still passes everything else here.
+     */
+    await page.setViewportSize({ width: 1280, height: 900 });
+
+    const archived = page.locator("[data-slot=now-archived]");
+    test.skip((await archived.count()) === 0, "nothing archived - no body to cap");
+
+    const measure = await page
+      .locator("main .prose-dan")
+      .first()
+      .evaluate((el) => el.getBoundingClientRect().width);
+
+    const bodies = await archived.locator(".prose-dan").evaluateAll((els) =>
+      els.map((el) => ({
+        width: el.getBoundingClientRect().width,
+        // The entry is what the body would fill uncapped, so it says whether
+        // the cap is holding anything back at this width.
+        room: (el.closest("li") as HTMLElement).getBoundingClientRect().width,
+      })),
+    );
+
+    expect(bodies.length, "the archive rendered no bodies to measure").toBe(await archived.count());
+    // Skipped rather than asserted, so this test fails for its own reason and
+    // not for the one above: with the section at the measure the entries have
+    // no more room than the measure and the cap cannot be seen doing anything.
+    test.skip(
+      !bodies.some((body) => body.room > measure + 1),
+      "the archive is no wider than the measure - nothing for the cap to hold back",
+    );
+
+    for (const body of bodies) {
+      expect(
+        body.width,
+        `an archived body runs to ${Math.round(body.width)}px in ${Math.round(body.room)}px of room - past the ${Math.round(measure)}px measure`,
+      ).toBeLessThanOrEqual(measure + 1);
+    }
+  });
 });
 
 test.describe("comics", () => {

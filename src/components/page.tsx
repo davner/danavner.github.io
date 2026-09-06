@@ -88,7 +88,12 @@ export function PageHeader({
         </div>
       ) : null}
 
-      <h1 className={cn("display", TITLE_SIZE[size])}>{title}</h1>
+      {/* `display-stack` on the block rather than on the lines inside it: a
+          title that stacks is written as spans at the call site, and the
+          clearance between them is not something every call site can be
+          trusted to remember. A single-line title has no siblings to space,
+          so carrying it here costs that title nothing. */}
+      <h1 className={cn("display display-stack", TITLE_SIZE[size])}>{title}</h1>
 
       {/* `mt-6` is the standing gap under a page title, whatever follows it -
           a lede here, a fact line on the detail pages, the kicker on the

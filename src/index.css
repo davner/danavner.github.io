@@ -445,6 +445,25 @@
     text-transform: uppercase;
   }
 
+  /*
+   * Clearance between the lines of a heading that stacks them.
+   *
+   * Anton's caps measure 0.8599em against `.display`'s 0.86 leading, so the lower
+   * line's cap line arrives exactly on the upper line's baseline and the two
+   * blocks of ink meet with nothing between them. Two things then cross the
+   * seam, and they scale differently: the round caps' optical overshoot, which
+   * is a fraction of the size, and half of the 1.5px stroke an outlined line is
+   * drawn with, which is not - so the clearance carries a term for each, the
+   * px term sized to leave a hairline of air at the smallest step this reaches.
+   *
+   * Space rather than leading. `.display`'s 0.86 is what makes the face a
+   * poster and is inherited by every bare display step, so it is not one
+   * heading's to move - see DESIGN.md, the Bare Display Step Rule.
+   */
+  .display-stack > * + * {
+    margin-top: calc(0.04em + 1.5px);
+  }
+
   .display-outline {
     -webkit-text-stroke: 1.5px var(--foreground);
   }

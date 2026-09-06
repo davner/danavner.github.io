@@ -137,16 +137,9 @@ export function Home() {
             than left to the browser: one line of "DAN AVNER" is wider than the
             measure at every viewport, so the browser would put the break in the
             same place with a chance of overflowing on a face that fell back. */}
-        <h1 className="display text-hero">
+        <h1 className="display display-stack text-hero">
           <span className="block">Dan</span>
-          {/* Anton's caps measure 0.8599em against the face's 0.86 leading, so
-              a solid line meets the outline stacked under it exactly and the
-              1.5px stroke crosses into the block above, over the apex of the
-              "A". Enough clearance to read as clearance against that stroke at
-              the smallest size this step reaches, and per-element: `.display`'s
-              leading is the one every bare display step inherits, and is not
-              the hero's to move. */}
-          <span className="display-outline mt-[0.045em] block">Avner</span>
+          <span className="display-outline block">Avner</span>
         </h1>
 
         {/* The photo sits beside the copy from `md` up, not from `lg`. A plate

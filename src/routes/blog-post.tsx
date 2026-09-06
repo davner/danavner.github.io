@@ -11,7 +11,7 @@ import { Link } from "@/components/link";
 import { PageHeader, PageShell } from "@/components/page";
 import { ProseAnchor } from "@/components/prose-anchor";
 import { Badge } from "@/components/ui/badge";
-import { CATEGORY_LABEL, formatDate, getPost, posts } from "@/lib/blog";
+import { CATEGORY_LABEL, type Post, formatDate, getPost, posts } from "@/lib/blog";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 import { NotFound } from "@/routes/not-found";
 
@@ -51,9 +51,17 @@ export function BlogPost() {
   const { slug } = useParams();
   const post = getPost(slug);
 
-  useDocumentMeta(post?.title ?? "Not found", post?.summary ?? "");
-
+  // A dead post link is a dead page rather than a dead entry in a log, so this
+  // is the one section that answers an unknown slug with the not-found page
+  // instead of redirecting to its index.
   if (!post) return <NotFound />;
+
+  // Split so the not-found branch can return before any hook runs.
+  return <PostBody post={post} />;
+}
+
+function PostBody({ post }: { post: Post }) {
+  useDocumentMeta(post.title, post.summary);
 
   const index = posts.findIndex((entry) => entry.slug === post.slug);
   const newer = index > 0 ? posts[index - 1] : undefined;

@@ -1,66 +1,16 @@
+import { siteIndex } from "virtual:site-index";
+
 import { ArrowRight, ArrowUpRight, CheckIcon } from "lucide-react";
 
-import { BandList } from "@/components/band-list";
 import { FramedPhoto } from "@/components/framed-photo";
 import { Link } from "@/components/link";
 import { Marquee } from "@/components/marquee";
 import { Section } from "@/components/page";
 import { SocialLinks } from "@/components/social-links";
 import { profile } from "@/content/profile";
-import { posts } from "@/lib/blog";
-import { formatShowDate, showLocation, showStats, supportFor } from "@/lib/shows";
-import { NOW_DESCRIPTION } from "@/lib/site";
+import { ALL_SECTIONS, type Section as SiteSection } from "@/lib/site";
+import { NO_ROW } from "@/lib/site-index";
 import { useDocumentMeta } from "@/lib/use-document-meta";
-
-const INDEX = [
-  {
-    to: "/now",
-    title: "Now",
-    // The same sentence the page and its link preview use, so the three cannot
-    // describe it differently depending on where you meet it.
-    blurb: NOW_DESCRIPTION,
-  },
-  {
-    to: "/about",
-    title: "About",
-    blurb: "Alexis, Milly and Penny, shows, records, comics, Legos, and one bowling statistic.",
-  },
-  {
-    to: "/career",
-    title: "Career",
-    blurb: "The day job, and the decade of telescope software behind it.",
-  },
-  {
-    to: "/blog",
-    title: "Blog",
-    blurb: "Notes on whatever has my attention, which is usually not work.",
-  },
-  {
-    to: "/shows",
-    title: "Shows",
-    blurb: "Every gig I have been to since I started keeping track, logged and rated.",
-  },
-  {
-    to: "/vinyl",
-    title: "Vinyl",
-    blurb: "Every record Alexis and I own, pulled straight from the Discogs shelf.",
-  },
-  {
-    to: "/comics",
-    title: "Comics",
-    blurb: "Every run on the shelf, what is waiting at the shop, and what I still want.",
-  },
-  {
-    to: "/fortnite",
-    title: "Fortnite",
-    blurb: "Wins, kills and K/D, read nightly and kept season by season.",
-  },
-  {
-    to: "/dan-fm",
-    title: "dan.fm",
-    blurb: "One album a day, with a review, a favourite track, and a score out of five.",
-  },
-];
 
 const TICKER = [
   "Live music",
@@ -77,11 +27,97 @@ const TICKER = [
   "Goof boy",
 ];
 
+/**
+ * One section on the index: its name, what it holds, and what it last gained.
+ *
+ * The last part comes from `virtual:site-index`, computed at build time, rather
+ * than from the collections themselves. This page is the eager landing chunk
+ * every route loads, and the collections it indexes are ~80 kB of payload plus
+ * module-level work a bundler cannot shake out, to print nine lines.
+ *
+ * What a row carries is the digest's decision, not this component's: a section
+ * with nothing logged has no readout at all, a record and a comic have no page
+ * here to link to, and a Fortnite season has no date because a season is a
+ * period rather than something that happened.
+ */
+function SectionRow({ section }: { section: SiteSection }) {
+  const row = siteIndex[section.to] ?? NO_ROW;
+
+  return (
+    <li
+      data-slot="index-row"
+      className="group relative border-b border-border py-6 transition-colors hover:bg-card/60 sm:py-8"
+    >
+      {/* One arrow, placed by `order` rather than rendered twice: it sits on
+          the name's line while the row is stacked, and at the far end of the
+          row once the description moves alongside the name.
+
+          The row's whole area is the section's link, drawn by the name's
+          `::after`. Nothing between that pseudo-element and the `li` may take a
+          transform - a transformed ancestor becomes its containing block and
+          shrinks the target to the name - which is why the hover shift sits on
+          the span inside the link rather than on the link itself. */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-4 sm:gap-x-8 lg:flex-nowrap">
+        <Link to={section.to} className="flex after:absolute after:inset-0">
+          <span className="display text-feature transition-all duration-200 group-hover:translate-x-1 group-hover:text-ember">
+            {section.label}
+          </span>
+        </Link>
+
+        <ArrowUpRight className="ml-auto size-5 shrink-0 text-muted-foreground transition-all duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-ember sm:size-6 lg:order-2 lg:ml-0" />
+
+        <div className="w-full min-w-0 lg:order-1 lg:ml-auto lg:w-auto lg:max-w-md lg:text-right">
+          {/* The same sentence the nav panel gives this section, and shown at
+              every width: nine bare display words tell a first-time reader what
+              "dan.fm" and "Fortnite" are, which is nothing. */}
+          <p
+            data-slot="index-blurb"
+            className="text-sm leading-relaxed text-muted-foreground text-pretty"
+          >
+            {section.blurb}
+          </p>
+
+          {row.latest ? (
+            <p className="mt-3 text-sm leading-relaxed text-pretty">
+              {row.href ? (
+                /* Underlined at rest rather than coloured on hover: the link
+                   sits in a run of body copy, so a cue held back until a
+                   pointer arrives leaves a keyboard or touch reader meeting a
+                   control as plain text (WCAG 1.4.1). The ring is pushed out
+                   past the underline for `.readout-link`'s reason - at the
+                   standing offset its lower edge lands on the underline, and
+                   the two read as one thick rule. */
+                <Link
+                  to={row.href}
+                  className="relative underline decoration-muted-foreground underline-offset-4 transition-colors hover:text-ember hover:decoration-ember focus-visible:outline-offset-4"
+                >
+                  {row.latest}
+                </Link>
+              ) : (
+                row.latest
+              )}
+            </p>
+          ) : null}
+
+          {row.date || row.tally ? (
+            <p className="readout-dim mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 lg:justify-end">
+              {row.date ? <time dateTime={row.date}>{row.dateLabel}</time> : null}
+              {row.date && row.tally ? (
+                <span className="text-ember" aria-hidden>
+                  ·
+                </span>
+              ) : null}
+              {row.tally ? <span>{row.tally}</span> : null}
+            </p>
+          ) : null}
+        </div>
+      </div>
+    </li>
+  );
+}
+
 export function Home() {
   useDocumentMeta("Dan Avner", `${profile.greeting} ${profile.blurb}`);
-
-  const latestPost = posts[0];
-  const latestShow = showStats.latest;
 
   return (
     <>
@@ -200,86 +236,10 @@ export function Home() {
       <div className="mx-auto max-w-6xl px-4 pt-20 pb-8 sm:px-6">
         <Section>
           <ul className="border-t border-border">
-            {INDEX.map((entry) => (
-              <li key={entry.to}>
-                <Link
-                  to={entry.to}
-                  className="group flex items-center gap-4 border-b border-border py-6 transition-colors hover:bg-card/60 sm:gap-8 sm:py-8"
-                >
-                  <span className="display text-feature transition-all duration-200 group-hover:translate-x-1 group-hover:text-ember">
-                    {entry.title}
-                  </span>
-                  <span className="ml-auto hidden max-w-sm text-right text-sm leading-relaxed text-muted-foreground text-pretty lg:block">
-                    {entry.blurb}
-                  </span>
-                  <ArrowUpRight className="size-5 shrink-0 text-muted-foreground transition-all duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-ember sm:size-6" />
-                </Link>
-              </li>
+            {ALL_SECTIONS.map((section) => (
+              <SectionRow key={section.to} section={section} />
             ))}
           </ul>
-        </Section>
-
-        <Section
-          title="Latest"
-          action={
-            <Link
-              to="/blog"
-              className="readout text-muted-foreground transition-colors hover:text-ember"
-            >
-              All posts →
-            </Link>
-          }
-        >
-          <div className="grid gap-px border border-border bg-border md:grid-cols-2">
-            {latestPost ? (
-              <Link
-                to={`/blog/${latestPost.slug}`}
-                className="group flex flex-col bg-background p-6 transition-colors hover:bg-card/60 sm:p-8"
-              >
-                <p className="readout text-ember">Latest post</p>
-                <p className="display mt-4 text-heading text-balance transition-colors group-hover:text-ember">
-                  {latestPost.title}
-                </p>
-                <p className="mt-4 flex-1 leading-relaxed text-muted-foreground text-pretty">
-                  {latestPost.summary}
-                </p>
-                <p className="readout-dim mt-6 flex items-center gap-2">
-                  Read
-                  <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
-                </p>
-              </Link>
-            ) : null}
-
-            {latestShow ? (
-              <Link
-                to="/shows"
-                className="group flex flex-col bg-background p-6 transition-colors hover:bg-card/60 sm:p-8"
-              >
-                <p className="readout text-ember">Last show</p>
-                <p className="display mt-4 text-heading text-balance transition-colors group-hover:text-ember">
-                  {latestShow.title}
-                </p>
-                <p className="mt-4 flex-1 leading-relaxed text-muted-foreground text-pretty">
-                  {supportFor(latestShow).length ? (
-                    <>
-                      <span className="text-ember">w/</span>{" "}
-                      <BandList bands={supportFor(latestShow)} />
-                      {" - "}
-                    </>
-                  ) : null}
-                  {showLocation(latestShow)}
-                </p>
-                <p className="readout-dim mt-6 flex items-center gap-2">
-                  {[formatShowDate(latestShow), latestShow.date.slice(0, 4)]
-                    .filter(Boolean)
-                    .join(" ")}
-                  <span className="text-ember">·</span>
-                  {showStats.total} logged
-                  <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
-                </p>
-              </Link>
-            ) : null}
-          </div>
         </Section>
       </div>
     </>

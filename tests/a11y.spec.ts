@@ -57,6 +57,13 @@ type FindingNode = Finding["nodes"][number];
  * pixels instead. Everything else is gated, on every route and on every state
  * in `OPEN_STATES`, in both themes.
  *
+ * The outlined display type is the part of that slice this allowance cannot be
+ * narrowed to cover. It is `color: transparent` over a `-webkit-text-stroke`,
+ * which axe has no model of at all: it composites the transparent fill over the
+ * background, reports `contrastRatio: 0`, and reaches no verdict whatever is
+ * behind it. `tests/display-ink.spec.ts` measures those from the painted
+ * pixels, since nothing here ever will.
+ *
  * Use `withTags` to change what runs. `disableRules` is not the way to widen
  * this allowlist, but not because it would misbehave: measured in
  * `@axe-core/playwright` 4.12.1, `options()` at dist/index.js:170 assigns

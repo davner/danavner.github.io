@@ -347,6 +347,16 @@ being shaken out, would make the whole site slower to show anything. A section
 with nothing logged gets a row that says so rather than no row at all, which is
 the state of a checkout the fetch jobs have never run against.
 
+`home.tsx` prints one row per entry in `ALL_SECTIONS`, nine of them, each
+carrying the section's name, the same one-line `blurb` the nav panel gives it,
+that section's newest item, and a readout of the item's date and the section's
+tally. Everything after the name is conditional on the digest having something
+to say, so an empty section prints its blurb and stops. A row's newest item is
+set as plain text rather than as a link where its page is the section's own -
+`rowFor` in `src/lib/site-index.ts` settles that for every row rather than
+leaving each row to settle it, and `DESIGN.md` says why under The Section
+Index.
+
 **A caller that turns a reader's output into titles or URLs drops drafts
 itself.** `readPosts` returns them, because the dev server wants them. So the
 site index filters them out of the home page's newest-post row and out of the

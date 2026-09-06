@@ -329,7 +329,8 @@ it reads as a machine talking.
 A single centred column, `max-w-6xl`, with `1rem` gutters rising to `1.5rem`
 above the small breakpoint, and `3rem` of space above the page title rising to
 `4rem`. Long-form reading is capped narrower, around `max-w-2xl`, independent of
-the shell.
+the shell. The landing page is that column twice with a full-bleed ticker
+between: the hero above it, and the section index below.
 
 Vertical rhythm is coarse and consistent. `1.5rem` is the standing gap under a
 page title whatever follows it. Paragraphs in prose sit `1.25rem` apart, section
@@ -718,6 +719,40 @@ Two exceptions, stated here so the pair does not read as covering everything.
   `pretty` keeps it off a last line of one word. Every other figure is a count
   and takes the default.
 
+### The Section Index
+
+The lower half of the landing page: one row per section, nine of them, and the
+only view on the site that says what every section holds at once.
+
+- **A row carries four things**, each conditional on the digest behind it having
+  something to say - the section's name in the display face, the one-line
+  descriptor the nav panel gives that same section, the newest item in it, and a
+  readout of that item's date and the section's tally. A section with nothing
+  logged prints its name and its descriptor and draws no empty readout under
+  them.
+- **The descriptor is shown at every width**, not folded away on a phone. Nine
+  bare display words tell a first-time reader what "dan.fm" and "Fortnite" are,
+  which is nothing.
+- **The whole row is the section's link**, drawn by the name's `::after`
+  stretched over the `li` rather than by an anchor wrapping the row. Nothing
+  between that pseudo-element and the `li` may take a transform: a transformed
+  ancestor becomes the pseudo-element's containing block and shrinks the target
+  back to the name alone. That is why the hover shift sits on a span inside the
+  link and not on the link, and it is the thing to check before putting any
+  motion on a row.
+- **A row whose newest item has no page of its own prints that item as plain
+  text.** Usually the item is a link to its own page. `/vinyl` and `/fortnite`
+  have always printed theirs flat, since there is no `/vinyl/:id` route and a
+  Fortnite season is a tab on its own page rather than a page. `/now` is the
+  one that has to be decided rather than observed: it prints its current entry
+  instead of listing it, so that entry's page is the row's own destination, and
+  a second control onto it is a tab stop that arrives nowhere new - announcing
+  itself, since a now entry carries no title, as half a sentence of its prose.
+  `rowFor` in `src/lib/site-index.ts` drops the `href` of any row pointing at
+  its own section, applied to every row rather than written into the one that
+  needs it, so the next section whose items have no pages cannot ship the same
+  link by writing the obvious thing.
+
 ### Inputs and Fields
 
 - Hairline border on the page background, square, mono or body type depending on
@@ -733,9 +768,8 @@ Two exceptions, stated here so the pair does not read as covering everything.
   second click, on Escape, on a link, or on a press outside. On small screens
   the nav collapses into a sheet.
 - **The one group is "Collections"**, which is the word `src/` already uses for
-  it internally in six places. A name on screen that differs from the name in
-  the source is a synonym somebody has to keep in step, and one name is cheaper
-  than two.
+  it internally. A name on screen that differs from the name in the source is a
+  synonym somebody has to keep in step, and one name is cheaper than two.
 - **Every item in the panel carries a descriptor**, one line saying what that
   section holds. It is the same string the home page's index prints, read from
   `Section.blurb` in `lib/site.ts`, so a section cannot describe itself two ways

@@ -172,14 +172,21 @@ deploys included, so the number advances several times a day on its own. A
 build without the variable prints "Proof copy" instead.
 
 The Playwright suite runs against the **production build**, on desktop and
-mobile viewports, and covers four things:
+mobile viewports, and covers:
 
 - **Behaviour** - routing, titles, the writing filter and its URL state, theme
   persistence, markdown rendering, and the derived show stats.
-- **Accessibility** - axe (WCAG 2.2 A and AA) on every route in _both_ themes.
-  The palettes are independent, and contrast is the easiest thing to break.
+- **Accessibility** - axe (WCAG 2.2 A and AA) in _both_ themes, over every route
+  as it loads and over the states a route load never reaches: the phone menu,
+  the collections panel, the sort listbox, the share popover, the carousel's
+  last slide, every year on the show log. The palettes are independent, and
+  contrast is the easiest thing to break.
 - **Links and assets** - every in-site link resolves to a real route rather
   than the SPA's 404 fallback, and no image is broken.
+- **Layout** - no route scrolls sideways and no figure spills its tile, at each
+  of eleven widths; and every page prints as what it is.
+- **Feeds** - every feed the manifest declares is written, parses, resolves its
+  own links, and carries no draft.
 - **No third parties** - fails if any request leaves the origin except the
   GoatCounter beacon, which keeps the claim above honest.
 
@@ -1292,9 +1299,15 @@ which is why button labels on ember are near-black rather than bone. Across the
 13 routes in both themes it decides 1,896 of 2,292 contrast nodes and fails none
 of them. The other 396 - 17% - come back `incomplete` rather than pass or fail,
 mostly because the grain overlay in `components/backdrop.tsx` is a background
-image and axe will not guess what is behind one. `color-contrast` is the only
-undecided result `tests/a11y.spec.ts` tolerates; any other rule reaching no
-verdict fails the build. That 17% is not covered by CI at all and has to be
+image and axe will not guess what is behind one. `tests/a11y.spec.ts` tolerates
+an undecided result for three rules and no others: `color-contrast` at every
+node; `aria-valid-attr-value` only where every check on the node reports
+`controlsWithinPopup`, which is axe declining to resolve the share popover
+trigger's `aria-controls`; and `aria-prohibited-attr` only where a role-less
+`div`'s single prohibited attribute is the `aria-labelledby` Radix hangs on a
+navigation panel. Either of the last two anywhere else fails the build, as does
+any other rule reaching no verdict. That 17% is not covered by CI at all and has
+to be
 measured from painted pixels by hand. `PRODUCT.md` breaks the 396 down.
 
 ---

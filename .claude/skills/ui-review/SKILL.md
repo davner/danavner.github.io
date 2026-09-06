@@ -41,9 +41,13 @@ Interact with it: click through, tab through, resize.
 internal links, broken images, and horizontal overflow. Run it before claiming a
 visual change is safe.
 
-Know what it does not see. It only ever looks at a route as it loads, so nothing
-behind a sheet, a listbox, a popover or a collapsed `<details>` is scanned. And
-the grain overlay leaves about one contrast node in ten undecided, which axe
-reports as `incomplete` rather than pass or fail. A green run is not evidence
-about contrast over the grain, or about any state you have to open to reach:
-look at those yourself.
+Know what it does not see. It scans each route as it loads and then the states
+listed in `tests/open-states.ts` - the phone menu, the collections panel, the
+sort listbox, the share popover, the carousel on its last slide, the revealed
+email address, every year on the show log expanded, and each comic shelf. That
+list is written by hand, so a sheet, panel or disclosure nobody adds to it is
+scanned in no state but closed. And contrast over the grain overlay comes back
+undecided, which axe reports as `incomplete` rather than pass or fail;
+`PRODUCT.md` says what falls in that slice. A green run is not evidence about
+contrast over the grain, or about a state you can open that the list does not
+name: look at those yourself.

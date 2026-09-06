@@ -132,8 +132,11 @@ Absences that future work must not paper over:
 ## Accessibility & Inclusion
 
 **WCAG 2.2 Level AA**, confirmed 2026-08-28. `tests/a11y.spec.ts` runs axe at
-the 2.2 A and AA tags on every route in both themes, and fails on any rule that
-reaches no verdict as well as on any that fails.
+the 2.2 A and AA tags in both themes, over every route as it loads and then over
+the states a route load never reaches, which `tests/open-states.ts` holds. It
+fails on a rule that reaches no verdict as readily as on one that fails, bar
+three that are allowed at the nodes giving a bounded reason and nowhere else -
+`README.md` names them.
 
 Durable, and easy to overstate in either direction: **axe decides most of the
 colour contrast on this site, and not all of it.** Measured across all 13 routes
@@ -153,9 +156,15 @@ reasons are specific and bounded:
 So a green axe run is real evidence about most of this site's colour and no
 evidence at all about that 17%. The 17% is measured from painted pixels instead.
 
-A second gap is not about contrast at all: the suite only ever sees a route as
-it loads. Two of the six failures the 2026-08 audit found were in states it
-never enters - a navigation label at 3.28:1 inside the mobile menu, which axe
-reports as an ordinary violation the moment the sheet is open, and focusable
-content inside an `aria-hidden` subtree with the sort listbox open. Both are
-fixed. The blind spot is not.
+A second gap is not about contrast at all, and it is worth keeping in view even
+now it is mostly closed: a sweep that only sees a route as it loads is blind to
+whatever a reader has to open. Two of the six failures the 2026-08 audit found
+sat exactly there - a navigation label at 3.28:1 inside the mobile menu, which
+axe reports as an ordinary violation the moment the sheet is open, and focusable
+content inside an `aria-hidden` subtree with the sort listbox open. Both states
+are now entries in `tests/open-states.ts`, so both failures are gated rather
+than fixed and trusted.
+
+What is left of the gap is that the list is written by hand. A sheet, panel or
+disclosure nobody adds to it is scanned closed and never open, which is the
+condition those two shipped under.

@@ -248,11 +248,12 @@ scans this file and naming one puts its CSS back in the bundle.
 catching is the consequence, and the consequence is a contrast number, which
 axe already produces wherever it can resolve the background - it reported the
 nav heading as an ordinary violation. The reason that one shipped is not that
-contrast is unmeasurable; it is that `tests/a11y.spec.ts` only ever looks at a
-route as it loads, and nobody had opened the menu. Extending that sweep to the
-states a route load never reaches is the guard worth building. A rule that
-hunts for the alpha instead would be a second thing to maintain that has to
-agree with the first, and would still be blind in exactly the same places.
+contrast is unmeasurable; it is that a sweep of routes as they load never opens
+the menu. `tests/open-states.ts` is the guard that closes that: the axe sweep
+drives the phone menu, the sort listbox, the share popover and the rest, and
+scans each in both themes. A rule that hunts for the alpha instead would be a
+second thing to maintain that has to agree with the first, and would still be
+blind in exactly the same places.
 
 **The Same Artefact Rule.** The two themes are one design on different stock.
 A colour decision that only makes sense in one theme is not finished.

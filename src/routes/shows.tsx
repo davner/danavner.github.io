@@ -46,6 +46,15 @@ function ShowRow({ show }: { show: Show }) {
     show.video ? (show.videoIsPlaylist ? "Playlist" : "Video") : "",
   ].filter(Boolean);
 
+  // Solo and duo are badges and belong with the other chips; a plain list of
+  // names is prose and runs with the prose. A row carries at most one of the
+  // three, which is what `isDuo` excluding solo already guarantees.
+  const duo = isDuo(show);
+  const named = show.solo || duo ? [] : show.companions;
+
+  const hasChips = show.type === "festival" || show.rating != null || show.solo || duo;
+  const hasRun = Boolean(show.bestSong) || named.length > 0 || inside.length > 0;
+
   return (
     /* Three columns at `md` rather than `sm`, which is the one thing `md` is
        sanctioned for. At 640 the card has 568px inside it, and the date column,
@@ -92,49 +101,64 @@ function ShowRow({ show }: { show: Show }) {
             a long tour name would push the row off a 320px screen. */}
         {show.subtitle ? <p className="readout-dim mt-2 text-pretty">{show.subtitle}</p> : null}
 
-        {show.type === "festival" || show.rating != null ? (
-          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
-            {show.type === "festival" ? <Badge variant="outline">Festival</Badge> : null}
-            {show.rating != null ? <Rating value={show.rating} /> : null}
+        {/* Three lines under the title, and every fact the row states sits on
+            one of them.
+
+            The chips share a line because a badge beside a badge reads as one
+            set of marks. The bill takes a line of its own, because a festival
+            lineup wraps to three of them on a phone and would strand anything
+            sharing with it. What is left is short enough to run together.
+
+            No separator dots between the groups on the last line: it wraps,
+            and a wrapped run with separators opens a line with an orphan dot,
+            which is why `fact-line.tsx` hides its own when it stacks. */}
+        {hasChips || support.length > 0 || hasRun ? (
+          <div className="mt-3 space-y-2">
+            {hasChips ? (
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                {show.type === "festival" ? <Badge variant="outline">Festival</Badge> : null}
+                {show.rating != null ? <Rating value={show.rating} /> : null}
+                {show.solo ? <SoloBadge /> : null}
+                {duo ? <DuoBadge partner={show.companions[0]} /> : null}
+              </div>
+            ) : null}
+
+            {support.length > 0 ? (
+              <p className="text-sm leading-relaxed text-muted-foreground text-pretty">
+                <span className="text-ember">w/</span> <BandList bands={support} />
+              </p>
+            ) : null}
+
+            {hasRun ? (
+              <p className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-muted-foreground">
+                {show.bestSong ? (
+                  <span className="flex items-center gap-2">
+                    <Music className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+                    <span>
+                      <span className="readout-dim">Best live</span> {show.bestSong}
+                    </span>
+                  </span>
+                ) : null}
+
+                {named.length > 0 ? (
+                  <span className="flex items-center gap-2">
+                    <Users className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+                    <span>
+                      <span className="sr-only">Went with </span>
+                      {named.join(", ")}
+                    </span>
+                  </span>
+                ) : null}
+
+                {/* Says what is behind the click, so the row is honest about
+                    having more rather than just ending. */}
+                {inside.length > 0 ? (
+                  <span className="readout-dim">{inside.join(" · ")}</span>
+                ) : null}
+              </p>
+            ) : null}
           </div>
         ) : null}
-
-        {support.length > 0 ? (
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground text-pretty">
-            <span className="text-ember">w/</span> <BandList bands={support} />
-          </p>
-        ) : null}
-
-        {show.bestSong ? (
-          <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
-            <Music className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
-            <span>
-              <span className="readout-dim">Best live</span> {show.bestSong}
-            </span>
-          </p>
-        ) : null}
-
-        {show.solo ? (
-          <p className="mt-3">
-            <SoloBadge />
-          </p>
-        ) : isDuo(show) ? (
-          <p className="mt-3">
-            <DuoBadge partner={show.companions[0]} />
-          </p>
-        ) : show.companions.length > 0 ? (
-          <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
-            <Users className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
-            <span>
-              <span className="sr-only">Went with </span>
-              {show.companions.join(", ")}
-            </span>
-          </p>
-        ) : null}
-
-        {/* Says what is behind the click, so the row is honest about having
-            more rather than just ending. */}
-        {inside.length > 0 ? <p className="readout-dim mt-4">{inside.join(" · ")}</p> : null}
       </div>
 
       {/* One glyph, one meaning, everywhere: calendar is when, building is the

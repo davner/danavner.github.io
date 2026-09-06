@@ -141,8 +141,9 @@ three that are allowed at the nodes giving a bounded reason and nowhere else -
 Durable, and easy to overstate in either direction: **axe decides most of the
 colour contrast on this site, and not all of it.** A minority of contrast nodes
 come back `incomplete`, meaning the check ran and could not reach an answer. The
-grain overlay is most of that slice on its own, and the whole of it is six
-reasons, each specific and bounded:
+grain overlay is the largest single reason, since it is `fixed inset-0` behind
+every surface on the site; the whole of the slice is six reasons, each specific
+and bounded:
 
 | Nodes | Why axe could not decide                                                                             |
 | ----- | ---------------------------------------------------------------------------------------------------- |

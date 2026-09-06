@@ -486,7 +486,8 @@ fields from looking dead. It is `aria-hidden`, fixed, and behind everything, and
 it must never be removed to "clean up" a surface. Its cost, accepted knowingly,
 is a hole in automated colour checking: axe will not guess what is behind a
 background image, so the nodes sitting over the grain come back `incomplete`
-rather than pass or fail, and they are most of the undecided slice on their own.
+rather than pass or fail, and this layer being behind every surface makes it the
+largest single reason a node here goes undecided.
 That is a bounded hole, not a total one: axe decides most of this site's
 colour, and what falls in the rest is measured from painted pixels instead.
 `PRODUCT.md` names the six reasons a contrast node goes undecided here.

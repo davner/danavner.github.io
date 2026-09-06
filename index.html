@@ -31,6 +31,10 @@
       bundle has parsed and run - measured at 1.5s of dead time on mobile before
       the request went out.
 
+      `imagesizes` has to be the `sizes` the hero renders with in
+      src/routes/home.tsx. A preload that disagrees picks a different candidate
+      and the page fetches the photo twice.
+
       Marked so every generated page can drop it: this file is the only one
       GitHub Pages serves at "/", and preloading the home hero on /fortnite
       would be 47 kB nobody asked for. `vite-plugin-pages.ts` builds all of
@@ -42,7 +46,7 @@
       as="image"
       href="/img/me1.webp"
       imagesrcset="/img/me1-768.webp 768w, /img/me1.webp 1067w"
-      imagesizes="(min-width: 1024px) 400px, 100vw"
+      imagesizes="(min-width: 1024px) 384px, (min-width: 768px) 288px, 100vw"
       fetchpriority="high"
     />
     <!-- home-preload:end -->

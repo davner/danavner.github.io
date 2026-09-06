@@ -21,7 +21,7 @@ colors:
 typography:
   hero:
     fontFamily: "Anton, Anton Fallback, Arial Narrow, Haettenschweiler, Impact, sans-serif"
-    fontSize: "clamp(4rem, 17vw, 12.5rem)"
+    fontSize: "clamp(4rem, 34vw, 24rem)"
     fontWeight: 400
     lineHeight: 0.86
     letterSpacing: "-0.015em"
@@ -281,9 +281,11 @@ Every step is a `clamp()` on the display face, so type scales with the viewport
 and the layout is the only thing that steps. Asking for a stock Tailwind size
 generates no CSS at all, which is louder than rendering at a size nobody chose.
 
-- **Hero** (400, `clamp(4rem, 17vw, 12.5rem)`, 0.86, `-0.015em`, uppercase): the
+- **Hero** (400, `clamp(4rem, 34vw, 24rem)`, 0.86, `-0.015em`, uppercase): the
   largest mark on the site. The wordmark on the landing page and the numeral on
-  the 404, and nothing else.
+  the 404, and nothing else. At their closest it is twice the poster step and
+  2.3x a section name on the landing page: a mark that only just outsizes what
+  it sits above is the undecided heading the Two Voices Rule refuses.
 - **Poster** (400, `clamp(3.25rem, 13vw, 9rem)`): a page title of one or two
   short words, set as large as the page will carry. Line height under 1 and
   negative tracking are what make it read as a poster rather than a headline.
@@ -330,7 +332,10 @@ A single centred column, `max-w-6xl`, with `1rem` gutters rising to `1.5rem`
 above the small breakpoint, and `3rem` of space above the page title rising to
 `4rem`. Long-form reading is capped narrower, around `max-w-2xl`, independent of
 the shell. The landing page is that column twice with a full-bleed ticker
-between: the hero above it, and the section index below.
+between: the hero above it, and the section index below. The hero is the one
+place the column has a child that leaves it - the portrait runs to both screen
+edges below the `md` split, on negative gutter margins that cancel at the split
+rather than on a second shell.
 
 Vertical rhythm is coarse and consistent. `1.5rem` is the standing gap under a
 page title whatever follows it. Paragraphs in prose sit `1.25rem` apart, section

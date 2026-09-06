@@ -190,7 +190,7 @@
    * consequence is that a sans-face call site of one of these states its own
    * `leading-*`.
    */
-  --text-hero: clamp(4rem, 17vw, 12.5rem);
+  --text-hero: clamp(4rem, 34vw, 24rem);
   --text-poster: clamp(3.25rem, 13vw, 9rem);
   --text-poster-long: clamp(1.75rem, 6.4vw, 4.5rem);
   --text-feature: clamp(3rem, 2rem + 5vw, 4.5rem);
@@ -1376,6 +1376,12 @@
     --heat-blue: #000;
     --heat-blue-edge: #000;
     --heat-blue-stroke: 0px;
+
+    /* The one step whose size has to be replaced and not just recoloured. On
+       paper `vw` resolves against the sheet, and at this step's rate that is a
+       name with a page to itself. A fixed size instead, since there is no
+       viewport left for it to track. */
+    --text-hero: 5rem;
   }
 
   /* Crop marks: the cut-corners idiom at page scale, two L-shaped registration

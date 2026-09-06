@@ -132,30 +132,34 @@ export function Home() {
       {/* Matches PageShell's `pt-12 sm:pt-16` so the landing page starts at the
           same height off the nav as every other page. */}
       <section className="mx-auto max-w-6xl px-4 pt-12 pb-14 sm:px-6 sm:pt-16">
-        {/* The photo sits beside the name from `md` up, not from `lg`. Stacked,
-            it is as wide as the shell, which puts a 912px portrait between the
-            buttons and the rest of the page and runs the hero to three screens
-            on a tablet.
+        {/* The name spans the shell rather than sitting in a column, so it is
+            set at the width it is sized for. The break is written in rather
+            than left to the browser: one line of "DAN AVNER" is wider than the
+            measure at every viewport, so the browser would put the break in the
+            same place with a chance of overflowing on a face that fell back. */}
+        <h1 className="display text-hero">
+          <span className="block">Dan</span>
+          <span className="display-outline block">Avner</span>
+        </h1>
 
-            Two column widths rather than one, because the left column has to
-            hold two things at once. The wordmark is set in `vw`, so it wants a
-            fixed share of the viewport however narrow its column gets, and the
-            button row needs about 360px before it breaks into three lines. A
-            column split that satisfies the wordmark alone still breaks the
-            buttons. */}
-        <div className="grid gap-10 md:grid-cols-[minmax(0,1fr)_18rem] md:items-start md:gap-12 lg:grid-cols-[minmax(0,1fr)_24rem]">
+        {/* The photo sits beside the copy from `md` up, not from `lg`. A plate
+            left full-bleed on a wide screen is bound by the window's height
+            rather than its width, so it flattens into a band too shallow to
+            hold a face at any `object-position`. The column is what hands the
+            whole photograph back.
+
+            Two column widths rather than one, because at `md` the button row is
+            already down to the ~360px it needs before breaking into three
+            lines. The photo takes the wider track only once the shell has the
+            room to give it. */}
+        <div className="mt-6 grid gap-10 md:grid-cols-[minmax(0,1fr)_18rem] md:items-start md:gap-12 lg:grid-cols-[minmax(0,1fr)_24rem]">
           <div>
-            <h1 className="display text-hero">
-              <span className="block">Dan</span>
-              <span className="display-outline block">Avner</span>
-            </h1>
-
             {/* A kicker between the name and the hello. Muted all the way
                 through, because the greeting under it already takes the accent
                 and two ember lines stacked would fight. Each sentence is its
                 own flex item, so wrapping breaks between sentences rather than
                 mid-thought. */}
-            <p className="readout-dim mt-6 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            <p className="readout-dim flex flex-wrap items-baseline gap-x-2 gap-y-1">
               <span>{profile.quest.label}:</span>
               <span>{profile.quest.main}</span>
             </p>
@@ -213,15 +217,31 @@ export function Home() {
             </div>
           </div>
 
-          {/* Full colour and full width, tops out level with the wordmark the
-              way the about and career hero photos do. */}
+          {/* A plate rather than a portrait in a box. Below the split it runs
+              to both edges of the screen and its own height crops it to a band,
+              which is what holds a full-width photograph to about half the
+              screen instead of the two-thirds its 2:3 frame would take. The
+              height is capped three ways because each binds somewhere: the
+              width on a phone, the screen on a short window, and a flat ceiling
+              on a large tablet where neither does.
+
+              From `md` it takes the frame's own 2:3 in the column, so nothing
+              is cropped there and `object-position` has nothing to do - which
+              is also what makes `sizes` below exact rather than approximate. */}
           <div>
             {/* WebP, and two widths. The JPEG is half the size again as WebP
                 at the same quality, and the small screens that need the least
                 of it were being sent all 1067px of it. `sizes` describes what
-                the layout actually does: a column beside the wordmark that
-                widens once, and full width below the split. Each value tracks a
-                grid track above, so a change to one is a change to both. */}
+                the layout actually does: a column beside the copy that widens
+                once, and the full screen below the split. Each value tracks a
+                grid track above, and the same string is the preload's
+                `imagesizes` in `index.html` - a change to one is a change to
+                all three, and a preload that disagrees fetches a second copy.
+
+                `width`/`height` are the file's own, not the box's: the image is
+                out of flow, so the box is set by the classes above it and the
+                pair is only here to give the browser the aspect ratio it
+                decodes at. */}
             <FramedPhoto
               src="/img/me1.webp"
               srcSet="/img/me1-768.webp 768w, /img/me1.webp 1067w"
@@ -229,9 +249,10 @@ export function Home() {
               alt={`${profile.name}, smiling, in a patterned shirt`}
               caption="Me"
               width={1067}
-              height={1334}
+              height={1600}
               eager
-              imageClassName="aspect-4/5"
+              className="-mx-4 h-[min(110vw,70svh,46rem)] border-x-0 sm:-mx-6 md:mx-0 md:aspect-2/3 md:h-auto md:border-x"
+              imageClassName="absolute inset-0 h-full object-[50%_35%]"
             />
           </div>
         </div>

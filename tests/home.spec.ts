@@ -17,6 +17,9 @@ import { ALL_SECTIONS } from "../src/lib/site";
  * with nothing on it counts to nothing rather than to zero - is settled in Node
  * by `tests/site-index.spec.ts`. This file is the other half: that the page
  * prints what it was handed, and prints nothing where it was handed nothing.
+ *
+ * The hero above the index gets the last block in the file, for the one thing
+ * about it that arithmetic decides rather than a stylesheet.
  */
 
 /** The row that opens a section, found by the link that opens it. */
@@ -296,5 +299,69 @@ for (const width of [375, 1280]) {
     }
 
     expect(checked, "no row named an entry with a page of its own").toBeGreaterThan(0);
+  });
+}
+
+/**
+ * The head, as a band of the photograph's own frame: the top of the hair down
+ * to just under the chin, measured off `public/img/me1.webp`.
+ */
+const HEAD_TOP = 0.165;
+const HEAD_BOTTOM = 0.7;
+
+/**
+ * Which slice of the photograph the hero plate actually shows, top and bottom
+ * as fractions of the frame's height.
+ *
+ * Computed from the rendered box, the file's own size and the resolved
+ * `object-position` rather than read off a screenshot: this is the arithmetic
+ * `object-fit: cover` does, so a failure here names the number that moved
+ * instead of a pixel that did.
+ */
+async function visibleFrame(page: Page): Promise<{ top: number; bottom: number }> {
+  return page
+    .locator("figure")
+    .first()
+    .locator("img")
+    .evaluate(async (el) => {
+      const img = el as HTMLImageElement;
+      await img.decode();
+
+      const box = img.getBoundingClientRect();
+      const scale = Math.max(box.width / img.naturalWidth, box.height / img.naturalHeight);
+      const drawn = img.naturalHeight * scale;
+      const down = parseFloat(getComputedStyle(img).objectPosition.split(" ")[1]) / 100;
+      const offset = (drawn - box.height) * down;
+
+      return { top: offset / drawn, bottom: (offset + box.height) / drawn };
+    });
+}
+
+/*
+ * Both sides of the `md` split, at the narrowest and widest each is asked to
+ * cover. Below the split the plate is a band the height class cuts out of a
+ * full-width photograph, and `object-position` is the only thing holding the
+ * face inside it. From the split the plate takes the frame's own 2:3 and there
+ * is no crop at all - which is the half that fails if that ratio ever stops
+ * matching the file, quietly, as a portrait that lost its chin.
+ *
+ * Landscape phones under about 400px tall are knowingly outside this: the
+ * plate is bound by `70svh` there and no `object-position` fits a head into
+ * 26% of the frame.
+ */
+for (const [width, height] of [
+  [390, 844],
+  [767, 1024],
+  [1024, 768],
+  [1440, 900],
+]) {
+  test(`the hero plate keeps the whole head at ${width}x${height}`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    await openHome(page);
+
+    const { top, bottom } = await visibleFrame(page);
+
+    expect(top, "the plate crops into the hair").toBeLessThanOrEqual(HEAD_TOP);
+    expect(bottom, "the plate cuts the chin off").toBeGreaterThanOrEqual(HEAD_BOTTOM);
   });
 }

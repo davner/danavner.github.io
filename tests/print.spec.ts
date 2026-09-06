@@ -21,7 +21,16 @@ async function stock(page: Page): Promise<string> {
   return page.evaluate(() => getComputedStyle(document.body).backgroundColor);
 }
 
-const CASES = ["/shows/bruno-mars-madrid-2026", "/blog/welcome"];
+/**
+ * Two pages of the catalogue and the cover. The home page is here because it is
+ * the one page whose display step is replaced rather than recoloured on paper:
+ * the hero is sized in `vw`, which resolves against the page box, so the print
+ * block overrides it outright and this is the case that notices if that line
+ * goes.
+ *
+ * The cover goes last, because the two cases below index into this list.
+ */
+const CASES = ["/shows/bruno-mars-madrid-2026", "/blog/welcome", "/"];
 
 for (const route of CASES) {
   test(`${route} prints as what it is`, async ({ page }) => {
@@ -37,11 +46,18 @@ for (const route of CASES) {
 
     const imprint = page.locator("footer").getByText(`danavner.com${route}`);
     await expect(imprint, "no imprint carries this page's own address").toBeVisible();
-    // The section's number stands for its items: a show borrows /shows',
-    // a post /blog's.
-    await expect(imprint, "the imprint misses the catalogue number").toContainText(
-      catalogueFor(route)!,
-    );
+
+    const catalogue = catalogueFor(route);
+    if (catalogue) {
+      // The section's number stands for its items: a show borrows /shows',
+      // a post /blog's.
+      await expect(imprint, "the imprint misses the catalogue number").toContainText(catalogue);
+    } else {
+      // The cover is not a page of the catalogue, so it prints the pressing
+      // and the address and no number - and printing one would mean the home
+      // page had quietly been filed as a section.
+      await expect(imprint, "the cover printed a catalogue number").not.toContainText(/DA-\d+/);
+    }
 
     expect(await stock(page), "the dark theme printed on its own stock").toBe("rgb(255, 255, 255)");
   });

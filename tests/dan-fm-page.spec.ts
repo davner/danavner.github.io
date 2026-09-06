@@ -45,6 +45,8 @@ const NEWEST_TITLE = NEWEST?.album ?? "";
 // The score the stars draw: the standing one, where a rescore exists.
 const NEWEST_SCORE = NEWEST?.later ?? NEWEST?.score ?? 0;
 const NEWEST_REVIEW = NEWEST?.review ?? "";
+// The sleeve, which is the grid track the card's shape is measured against.
+const NEWEST_COVER = NEWEST?.cover ?? "";
 
 /**
  * The reviews the log holds against albums that are not the featured one.
@@ -451,6 +453,82 @@ test.describe("the album's review", () => {
         page.getByText(opening),
         `an album that is not the featured one has its review on the front page: "${opening.slice(0, 60)}..."`,
       ).toHaveCount(0);
+    }
+  });
+});
+
+/**
+ * The width the card's shape is measured at.
+ *
+ * The two-column grid starts at `md`, so below 768 every block on the card is
+ * full width whatever the markup says and a measurement there proves nothing.
+ * 1440 is where the rail was worst - a 352px sleeve column standing empty
+ * beside 1,101px of a 1,453px block - and it is where the shape has to hold.
+ */
+const CARD_WIDTH = 1440;
+
+test.describe("the featured card's shape", () => {
+  test("the writing runs the card's width, below the sleeve", async ({ page }) => {
+    /*
+     * The grid holds what identifies the record - the sleeve, the title, the
+     * score, the tags - and closes there. Everything that is read rather than
+     * glanced at runs underneath it, at the card's own width.
+     *
+     * Geometry, because nothing else can see this. Every other case on this
+     * page finds the review by role and by name, and a review moved back
+     * inside the right-hand column answers to both: the same words, under the
+     * same heading, in the same DOM order - set down a 712px track with the
+     * sleeve's column empty for the whole thousand words of it.
+     */
+    await page.setViewportSize({ width: CARD_WIDTH, height: 900 });
+    await openDanFm(page);
+    // The sleeve is a square of a known size and the type around it is not, so
+    // a measurement taken before the face swaps in is taken on a shorter card.
+    await page.evaluate(() => document.fonts.ready);
+
+    /*
+     * A local courtesy in `openDanFm`'s sense: an album with no art draws a
+     * placeholder rather than the sleeve, and the fetched log may be one on any
+     * given day. The fixture's albums all carry art, so CI always measures.
+     */
+    test.skip(
+      !process.env.CI && NEWEST_COVER === "",
+      "the featured album has no sleeve, so there is no column to measure against",
+    );
+    expect(
+      NEWEST_COVER,
+      "the featured album has no sleeve - nothing below is being asked",
+    ).not.toBe("");
+    expect(
+      NEWEST_REVIEW,
+      "the featured album carries no review - the block most at risk is not on the page",
+    ).not.toBe("");
+
+    const sleeve = await today(page).locator("img").boundingBox();
+    expect(sleeve, "the featured card drew no sleeve").not.toBeNull();
+
+    const blocks: [string, Locator][] = [
+      ["the two tracks", today(page).locator("dl")],
+      ["the review", review(today(page))],
+      ["the actions", today(page).getByRole("button", { name: /^Share/ })],
+    ];
+
+    for (const [what, block] of blocks) {
+      // Every one of these is drawn only when the album gives it something to
+      // say, so an absent block is the log's decision rather than the layout's.
+      if ((await block.count()) === 0) continue;
+
+      const box = await block.boundingBox();
+      expect(box, `${what} is on the page but has no box`).not.toBeNull();
+
+      expect(
+        box!.x,
+        `${what} starts ${Math.round(box!.x - sleeve!.x)}px right of the sleeve, which is the grid's second track`,
+      ).toBeLessThanOrEqual(sleeve!.x + 1);
+      expect(
+        box!.y,
+        `${what} starts beside the sleeve rather than under it`,
+      ).toBeGreaterThanOrEqual(sleeve!.y + sleeve!.height - 1);
     }
   });
 });

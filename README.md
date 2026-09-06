@@ -218,6 +218,7 @@ eslint.config.js          the browser half, the Node half, prettier last
 .git-blame-ignore-revs    formatting-only commits, skipped by git blame
 vite-plugin-content.ts    reads + validates every content collection at build time
 vite-plugin-cover-variants.ts derives a smaller copy of every vinyl and comic cover, into dist
+vite-plugin-feeds.ts      writes the six Atom feeds, and injects the combined one's link
 vite-plugin-pages.ts      writes a real HTML page per route, plus 404.html and sitemap.xml
 vite.config.ts            aliases, Tailwind, fonts, and the footer's build date
 src/
@@ -262,6 +263,8 @@ src/
     fortnite.ts           windows, playlists, placement tiers, and the deltas
     now.ts                the current entry and its archive
     site.ts               the nav, shared by the header, footer and tests
+    site-index.ts         the home index's row shape, and the wording nine rows share
+    feeds.ts              the feed manifest, read by both build plugins
     stale-chunk.ts        the once-only guard behind route-boundary.tsx
     photo.ts              the Photo type, shared by the markdown collections
     theme.ts              light/dark store, synced with the pre-paint script
@@ -281,14 +284,16 @@ reimplementing them.
 `vite-plugin-content.ts` reads every collection in Node at build time,
 validates it, and exposes it as a virtual module:
 
-| Source                                            | Module             | Written by                    |
-| ------------------------------------------------- | ------------------ | ----------------------------- |
-| `content/blog/*.md`                               | `virtual:blog`     | you                           |
-| `content/shows/*.md`                              | `virtual:shows`    | you                           |
-| `content/now/*.md`                                | `virtual:now`      | you                           |
-| `content/vinyl.json`                              | `virtual:vinyl`    | `update-vinyl.mjs`, nightly   |
-| `content/comics.json`                             | `virtual:comics`   | `update-comics.mjs`, nightly  |
-| `content/fortnite.json` + `fortnite-seasons.json` | `virtual:fortnite` | the job; you name the seasons |
+| Source                                            | Module               | Written by                       |
+| ------------------------------------------------- | -------------------- | -------------------------------- |
+| `content/blog/*.md`                               | `virtual:blog`       | you                              |
+| `content/shows/*.md`                              | `virtual:shows`      | you                              |
+| `content/now/*.md`                                | `virtual:now`        | you                              |
+| `content/vinyl.json`                              | `virtual:vinyl`      | `update-vinyl.mjs`, nightly      |
+| `content/comics.json`                             | `virtual:comics`     | `update-comics.mjs`, nightly     |
+| `content/fortnite.json` + `fortnite-seasons.json` | `virtual:fortnite`   | the job; you name the seasons    |
+| `content/dan-fm.json`                             | `virtual:dan-fm`     | `update-dan-fm.mjs`, four-hourly |
+| every collection above                            | `virtual:site-index` | the build itself                 |
 
 The generated files are validated exactly as strictly as the hand-written ones,
 which is the point: a fetch that half-worked is the likeliest way bad data gets
@@ -305,6 +310,125 @@ in Node rather than in the browser:
 
 A file whose name starts with `_` is ignored, which is how each collection keeps
 its own reference next to its content.
+
+Every reader in `vite-plugin-content.ts` is exported, not only the ones a
+virtual module is built from, because the content is read by more of the build
+than the app: `vite-plugin-feeds.ts` reads five collections to write the feeds,
+and `buildSiteIndex` in the content plugin itself reads all of them to write
+`virtual:site-index`.
+
+That last one is a line per section - what it last gained, when, where that
+lives, and how much the section holds - in a few hundred bytes. It exists so the
+landing page can print real items without importing the collections it indexes.
+`home.tsx` is in the eager bundle every page loads, and pulling roughly 80 kB of
+payload into it, along with two module-level constructions that stop the rest
+being shaken out, would make the whole site slower to show anything. A section
+with nothing logged gets a row that says so rather than no row at all, which is
+the state of a checkout the fetch jobs have never run against.
+
+**A caller that turns a reader's output into titles or URLs drops drafts
+itself.** `readPosts` returns them, because the dev server wants them. So the
+site index filters them out of the home page's newest-post row and out of the
+post count, and the blog feed filters them again. Two callers, two files, the
+same rule stated in both.
+
+---
+
+## Feeds
+
+The build writes six Atom feeds into `dist/`, from the same readers that
+validate the content. `src/lib/feeds.ts` is the manifest, `vite-plugin-feeds.ts`
+writes exactly what the manifest declares, and `tests/feeds.spec.ts` holds the
+build to the list.
+
+| Feed               | Carries                                            |
+| ------------------ | -------------------------------------------------- |
+| `/feed.xml`        | everything below, re-sorted newest first, uncapped |
+| `/feed-blog.xml`   | published posts only                               |
+| `/feed-shows.xml`  | every show                                         |
+| `/feed-now.xml`    | every now entry, the current one included          |
+| `/feed-dan-fm.xml` | every album in the log                             |
+| `/feed-vinyl.xml`  | every record, ordered by the day it was added      |
+
+Feeds are files rather than routes, so none of them has a `PAGE_META` entry, a
+catalogue number, or a line in `ROUTES`. The paths are flat at the root rather
+than `/blog/feed.xml`, because `vite-plugin-pages.ts` only creates
+`dist/<route>/` for a route that parents content pages. `/vinyl` parents none,
+so a feed nested under it would be the only thing in that directory, leaving a
+directory with no `index.html` behind it - and what GitHub Pages answers there
+is not something to find out in production.
+
+Five section feeds exist alongside the combined one because a title is all a
+subscribe dialog shows. A site whose single advertised feed is titled for one
+section hands a follower a subscription missing most of what they came for, and
+says nothing about it. So the feed that says "everything" carries everything,
+and the feed that says "blog" is the one a blog follower wants.
+
+An entry's `<id>` and its link are usually the same absolute URL. Two feeds
+separate them:
+
+| Feed    | Entry `<id>`                         | Entry link                               |
+| ------- | ------------------------------------ | ---------------------------------------- |
+| `now`   | the entry's permalink, always        | `/now` while current, else the permalink |
+| `vinyl` | `tag:<host>,2026:vinyl/<instanceId>` | `/vinyl`                                 |
+
+A now entry keeps its permalink as its identity even while it is the current
+entry, because that is the address it still has the day the next one lands - an
+id that moved with it would arrive in every reader as a second copy of something
+already read. Its link is `/now` for as long as it is current, because
+`/now/<its date>` redirects there, which is the rule the sitemap follows. A
+record has no page on this site at all, so it takes a `tag:` id and links to the
+shelf it sits on; Discogs is not the other candidate for that link, because a
+feed of this site sending every click to someone else's is not a feed of this
+site.
+
+A record whose `added` day is malformed is dropped from its feed rather than
+failing the build. `readVinyl` validates the artist, the title and the cover but
+not that date, and a fetch that half-succeeded should not stop a deploy over one
+record. Every other collection's date is validated where it is parsed, so this
+is the one place a feed decides what to do with a bad one.
+
+**Summary only, and that is a decision rather than a stage nobody got to.** Each
+entry carries `<summary type="text">` - the same one-line description the site
+prints on its own cards - and no `<content>`. Full content would mean a third
+markdown pipeline running in Node, and the HTML it produced would differ from
+the one `blog-post.tsx` renders in the browser, which adds `rehypeSlug`,
+`rehypeHighlight` and custom `a`, `pre` and `blockquote` handling.
+`now-summary.ts` already documents a parity contract between the two pipelines
+that exist; a third is a fourth thing to hold true. That is the price to weigh if
+full content is ever worth having.
+
+The summaries are text nodes and never CDATA. A `type="text"` summary carries no
+markup to protect, which is the only thing CDATA is for, and a CDATA section
+cannot contain `]]>` - a landmine in prose arriving from a published Google
+Sheet. Control characters other than tab, newline and carriage return are
+stripped for the same class of reason: one stray byte does not make one entry
+wrong, it makes the document unparseable, and every subscriber loses the feed at
+once.
+
+**The autodiscovery link is injected at build time, not written into
+`index.html`.** `vite-plugin-feeds.ts` is `apply: "build"`, so a literal in that
+file would advertise a feed the dev server never writes - a 404 on every dev page
+load - and it would be a URL kept in step with the manifest by hand. The plugin
+adds the combined feed's link through `transformIndexHtml` instead;
+`vite-plugin-pages.ts` builds every generated page and `404.html` from the
+`index.html` that leaves behind, so all of them inherit it. Each section's page
+then gets its own feed's link appended on top, so `/blog` and `/blog/welcome`
+both offer the blog feed beside the combined one.
+
+**Entry dates are stamped at 09:00 in the site's own time zone.** Atom's
+`<updated>` is an RFC-3339 instant and the content stores a day, so an instant
+has to be invented. Nine in the morning is a house convention like the imprint's
+epoch stamp rather than a claim about when anything was written, and it sits far
+enough from midnight that no reader in any zone files an entry under the wrong
+day. A partial show date pads to the first of its month or year. The offset is
+resolved per date through `Intl` against `SITE_TIME_ZONE` rather than hardcoded,
+because half the year is not `-08:00`, and a day no calendar has fails the build
+rather than reaching a reader as a timestamp.
+
+Atom only - no RSS, no JSON Feed. RFC-822 dates need a day-name table that
+`dates.ts` deliberately does not carry, and a second format is a second artefact
+to hold in step for reach this site does not need.
 
 ---
 
@@ -1281,11 +1405,14 @@ Things that were not obvious, in case you hit them too:
   frame under `prefers-reduced-motion`.
 - **The `lib/` modules the build reads may not import a `@/` alias or a
   `virtual:` specifier.** `show-summary.ts`, `now-summary.ts`, `routes.ts`,
-  `site.ts` and `covers.ts` are each called from the browser - the share
-  button, the page meta, the cover tiles - and from Node by the plugin that
-  reaches them by relative path from Vite's config context,
-  `vite-plugin-pages.ts` for the first four and `vite-plugin-cover-variants.ts`
-  for `covers.ts`. Neither kind of specifier resolves there: `resolve.alias`
+  `site.ts`, `site-index.ts` and `covers.ts` are each called from the browser -
+  the share button, the page meta, the home index, the cover tiles - and from
+  Node by a plugin that reaches them by relative path from Vite's config
+  context: `vite-plugin-pages.ts` for the first four, `vite-plugin-content.ts`
+  for `site-index.ts`, and `vite-plugin-cover-variants.ts` for `covers.ts`.
+  `feeds.ts` is on the same list under the same rule with only the Node half of
+  it - both build plugins read the manifest and nothing in the browser does.
+  Neither kind of specifier resolves there: `resolve.alias`
   applies to the app's module graph, not to the config bundle, and the
   `virtual:` modules do not exist yet because `contentPlugin` is what creates
   them. Bare npm specifiers are fine, which is why `now-summary.ts` can parse

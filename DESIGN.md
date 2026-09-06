@@ -360,6 +360,78 @@ than the cell holding it.
 **The Type Scales, The Layout Steps Rule.** Prefer `clamp()` on the display face
 over a new breakpoint. The grid changes rarely and the type changes constantly.
 
+The collection shelves are the standing case for it. /vinyl, /comics and
+/fortnite lay their tiles on one stepped ladder - two columns, three from `sm`,
+then four or five from `lg` - and the fluid alternative,
+`repeat(auto-fill, minmax(MIN, 1fr))`, cannot draw that ladder at any constant
+`MIN`. The tiles are separated by `gap-px`, so auto-fill fits
+`floor((W + 1) / (MIN + 1))` columns in a container `W` wide. The shell is
+`max-w-6xl` with `px-4` below `sm` and `sm:px-6` above, which fixes both the
+container and what each step demands of `MIN`:
+
+| Viewport | Container | Columns | Permitted `MIN`  |
+| -------- | --------- | ------- | ---------------- |
+| 320px    | 288px     | 2       | (95.33, 143.5]   |
+| 639px    | 607px     | 2       | (201.67, 303]    |
+| 640px    | 592px     | 3       | (147.25, 196.67] |
+| 1024px   | 976px     | 4       | (194.4, 243.25]  |
+| 1152px+  | 1104px    | 4       | (220, 275.25]    |
+
+The brackets are the usual ones - the low end excluded, the high end included -
+and the top of each interval is also the tile width the ladder actually draws
+there, from 143.5px on a phone to 303px at the widest single-column step.
+
+Two results fall out, and the second is the one worth keeping. Rows one and
+three do not overlap, 143.5 being below 147.25, so no single number satisfies
+both and the ladder is not reproducible at a fixed minimum. Rows two and three
+are stronger, because they need no reference to the shipped design at all:
+across one pixel of viewport, 639 to 640, the container gets **narrower** as the
+gutter steps from `px-4` to `sm:px-6`, while the column count goes **up**. `MIN`
+would have to fall as the viewport grows, which no monotone function of viewport
+does and only a breakpoint fakes. A fluid shelf therefore either changes the
+ladder or reintroduces the breakpoint it was brought in to remove. Both widths
+are in `tests/responsive.spec.ts`'s sweep, so neither is hypothetical.
+
+Container queries do not rescue it. They are moot once auto-fill is off the
+table, and `container-type: inline-size` brings layout containment, a stacking
+context and a containing block for fixed descendants - three side effects for no
+remaining benefit. The ladder is a component instead, so there is one place to
+change it and no magic constant to explain.
+
+**The Prose Grid Rule.** A block that has to be wider than the writing around it
+takes `.prose-grid`, rather than a wrapper that leaves the page's flow. The grid
+is two tracks - the reading measure, then whatever is left of the shell - so
+every child sits in the measure by default and a child asking for `.prose-full`
+takes the measure and the space beside it. It is declared once, in
+`src/index.css`, and /now uses it on both of its surfaces, the current entry and
+an archived permalink, so the two cannot drift into two column widths.
+
+Not the symmetric `1fr min(42rem, 100%) 1fr` full-bleed grid, which centres the
+measure. Every reading surface here is left-aligned in its shell, so adopting
+the symmetric form would re-centre the prose as a side effect of adding a
+full-bleed track.
+
+There is no column gap, and its absence is load-bearing rather than an
+oversight. On a phone the first track resolves to `100%`, taken against the
+content box rather than against what a gap leaves of it, so any gap makes the
+grid wider than its shell and scrolls the page sideways - the one thing
+`tests/responsive.spec.ts` fails outright, at every width it sweeps. A future
+occupant of the second track brings its own inline padding instead.
+
+**`.prose-full` frees the block, not the writing inside it.** A full-width block
+containing prose has to carry its own measure, or its sentences set to the width
+of the page. /now's archive is the worked example: the timeline takes
+`.prose-full` so its rail gets the whole width, and then re-caps each entry's
+body at the reading measure inside it.
+
+Two other blocks on the site take a different geometry by leaving their
+container instead, and both are right to. The home page's marquee sits outside
+the shell entirely, because a ticker is a full-viewport rule and not a block in
+a column. The /shows stat strip closes `PageShell` and re-declares the shell by
+hand around the board, so the board's vertical rhythm is its own rather than the
+shell's. Neither is the pattern to copy for something that has to stay in the
+flow of a page you are reading, which is the case `.prose-grid` covers.
+
 ## Elevation & Depth
 
 **There are no shadows in this system, and that is the design.** Surfaces are
@@ -602,6 +674,48 @@ hinting at it.
 - **Internal padding:** `1.25rem`, rising to `2rem` on larger panels.
 - **Interactive panels** grow ember corner ticks on hover and focus-within.
 
+### Collection Boards and Shelves
+
+A collection page states the shape of the collection and then lays it out in
+tiles. Each half is one component in `src/components/`, and each is shared by
+three pages: /shows, /vinyl and /comics take the board, /vinyl, /comics and
+/fortnite take the shelf.
+
+- **`StatBoard` and `Stat`** are the figures: a two-up grid opening to four,
+  with the hairlines between tiles drawn by `gap-px` over a `bg-border` field
+  behind the grid. `Stat` renders a `dl` holding one term and one figure, and
+  the board around it is a plain `div` rather than the single `dl` its contents
+  suggest. /shows and /vinyl each drop a ranked list into the board, and a `p`
+  beside an `ol` is content a `dl` does not permit - axe's `definition-list`
+  rule fails it. The grouping lives in the grid instead of in the markup.
+- **`Shelf`** is the tiles: two columns, three from `sm`, and four or five from
+  `lg`, which is the only part of the ladder a caller chooses. Every tile draws
+  its own hairline with a 1px spread shadow, and there is no switch for the
+  board's seam field. A shelf's last row is often short, and a grid is as wide
+  and tall as its rows whether or not anything sits in them, so a `bg-border`
+  showing through the gaps would paint a grey rectangle where the missing tiles
+  would be. A stat board can afford the field precisely because its rows always
+  come out full.
+
+`data-slot="stat"` is set by `Stat` rather than by its callers, because
+`tests/responsive.spec.ts` sweeps `[data-slot=stat] dd` at eleven widths for a
+figure spilling its own tile - a fault no horizontal-overflow check can see. A
+tile that does not carry the attribute is a tile nothing measures.
+
+Two exceptions, stated here so the pair does not read as covering everything.
+
+- **/fortnite keeps its own `Stat` and its own boards.** Its figures carry a
+  comparison against lifetime under the number, which no other board has; its
+  seams are per tile, because "All modes" draws four tiles into a six-tile grid
+  and a field behind that would paint the empty cells grey; and its second board
+  is three columns, a third count. Folding it in would mean a delta slot, a
+  seams mode and a third column count to serve one caller. It sets
+  `data-slot="stat"` like the shared one, so it stays inside the sweep.
+- **/comics sets one figure `pretty` rather than balanced.** "Most of" prints a
+  publisher's name, so it is the one tile on any board whose figure wraps, and
+  `pretty` keeps it off a last line of one word. Every other figure is a count
+  and takes the default.
+
 ### Inputs and Fields
 
 - Hairline border on the page background, square, mono or body type depending on
@@ -616,6 +730,43 @@ hinting at it.
   which is marked. A group opens on a click, never on a hover, and closes on a
   second click, on Escape, on a link, or on a press outside. On small screens
   the nav collapses into a sheet.
+- **The one group is "Collections"**, which is the word `src/` already uses for
+  it internally in six places. A name on screen that differs from the name in
+  the source is a synonym somebody has to keep in step, and one name is cheaper
+  than two.
+- **Every item in the panel carries a descriptor**, one line saying what that
+  section holds. It is the same string the home page's index prints, read from
+  `Section.blurb` in `lib/site.ts`, so a section cannot describe itself two ways
+  depending on which list you met it in. Deliberately not the page's meta
+  description: that one is written for a browser tab, a search result and a link
+  preview, and this one for a reader already on the site deciding where to go
+  next. /now is the single overlap, because its lede is already that sentence.
+- **The descriptor is muted-foreground at full strength**, at the small text
+  step. One step down in size from the label above it and no steps down in
+  colour, because the No Second Dimming Rule bites here as hard as anywhere: an
+  alpha over that same token, over this same background, is what put the phone
+  menu's group heading at 3.28:1. Quieter means smaller or further away, not
+  fainter. The spelling to avoid is described rather than written out, for the
+  reason given under that rule - Tailwind scans this file, and
+  `tests/bundle.spec.ts` fails the build when the spelling reaches the shipped
+  stylesheet, whether a component or a docs paragraph is what put it there.
+- **The panel is positioned absolutely at every width**, and anchored to its
+  trigger's right edge. Absolutely because the bar starts at `sm` while the menu
+  primitive only lifts the panel out of flow at `md`, so between those two widths
+  the panel lays out inside a 64px bar and pushes the document wider than the
+  window. Right-anchored because the trigger is the last thing in the bar before
+  the theme toggle, and a panel opening rightwards runs off the screen, which
+  scrolls the page sideways to reach a menu.
+- **The panel's list is capped in height and takes itself out of the tab
+  order.** Five items each carrying a label and a two-line descriptor run about
+  400px, hanging off a sticky bar, which does not fit a short laptop window - and
+  the page behind cannot be scrolled to reach what spills, so the cap is
+  `min(70svh, 32rem)` with the list scrolling inside it. The tab-order removal is
+  what makes that cap safe: a browser puts an overflowing scroller in the tab
+  order so a keyboard can reach content nothing else reaches, and this one holds
+  five links Tab already scrolls to. Left in, the extra stop takes Tab and does
+  not give it back, wearing a ring its own overflow clips to nothing - a keyboard
+  trap on exactly the short windows where the cap engages.
 
 ### The Focus Ring
 

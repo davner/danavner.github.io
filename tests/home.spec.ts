@@ -172,3 +172,124 @@ test("a section with nothing logged prints its blurb and no empty readout", asyn
     expect(row!.lines, `${to} prints more than what it is`).toEqual([blurb]);
   }
 });
+
+/**
+ * Brings `row` fully into view, clear of the bar.
+ *
+ * The header is sticky and 64px tall, so a row scrolled to the top of the
+ * window sits under it and takes a click that was aimed at the row.
+ */
+async function showRow(row: Locator): Promise<void> {
+  await row.scrollIntoViewIfNeeded();
+  await row.evaluate((li) => {
+    const bar = document.querySelector("header")?.getBoundingClientRect();
+    const under = (bar?.bottom ?? 0) - li.getBoundingClientRect().top;
+    if (under > 0) window.scrollBy(0, -under - 8);
+  });
+}
+
+/**
+ * A point inside the row that neither of its links draws a box over.
+ *
+ * Sampled rather than computed, because where the open space is depends on the
+ * width: stacked, it is the end of the name's line, and in one line it is the
+ * gap between the name and the description. Points the row does not own are
+ * skipped, so nothing here can click the bar or an overlay by accident.
+ */
+async function openSpaceIn(row: Locator): Promise<{ x: number; y: number } | null> {
+  return row.evaluate((li) => {
+    const rect = li.getBoundingClientRect();
+    const links = [...li.querySelectorAll("a")].map((link) => link.getBoundingClientRect());
+    const clear = (x: number, y: number) =>
+      links.every(
+        (box) => x < box.left - 2 || x > box.right + 2 || y < box.top - 2 || y > box.bottom + 2,
+      );
+
+    for (const down of [0.5, 0.25, 0.75]) {
+      const y = rect.top + rect.height * down;
+      for (let across = 0.05; across < 1; across += 0.05) {
+        const x = rect.left + rect.width * across;
+        if (!clear(x, y)) continue;
+        if (!li.contains(document.elementFromPoint(x, y))) continue;
+        return { x, y };
+      }
+    }
+
+    return null;
+  });
+}
+
+/*
+ * The row's whole area is the section's link, drawn by an `::after` on the name
+ * that is absolute and inset to the `li`. Two things take that away without
+ * changing a pixel of what the page looks like, and each has its own case here.
+ *
+ * A transform anywhere between the `li` and that pseudo-element makes the
+ * transformed element its containing block, and a row-wide target collapses
+ * onto the name - which is why the hover shift sits on a span inside the link
+ * rather than on the link itself. And the newest item's own link is over that
+ * overlay only because it is positioned; static, it is painted under it, and a
+ * click meant for an album opens the section index instead.
+ *
+ * Both widths, because the row lays out twice: stacked below `lg`, and in one
+ * line above it with the description alongside the name.
+ */
+for (const width of [375, 1280]) {
+  test(`a click in a row's open space opens its section at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+
+    for (const section of ALL_SECTIONS) {
+      await openHome(page);
+
+      const row = rowFor(page, section.to);
+      await showRow(row);
+
+      const point = await openSpaceIn(row);
+      expect(
+        point,
+        `${section.to}'s row has no space that is not one of its own links`,
+      ).not.toBeNull();
+
+      await page.mouse.click(point!.x, point!.y);
+      await expect(page, `a click in ${section.to}'s row went nowhere`).toHaveURL(section.to);
+    }
+  });
+
+  test(`a row's newest item opens the item rather than the section at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+
+    let checked = 0;
+
+    for (const section of ALL_SECTIONS) {
+      await openHome(page);
+
+      const row = rowFor(page, section.to);
+      const item = itemLink(row);
+      if ((await item.count()) === 0) continue;
+
+      /*
+       * A row whose newest item has no page of its own links to the collection
+       * instead - `/now`'s current entry is the page it is listed on - and a
+       * click there is meant to land in the same place as the overlay's. Only a
+       * row that leads somewhere else can tell the two apart.
+       */
+      const href = await item.getAttribute("href");
+      if (href === section.to) continue;
+
+      await showRow(row);
+      const box = await item.boundingBox();
+      expect(box, `${section.to}'s row names an entry with no box`).not.toBeNull();
+
+      await page.mouse.click(box!.x + box!.width / 2, box!.y + box!.height / 2);
+      await expect(
+        page,
+        `a click on ${section.to}'s newest entry opened the section index instead`,
+      ).toHaveURL(href!);
+      checked += 1;
+    }
+
+    expect(checked, "no row named an entry with a page of its own").toBeGreaterThan(0);
+  });
+}

@@ -446,13 +446,22 @@
   }
 
   .display-outline {
-    color: transparent;
     -webkit-text-stroke: 1.5px var(--foreground);
   }
 
   .display-outline-ember {
-    color: transparent;
     -webkit-text-stroke: 1.5px var(--ember);
+  }
+
+  /* The fill is knocked out only where the stroke that replaces it draws.
+     Unguarded, an engine that ignores `-webkit-text-stroke` renders the word as
+     nothing at all while the accessible name still reads it out - a total
+     failure behind a prefixed property, for one line. */
+  @supports (-webkit-text-stroke: 1px currentcolor) {
+    .display-outline,
+    .display-outline-ember {
+      color: transparent;
+    }
   }
 
   /* ---- Rules --------------------------------------------------------- */

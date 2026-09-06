@@ -335,7 +335,9 @@ the shell. The landing page is that column twice with a full-bleed ticker
 between: the hero above it, and the section index below. The hero is the one
 place the column has a child that leaves it - the portrait runs to both screen
 edges below the `md` split, on negative gutter margins that cancel at the split
-rather than on a second shell.
+rather than on a second shell. A full-bleed plate has no width to give up, so
+every cap on its height is a deeper crop; its height therefore carries a floor
+as well, and the floor is what keeps a face in it on a landscape phone.
 
 Vertical rhythm is coarse and consistent. `1.5rem` is the standing gap under a
 page title whatever follows it. Paragraphs in prose sit `1.25rem` apart, section

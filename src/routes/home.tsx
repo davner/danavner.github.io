@@ -139,7 +139,14 @@ export function Home() {
             same place with a chance of overflowing on a face that fell back. */}
         <h1 className="display text-hero">
           <span className="block">Dan</span>
-          <span className="display-outline block">Avner</span>
+          {/* Anton's caps measure 0.8599em against the face's 0.86 leading, so
+              a solid line meets the outline stacked under it exactly and the
+              1.5px stroke crosses into the block above, over the apex of the
+              "A". Enough clearance to read as clearance against that stroke at
+              the smallest size this step reaches, and per-element: `.display`'s
+              leading is the one every bare display step inherits, and is not
+              the hero's to move. */}
+          <span className="display-outline mt-[0.045em] block">Avner</span>
         </h1>
 
         {/* The photo sits beside the copy from `md` up, not from `lg`. A plate
@@ -220,10 +227,18 @@ export function Home() {
           {/* A plate rather than a portrait in a box. Below the split it runs
               to both edges of the screen and its own height crops it to a band,
               which is what holds a full-width photograph to about half the
-              screen instead of the two-thirds its 2:3 frame would take. The
-              height is capped three ways because each binds somewhere: the
-              width on a phone, the screen on a short window, and a flat ceiling
-              on a large tablet where neither does.
+              screen instead of the two-thirds its 2:3 frame would take. Three
+              terms cap the height because each binds somewhere: the width on a
+              phone, the screen on a short window, and a flat ceiling on a large
+              tablet where neither does.
+
+              The floor is the line those caps may not cross. Nothing narrows
+              the plate, so a cap that shortens it only crops it harder, and on
+              a landscape phone `70svh` alone leaves 26% of the frame: a band
+              across the eyes with no hair and no chin. 93% of the width is the
+              flattest crop the layout already draws anywhere - the one the
+              `46rem` ceiling cuts at 767px - which holds the head with the chin
+              clear of the caption.
 
               From `md` it takes the frame's own 2:3 in the column, so nothing
               is cropped there and `object-position` has nothing to do - which
@@ -251,7 +266,7 @@ export function Home() {
               width={1067}
               height={1600}
               eager
-              className="-mx-4 h-[min(110vw,70svh,46rem)] border-x-0 sm:-mx-6 md:mx-0 md:aspect-2/3 md:h-auto md:border-x"
+              className="-mx-4 h-[clamp(93vw,min(70svh,46rem),110vw)] border-x-0 sm:-mx-6 md:mx-0 md:aspect-2/3 md:h-auto md:border-x"
               imageClassName="absolute inset-0 h-full object-[50%_35%]"
             />
           </div>

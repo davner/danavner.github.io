@@ -4,8 +4,13 @@ import sharp from "sharp";
 import { ROUTES } from "./routes";
 
 /**
- * The outlined display type, measured from the pixels a browser actually
- * paints.
+ * The display face, measured: how much ink its outline lays down against what
+ * is behind it, and where that ink lands relative to the line above.
+ *
+ * Both are things only a measurement settles. The first because axe declines to
+ * decide it, the second because it is a collision of two glyph outlines that no
+ * box model reports - a heading whose lines cross reads as a heading, and every
+ * layout assertion in the suite passes over it.
  *
  * `.display-outline` is `color: transparent` with a `-webkit-text-stroke`, and
  * axe has no model of a stroke: asked about the wordmark on the home page it
@@ -141,3 +146,114 @@ for (const colorScheme of ["dark", "light"] as const) {
     expect(measured, `no route drew outlined type in ${colorScheme} mode`).toBeGreaterThan(0);
   });
 }
+
+/**
+ * Where one stacked display line's ink ends and the next one's begins.
+ *
+ * `.display` sets `line-height: 0.86` against a face whose caps measure
+ * 0.8599em, so two stacked lines are set with their baselines one cap-height
+ * apart and the lower line's caps arrive at the upper line's baseline. Optical
+ * overshoot on the round letters, and half a stroke width on an outlined line,
+ * then take the lower line's ink up into the block above - which paints as an
+ * outline drawn through the middle of the solid letters over it.
+ *
+ * Read off the face's own metrics rather than the boxes: the boxes overlap by
+ * design and say nothing about it, and a screenshot would have to separate two
+ * lines of the same colour to say which ink was whose. The canvas reports the
+ * ink extent of the actual string at the actual size, which is the number that
+ * moves.
+ *
+ * One assumption, which holds while these lines are set flush left and start
+ * together: bands that overlap vertically are glyphs that overlap, because the
+ * two lines always share a column. A stacked heading that centred or indented
+ * one of its lines could overlap here and not touch on screen.
+ */
+function stackedInk() {
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d")!;
+  const faults: string[] = [];
+  const round = (value: number) => Math.round(value * 100) / 100;
+
+  /** The top and bottom of one line's ink, in page coordinates. */
+  const inkOf = (line: Element) => {
+    const style = getComputedStyle(line);
+    const size = parseFloat(style.fontSize);
+    context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+    // A shorthand the canvas cannot parse leaves the previous font in place and
+    // every number below becomes a measurement of 10px sans-serif.
+    if (!context.font.includes(style.fontSize)) return null;
+
+    const words = (line.textContent ?? "").trim();
+    const metrics = context.measureText(
+      style.textTransform === "uppercase" ? words.toUpperCase() : words,
+    );
+    const strut = metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent;
+    const leading = parseFloat(style.lineHeight) || strut;
+    // The block holds one line, so its box top is the line box top and the
+    // baseline sits half the leading difference below it.
+    const baseline =
+      line.getBoundingClientRect().top +
+      (leading - strut) / 2 +
+      strut -
+      metrics.fontBoundingBoxDescent;
+    // Centred, so half of it draws outside the glyph on every side.
+    const stroke = (parseFloat(style.webkitTextStrokeWidth) || 0) / 2;
+
+    return {
+      words,
+      size,
+      top: baseline - metrics.actualBoundingBoxAscent - stroke,
+      bottom: baseline + metrics.actualBoundingBoxDescent + stroke,
+    };
+  };
+
+  let pairs = 0;
+
+  for (const heading of document.querySelectorAll(".display")) {
+    const lines = [...heading.children].filter(
+      (child) =>
+        getComputedStyle(child).display === "block" && (child.textContent ?? "").trim() !== "",
+    );
+
+    for (let index = 1; index < lines.length; index++) {
+      const above = inkOf(lines[index - 1]);
+      const below = inkOf(lines[index]);
+      if (!above || !below) {
+        faults.push(`a display line's face could not be measured`);
+        continue;
+      }
+
+      pairs += 1;
+      const clearance = below.top - above.bottom;
+      if (clearance < 0) {
+        faults.push(
+          `"${below.words}" is drawn ${round(-clearance)}px up into "${above.words}" at ${round(below.size)}px`,
+        );
+      }
+    }
+  }
+
+  return { faults, pairs };
+}
+
+test("a stacked display heading keeps its lines out of each other", async ({ page }) => {
+  const faults: string[] = [];
+  let pairs = 0;
+
+  for (const route of ROUTES) {
+    await page.goto(route);
+    await page.getByRole("heading", { level: 1 }).waitFor();
+    // The metrics below are the face's, so a reading taken before it has
+    // arrived is a reading of the fallback.
+    await page.evaluate(() => document.fonts.ready);
+
+    const found = await page.evaluate(stackedInk);
+    pairs += found.pairs;
+    faults.push(...found.faults.map((fault) => `${route}: ${fault}`));
+  }
+
+  expect(faults).toEqual([]);
+  // Otherwise a heading that stopped stacking its lines, or a renamed face
+  // class, turns this into a sweep over nothing.
+  expect(pairs, "no route stacked two display lines, so nothing was compared").toBeGreaterThan(0);
+});

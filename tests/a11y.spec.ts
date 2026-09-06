@@ -144,27 +144,23 @@ const EXPLAINED: Record<string, (node: FindingNode) => boolean> = {
 };
 
 /*
- * The one node kept out of every scan, and it is Radix's rather than ours.
+ * Radix's focus proxy: the visually hidden span `NavigationMenuTrigger` mounts
+ * beside itself while its panel is open, to hand the keyboard into the panel
+ * and back out of it.
  *
- * While a navigation panel is open, `NavigationMenuTrigger` renders a visually
- * hidden `<span aria-hidden tabindex="0">` beside itself. axe reads that as
- * `aria-hidden-focus`, and on the face of it that is right: a tab stop nothing
- * assistive can see.
+ * Nothing is kept out of the scans below on its account. It ships carrying
+ * `aria-hidden` alongside its tab stop, which is `aria-hidden-focus` and a
+ * Level A failure of 4.1.2; `components/ui/navigation-menu.tsx` takes the
+ * attribute back off and leaves the stop, for the reason set out there. So the
+ * open-state sweep is what holds that fix - put the attribute back and these
+ * tests report it, in both themes.
  *
- * It is not a stop. Its `onFocus` hands focus straight into the panel, so the
- * span is how Tab gets into the content at all rather than something Tab gets
- * caught on. There is no prop to turn it off, so the choice is between allowing
- * this node and never scanning a menu open - and a state a route load never
- * reaches is exactly where this suite has found real defects before.
- *
- * Excluded by node, never by rule: `aria-hidden-focus` is how the sort listbox
- * defect was caught, and allowing it outright would have hidden that. The
- * redirect the exclusion rests on is asserted at the foot of this file rather
- * than taken on trust, in both tab directions, so a Radix release that stops
- * moving focus out of the proxy fails here instead of going quiet.
+ * Named by the tab stop rather than by the attribute, because the attribute is
+ * the thing that is supposed to be gone. The tests at the foot of this file
+ * still need to find the node, to say that focus passes through it rather than
+ * stopping on it.
  */
-const RADIX_FOCUS_PROXY =
-  '[data-slot="navigation-menu-item"] > span[aria-hidden="true"][tabindex="0"]';
+const RADIX_FOCUS_PROXY = '[data-slot="navigation-menu-item"] > span[tabindex="0"]';
 
 /** The undecided results with no accepted reason for being undecided. */
 function unexplained(incomplete: Finding[]): Finding[] {
@@ -182,10 +178,7 @@ function unexplained(incomplete: Finding[]): Finding[] {
  * sweeps below produce failures that are otherwise indistinguishable.
  */
 async function expectAxeClean(page: Page, testInfo: TestInfo, subject: string) {
-  const { violations, incomplete } = await new AxeBuilder({ page })
-    .withTags(TAGS)
-    .exclude(RADIX_FOCUS_PROXY)
-    .analyze();
+  const { violations, incomplete } = await new AxeBuilder({ page }).withTags(TAGS).analyze();
 
   if (violations.length > 0) {
     await testInfo.attach("axe-violations", {
@@ -299,16 +292,18 @@ test.describe("heading order", () => {
 });
 
 /**
- * The other half of the `RADIX_FOCUS_PROXY` exclusion above.
+ * The other half of the `RADIX_FOCUS_PROXY` note above.
  *
- * The proxy is allowed because it passes focus on rather than holding it. This
- * is what checks that it does, in the one state where it is rendered at all.
+ * The proxy keeps its tab stop because it passes focus on rather than holding
+ * it. This is what checks that it does, in the one state where it is rendered
+ * at all - a release that stopped moving focus out of it would leave a stop on
+ * a span with no name and nothing in it, which is the defect the attribute was
+ * removed on the strength of it not being.
  *
  * Both directions, because they are two branches of the same `onFocus` and only
  * one of them is Tab arriving from the trigger. Coming back out of the panel the
- * proxy is met from the other side, and focus resting on it there is the same
- * defect `aria-hidden-focus` names - a stop nothing assistive can see - reached
- * by the direction the forward assertion cannot speak for.
+ * proxy is met from the other side, by the direction the forward assertion
+ * cannot speak for.
  */
 test("the navigation menu hands the keyboard to its panel and back", async ({ page }) => {
   // The bar is `hidden sm:flex`, so the trigger exists only above 640.

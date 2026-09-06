@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 import { ALL_SECTIONS, isGroup, SECTIONS } from "../src/lib/site";
 
@@ -172,4 +172,54 @@ test("the keyboard leaves the panel at the end of its links", async ({ page }) =
     }, PANEL),
     "Tab from the last link stayed inside the panel, with nothing further to tab to",
   ).toBe(false);
+});
+
+/** Whether focus is inside the panel, asked of the document for the same reason. */
+const focusIsInPanel = (page: Page) =>
+  page.evaluate((selector) => {
+    const panel = document.querySelector(selector);
+    return panel ? panel.contains(document.activeElement) : false;
+  }, PANEL);
+
+/**
+ * And back in again, which is the direction with something under it.
+ *
+ * Radix pulls the panel's links out of the tab order the moment focus leaves
+ * the panel for the trigger, and leaves the panel open while it does - so this
+ * is a settled state rather than a race, and one Shift+Tab reaches it. What
+ * puts the links back is the focus proxy `components/ui/navigation-menu.tsx`
+ * describes: Tab hands focus to it, and its `onFocus` restores the order and
+ * moves on into the panel.
+ *
+ * Which makes this the case that decides what may be done about the proxy's
+ * `aria-hidden-focus`. Take its tab stop away - `tabindex="-1"`, or hiding the
+ * span - and this Tab lands on the theme toggle instead, leaving five links
+ * sitting open on screen that a mouse can reach and a keyboard cannot.
+ */
+test("the keyboard gets back into the panel it just left", async ({ page }) => {
+  await reachOpenState(page, OPEN);
+
+  const trigger = page.locator("[data-slot=navigation-menu-trigger]").first();
+  await trigger.focus();
+  await page.keyboard.press("Tab");
+  expect(await focusIsInPanel(page), "Tab from the trigger never reached the panel").toBe(true);
+
+  await page.keyboard.press("Shift+Tab");
+  await expect(page.locator(PANEL), "leaving for the trigger closed the panel").toBeVisible();
+
+  // Asserted rather than assumed: if Radix stops stripping the links, Tab
+  // reaches them whatever the proxy does, and the case below proves nothing.
+  const stripped = await page
+    .locator(`${PANEL} a`)
+    .evaluateAll((links) => links.filter((link) => link.tabIndex < 0).length);
+  expect(
+    stripped,
+    "the panel's links are still in the tab order, so nothing has to restore them",
+  ).toBeGreaterThan(0);
+
+  await page.keyboard.press("Tab");
+  expect(
+    await focusIsInPanel(page),
+    "Tab off the trigger walked past an open panel whose links were out of the tab order",
+  ).toBe(true);
 });

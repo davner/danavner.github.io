@@ -51,15 +51,76 @@ function NavigationMenuList({
   );
 }
 
+/**
+ * Radix's focus proxy: the one-pixel span `NavigationMenuTrigger` mounts beside
+ * itself, as a direct child of the item, while its panel is open.
+ *
+ * It ships as `<span aria-hidden="true" tabindex="0">`, and that pair is what
+ * axe reports as `aria-hidden-focus` - a tab stop nothing assistive can
+ * describe, which WCAG 4.1.2 fails at Level A. There is no prop to turn it off.
+ */
+const FOCUS_PROXY = ':scope > span[aria-hidden="true"][tabindex="0"]';
+
 function NavigationMenuItem({
   className,
+  ref,
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Item>) {
+  const item = React.useRef<HTMLLIElement | null>(null);
+
+  /*
+   * Departure from upstream: the proxy keeps its tab stop and loses its
+   * `aria-hidden`, rather than the other way round.
+   *
+   * The stop is the half that has to stay. Radix pulls the panel's own links
+   * out of the tab order every time the panel is dismissed, and this span's
+   * `onFocus` is the only thing that puts them back; it is also how Shift+Tab
+   * reaches the panel from below, which is the direction that has no other way
+   * in once the links are stripped. Take the stop away - `tabIndex={-1}`, or
+   * hiding the span - and Escape followed by a second open leaves Tab walking
+   * from the trigger straight past five links that are still stripped. That
+   * trades a 4.1.2 finding for a 2.1.1 one, which is the worse half of the
+   * trade: the panel becomes mouse-only.
+   *
+   * Dropping `aria-hidden` costs nothing by comparison. The span holds no text,
+   * and its `onFocus` hands focus on inside the same event, so focus never
+   * comes to rest there for a reader to be told about.
+   *
+   * An observer rather than an effect on the open state, because no render of
+   * ours coincides with the proxy's: it mounts when Radix's own trigger
+   * re-renders, and every wrapper in this file sits outside that. `childList`
+   * alone and no subtree, so removing the attribute cannot feed the observer
+   * its own mutation, and a panel re-rendering its links cannot wake it.
+   */
+  React.useEffect(() => {
+    const node = item.current;
+    if (!node) return;
+
+    const reveal = () => {
+      for (const proxy of node.querySelectorAll(FOCUS_PROXY)) {
+        proxy.removeAttribute("aria-hidden");
+      }
+    };
+
+    reveal();
+    const observer = new MutationObserver(reveal);
+    observer.observe(node, { childList: true });
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <NavigationMenuPrimitive.Item
       data-slot="navigation-menu-item"
       className={cn("relative", className)}
       {...props}
+      // Composed rather than spread, so a consumer's ref still arrives and the
+      // observer above still has the item to watch.
+      ref={(node) => {
+        item.current = node;
+        if (typeof ref === "function") return ref(node);
+        if (ref) ref.current = node;
+      }}
     />
   );
 }

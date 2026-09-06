@@ -53,9 +53,9 @@ type FindingNode = Finding["nodes"][number];
  * the grain overlay in `backdrop.tsx` is a background image axe cannot
  * resolve, so nodes sitting over it come back undecided. axe decides the large
  * majority of contrast nodes here and leaves a bounded slice undecided, for the
- * six specific reasons `PRODUCT.md` lists and counts. That slice is measured
- * from painted pixels instead. Everything else is gated, which is green today
- * on every route in both themes.
+ * six specific reasons `PRODUCT.md` lists. That slice is measured from painted
+ * pixels instead. Everything else is gated, on every route and on every state
+ * in `OPEN_STATES`, in both themes.
  *
  * Use `withTags` to change what runs. `disableRules` is not the way to widen
  * this allowlist, but not because it would misbehave: measured in

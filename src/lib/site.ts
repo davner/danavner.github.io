@@ -68,9 +68,9 @@ export interface SectionGroup {
  * and a section added to one is a section half the site cannot reach.
  *
  * The collections are grouped rather than sitting alongside About and Career,
- * because they are not the same kind of thing: Shows, Vinyl and Comics are all
- * "what I am into", and listing them flat makes a seven-item bar where four of
- * the entries answer the same question. Grouping also stops the bar growing
+ * because they are not the same kind of thing: Shows, Vinyl, Comics, Fortnite
+ * and dan.fm are all "what I am into", and listing them flat makes a nine-item
+ * bar where five of the entries answer the same question. Grouping also stops the bar growing
  * every time another shelf gets a page.
  */
 export const SECTIONS: (Section | SectionGroup)[] = [

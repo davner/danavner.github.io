@@ -42,8 +42,8 @@ const UNDECLARED = 7;
  *
  * Handed to `page.evaluate`, so it closes over nothing and takes what it needs
  * as an argument. One page load per width and route is what makes eleven widths
- * across thirteen routes affordable at all; four separate assertions would be
- * four times the loads for the same coverage.
+ * across every route in `ROUTES` affordable at all; four separate assertions
+ * would be four times the loads for the same coverage.
  */
 function collectFaults(scale: { steps: string[]; paired: string[]; undeclared: number }) {
   const faults: string[] = [];

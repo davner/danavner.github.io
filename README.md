@@ -1328,8 +1328,9 @@ three woff2 files, ~108 kB, declared by hand in `src/fonts.css` so `dist/`
 carries exactly three font files rather than every subset Fontsource ships.
 
 **Primitives.** `.display` for poster type, `.display-outline` /
-`.display-outline-ember` for the stroked variants, `.readout` / `.readout-dim`
-for the mono labels, `.rule-ticks` for the ruler edge, `.cut-corners` for
+`.display-outline-ember` for the stroked variants, `.display-stack` for a title
+whose lines stack - Anton's caps and the outline's stroke would otherwise paint
+into the line above - `.readout` / `.readout-dim` for the mono labels, `.rule-ticks` for the ruler edge, `.cut-corners` for
 registration marks on hover, `.solo-badge` for the shimmer, `.on-air-lamp` for the
 glow on dan.fm's station dot. Grain and the starfield live in
 `components/backdrop.tsx`. Panels are plain `gap-px` grids over a `bg-border`

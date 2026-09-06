@@ -2886,7 +2886,7 @@ test.describe("chrome", () => {
      * entry in `ROUTES` waits on a chunk, and the count is what the sweep
      * checks itself against at the end.
      */
-    const EAGER_ROUTES = ["/", "/about", "/career", "/blog", "/colophon"];
+    const EAGER_ROUTES = ["/", "/about", "/career", "/blog", "/colophon", "/404"];
 
     /*
      * Taller than the fallback reaches unaided, so only a container that grows

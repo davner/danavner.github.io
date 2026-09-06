@@ -44,4 +44,17 @@ export const ROUTES: readonly string[] = [
    */
   "/now/2026-08-10",
   ...(OLDEST_ALBUM ? [`/dan-fm/${OLDEST_ALBUM}`] : []),
+  /*
+   * The page a broken link lands on, which is the one page here nobody chooses
+   * to visit and so the one nobody looks at. `vite-plugin-pages.ts` writes it
+   * as a bare file rather than as a page with a directory beside it, because
+   * Pages serves it for every URL it has no file for rather than for an address
+   * of its own - `/404` is only the address that file also happens to answer at.
+   *
+   * That shape is why the sweeps reading `dist` still hold: they resolve a
+   * route to its flat file, which this has. The other way in - a path matching
+   * no route at all - has no file to resolve and stays out of this list;
+   * `tests/not-found.spec.ts` walks that one.
+   */
+  "/404",
 ];

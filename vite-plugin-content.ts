@@ -9,7 +9,7 @@ import { albumTitle, albumUrl } from "./src/lib/dan-fm-summary";
 import { nowParagraphs, nowSummary } from "./src/lib/now-summary";
 import { showHeading } from "./src/lib/show-summary";
 import { ALL_SECTIONS } from "./src/lib/site";
-import { NO_ROW, dateOf, showDateOf, tally, type SiteIndex } from "./src/lib/site-index";
+import { dateOf, rowFor, showDateOf, tally, type SiteIndex } from "./src/lib/site-index";
 
 const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;
 const WORDS_PER_MINUTE = 200;
@@ -1589,7 +1589,8 @@ export function readShows(root: string, publicDir: string) {
  * Every section in `ALL_SECTIONS` gets a row, and one with nothing to say gets
  * `NO_ROW` rather than no row at all: `/about` and `/career` are pages rather
  * than collections, and every collection is empty on a checkout the fetch jobs
- * have never run against.
+ * have never run against. Each row states where its newest item lives; `rowFor`
+ * decides whether that is somewhere the row does not already go.
  *
  * `seed` is the content plugin's own, so the index, the bundle and the
  * generated pages are all made from the same album log.
@@ -1604,6 +1605,8 @@ function buildSiteIndex(root: string, publicDir: string, seed: SeedRule): SiteIn
     rows["/now"] = {
       latest: nowSummary(current, 90),
       ...dateOf(current.updated),
+      // The entry has no page of its own - it is what `/now` prints - so this
+      // is the section's own path, and `rowFor` reads that as no link at all.
       href: "/now",
       tally: tally(archive.length + 1, "entry", "entries"),
     };
@@ -1711,7 +1714,7 @@ function buildSiteIndex(root: string, publicDir: string, seed: SeedRule): SiteIn
   }
 
   return Object.fromEntries(
-    ALL_SECTIONS.map((section) => [section.to, rows[section.to] ?? NO_ROW]),
+    ALL_SECTIONS.map((section) => [section.to, rowFor(section.to, rows[section.to])]),
   );
 }
 

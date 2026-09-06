@@ -38,6 +38,8 @@ export interface IndexRow {
   /**
    * That item's page on this site. Null where it has none: a record and a
    * comic live on someone else's site, and the row must not pretend otherwise.
+   * Null too where the item's page is the section's own - see `rowFor`, which
+   * is what settles that one rather than each row settling it for itself.
    */
   href: string | null;
   /**
@@ -58,6 +60,29 @@ export const NO_ROW: IndexRow = {
   href: null,
   tally: null,
 };
+
+/**
+ * A section's row as the page is handed it: the row that was built for it, or
+ * nothing at all, with an `href` that has somewhere of its own to go.
+ *
+ * A row names the newest item and links to that item's page. Where the item has
+ * no page of its own the link is the section's own path - `/now` prints one
+ * entry rather than listing it, so its newest entry is the page the row already
+ * opens - and a second control onto the row's own destination is a tab stop
+ * that arrives nowhere new. Worse on that row than on any other, because an
+ * entry with no title is named by a cut of its prose, so the tab stop announces
+ * itself as half a sentence.
+ *
+ * Applied to every row rather than written into the one that needs it, so the
+ * next section whose items have no pages cannot ship the same link by writing
+ * the obvious thing. What the page does with the answer already exists: a row
+ * with no `href` prints its item as plain text, which is what `/vinyl` and
+ * `/fortnite` have always done.
+ */
+export function rowFor(section: string, row: IndexRow | undefined): IndexRow {
+  if (!row) return NO_ROW;
+  return row.href === section ? { ...row, href: null } : row;
+}
 
 /** The two date fields, which are only ever set as a pair. */
 export type DateFields = Pick<IndexRow, "date" | "dateLabel">;

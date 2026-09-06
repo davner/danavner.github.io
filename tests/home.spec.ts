@@ -270,13 +270,15 @@ for (const width of [375, 1280]) {
       if ((await item.count()) === 0) continue;
 
       /*
-       * A row whose newest item has no page of its own links to the collection
-       * instead - `/now`'s current entry is the page it is listed on - and a
-       * click there is meant to land in the same place as the overlay's. Only a
-       * row that leads somewhere else can tell the two apart.
+       * A row that draws an item link at all draws one that goes somewhere the
+       * row does not - `src/lib/site-index.ts` refuses the other kind - so
+       * every link found here has to be distinguishable from the overlay behind
+       * it, and none of them may be skipped.
        */
       const href = await item.getAttribute("href");
-      if (href === section.to) continue;
+      expect(href, `${section.to}'s newest entry links back to the row's own section`).not.toBe(
+        section.to,
+      );
 
       await showRow(row);
       const box = await item.boundingBox();

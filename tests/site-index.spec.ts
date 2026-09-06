@@ -165,6 +165,21 @@ test.describe("every section's row", () => {
     }
   });
 
+  test("no row points where the row already goes", () => {
+    /*
+     * A row's link is to the item's own page, and the row itself already opens
+     * the section. Where the two are the same address the item has no page of
+     * its own - `/now` prints its newest entry rather than listing it - and the
+     * link is a second tab stop onto the destination the reader is already on
+     * their way to.
+     */
+    const index = loadIndex(REPO, PUBLIC, "1");
+
+    for (const [section, row] of Object.entries(index)) {
+      expect(row.href, `${section} links to itself`).not.toBe(section);
+    }
+  });
+
   test("no unfinished post is named", () => {
     /*
      * `readPosts` returns drafts with everything else and says so, so the
@@ -227,6 +242,26 @@ test.describe("what a row refuses to say", () => {
       dateLabel: "2019",
       href: "/shows/some-band",
       tally: "1 show",
+    });
+  });
+
+  test("now names its newest entry and gives it nothing to link to", () => {
+    /*
+     * The sweep above only says the rule held for whatever was in the repo the
+     * morning it ran. This is the row the rule was written for, built from a
+     * log of exactly one entry: the entry is named, and the link that would go
+     * back to the page naming it is not there.
+     */
+    const index = indexOf({
+      "src/content/now/2026-01-02.md": "---\nupdated: 2026-01-02\n---\n\nStill here.\n",
+    });
+
+    expect(index["/now"]).toEqual({
+      latest: "Still here.",
+      date: "2026-01-02",
+      dateLabel: "January 2, 2026",
+      href: null,
+      tally: "1 entry",
     });
   });
 

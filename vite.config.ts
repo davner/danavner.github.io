@@ -8,6 +8,7 @@ import { defineConfig, type Plugin } from "vite";
 import { SITE_TIME_ZONE } from "./src/lib/site";
 import { contentPlugin } from "./vite-plugin-content";
 import { coverVariantsPlugin } from "./vite-plugin-cover-variants";
+import { feedsPlugin } from "./vite-plugin-feeds";
 import { pagesPlugin } from "./vite-plugin-pages";
 
 /**
@@ -133,6 +134,7 @@ export default defineConfig({
     contentPlugin(),
     preloadFonts(),
     coverVariantsPlugin(),
+    feedsPlugin(),
     pagesPlugin(),
   ],
   resolve: {

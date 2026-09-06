@@ -32,6 +32,7 @@
     "src/lib/now-summary.ts",
     "src/lib/routes.ts",
     "src/lib/show-summary.ts",
+    "src/lib/site-index.ts",
     "src/lib/site.ts"
   ]
 }

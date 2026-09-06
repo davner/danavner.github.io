@@ -5,7 +5,11 @@ import { load as parseYaml } from "js-yaml";
 import type { Plugin } from "vite";
 
 import { danFmLinks, reviewProblems, takeProblems } from "./src/lib/dan-fm-markdown";
-import { nowParagraphs } from "./src/lib/now-summary";
+import { albumTitle, albumUrl } from "./src/lib/dan-fm-summary";
+import { nowParagraphs, nowSummary } from "./src/lib/now-summary";
+import { showHeading } from "./src/lib/show-summary";
+import { ALL_SECTIONS } from "./src/lib/site";
+import { NO_ROW, dateOf, showDateOf, tally, type SiteIndex } from "./src/lib/site-index";
 
 const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;
 const WORDS_PER_MINUTE = 200;
@@ -1572,6 +1576,146 @@ export function readShows(root: string, publicDir: string) {
 }
 
 /**
+ * What every section of the site last gained and how much it holds, in a few
+ * hundred bytes - the home index, decided here and served as
+ * `virtual:site-index`.
+ *
+ * Built here rather than by the page that prints it because the landing chunk
+ * is eager: a home page importing the collections it indexes would pull ~80 kB
+ * of payload into the bundle every page loads, along with two module-level
+ * constructions that stop the rest of it being shaken out. `src/lib/site-index.ts`
+ * carries the shape and the wording; this decides what each section has to say.
+ *
+ * Every section in `ALL_SECTIONS` gets a row, and one with nothing to say gets
+ * `NO_ROW` rather than no row at all: `/about` and `/career` are pages rather
+ * than collections, and every collection is empty on a checkout the fetch jobs
+ * have never run against.
+ *
+ * `seed` is the content plugin's own, so the index, the bundle and the
+ * generated pages are all made from the same album log.
+ */
+function buildSiteIndex(root: string, publicDir: string, seed: SeedRule): SiteIndex {
+  const rows: Partial<SiteIndex> = {};
+
+  const { current, archive } = readNow(root, publicDir);
+  // An empty log comes back as an entry with an empty date rather than as no
+  // entry at all, and an empty date renders as a blank readout under a heading.
+  if (current.updated) {
+    rows["/now"] = {
+      latest: nowSummary(current, 90),
+      ...dateOf(current.updated),
+      href: "/now",
+      tally: tally(archive.length + 1, "entry", "entries"),
+    };
+  }
+
+  /*
+   * `readCollection` hands both markdown collections over newest first, so the
+   * first entry is the latest one.
+   *
+   * Drafts are the caller's to drop - `readPosts` says so - and this is the
+   * caller that would otherwise print an unfinished title on the front page and
+   * count it in the total.
+   */
+  const posts = readPosts(root, publicDir).filter((entry) => !entry.draft);
+  const [post] = posts;
+  if (post) {
+    rows["/blog"] = {
+      latest: post.title,
+      ...dateOf(post.date),
+      href: `/blog/${post.slug}`,
+      tally: tally(posts.length, "post"),
+    };
+  }
+
+  const shows = readShows(root, publicDir);
+  const [show] = shows;
+  if (show) {
+    rows["/shows"] = {
+      latest: showHeading(show),
+      ...showDateOf(show),
+      href: `/shows/${show.slug}`,
+      tally: tally(shows.length, "show"),
+    };
+  }
+
+  // Newest by the day it was added rather than by position, which is the rule
+  // `statsFor` in `src/lib/vinyl.ts` already reads its own latest by.
+  const records = [...readVinyl(root, publicDir).records].sort((a, b) =>
+    b.added.localeCompare(a.added),
+  );
+  const [record] = records;
+  if (record) {
+    rows["/vinyl"] = {
+      latest: `${record.artist} - ${record.title}`,
+      ...dateOf(record.added),
+      // There is no `/vinyl/:id` route, and pointing the row at Discogs would
+      // send a reader off the site from the site's own index.
+      href: null,
+      tally: tally(records.length, "record"),
+    };
+  }
+
+  /*
+   * Two counts and no newest comic, which is a refusal rather than an omission:
+   * the pull list is what is waiting at the shop, so it is dated forward, and a
+   * run on the shelf carries no date at all. Either one printed as the latest
+   * would present something that has not happened as something that did.
+   */
+  const comics = readComics(root, publicDir);
+  const shelf = [
+    tally(comics.series.length, "run"),
+    comics.pullList.length ? `${comics.pullList.length} waiting` : null,
+  ].filter(Boolean);
+  if (shelf.length) {
+    rows["/comics"] = {
+      latest: null,
+      date: null,
+      dateLabel: null,
+      href: null,
+      tally: shelf.join(" · "),
+    };
+  }
+
+  // The calendar is sorted newest first, so the first season is the one running.
+  const seasons = readFortnite(root, publicDir).seasons;
+  const [season] = seasons;
+  if (season) {
+    rows["/fortnite"] = {
+      latest: season.label,
+      // A season is a period rather than an event: a date beside the label
+      // would read as the day it happened.
+      date: null,
+      dateLabel: null,
+      // Nor does a season have a page - they are tabs on `/fortnite`.
+      href: null,
+      tally: tally(seasons.length, "season"),
+    };
+  }
+
+  /*
+   * The newest album in the log, not the one on air. `station()` in
+   * `src/lib/dan-fm.ts` reads its day off the reader's clock and this is baked
+   * at build time, so "the newest one logged" is the claim that stays true
+   * however old the build is.
+   */
+  const albums = readDanFm(root, publicDir, seed).albums;
+  const [album] = albums;
+  if (album) {
+    rows["/dan-fm"] = {
+      latest: albumTitle(album),
+      ...dateOf(album.date),
+      href: albumUrl(album),
+      tally: tally(albums.length, "album"),
+    };
+  }
+
+  return Object.fromEntries(
+    ALL_SECTIONS.map((section) => [section.to, rows[section.to] ?? NO_ROW]),
+  );
+}
+
+/**
  * A path under `public/img/` as the source writes one.
  *
  * Anchored on the delimiter that opens it, which is what tells a reference from
@@ -1679,6 +1823,12 @@ export function contentPlugin(): Plugin {
   const FORTNITE = "fortnite";
   const DAN_FM = "dan-fm";
 
+  /**
+   * Not a page: a line per section for the home index, built from the readers
+   * above rather than from a content file of its own. See `buildSiteIndex`.
+   */
+  const SITE_INDEX = "site-index";
+
   function virtualId(name: string) {
     return `virtual:${name}`;
   }
@@ -1717,7 +1867,7 @@ export function contentPlugin(): Plugin {
     },
 
     resolveId(id) {
-      for (const single of [VINYL, NOW, COMICS, FORTNITE, DAN_FM]) {
+      for (const single of [VINYL, NOW, COMICS, FORTNITE, DAN_FM, SITE_INDEX]) {
         if (id === virtualId(single)) return resolvedId(single);
       }
       const collection = COLLECTIONS.find((entry) => id === virtualId(entry.name));
@@ -1739,6 +1889,10 @@ export function contentPlugin(): Plugin {
       }
       if (id === resolvedId(DAN_FM)) {
         return `export const danFm = ${JSON.stringify(readDanFm(root, publicDir, seedDanFm))};`;
+      }
+      if (id === resolvedId(SITE_INDEX)) {
+        const index = buildSiteIndex(root, publicDir, seedDanFm);
+        return `export const siteIndex = ${JSON.stringify(index)};`;
       }
 
       const collection = COLLECTIONS.find((entry) => id === resolvedId(entry.name));

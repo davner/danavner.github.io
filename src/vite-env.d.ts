@@ -75,3 +75,14 @@ declare module "virtual:dan-fm" {
    */
   export const danFm: DanFmPayload;
 }
+
+declare module "virtual:site-index" {
+  import type { SiteIndex } from "@/lib/site-index";
+
+  /**
+   * A line per section for the home index - what each one last gained and how
+   * much it holds - computed by `buildSiteIndex` in `vite-plugin-content.ts`
+   * so the landing page can print it without importing what it describes.
+   */
+  export const siteIndex: SiteIndex;
+}

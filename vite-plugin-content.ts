@@ -465,7 +465,7 @@ interface VinylRecordJson {
  * ever run, and the page renders its empty state - the same way an empty
  * content directory is a log with nothing in it rather than a broken build.
  */
-function readVinyl(root: string, publicDir: string) {
+export function readVinyl(root: string, publicDir: string) {
   const file = path.resolve(root, "src/content/vinyl.json");
   const empty = {
     user: "",
@@ -953,7 +953,7 @@ export function readDanFm(root: string, publicDir: string, seed: SeedRule) {
  * A missing file is not an error. The repo builds before the first fetch has
  * ever run, and the page renders its empty state.
  */
-function readComics(root: string, publicDir: string) {
+export function readComics(root: string, publicDir: string) {
   const file = path.resolve(root, "src/content/comics.json");
   const empty = {
     user: "",
@@ -1271,7 +1271,7 @@ function readFortniteSeasons(root: string, publicDir: string): FortniteSeasonJso
  * A missing file is not an error. The repo builds before the first fetch has
  * ever run, and the page renders its empty state.
  */
-function readFortnite(root: string, publicDir: string) {
+export function readFortnite(root: string, publicDir: string) {
   const calendar = readFortniteSeasons(root, publicDir);
 
   /** The calendar with no numbers against it, which is what a season nobody

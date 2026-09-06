@@ -5,6 +5,7 @@ import sharp from "sharp";
 import type { Plugin, Rollup } from "vite";
 
 import { albumSummary, albumTitle, albumUrl } from "./src/lib/dan-fm-summary";
+import { ATOM_TYPE, feedFor, feedUrl } from "./src/lib/feeds";
 import { nowSummary, nowTitle } from "./src/lib/now-summary";
 import { PAGE_META } from "./src/lib/routes";
 import { showHeading, showSummary } from "./src/lib/show-summary";
@@ -503,6 +504,24 @@ function render(template: string, page: Page, chunk: string | null, sizes: Map<s
    * bytes, and this is the tag that says which of the two is the address.
    */
   const tags = [`<link rel="canonical" href="${escapeAttribute(url)}" />`];
+
+  /*
+   * This section's own feed, beside the combined one every page inherits from
+   * `index.html`. A blog reader wants the blog, and offering them only the feed
+   * of everything makes them take four collections to get it.
+   *
+   * Titled, because the title is what a reader shows in its subscribe dialog:
+   * an untitled `rel="alternate"` says nothing about what is inside, which is
+   * exactly how a follower ends up subscribed to a feed missing what they came
+   * for.
+   */
+  const feed = feedFor(page.path);
+
+  if (feed) {
+    tags.push(
+      `<link rel="alternate" type="${ATOM_TYPE}" title="${escapeAttribute(feed.title)}" href="${escapeAttribute(feedUrl(feed))}" />`,
+    );
+  }
 
   if (chunk) {
     /*

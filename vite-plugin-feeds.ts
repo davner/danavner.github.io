@@ -1,7 +1,7 @@
 import type { Plugin } from "vite";
 
 import { albumSummary, albumTitle, albumUrl } from "./src/lib/dan-fm-summary";
-import { FEEDS, type Feed, feedUrl, ATOM_TYPE } from "./src/lib/feeds";
+import { ATOM_TYPE, COMBINED, FEEDS, type Feed, feedUrl } from "./src/lib/feeds";
 import { nowSummary, nowTitle } from "./src/lib/now-summary";
 import { showHeading, showSummary } from "./src/lib/show-summary";
 import { SITE_NAME, SITE_TIME_ZONE, SITE_URL } from "./src/lib/site";
@@ -398,6 +398,33 @@ export function feedsPlugin(): Plugin {
       root = config.root;
       publicDir = config.publicDir;
       seedDanFm = seedsDanFm(config.command);
+    },
+
+    /**
+     * The combined feed's autodiscovery link, injected rather than written into
+     * `index.html`.
+     *
+     * This plugin is build-only, so a literal in that file would advertise a
+     * feed the dev server never writes, and it would be a URL kept in step with
+     * `FEEDS` by hand. `vite-plugin-pages.ts` builds every generated page and
+     * `404.html` from the `index.html` this leaves behind, so all of them
+     * inherit the link.
+     */
+    transformIndexHtml() {
+      return [
+        {
+          tag: "link",
+          attrs: {
+            rel: "alternate",
+            type: ATOM_TYPE,
+            // Titled, because a reader's subscribe dialog shows this and
+            // "alternate" on its own says nothing about what is inside.
+            title: COMBINED.title,
+            href: feedUrl(COMBINED),
+          },
+          injectTo: "head" as const,
+        },
+      ];
     },
 
     generateBundle() {

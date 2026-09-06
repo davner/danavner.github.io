@@ -1,12 +1,14 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 
 import { expect, test, type Page } from "@playwright/test";
 
-import { COMBINED, FEEDS, feedUrl, type Feed } from "../src/lib/feeds";
+import { ATOM_TYPE, COMBINED, FEEDS, feedFor, feedUrl, type Feed } from "../src/lib/feeds";
 import { SITE_URL } from "../src/lib/site";
 import { readNow, readPosts } from "../vite-plugin-content";
 import { escapeXml, stamp } from "../vite-plugin-feeds";
+
+import { ROUTES } from "./routes";
 
 const DIST = path.resolve("dist");
 const CONTENT_ROOT = process.cwd();
@@ -32,9 +34,39 @@ const FORBIDDEN = /(?![\t\n\r])\p{Cc}/u;
 /** An ampersand opening nothing, which is the commonest way a feed stops parsing. */
 const BARE_AMPERSAND = /&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)/g;
 
+/** One `<link rel="alternate">`, however its attributes were spelled. */
+const ALTERNATE = /<link\b[^>]*\brel="alternate"[^>]*>/g;
+
 /** `/feed-blog.xml` -> `dist/feed-blog.xml`. */
 function fileFor(feed: Feed) {
   return path.join(DIST, feed.path.slice(1));
+}
+
+/** `/about` -> `dist/about.html`, and `/` -> the file Pages serves at the root. */
+function pageFile(route: string) {
+  return path.join(DIST, route === "/" ? "index.html" : `${route.slice(1)}.html`);
+}
+
+/**
+ * Every page the build rendered, as a path under `dist`.
+ *
+ * A file `public/` ships as-is is not one: the CMS admin is a whole application
+ * of somebody else's that never passed through `index.html`, and holding it to
+ * this site's head is holding upstream to a rule it has never read.
+ */
+function renderedPages(): string[] {
+  return readdirSync(DIST, { recursive: true })
+    .map((file) => String(file))
+    .filter((file) => file.endsWith(".html") && !existsSync(path.join(PUBLIC, file)));
+}
+
+/** What each `rel="alternate"` in one page's head offers, in document order. */
+function alternatesOf(html: string) {
+  return [...html.matchAll(ALTERNATE)].map(([tag]) => ({
+    type: /\btype="([^"]*)"/.exec(tag)?.[1] ?? "",
+    title: /\btitle="([^"]*)"/.exec(tag)?.[1] ?? "",
+    href: /\bhref="([^"]*)"/.exec(tag)?.[1] ?? "",
+  }));
 }
 
 /**
@@ -346,6 +378,70 @@ test.describe("the text a feed entry carries", () => {
         source.match(BARE_AMPERSAND) ?? [],
         `${feed.path} carries an ampersand that opens nothing`,
       ).toEqual([]);
+    }
+  });
+});
+
+/**
+ * What a page says about its feed.
+ *
+ * A reader's subscribe button offers whatever the document advertises, and it
+ * offers it under the title the document gives. A page in a section carries
+ * two: the combined feed first, then its own - so a follower who takes the
+ * obvious one gets everything, and a follower who wants the blog can see that
+ * the blog has its own.
+ */
+test.describe("the feed a page advertises", () => {
+  test("every page the build rendered advertises the combined feed", () => {
+    const pages = renderedPages();
+    expect(pages.length, "the build rendered no pages").toBeGreaterThan(0);
+
+    for (const file of pages) {
+      const offered = alternatesOf(readFileSync(path.join(DIST, file), "utf8")).filter(
+        (link) => link.href === feedUrl(COMBINED),
+      );
+
+      expect(offered, `${file} does not offer the combined feed exactly once`).toEqual([
+        { type: ATOM_TYPE, title: COMBINED.title, href: feedUrl(COMBINED) },
+      ]);
+    }
+  });
+
+  test("a section and its content pages also advertise the section's own feed", () => {
+    for (const route of ROUTES) {
+      const own = feedFor(route);
+      const expected = [COMBINED, ...(own ? [own] : [])].map((feed) => ({
+        type: ATOM_TYPE,
+        title: feed.title,
+        href: feedUrl(feed),
+      }));
+
+      expect(
+        alternatesOf(readFileSync(pageFile(route), "utf8")),
+        `${route} does not advertise the feeds it belongs to`,
+      ).toEqual(expected);
+    }
+  });
+
+  test("no page advertises a feed the build did not write", () => {
+    const declared = new Set(FEEDS.map(feedUrl));
+
+    for (const file of renderedPages()) {
+      for (const link of alternatesOf(readFileSync(path.join(DIST, file), "utf8"))) {
+        expect(
+          declared.has(link.href),
+          `${file} advertises ${link.href}, which is not a declared feed`,
+        ).toBe(true);
+
+        const served = servedFile(link.href);
+        expect(
+          served,
+          `${file} advertises "${link.href}", which is not an address here`,
+        ).not.toBeNull();
+        expect(existsSync(served!), `${file} advertises ${link.href}, which has no file`).toBe(
+          true,
+        );
+      }
     }
   });
 });

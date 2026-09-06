@@ -257,3 +257,58 @@ test("a stacked display heading keeps its lines out of each other", async ({ pag
   // class, turns this into a sweep over nothing.
   expect(pairs, "no route stacked two display lines, so nothing was compared").toBeGreaterThan(0);
 });
+
+test("the outline's fill is only knocked out where a stroke replaces it", async ({ page }) => {
+  /*
+   * An outlined line is a transparent fill standing on the stroke to be legible
+   * at all, so an engine that does not draw the stroke has to keep the fill.
+   * Unguarded, such an engine renders the word as nothing while the accessible
+   * name still reads it out - the failure is total, and silent, behind a
+   * prefixed property.
+   *
+   * What this can and cannot show: Chromium satisfies the condition, so the
+   * branch that matters is the one it never takes and no assertion here
+   * exercises it. What is checked is that the browser parsed the knockout into
+   * a conditional group at all, which is the thing an edit takes away. The
+   * CSSOM is what the browser built, so a stylesheet whose condition the build
+   * flattens on the way out is caught here; the source it was written in is
+   * not what any reader is served.
+   */
+  await page.goto("/");
+  await page.getByRole("heading", { level: 1 }).waitFor();
+
+  const knockouts = await page.evaluate(() => {
+    const found: { selector: string; condition: string | null }[] = [];
+
+    const walk = (rules: CSSRuleList, condition: string | null) => {
+      for (const rule of rules) {
+        if (rule instanceof CSSSupportsRule) {
+          walk(rule.cssRules, rule.conditionText);
+        } else if (rule instanceof CSSStyleRule) {
+          // A fill with no alpha left, however the engine spells it back.
+          const fill = rule.style.color.replace(/\s/g, "");
+          const knocked = fill === "transparent" || /,0\)$/.test(fill);
+          if (knocked && /\.display-outline/.test(rule.selectorText)) {
+            found.push({ selector: rule.selectorText, condition });
+          }
+        } else if ("cssRules" in rule) {
+          // A layer or a media block, which carries the condition through.
+          walk((rule as CSSGroupingRule).cssRules, condition);
+        }
+      }
+    };
+
+    for (const sheet of document.styleSheets) walk(sheet.cssRules, null);
+    return found;
+  });
+
+  const unguarded = knockouts.filter((rule) => !/text-stroke/.test(rule.condition ?? ""));
+  expect(
+    unguarded.map((rule) => rule.selector),
+    "the outline's fill is knocked out whether or not the stroke draws",
+  ).toEqual([]);
+
+  // Otherwise a renamed class leaves nothing to find and the emptiness above
+  // reads as a pass.
+  expect(knockouts, "nothing knocks the outline's fill out any more").not.toHaveLength(0);
+});

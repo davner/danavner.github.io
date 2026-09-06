@@ -21,16 +21,18 @@ async function stock(page: Page): Promise<string> {
   return page.evaluate(() => getComputedStyle(document.body).backgroundColor);
 }
 
+/** The cover, which is a page of the site and not one of the catalogue. */
+const COVER = "/";
+
 /**
- * Two pages of the catalogue and the cover. The home page is here because it is
- * the one page whose display step is replaced rather than recoloured on paper:
- * the hero is sized in `vw`, which resolves against the page box, so the print
- * block overrides it outright and this is the case that notices if that line
- * goes.
+ * Two pages of the catalogue and the cover, which prints unlike either of them:
+ * it carries no catalogue number, and its display step is replaced rather than
+ * recoloured. The size is its own case further down, because nothing in the
+ * imprint check below can see it.
  *
- * The cover goes last, because the two cases below index into this list.
+ * The cover goes last, because the cases below index into this list.
  */
-const CASES = ["/shows/bruno-mars-madrid-2026", "/blog/welcome", "/"];
+const CASES = ["/shows/bruno-mars-madrid-2026", "/blog/welcome", COVER];
 
 for (const route of CASES) {
   test(`${route} prints as what it is`, async ({ page }) => {
@@ -62,6 +64,57 @@ for (const route of CASES) {
     expect(await stock(page), "the dark theme printed on its own stock").toBe("rgb(255, 255, 255)");
   });
 }
+
+/**
+ * How much of a sheet a line of the name may take, in CSS pixels: A4 across at
+ * the 96dpi a CSS inch is defined as, less 10mm of margin either side, which is
+ * about the least a desktop printer will leave.
+ */
+const SHEET = ((210 - 2 * 10) / 25.4) * 96;
+
+test("the name is set for the sheet rather than the window", async ({ page }) => {
+  /*
+   * The hero step is a `vw` clamp, and `vw` on paper resolves against the page
+   * box - so the step has to be replaced outright in the print block rather
+   * than recoloured with the rest of the tokens. Without that line the sheet
+   * comes out of the printer with a name on it and nothing else.
+   *
+   * Print emulation swaps the media type and leaves the viewport alone, so a
+   * step still reading `vw` here reads the window: the two readings below are
+   * taken at different widths, and a size that moves between them is a size
+   * still tracking something that will be the sheet on paper.
+   */
+  await page.goto(COVER);
+  const name = page.getByRole("heading", { level: 1 });
+  await name.waitFor();
+  await page.evaluate(() => document.fonts.ready);
+
+  /** The step, and the widest line the name sets at it. */
+  const measure = () =>
+    name.evaluate((el) => ({
+      size: parseFloat(getComputedStyle(el).fontSize),
+      line: Math.max(
+        ...[...el.children].map((child) => {
+          const range = document.createRange();
+          range.selectNodeContents(child);
+          return range.getBoundingClientRect().width;
+        }),
+      ),
+    }));
+
+  await page.emulateMedia({ media: "print" });
+  await page.evaluate(() => document.fonts.ready);
+  const wide = await measure();
+
+  await page.setViewportSize({ width: 900, height: 900 });
+  const narrow = await measure();
+
+  expect(
+    wide.line,
+    `the name sets ${Math.round(wide.line)}px across, which is wider than the sheet`,
+  ).toBeLessThanOrEqual(SHEET);
+  expect(narrow.size, "the name on paper is still sized off the window").toBe(wide.size);
+});
 
 test("a show's share control stays off paper", async ({ page }) => {
   await page.goto(CASES[0]);

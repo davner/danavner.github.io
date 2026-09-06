@@ -23,6 +23,14 @@ export interface OpenState {
    * project and the test would have to skip itself half the time.
    */
   width?: number;
+  /**
+   * Forced when the state depends on how tall the window is. The collections
+   * panel caps its list against the viewport, and what that cap makes of the
+   * list - a scroller, with everything a scroller brings - only exists in a
+   * window short enough to engage it. Read only when `width` is set, since it
+   * is the same resize.
+   */
+  height?: number;
   /** Drives the page into the state, and fails if it did not get there. */
   reach: (page: Page) => Promise<void>;
 }
@@ -181,7 +189,7 @@ async function showShelf(page: Page, label: RegExp, id: string) {
 
 /** Load `state.path` and drive it into `state`, ready to be inspected. */
 export async function reachOpenState(page: Page, state: OpenState) {
-  if (state.width) await page.setViewportSize({ width: state.width, height: 800 });
+  if (state.width) await page.setViewportSize({ width: state.width, height: state.height ?? 800 });
   await page.goto(state.path);
   await page.getByRole("heading", { level: 1 }).waitFor();
   await page.waitForLoadState("networkidle");

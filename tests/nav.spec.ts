@@ -28,6 +28,12 @@ import { openState, reachOpenState } from "./open-states";
  * decision rather than an omission: a drawer holding nine links plus nine
  * sentences is a scroll, and its group headings already say what the sections
  * have in common.
+ *
+ * The panel's own shape is here for a reason the sweeps cannot cover: it fits
+ * the window it hangs in, and the keyboard can get back out of it. Both are
+ * only true of a panel that is open, and the two sweeps that would otherwise
+ * catch either - the width sweep in `tests/responsive.spec.ts` and the axe run
+ * in `tests/a11y.spec.ts` - walk each route as it loads, with this closed.
  */
 
 /** The group the panel opens, read off the nav so a renamed one fails here. */
@@ -35,6 +41,12 @@ const COLLECTIONS = SECTIONS.filter(isGroup)[0];
 
 /** The paths the panel lists. The rest of the sections sit in the bar. */
 const IN_PANEL = new Set(COLLECTIONS.items.map((item) => item.to));
+
+/** The panel, which is in the DOM only while it is open. */
+const PANEL = "[data-slot=navigation-menu-content]";
+
+/** The state every case below drives to, resized per case. */
+const OPEN = openState("the collections menu open");
 
 test("the bar names the group whatever site.ts calls it", async ({ page }) => {
   /*
@@ -89,4 +101,75 @@ test("every section carries a blurb", () => {
   );
 
   expect(blank).toEqual([]);
+});
+
+/**
+ * The widths the panel has to hang in.
+ *
+ * 640 is the first pixel the bar exists at, so it is the narrowest window the
+ * panel is ever opened in; 768 is where upstream's own positioning would take
+ * over; and 1280 is a window wide enough that only the anchoring can put the
+ * panel outside it. The trigger is the last thing in the bar, so the panel's
+ * right edge is the one at risk at every one of them.
+ */
+for (const width of [640, 768, 1280]) {
+  test(`the open panel stays inside a ${width}px window`, async ({ page }) => {
+    await reachOpenState(page, { ...OPEN, width });
+
+    const fit = await page.locator(PANEL).evaluate((panel) => {
+      const box = panel.getBoundingClientRect();
+      const doc = document.documentElement;
+
+      return {
+        past: Math.round(box.right - doc.clientWidth),
+        short: Math.round(box.left),
+        // The symptom either way: a menu you have to scroll the page sideways
+        // to read, on a page that has nothing else off to the right.
+        sideways: doc.scrollWidth - doc.clientWidth,
+      };
+    });
+
+    expect(
+      fit.past,
+      `the panel ends ${fit.past}px past the right of the window`,
+    ).toBeLessThanOrEqual(0);
+    expect(fit.short, "the panel starts off the left of the window").toBeGreaterThanOrEqual(0);
+    expect(
+      fit.sideways,
+      `the page scrolls sideways by ${fit.sideways}px with the panel open`,
+    ).toBeLessThanOrEqual(1);
+  });
+}
+
+/**
+ * A window short enough that the panel's list has to scroll.
+ *
+ * The cap is `min(70svh, 32rem)` against five rows of about 445px, so the list
+ * overflows below roughly 636px of window. Chrome puts an overflowing scroller
+ * in the tab order, and that stop is what has to not exist.
+ */
+const SHORT_WINDOW = 600;
+
+test("the keyboard leaves the panel at the end of its links", async ({ page }) => {
+  await reachOpenState(page, { ...OPEN, height: SHORT_WINDOW });
+
+  const list = page.locator(`${PANEL} ul`);
+  expect(
+    await list.evaluate((ul) => ul.scrollHeight > ul.clientHeight),
+    `the list is not scrolling in a ${SHORT_WINDOW}px window, so there is no extra stop to check`,
+  ).toBe(true);
+
+  await page.locator(`${PANEL} a`).last().focus();
+  await page.keyboard.press("Tab");
+
+  expect(
+    // Read off the document rather than off the panel: focus moving out is
+    // one of the things that dismisses the panel, and a panel that has gone
+    // is not one the keyboard is stuck inside.
+    await page.evaluate((selector) => {
+      const panel = document.querySelector(selector);
+      return panel ? panel.contains(document.activeElement) : false;
+    }, PANEL),
+    "Tab from the last link stayed inside the panel, with nothing further to tab to",
+  ).toBe(false);
 });

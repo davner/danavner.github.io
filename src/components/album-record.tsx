@@ -1,8 +1,10 @@
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
 import Markdown from "react-markdown";
 
 import { ProseAnchor } from "@/components/prose-anchor";
 import { Rating } from "@/components/rating";
+import { ShareAlbum } from "@/components/share-album";
+import { Button } from "@/components/ui/button";
 import { coverSrcSet } from "@/lib/covers";
 import { standingScore, type Album } from "@/lib/dan-fm";
 import { cn } from "@/lib/utils";
@@ -162,5 +164,59 @@ export function AlbumTake({ take, className }: { take: string; className?: strin
     >
       {take}
     </Markdown>
+  );
+}
+
+/**
+ * What there is to do with the record: send it on, and go and hear it.
+ *
+ * Both surfaces set this directly under the identity block, above the writing.
+ * The row acts on the album rather than on the review, so it belongs with what
+ * names the album; and a review is as long as it was written, so a row placed
+ * after one sits at whatever distance that day's cell decided. Above the
+ * writing it is in the same place on every record, and a reader who has the
+ * score and the tags and wants to hear the thing reaches it without passing a
+ * thousand words to get there.
+ *
+ * `shareUrl` overrides where the panel's link actions point. The station passes
+ * its own address, because sharing the front page is sharing what is on air;
+ * everywhere else the album's permalink is the subject and `ShareAlbum` fills
+ * it in.
+ *
+ * The row owns the margin rather than either control, because the Spotify link
+ * is only there on the days the log has an address for the record and the space
+ * above the writing is not.
+ */
+export function AlbumActions({
+  album,
+  shareUrl,
+  className,
+}: {
+  album: Album;
+  shareUrl?: string;
+  className?: string;
+}) {
+  return (
+    <div className={cn("flex flex-wrap items-center gap-3", className)}>
+      <ShareAlbum album={album} url={shareUrl} />
+
+      {/* A plain anchor behind the button styling, and it stays one. An embed
+          or a play button would have the page reach Spotify on load, which
+          `tests/links.spec.ts` fails the build over - the site makes one
+          outbound request and it is the pageview beacon. */}
+      {album.url ? (
+        <Button
+          asChild
+          variant="outline"
+          size="sm"
+          className="readout rounded-none text-muted-foreground hover:border-ember hover:text-ember"
+        >
+          <a href={album.url} target="_blank" rel="noopener noreferrer">
+            Open on Spotify
+            <ArrowUpRight />
+          </a>
+        </Button>
+      ) : null}
+    </div>
   );
 }

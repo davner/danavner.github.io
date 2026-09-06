@@ -1,6 +1,7 @@
-import { ArrowUpRight, Disc3 } from "lucide-react";
+import { Disc3 } from "lucide-react";
 
 import {
+  AlbumActions,
   AlbumCover,
   AlbumReview,
   AlbumScore,
@@ -13,11 +14,9 @@ import { DanFmMixtape } from "@/components/dan-fm-mixtape";
 import { Link } from "@/components/link";
 import { OnAir } from "@/components/on-air";
 import { PageHeader, PageShell, Section } from "@/components/page";
-import { ShareAlbum } from "@/components/share-album";
 import { SourceLine } from "@/components/source-line";
 import { SpotifyCredit } from "@/components/spotify-credit";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { albums, log, station, statsFor, yearLabel, type Album } from "@/lib/dan-fm";
 import { albumUrl } from "@/lib/dan-fm-summary";
 import { longDate } from "@/lib/dates";
@@ -102,6 +101,12 @@ function TodayCard({ album }: { album: Album }) {
         </div>
       </div>
 
+      {/* The share button carries the station's address rather than this
+          album's, because someone sharing the front page is sharing what is on
+          and tomorrow that is a different record. The poster is still this
+          album - it is what is on air at the moment the link is sent. */}
+      <AlbumActions album={album} shareUrl={`${SITE_URL}/dan-fm`} className="mt-8" />
+
       {/* Out of the grid, where the writing sets its own measure rather than a
           grid track's, and in the order the album's own page reads it - the
           verdict, the two tracks, then the long piece - so one album on two
@@ -113,38 +118,6 @@ function TodayCard({ album }: { album: Album }) {
 
       <AlbumTracks album={album} className="mt-8" />
       <AlbumReview review={album.review} className="mt-10" />
-
-      {/* The same pair the album's own page carries, in the same order and at
-          the same size, so the two surfaces do not offer one album two sets of
-          controls. They sit where the reading ends rather than under the
-          badges, and the row owns the margin rather than either control: the
-          Spotify link is only there on the days the log has an address for the
-          record, and the space under the review is not.
-
-          The share button carries the station's address rather than this
-          album's, because someone sharing the front page is sharing what is
-          on and tomorrow that is a different record. The poster is still this
-          album - it is what is on air at the moment the link is sent. */}
-      <div className="mt-8 flex flex-wrap items-center gap-3">
-        <ShareAlbum album={album} url={`${SITE_URL}/dan-fm`} />
-
-        {/* A plain anchor behind the button styling, and it stays one. An
-            embed or a play button would have this page reach Spotify on load,
-            which `tests/links.spec.ts` fails the build over. */}
-        {album.url ? (
-          <Button
-            asChild
-            variant="outline"
-            size="sm"
-            className="readout rounded-none text-muted-foreground hover:border-ember hover:text-ember"
-          >
-            <a href={album.url} target="_blank" rel="noopener noreferrer">
-              Open on Spotify
-              <ArrowUpRight />
-            </a>
-          </Button>
-        ) : null}
-      </div>
     </div>
   );
 }

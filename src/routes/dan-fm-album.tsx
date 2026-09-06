@@ -1,7 +1,8 @@
-import { ArrowLeft, ArrowUpRight } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Navigate, useParams } from "react-router";
 
 import {
+  AlbumActions,
   AlbumCover,
   AlbumReview,
   AlbumScore,
@@ -11,10 +12,8 @@ import {
 import { FactLine } from "@/components/fact-line";
 import { Link } from "@/components/link";
 import { PageHeader, PageShell, Section } from "@/components/page";
-import { ShareAlbum } from "@/components/share-album";
 import { SpotifyCredit } from "@/components/spotify-credit";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { type Album, albums, yearLabel } from "@/lib/dan-fm";
 import { albumSummary, albumTitle } from "@/lib/dan-fm-summary";
 import { longDate } from "@/lib/dates";
@@ -97,27 +96,7 @@ function AlbumBody({ album }: { album: Album }) {
           </div>
         ) : null}
 
-        <div className="mt-7 flex flex-wrap items-center gap-3">
-          <ShareAlbum album={album} />
-
-          {/* A plain anchor, and it stays one. An embed or a play button would
-              have this page reach Spotify on load, which `tests/links.spec.ts`
-              fails the build over - the site makes one outbound request and it
-              is the pageview beacon. */}
-          {album.url ? (
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className="readout rounded-none text-muted-foreground hover:border-ember hover:text-ember"
-            >
-              <a href={album.url} target="_blank" rel="noopener noreferrer">
-                Open on Spotify
-                <ArrowUpRight />
-              </a>
-            </Button>
-          ) : null}
-        </div>
+        <AlbumActions album={album} className="mt-7" />
       </PageHeader>
 
       {/* The record in the order the front page reads it, so one album on two

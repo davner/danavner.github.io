@@ -10,6 +10,7 @@ import { SocialLinks } from "@/components/social-links";
 import { profile } from "@/content/profile";
 import { ALL_SECTIONS, type Section as SiteSection } from "@/lib/site";
 import { NO_ROW } from "@/lib/site-index";
+import { cn } from "@/lib/utils";
 import { useDocumentMeta } from "@/lib/use-document-meta";
 
 const TICKER = [
@@ -42,6 +43,7 @@ const TICKER = [
  */
 function SectionRow({ section }: { section: SiteSection }) {
   const row = siteIndex[section.to] ?? NO_ROW;
+  const readout = Boolean(row.latest || row.date || row.tally);
 
   return (
     <li
@@ -50,7 +52,7 @@ function SectionRow({ section }: { section: SiteSection }) {
     >
       {/* One arrow, placed by `order` rather than rendered twice: it sits on
           the name's line while the row is stacked, and at the far end of the
-          row once the description moves alongside the name.
+          row once the readout moves alongside the name.
 
           The row's whole area is the section's link, drawn by the name's
           `::after`. Nothing between that pseudo-element and the `li` may take a
@@ -64,53 +66,59 @@ function SectionRow({ section }: { section: SiteSection }) {
           </span>
         </Link>
 
-        <ArrowUpRight className="ml-auto size-5 shrink-0 text-muted-foreground transition-all duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-ember sm:size-6 lg:order-2 lg:ml-0" />
+        {/* `lg:ml-0` only where the readout follows: from `lg` that column
+            carries the `ml-auto` that pushes the pair to the right edge, and
+            the arrow riding one of its own as well would split them apart. A
+            row with no readout has nothing else to push it, so it keeps the
+            one it starts with and lands where every other row's arrow does. */}
+        <ArrowUpRight
+          className={cn(
+            "ml-auto size-5 shrink-0 text-muted-foreground transition-all duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-ember sm:size-6 lg:order-2",
+            readout && "lg:ml-0",
+          )}
+        />
 
-        <div className="w-full min-w-0 lg:order-1 lg:ml-auto lg:w-auto lg:max-w-md lg:text-right">
-          {/* The same sentence the nav panel gives this section, and shown at
-              every width: nine bare display words tell a first-time reader what
-              "dan.fm" and "Fortnite" are, which is nothing. */}
-          <p
-            data-slot="index-blurb"
-            className="text-sm leading-relaxed text-muted-foreground text-pretty"
-          >
-            {section.blurb}
-          </p>
-
-          {row.latest ? (
-            <p className="mt-3 text-sm leading-relaxed text-pretty">
-              {row.href ? (
-                /* Underlined at rest rather than coloured on hover: the link
+        {/* Dropped entirely rather than left empty when the digest has nothing:
+            `/about` and `/career` are in no collection, so this column would
+            otherwise be a bare box adding the row's `gap-y-4` under a name that
+            already said everything. */}
+        {readout ? (
+          <div className="w-full min-w-0 lg:order-1 lg:ml-auto lg:w-auto lg:max-w-md lg:text-right">
+            {row.latest ? (
+              <p className="text-sm leading-relaxed text-pretty">
+                {row.href ? (
+                  /* Underlined at rest rather than coloured on hover: the link
                    sits in a run of body copy, so a cue held back until a
                    pointer arrives leaves a keyboard or touch reader meeting a
                    control as plain text (WCAG 1.4.1). The ring is pushed out
                    past the underline for `.readout-link`'s reason - at the
                    standing offset its lower edge lands on the underline, and
                    the two read as one thick rule. */
-                <Link
-                  to={row.href}
-                  className="relative underline decoration-muted-foreground underline-offset-4 transition-colors hover:text-ember hover:decoration-ember focus-visible:outline-offset-4"
-                >
-                  {row.latest}
-                </Link>
-              ) : (
-                row.latest
-              )}
-            </p>
-          ) : null}
+                  <Link
+                    to={row.href}
+                    className="relative underline decoration-muted-foreground underline-offset-4 transition-colors hover:text-ember hover:decoration-ember focus-visible:outline-offset-4"
+                  >
+                    {row.latest}
+                  </Link>
+                ) : (
+                  row.latest
+                )}
+              </p>
+            ) : null}
 
-          {row.date || row.tally ? (
-            <p className="readout-dim mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 lg:justify-end">
-              {row.date ? <time dateTime={row.date}>{row.dateLabel}</time> : null}
-              {row.date && row.tally ? (
-                <span className="text-ember" aria-hidden>
-                  ·
-                </span>
-              ) : null}
-              {row.tally ? <span>{row.tally}</span> : null}
-            </p>
-          ) : null}
-        </div>
+            {row.date || row.tally ? (
+              <p className="readout-dim mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 lg:justify-end">
+                {row.date ? <time dateTime={row.date}>{row.dateLabel}</time> : null}
+                {row.date && row.tally ? (
+                  <span className="text-ember" aria-hidden>
+                    ·
+                  </span>
+                ) : null}
+                {row.tally ? <span>{row.tally}</span> : null}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </li>
   );

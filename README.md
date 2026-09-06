@@ -348,10 +348,11 @@ with nothing logged gets a row that says so rather than no row at all, which is
 the state of a checkout the fetch jobs have never run against.
 
 `home.tsx` prints one row per entry in `ALL_SECTIONS`, nine of them, each
-carrying the section's name, the same one-line `blurb` the nav panel gives it,
-that section's newest item, and a readout of the item's date and the section's
-tally. Everything after the name is conditional on the digest having something
-to say, so an empty section prints its blurb and stops. A row's newest item is
+carrying the section's name, that section's newest item, and a readout of the
+item's date and the section's tally. Everything after the name is conditional
+on the digest having something to say, so a section with nothing logged prints
+its name alone and the column the readout would fill is not rendered at all. A
+row's newest item is
 set as plain text rather than as a link where its page is the section's own -
 `rowFor` in `src/lib/site-index.ts` settles that for every row rather than
 leaving each row to settle it, and `DESIGN.md` says why under The Section

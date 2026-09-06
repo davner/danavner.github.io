@@ -38,13 +38,13 @@ async function openHome(page: Page): Promise<void> {
 }
 
 /*
- * Both widths, because a phone is where the description earns its place: nine
- * display words on their own tell a first-time reader what "dan.fm" and
- * "Fortnite" are, which is nothing. The viewport is set here rather than left
- * to the project, so the desktop and the mobile run both measure both widths.
+ * Both widths, because the row is laid out twice: stacked on a phone and with
+ * the readout alongside the name from `lg`. The viewport is set here rather
+ * than left to the project, so the desktop and the mobile run both measure
+ * both widths.
  */
 for (const width of [375, 1280]) {
-  test(`every section says what it holds at ${width}px`, async ({ page }) => {
+  test(`every section has a row of its own at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await openHome(page);
 
@@ -55,12 +55,13 @@ for (const width of [375, 1280]) {
       await expect(row, `${section.to} has no row on the index`).toHaveCount(1);
       await expect(row, `${section.to}'s row is not named`).toContainText(section.label);
 
-      // Against `section.blurb` rather than a sentence typed here, for
-      // `tests/nav.spec.ts`' reason: a test holding its own copy is a third
-      // copy, and the drift just moves into it.
-      const blurb = row.locator("[data-slot=index-blurb]");
-      await expect(blurb, section.to).toHaveText(section.blurb);
-      await expect(blurb, `${section.to}'s description is hidden at ${width}px`).toBeVisible();
+      // The index names sections and prints what is newest in them; the
+      // sentence saying what a section holds belongs to the nav panel alone,
+      // which `tests/nav.spec.ts` holds against `section.blurb`. A row that
+      // starts repeating it here is the drift this catches.
+      await expect(row, `${section.to}'s row prints the nav's descriptor`).not.toContainText(
+        section.blurb,
+      );
     }
   });
 }
@@ -143,7 +144,7 @@ test("a row points at the entry its collection lists first", async ({ page }) =>
  */
 const NOT_LOGS = ["/about", "/career"];
 
-test("a section with nothing logged prints its blurb and no empty readout", async ({ page }) => {
+test("a section with nothing logged prints its name and nothing else", async ({ page }) => {
   await openHome(page);
 
   const rows = await page.locator("[data-slot=index-row]").evaluateAll((items) =>
@@ -165,11 +166,13 @@ test("a section with nothing logged prints its blurb and no empty readout", asyn
 
   for (const to of NOT_LOGS) {
     const row = rows.find((entry) => entry.to === to);
-    const blurb = ALL_SECTIONS.find((section) => section.to === to)?.blurb;
 
     expect(row, `${to} has no row on the index`).toBeDefined();
     expect(row!.dates, `${to} has nothing logged and is dated anyway`).toEqual([]);
-    expect(row!.lines, `${to} prints more than what it is`).toEqual([blurb]);
+    // Not one empty paragraph either: the column the readout would fill is
+    // dropped rather than rendered blank, so there is no box holding the row's
+    // gap open under a name that already said everything.
+    expect(row!.lines, `${to} prints a line under a name that needs none`).toEqual([]);
   }
 });
 

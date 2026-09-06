@@ -725,15 +725,15 @@ Two exceptions, stated here so the pair does not read as covering everything.
 The lower half of the landing page: one row per section, nine of them, and the
 only view on the site that says what every section holds at once.
 
-- **A row carries four things**, each conditional on the digest behind it having
-  something to say - the section's name in the display face, the one-line
-  descriptor the nav panel gives that same section, the newest item in it, and a
-  readout of that item's date and the section's tally. A section with nothing
-  logged prints its name and its descriptor and draws no empty readout under
-  them.
-- **The descriptor is shown at every width**, not folded away on a phone. Nine
-  bare display words tell a first-time reader what "dan.fm" and "Fortnite" are,
-  which is nothing.
+- **A row carries three things**, each conditional on the digest behind it
+  having something to say - the section's name in the display face, the newest
+  item in it, and a readout of that item's date and the section's tally.
+- **A section with nothing logged prints its name and stops**, and the column
+  the other two would sit in is dropped rather than left empty. A bare box there
+  holds the row's `gap-y-4` open under a name that already said everything.
+- **The row does not say what a section holds.** That sentence is the nav
+  panel's, read from the same `Section.blurb`, and printing it here as well put
+  a paragraph of explanation under every name on the page.
 - **The whole row is the section's link**, drawn by the name's `::after`
   stretched over the `li` rather than by an anchor wrapping the row. Nothing
   between that pseudo-element and the `li` may take a transform: a transformed
@@ -772,9 +772,9 @@ only view on the site that says what every section holds at once.
   it internally. A name on screen that differs from the name in the source is a
   synonym somebody has to keep in step, and one name is cheaper than two.
 - **Every item in the panel carries a descriptor**, one line saying what that
-  section holds. It is the same string the home page's index prints, read from
-  `Section.blurb` in `lib/site.ts`, so a section cannot describe itself two ways
-  depending on which list you met it in. Deliberately not the page's meta
+  section holds, read from `Section.blurb` in `lib/site.ts`. The panel is the
+  only place it is printed: it is read by someone scanning a list of names they
+  may not recognise, which is the one place the sentence earns its room. Deliberately not the page's meta
   description: that one is written for a browser tab, a search result and a link
   preview, and this one for a reader already on the site deciding where to go
   next. /now is the single overlap, because its lede is already that sentence.

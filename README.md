@@ -667,31 +667,50 @@ Three more details worth knowing:
 - **Partial dates are fine.** `2026` renders with no day label under the 2026
   heading, `2026-06` renders as "Jun", a full date as "Jun 20".
 
-### Sharing a show, or a now entry
+### Sharing a show, a now entry, or an album
 
-Both have their own page and a **Share** button, and both open the same panel -
-`components/share.tsx`, with `share-show.tsx` and `share-now.tsx` as the two
-adapters that say what the subject is.
+A show and a now entry each have their own page and a **Share** button. An album
+has two places to share from, the station at `/dan-fm` and its own permalink,
+and both get the button from `AlbumActions` in `components/album-record.tsx`
+rather than mounting it twice. All three open the same panel -
+`components/share.tsx` - with `share-show.tsx`, `share-now.tsx` and
+`share-album.tsx` as the adapters that say what the subject is.
 
-The panel renders a 1080×1920 poster from the entry on a canvas and offers it
+The panel renders a 1080×1920 poster from the subject on a canvas and offers it
 and the link as **separate** actions. What goes on the poster is the only part
 that differs:
 
-| Subject                    | The poster carries                                                           |
-| -------------------------- | ---------------------------------------------------------------------------- |
-| A show                     | Photo, name, tour, openers, rating, venue, date, and the URL                 |
-| A now entry with photos    | Photo, the entry's date set large, as much of the prose as fits, and the URL |
-| A now entry with no photos | Nothing - the sheet offers the link alone                                    |
+| Subject                    | The poster carries                                                                                                                                       |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A show                     | Photo, name, tour, openers, rating, venue, date, and the URL                                                                                             |
+| A now entry with photos    | Photo, the entry's date set large, as much of the prose as fits, and the URL                                                                             |
+| A now entry with no photos | Nothing - the sheet offers the link alone                                                                                                                |
+| An album                   | Sleeve where the log saved one, title, artist and year, the score row, the take, the front of the review, the date and day number, and the station's URL |
+
+**An album's card is drawn with or without a sleeve.** Unlike a now entry, whose
+poster is the photo, there is plenty left when there is none: the title is set
+at poster scale and the score and the take fill the sheet under it.
 
 **A now entry without photos shares as a link.** Without the photo the top third
 of the card is empty and the biggest thing left on it is a date, which is a
 screenshot of a calendar rather than something worth sending.
 
-**The poster never quietly claims to be the whole entry.** It takes whole
-paragraphs while they fit, so a cut never lands mid-sentence, and when anything
-was dropped the last line takes an ellipsis _and_ the footer reads **READ THE
-REST AT** rather than **READ IT AT**. An ellipsis says something is missing; the
-footer is what says where to get it.
+**An album's poster prints the station's address, whichever page it came from.**
+A slug-length URL set in the readout face runs half again as wide as the card,
+and shrinking it to fit puts it under the size anyone can read off a story. The
+link action beside it carries the right address instead: the album's permalink
+everywhere but the station, which shares itself, because tomorrow it is a
+different album.
+
+**The poster never quietly claims to be the whole entry.** A now entry's takes
+whole paragraphs while they fit, so a cut never lands mid-sentence, and when
+anything was dropped the last line takes an ellipsis _and_ the footer reads
+**READ THE REST AT** rather than **READ IT AT**. An album's has no paragraphs to
+cut between - a take is a sentence or three, and the excerpt is the front of the
+review whatever it is made of - so it cuts by line and marks the last one the
+same way, with **FULL REVIEW AT** appearing over the footer only where the
+excerpt left some of the review behind. An ellipsis says something is missing;
+the footer is what says where to get it.
 
 **A card that cannot be drawn still offers the link.** The link actions render
 in every state of the panel - building, ready, and failed - because a poster
@@ -708,9 +727,9 @@ and a text message gets a link that previews itself. On a desktop, where
 and the link to copy.
 
 The link itself previews properly because `vite-plugin-pages.ts` writes a
-real `dist/shows/<slug>.html` per show and a `dist/now/<date>.html` per now
-entry at build time, each with its own title, description, `rel=canonical`,
-and `og:image`. A page with a photo of its own also gets that photo's
+real `dist/shows/<slug>.html` per show, a `dist/now/<date>.html` per now
+entry, and a `dist/dan-fm/<slug>.html` per album at build time, each with its
+own title, description, `rel=canonical`, and `og:image`. A page with a photo of its own also gets that photo's
 `og:image:alt` and its real `og:image:width` and `og:image:height`, measured
 from the file with sharp at build time so the card is never announced at the
 wrong shape. A page with no photo falls back to a share card and keeps the

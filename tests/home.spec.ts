@@ -347,12 +347,18 @@ async function visibleFrame(page: Page): Promise<{ top: number; bottom: number }
  * is no crop at all - which is the half that fails if that ratio ever stops
  * matching the file, quietly, as a portrait that lost its chin.
  *
- * Landscape phones under about 400px tall are knowingly outside this: the
- * plate is bound by `70svh` there and no `object-position` fits a head into
- * 26% of the frame.
+ * The three short windows are the ones nothing narrows the plate for: below the
+ * split its width is the screen's, so every cap on its height only crops the
+ * band harder, and a screen shorter than it is wide is where that bottoms out.
+ * A landscape phone is the extreme of it and a small tablet in landscape is the
+ * quiet one, which is why the set spans both rather than taking the worst case
+ * as a stand-in for the rest.
  */
 for (const [width, height] of [
   [390, 844],
+  [500, 568],
+  [640, 360],
+  [667, 375],
   [767, 1024],
   [1024, 768],
   [1440, 900],

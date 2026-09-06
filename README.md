@@ -242,10 +242,10 @@ src/
     dan-fm.json           the album log, written from a sheet every four hours
     dan-fm.seed.json      a hand-written album log, for a build asked for a full one
   routes/                 a file per page, or per pair sharing one lazy chunk
-  components/
-    ui/                   shadcn/ui, vendored: Badge, Button, Carousel, Checkbox,
-                          Empty, Label, NavigationMenu, Popover, ScrollArea,
-                          Select, Sheet, Skeleton, Toggle, ToggleGroup
+  components/             a file per component; the ones worth meeting first are
+    ui/                   shadcn/ui, vendored: Badge, Button, Carousel, Empty,
+                          NavigationMenu, Popover, ScrollArea, Select, Sheet,
+                          Skeleton, Toggle, ToggleGroup
     framed-photo.tsx      the site's photo frame, caption printed on the image
     source-line.tsx       "N shown · Read from <source> <date>", on every fetched page
     route-boundary.tsx    recovers a lazy route whose chunk a deploy deleted
@@ -253,22 +253,29 @@ src/
     filter-toggle.tsx     the filter pills, and the one place a control's height lives
     select-control.tsx    the single-choice control, on shadcn's Select
     fact-line.tsx         a detail page's own facts, set under its title
+    stat-board.tsx        the figures a collection opens with, on /shows /vinyl /comics
+    shelf.tsx             the tile ladder under them, on /vinyl /comics /fortnite
+    album-record.tsx      the parts an album prints as, shared by both dan.fm surfaces
     share.tsx             the share sheet, whatever the subject is
     share-show.tsx        a show as a share subject
     share-now.tsx         a now entry as a share subject
-  lib/
+    share-album.tsx       an album as a share subject
+  lib/                    likewise a selection, not the whole directory
     blog.ts               post helpers over the plugin's output
     shows.ts              sorting, year grouping, derived show stats
     show-summary.ts       one-line show description, shared with the Node build
-    card-canvas.ts        the sheet, the palette, and the marks both cards share
+    card-canvas.ts        the sheet, the palette, and the marks the three cards share
     show-card.ts          composes the kit into a show's poster
     now-card.ts           composes the kit into a now entry's poster
+    album-card.ts         composes the kit into an album's poster
     now-summary.ts        a now entry's title, date and excerpt, shared with the Node build
     dates.ts              the month table and the long date, one for each summary
     vinyl.ts              filtering, sorting, and derived collection stats
     comics.ts             the shelves, and the issue counts derived from them
     fortnite.ts           windows, playlists, placement tiers, and the deltas
+    dan-fm.ts             the album log, today's album, and where a rescored one stands
     now.ts                the current entry and its archive
+    routes.ts             each page's title, description and catalogue number
     site.ts               the nav, shared by the header, footer and tests
     site-index.ts         the home index's row shape, and the wording nine rows share
     feeds.ts              the feed manifest, read by both build plugins
@@ -285,6 +292,13 @@ shadcn/ui components are vendored, not installed - the CLI copies source into
 `src/components/ui/` and it becomes yours. Anything built on top (the photo
 strip, the solo badge, the filter row) composes those primitives rather than
 reimplementing them.
+
+Yours also means the CLI will overwrite them. Re-adding `navigation-menu` is the
+one that costs something: the file takes `aria-hidden` back off Radix's focus
+proxy while leaving its tab stop, without which an open panel is a WCAG 4.1.2
+failure at Level A, and it cuts two upstream animations to the site's motion
+cap. Every departure is commented where it sits, so read the file before letting
+the CLI replace it.
 
 ### How content works
 

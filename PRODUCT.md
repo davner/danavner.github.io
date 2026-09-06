@@ -139,22 +139,30 @@ three that are allowed at the nodes giving a bounded reason and nowhere else -
 `README.md` names them.
 
 Durable, and easy to overstate in either direction: **axe decides most of the
-colour contrast on this site, and not all of it.** Measured across all 13 routes
-in both themes, 2,292 contrast nodes: 1,896 pass, none fail, and 396 - 17% -
+colour contrast on this site, and not all of it.** A minority of contrast nodes
 come back `incomplete`, meaning the check ran and could not reach an answer. The
-reasons are specific and bounded:
+grain overlay is most of that slice on its own, and the whole of it is six
+reasons, each specific and bounded:
 
 | Nodes | Why axe could not decide                                                                             |
 | ----- | ---------------------------------------------------------------------------------------------------- |
-| 309   | The grain overlay is a background image, and axe will not guess what is behind one                   |
-| 46    | `text-foreground/90` in the prose styles resolves to an `oklab()` string axe's colour parser rejects |
-| 12    | A background gradient                                                                                |
-| 12    | A pseudo-element behind the text                                                                     |
-| 9     | Text partially overlapping another element                                                           |
-| 8     | A run too short for axe to call it text                                                              |
+|       | The grain overlay is a background image, and axe will not guess what is behind one                   |
+|       | `text-foreground/90` in the prose styles resolves to an `oklab()` string axe's colour parser rejects |
+|       | A background gradient                                                                                |
+|       | A pseudo-element behind the text                                                                     |
+|       | Text partially overlapping another element                                                           |
+|       | A run too short for axe to call it text                                                              |
+
+The counts are the one part of this that is a measurement rather than a
+property, and they move whenever a route, a surface or a swept state is added.
+They are left blank rather than left standing, because a stale figure here reads
+as a live one and is quoted as one. `expectAxeClean` in `tests/a11y.spec.ts`
+attaches an `axe-incomplete` artifact on every test whether or not anything is
+wrong, so the current numbers are a count of those rather than a fresh audit.
 
 So a green axe run is real evidence about most of this site's colour and no
-evidence at all about that 17%. The 17% is measured from painted pixels instead.
+evidence at all about the undecided slice. That slice is measured from painted
+pixels instead.
 
 A second gap is not about contrast at all, and it is worth keeping in view even
 now it is mostly closed: a sweep that only sees a route as it loads is blind to

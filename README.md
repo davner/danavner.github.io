@@ -1295,20 +1295,20 @@ parent, which is what produces the hairline seams.
 
 **Contrast is checked, with one known hole.** Both palettes go through axe in
 CI, and it earns its place: it caught bone type on the ember accent at 3.35:1,
-which is why button labels on ember are near-black rather than bone. Across the
-13 routes in both themes it decides 1,896 of 2,292 contrast nodes and fails none
-of them. The other 396 - 17% - come back `incomplete` rather than pass or fail,
-mostly because the grain overlay in `components/backdrop.tsx` is a background
-image and axe will not guess what is behind one. `tests/a11y.spec.ts` tolerates
-an undecided result for three rules and no others: `color-contrast` at every
-node; `aria-valid-attr-value` only where every check on the node reports
+which is why button labels on ember are near-black rather than bone. It decides
+most of the site's contrast nodes in both themes and fails none of them. The
+rest come back `incomplete` rather than pass or fail, mostly because the grain
+overlay in `components/backdrop.tsx` is a background image and axe will not
+guess what is behind one. `tests/a11y.spec.ts` tolerates an undecided result for
+three rules and no others: `color-contrast` at every node;
+`aria-valid-attr-value` only where every check on the node reports
 `controlsWithinPopup`, which is axe declining to resolve the share popover
 trigger's `aria-controls`; and `aria-prohibited-attr` only where a role-less
 `div`'s single prohibited attribute is the `aria-labelledby` Radix hangs on a
 navigation panel. Either of the last two anywhere else fails the build, as does
-any other rule reaching no verdict. That 17% is not covered by CI at all and has
-to be
-measured from painted pixels by hand. `PRODUCT.md` breaks the 396 down.
+any other rule reaching no verdict. The undecided slice is not covered by CI at
+all and has to be measured from painted pixels by hand. `PRODUCT.md` breaks it
+into its six reasons and says why it does not print a count.
 
 ---
 

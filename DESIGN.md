@@ -484,10 +484,11 @@ shadow that fakes depth under a surface is still banned.
 fields from looking dead. It is `aria-hidden`, fixed, and behind everything, and
 it must never be removed to "clean up" a surface. Its cost, accepted knowingly,
 is a hole in automated colour checking: axe will not guess what is behind a
-background image, so 309 of the site's 2,292 contrast nodes come back
-`incomplete` rather than pass or fail. That is a bounded hole, not a total one -
-axe decides 83% of this site's colour - and what falls in it is measured from
-painted pixels instead.
+background image, so the nodes sitting over the grain come back `incomplete`
+rather than pass or fail, and they are most of the undecided slice on their own.
+That is a bounded hole, not a total one: axe decides most of this site's
+colour, and what falls in the rest is measured from painted pixels instead.
+`PRODUCT.md` names the six reasons a contrast node goes undecided here.
 
 ## Shapes
 
@@ -839,7 +840,7 @@ without one.
 - **Do** keep both themes in mind at once. A colour decision that works in only
   one is unfinished.
 - **Do** measure contrast from painted pixels for anything sitting over the
-  grain, over a gradient, or over a photograph. axe decides 83% of this site's
+  grain, over a gradient, or over a photograph. axe decides most of this site's
   colour and returns "incomplete" for the rest, so a green run proves a lot and
   not everything.
 - **Do** tie any motion to the reader. The marquee pauses on hover and

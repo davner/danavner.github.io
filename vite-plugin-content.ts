@@ -1603,7 +1603,14 @@ function buildSiteIndex(root: string, publicDir: string, seed: SeedRule): SiteIn
   // entry at all, and an empty date renders as a blank readout under a heading.
   if (current.updated) {
     rows["/now"] = {
-      latest: nowSummary(current, 90),
+      /*
+       * A tighter cut than the 160 a meta description gets, because this is the
+       * one row whose newest item is prose rather than a title. Given more, it
+       * sets three lines of an interrupted paragraph directly beneath the two
+       * lines of blurb above it, and the row reads as a page that got cut off
+       * rather than as a taste of the entry.
+       */
+      latest: nowSummary(current, 60),
       ...dateOf(current.updated),
       // The entry has no page of its own - it is what `/now` prints - so this
       // is the section's own path, and `rowFor` reads that as no link at all.

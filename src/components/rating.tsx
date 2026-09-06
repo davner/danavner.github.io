@@ -5,6 +5,36 @@ import { cn } from "@/lib/utils";
 const HORNS = "🤘🏽";
 
 /**
+ * `count` marks, with the space after the last one left out of the text.
+ *
+ * `letter-spacing` lands after every glyph, the last one included, so a plain
+ * `mark.repeat(count)` ends with one space of nothing inside its own text run.
+ * A `Range` measures text runs, and `responsive.spec`'s stat sweep reads a row
+ * with one - so it counts that empty space as ink, and reads the average tile
+ * on `/shows` as overflowing at the width where the stat board is tightest,
+ * while every glyph sits well inside it. The last mark sets no tracking and
+ * `Rating` reserves the space as padding instead, so the row still spans
+ * `MAX_RATING` equal cells - a mark plus its tracking - and nothing repaints.
+ *
+ * Dropping the space rather than moving it is the near alternative, and it
+ * does repaint: the row narrows by one space, which pulls whatever follows it
+ * left and shrinks the base the fill's percentage divides, so a 4.5 draws well
+ * under half of its last mark. The row cannot give way to the tile instead -
+ * it is `nowrap` because the fill's clip needs one unbroken line, so it would
+ * cut a glyph rather than narrow - and widening the tile would move three
+ * pages' stat boards to settle one row.
+ */
+function Marks({ mark, count }: { mark: string; count: number }) {
+  if (count < 1) return null;
+  return (
+    <>
+      {mark.repeat(count - 1)}
+      <span className="tracking-normal">{mark}</span>
+    </>
+  );
+}
+
+/**
  * Rating out of five marks, horns by default.
  *
  * Two stacked copies of the same string - a desaturated one underneath and a
@@ -59,7 +89,6 @@ export function Rating({
   const percent = (shown / MAX_RATING) * 100;
   // Trailing zeros look like false precision on a hand-kept log: 4, not 4.0.
   const label = `${shown} out of ${MAX_RATING}`;
-  const row = mark.repeat(MAX_RATING);
   // The tier keys on the number the row draws - `shown`, clamped and rounded
   // - never on a raw value the caller passed, so the dress can never disagree
   // with the label.
@@ -73,13 +102,19 @@ export function Rating({
       // `isolate` so the glow layer's negative z-index stays inside this
       // span's own stacking context instead of dropping behind the row's
       // background.
+      //
+      // The padding is the last mark's tracking, held here rather than in the
+      // row's text - see `Marks`. It keeps the box `MAX_RATING` whole cells
+      // wide, which is the base every percentage below divides: the fill's
+      // `value / MAX_RATING` lands on a cell boundary only because the fifth
+      // cell's tracking is inside it.
       className={cn(
-        "isolate relative inline-block text-sm leading-none tracking-[0.15em] select-none",
+        "isolate relative inline-block pr-[0.15em] text-sm leading-none tracking-[0.15em] select-none",
         className,
       )}
     >
       <span aria-hidden className="whitespace-nowrap opacity-25 grayscale">
-        {row}
+        <Marks mark={mark} count={MAX_RATING} />
       </span>
       <span
         aria-hidden
@@ -90,22 +125,29 @@ export function Rating({
         style={{ width: `${percent}%` }}
       >
         {/* One DOM shape under heat at every tier - per-star spans so the
-            five's dress can address a single star - and the plain string
-            otherwise, byte-identical to the horns' rendering. */}
-        {tier
-          ? Array.from({ length: MAX_RATING }, (_, index) => (
-              <span key={index} data-slot="rating-star">
-                {mark}
-              </span>
-            ))
-          : row}
+            five's dress can address a single star - and `Marks` otherwise,
+            byte-identical to the horns' rendering. The last star sheds its
+            tracking for the reason `Marks` does. */}
+        {tier ? (
+          Array.from({ length: MAX_RATING }, (_, index) => (
+            <span
+              key={index}
+              data-slot="rating-star"
+              className={index === MAX_RATING - 1 ? "tracking-normal" : undefined}
+            >
+              {mark}
+            </span>
+          ))
+        ) : (
+          <Marks mark={mark} count={MAX_RATING} />
+        )}
       </span>
       {/* The sheen carrier rides after the fill so the fill stays the second
           child, which the clip test reads by position. Masked off-canvas at
           rest; only the five's crossing ever moves it. */}
       {tier === "blue" ? (
         <span aria-hidden data-slot="rating-sheen">
-          {row}
+          <Marks mark={mark} count={MAX_RATING} />
         </span>
       ) : null}
       {/* The glow lives on its own unclipped layer - transparent glyphs whose
@@ -115,7 +157,7 @@ export function Rating({
           star's missing halo is imperceptible, and these tiers start at 4.5. */}
       {tier === "gold" || tier === "blue" ? (
         <span aria-hidden data-slot="rating-glow">
-          {mark.repeat(Math.floor(shown))}
+          <Marks mark={mark} count={Math.floor(shown)} />
         </span>
       ) : null}
     </span>

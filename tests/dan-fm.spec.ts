@@ -93,6 +93,8 @@ const EXPORTED = /^export const danFm = (.*);$/s;
  * stopped answering to the name the app imports.
  */
 const DAN_FM = (contentPlugin() as unknown as Hooks).resolveId("virtual:dan-fm");
+/** The landing page's digest, which every collection edit also makes stale. */
+const SITE_INDEX = (contentPlugin() as unknown as Hooks).resolveId("virtual:site-index");
 
 /**
  * Files a content tree, asks the plugin for `virtual:dan-fm`, and hands back
@@ -742,7 +744,7 @@ test.describe("editing the log while the dev server runs", () => {
   test("a fetched log that changed on disk refreshes the page", () => {
     // A local run of the fetch should show up without a restart, the way a
     // local run of the Discogs or comics fetch already does.
-    expect(reloadedAfterEditing("src/content/dan-fm.json")).toEqual([DAN_FM]);
+    expect(reloadedAfterEditing("src/content/dan-fm.json")).toEqual([DAN_FM, SITE_INDEX]);
   });
 
   test("the fixture refreshes the page too", () => {
@@ -751,7 +753,7 @@ test.describe("editing the log while the dev server runs", () => {
      * leaving it out would mean the whole page is built against a fixture no
      * dev server ever notices changing.
      */
-    expect(reloadedAfterEditing("src/content/dan-fm.seed.json")).toEqual([DAN_FM]);
+    expect(reloadedAfterEditing("src/content/dan-fm.seed.json")).toEqual([DAN_FM, SITE_INDEX]);
   });
 
   test("an edit somewhere else in the content folder leaves the log alone", () => {

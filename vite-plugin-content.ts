@@ -1903,8 +1903,14 @@ export function contentPlugin(): Plugin {
       // Editing, adding, or deleting an entry should refresh the browser.
       const invalidate = (file: string) => {
         const reload = (name: string) => {
-          const module = server.moduleGraph.getModuleById(resolvedId(name));
-          if (module) server.moduleGraph.invalidateModule(module);
+          // The digest is derived from every collection, so whichever one was
+          // edited, the landing page's copy of it is stale too. Invalidating
+          // only the collection leaves `/` showing startup values until the
+          // server restarts.
+          for (const stale of [name, SITE_INDEX]) {
+            const module = server.moduleGraph.getModuleById(resolvedId(stale));
+            if (module) server.moduleGraph.invalidateModule(module);
+          }
           server.ws.send({ type: "full-reload" });
         };
 

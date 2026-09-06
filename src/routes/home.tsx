@@ -227,7 +227,7 @@ export function Home() {
               srcSet="/img/me1-768.webp 768w, /img/me1.webp 1067w"
               sizes="(min-width: 1024px) 384px, (min-width: 768px) 288px, 100vw"
               alt={`${profile.name}, smiling, in a patterned shirt`}
-              caption="Subject, smiling"
+              caption="Me"
               width={1067}
               height={1334}
               eager

@@ -18,8 +18,10 @@ import { ALL_SECTIONS } from "../src/lib/site";
  * by `tests/site-index.spec.ts`. This file is the other half: that the page
  * prints what it was handed, and prints nothing where it was handed nothing.
  *
- * The hero above the index gets the last block in the file, for the one thing
- * about it that arithmetic decides rather than a stylesheet.
+ * The hero above the index gets the last blocks in the file, for the two things
+ * about it that a stylesheet does not decide: which slice of the photograph the
+ * plate shows, and whether the preload in front of it asks for that same
+ * photograph.
  */
 
 /** The row that opens a section, found by the link that opens it. */
@@ -365,3 +367,46 @@ for (const [width, height] of [
     expect(bottom, "the plate cuts the chin off").toBeGreaterThanOrEqual(HEAD_BOTTOM);
   });
 }
+
+/*
+ * The plate is the one picture on the site with a preload in front of it, and
+ * that preload is written by hand in `index.html` while the `<img>` is written
+ * in `src/routes/home.tsx`. Nothing but this holds the two together, and they
+ * have drifted once already.
+ *
+ * Drift is silent and costs exactly what the preload was there to save: the
+ * preload scanner picks a candidate from `imagesrcset` against `imagesizes`
+ * before the bundle has run, the layout then picks one from `srcset` against
+ * `sizes`, and where those disagree the browser fetches the photograph twice
+ * and paints the second copy. Compared inside the loaded document, because that
+ * is where the two actually meet - reading the attribute out of the source
+ * would pass while `FramedPhoto` had quietly stopped forwarding it.
+ */
+test("the hero preload asks for the picture the page goes on to render", async ({ page }) => {
+  await openHome(page);
+
+  const { preload, plate } = await page.evaluate(() => {
+    const attrs = (el: Element | null, names: string[]) =>
+      el && Object.fromEntries(names.map((name) => [name, el.getAttribute(name)]));
+
+    return {
+      preload: attrs(document.querySelector('link[rel="preload"][as="image"]'), [
+        "href",
+        "imagesrcset",
+        "imagesizes",
+      ]),
+      plate: attrs(document.querySelector("figure img"), ["src", "srcset", "sizes"]),
+    };
+  });
+
+  // Named separately, so a half that is missing fails as itself rather than as
+  // a mismatch against nothing.
+  expect(preload, "index.html no longer preloads the hero").not.toBeNull();
+  expect(plate, "the hero draws no picture").not.toBeNull();
+
+  expect(preload, "the preload fetches a different picture from the one the page uses").toEqual({
+    href: plate!.src,
+    imagesrcset: plate!.srcset,
+    imagesizes: plate!.sizes,
+  });
+});

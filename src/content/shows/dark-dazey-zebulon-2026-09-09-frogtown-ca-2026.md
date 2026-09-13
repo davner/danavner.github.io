@@ -16,7 +16,7 @@ photos:
     caption: Stage presence top tier
 video: https://youtu.be/S7PPgqiGm5o?is=S8T-a7YhzDEux3_B
 standout: false
-subtitle: God Is A Frog Heaven Is A Swamp
+subtitle: “God Is A Frog Heaven Is A Swamp” Release
 type: show
 ---
 

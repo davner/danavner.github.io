@@ -1,11 +1,11 @@
 {
   "user": "dnafam",
   "url": "https://www.discogs.com/user/dnafam/collection",
-  "fetched": "2026-09-20",
+  "fetched": "2026-09-21",
   "value": {
-    "minimum": "$1,252.03",
-    "median": "$2,017.77",
-    "maximum": "$3,072.91"
+    "minimum": "$1,233.26",
+    "median": "$2,012.25",
+    "maximum": "$3,086.23"
   },
   "owners": [
     {
@@ -261,7 +261,7 @@
       "cover": "/img/vinyl/37586709.webp"
     },
     {
-      "id": 37537815,
+      "id": 37476741,
       "instanceId": 2155440675,
       "owner": "dan",
       "artist": "Mannequin Pussy",
@@ -270,15 +270,20 @@
       "label": "Epitaph",
       "catno": "87968-1",
       "format": "LP",
-      "variant": "Tie Dye Splash",
+      "variant": "Alternate Cover, Tie-Dye Splash",
       "genres": [
         "Rock"
       ],
-      "styles": [],
+      "styles": [
+        "Punk",
+        "Hard Rock",
+        "Indie Rock",
+        "Grunge"
+      ],
       "added": "2026-06-15",
       "rating": 0,
-      "url": "https://www.discogs.com/release/37537815",
-      "cover": "/img/vinyl/37537815.webp"
+      "url": "https://www.discogs.com/release/37476741",
+      "cover": "/img/vinyl/37476741.webp"
     },
     {
       "id": 37317108,

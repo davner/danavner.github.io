@@ -1,17 +1,17 @@
 {
   "user": "dnafam",
   "url": "https://www.discogs.com/user/dnafam/collection",
-  "fetched": "2026-09-21",
+  "fetched": "2026-09-22",
   "value": {
-    "minimum": "$1,233.26",
-    "median": "$2,012.25",
-    "maximum": "$3,086.23"
+    "minimum": "$1,268.25",
+    "median": "$2,059.09",
+    "maximum": "$3,163.75"
   },
   "owners": [
     {
       "id": "dan",
       "name": "Dan",
-      "count": 45
+      "count": 49
     },
     {
       "id": "alexis",
@@ -20,6 +20,98 @@
     }
   ],
   "records": [
+    {
+      "id": 38340126,
+      "instanceId": 2186724520,
+      "owner": "dan",
+      "artist": "Movements",
+      "title": "Happier Now",
+      "year": 2026,
+      "label": "Fearless Records",
+      "catno": "FEAR05440",
+      "format": "LP",
+      "variant": "Violet Translucent,  Gatefold",
+      "genres": [
+        "Rock"
+      ],
+      "styles": [
+        "Emo",
+        "Alternative Rock"
+      ],
+      "added": "2026-09-21",
+      "rating": 5,
+      "url": "https://www.discogs.com/release/38340126",
+      "cover": "/img/vinyl/38340126.webp"
+    },
+    {
+      "id": 38338995,
+      "instanceId": 2186723522,
+      "owner": "dan",
+      "artist": "156/Silence",
+      "title": "From A Distance",
+      "year": 2026,
+      "label": "Pure Noise Records",
+      "catno": "PNE484",
+      "format": "LP",
+      "variant": "Blood Red / Evergreen w/ White Splatter",
+      "genres": [
+        "Rock"
+      ],
+      "styles": [
+        "Metalcore",
+        "Melodic Hardcore",
+        "Post-Hardcore",
+        "Punk"
+      ],
+      "added": "2026-09-21",
+      "rating": 5,
+      "url": "https://www.discogs.com/release/38338995",
+      "cover": "/img/vinyl/38338995.webp"
+    },
+    {
+      "id": 37388871,
+      "instanceId": 2186722925,
+      "owner": "dan",
+      "artist": "Julia Wolf",
+      "title": "Pressure",
+      "year": 2026,
+      "label": "Girls In Purgatory",
+      "catno": "3669176",
+      "format": "LP",
+      "variant": "Tricolor Sunshine State Swirl",
+      "genres": [
+        "Rock"
+      ],
+      "styles": [
+        "Alternative Rock"
+      ],
+      "added": "2026-09-21",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/37388871",
+      "cover": "/img/vinyl/37388871.webp"
+    },
+    {
+      "id": 28461454,
+      "instanceId": 2186725607,
+      "owner": "dan",
+      "artist": "Chappell Roan",
+      "title": "The Rise & Fall Of A Midwest Princess",
+      "year": 2023,
+      "label": "Amusement Records",
+      "catno": "B0038014-01",
+      "format": "LP",
+      "variant": "",
+      "genres": [
+        "Pop"
+      ],
+      "styles": [
+        "Indie Pop"
+      ],
+      "added": "2026-09-21",
+      "rating": 5,
+      "url": "https://www.discogs.com/release/28461454",
+      "cover": "/img/vinyl/28461454.webp"
+    },
     {
       "id": 37113360,
       "instanceId": 2178260497,

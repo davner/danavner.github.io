@@ -1,25 +1,170 @@
 {
   "user": "dnafam",
   "url": "https://www.discogs.com/user/dnafam/collection",
-  "fetched": "2026-09-28",
+  "fetched": "2026-09-29",
   "value": {
-    "minimum": "$1,371.36",
-    "median": "$2,132.56",
-    "maximum": "$3,261.61"
+    "minimum": "$1,428.32",
+    "median": "$2,217.67",
+    "maximum": "$3,416.60"
   },
   "owners": [
     {
       "id": "dan",
       "name": "Dan",
-      "count": 49
+      "count": 53
     },
     {
       "id": "alexis",
       "name": "Alexis",
-      "count": 10
+      "count": 12
     }
   ],
   "records": [
+    {
+      "id": 38542605,
+      "instanceId": 2189036669,
+      "owner": "dan",
+      "artist": "Porch Light",
+      "title": "Hush",
+      "year": 2026,
+      "label": "Vertigo Vinyl",
+      "catno": "02638735",
+      "format": "LP",
+      "variant": "",
+      "genres": [
+        "Rock"
+      ],
+      "styles": [
+        "Alternative Rock",
+        "Indie Rock"
+      ],
+      "added": "2026-09-28",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/38542605",
+      "cover": ""
+    },
+    {
+      "id": 38534439,
+      "instanceId": 2189039035,
+      "owner": "alexis",
+      "artist": "Young Miko",
+      "title": "att.",
+      "year": 2026,
+      "label": "The Wave Music Group",
+      "catno": "850083983291",
+      "format": "2×LP",
+      "variant": "",
+      "genres": [
+        "Hip Hop",
+        "Latin"
+      ],
+      "styles": [
+        "Reggaeton"
+      ],
+      "added": "2026-09-28",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/38534439",
+      "cover": "/img/vinyl/38534439.webp"
+    },
+    {
+      "id": 38534166,
+      "instanceId": 2189038859,
+      "owner": "alexis",
+      "artist": "Young Miko",
+      "title": "Trap Kitty",
+      "year": 2026,
+      "label": "The Wave Music Group",
+      "catno": "00850083983314",
+      "format": "LP",
+      "variant": "Purple",
+      "genres": [
+        "Hip Hop",
+        "Latin"
+      ],
+      "styles": [
+        "Reggaeton"
+      ],
+      "added": "2026-09-28",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/38534166",
+      "cover": "/img/vinyl/38534166.webp"
+    },
+    {
+      "id": 30523828,
+      "instanceId": 2189036493,
+      "owner": "dan",
+      "artist": "Snowboard Kids Sound Team",
+      "title": "Snowboard Kids Original Soundtrack",
+      "year": 2024,
+      "label": "Fangamer",
+      "catno": "FG55",
+      "format": "LP",
+      "variant": "Blue with White Splatter",
+      "genres": [
+        "Stage & Screen"
+      ],
+      "styles": [
+        "Video Game Music"
+      ],
+      "added": "2026-09-28",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/30523828",
+      "cover": "/img/vinyl/30523828.webp"
+    },
+    {
+      "id": 28454800,
+      "instanceId": 2189038350,
+      "owner": "dan",
+      "artist": "Silk Sonic",
+      "title": "An Evening With Silk Sonic",
+      "year": 2023,
+      "label": "Atlantic",
+      "catno": "075678626654",
+      "format": "LP",
+      "variant": "",
+      "genres": [
+        "Funk / Soul"
+      ],
+      "styles": [
+        "Contemporary R&B",
+        "Soul",
+        "Funk",
+        "Disco"
+      ],
+      "added": "2026-09-28",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/28454800",
+      "cover": "/img/vinyl/28454800.webp"
+    },
+    {
+      "id": 22114357,
+      "instanceId": 2189037552,
+      "owner": "dan",
+      "artist": "Bruno Mars",
+      "title": "XXIVK Magic",
+      "year": 2022,
+      "label": "Atlantic",
+      "catno": "558305-1",
+      "format": "LP",
+      "variant": "Gold Disc / Gatefold Sleeve",
+      "genres": [
+        "Electronic",
+        "Hip Hop",
+        "Funk / Soul",
+        "Pop"
+      ],
+      "styles": [
+        "Contemporary R&B",
+        "Funk",
+        "Synth-pop",
+        "Soul",
+        "New Jack Swing"
+      ],
+      "added": "2026-09-28",
+      "rating": 0,
+      "url": "https://www.discogs.com/release/22114357",
+      "cover": "/img/vinyl/22114357.webp"
+    },
     {
       "id": 38340126,
       "instanceId": 2186724520,

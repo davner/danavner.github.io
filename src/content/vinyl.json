@@ -1,11 +1,11 @@
 {
   "user": "dnafam",
   "url": "https://www.discogs.com/user/dnafam/collection",
-  "fetched": "2026-10-13",
+  "fetched": "2026-10-14",
   "value": {
     "minimum": "$1,537.80",
-    "median": "$2,363.89",
-    "maximum": "$3,612.32"
+    "median": "$2,363.16",
+    "maximum": "$3,601.25"
   },
   "owners": [
     {
@@ -1336,10 +1336,12 @@
       "format": "LP",
       "variant": "",
       "genres": [
-        "Electronic"
+        "Electronic",
+        "Stage & Screen"
       ],
       "styles": [
-        "Chillwave"
+        "Chillwave",
+        "Video Game Music"
       ],
       "added": "2026-06-15",
       "rating": 0,
@@ -1451,7 +1453,7 @@
       "id": 26156411,
       "instanceId": 2155435961,
       "owner": "dan",
-      "artist": "Save Point, Nokbient",
+      "artist": "Save Point & Nokbient",
       "title": "Video Game Lofi: Yoshi",
       "year": 2023,
       "label": "Curaga Records",
@@ -1459,11 +1461,12 @@
       "format": "LP",
       "variant": "",
       "genres": [
-        "Electronic"
+        "Electronic",
+        "Stage & Screen"
       ],
       "styles": [
         "Chillwave",
-        "Bitpop"
+        "Video Game Music"
       ],
       "added": "2026-06-15",
       "rating": 0,

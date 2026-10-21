@@ -1,15 +1,15 @@
 {
   "name": "danwiththeyams",
   "accountId": "c8d91b5d775c424faaca60ccb06765b6",
-  "fetched": "2026-10-20",
+  "fetched": "2026-10-21",
   "lifetime": {
     "overall": {
-      "matches": 3967,
-      "wins": 1104,
-      "kills": 19365,
-      "deaths": 2863,
+      "matches": 3974,
+      "wins": 1107,
+      "kills": 19381,
+      "deaths": 2867,
       "kd": 6.76,
-      "winRate": 27.8,
+      "winRate": 27.9,
       "killsPerMatch": 4.88,
       "top3": 1524,
       "top5": 333,
@@ -17,9 +17,9 @@
       "top10": 10,
       "top12": 410,
       "top25": 16,
-      "minutesPlayed": 51260,
-      "score": 1584151,
-      "playersOutlived": 246766
+      "minutesPlayed": 51379,
+      "score": 1586664,
+      "playersOutlived": 246867
     },
     "solo": {
       "matches": 36,
@@ -81,26 +81,26 @@
     {
       "key": "ch7-s4",
       "first": "2026-08-20",
-      "fetched": "2026-10-20",
+      "fetched": "2026-10-21",
       "source": "fortnite-api",
       "stats": {
         "overall": {
-          "matches": 184,
-          "wins": 64,
-          "kills": 913,
-          "deaths": 120,
-          "kd": 7.61,
-          "winRate": 34.8,
-          "killsPerMatch": 4.96,
+          "matches": 191,
+          "wins": 67,
+          "kills": 929,
+          "deaths": 124,
+          "kd": 7.49,
+          "winRate": 35.1,
+          "killsPerMatch": 4.86,
           "top3": 121,
           "top5": 30,
           "top6": 135,
           "top10": 0,
           "top12": 32,
           "top25": 0,
-          "minutesPlayed": 2806,
-          "score": 88415,
-          "playersOutlived": 15663
+          "minutesPlayed": 2925,
+          "score": 90928,
+          "playersOutlived": 15764
         },
         "solo": null,
         "duo": {

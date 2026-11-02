@@ -1,6 +1,14 @@
 {
   "seasons": [
     {
+      "key": "ch7-s5",
+      "chapter": "Chapter 7",
+      "season": "Season 5",
+      "start": "2026-11-01",
+      "backendValue": 43,
+      "main": null
+    },
+    {
       "key": "ch7-s4",
       "chapter": "Chapter 7",
       "season": "Season 4",
